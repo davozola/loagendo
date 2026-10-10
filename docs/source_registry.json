@@ -1,0 +1,47 @@
+{
+  "generalitat": {
+    "owner": "Generalitat de Catalunya — Departament de Cultura",
+    "dataset": "Agenda Cultural de Catalunya (per localitzacions / organitzadors)",
+    "data_reuse_status": "open_with_conditions",
+    "license_basis": "Llicència oberta d'ús d'informació — Catalunya; dataset catalog points to the licensing page; dataset-specific terms still take precedence",
+    "license_url": "https://web.gencat.cat/ca/generalitat/dades-indicadors/dades-obertes/llicencies",
+    "catalog_url": "https://datos.gob.es/ca/catalogo/a09002970-agenda-cultural-de-catalunya-metadatos-cultural-la-localitzacions",
+    "attribution": "Generalitat de Catalunya. Departament de Cultura",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Data reutilization subject to specific notices, third party media rights, privacy and attribution."
+  },
+  "diba_bibliotecas": {
+    "owner": "Diputació de Barcelona",
+    "dataset": "actesbiblioteques_ca",
+    "data_reuse_status": "cc_by_4_metadata",
+    "license_basis": "Downloaded source metadata llicencia = https://creativecommons.org/licenses/by/4.0/deed.ca",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/deed.ca",
+    "attribution": "Diputació de Barcelona — Gerència de Serveis de Biblioteques",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Linked images might have third-party rights."
+  },
+  "diba_turismo": {
+    "owner": "Diputació de Barcelona",
+    "dataset": "actesturisme_ca",
+    "data_reuse_status": "cc_by_4_metadata",
+    "license_basis": "Downloaded source metadata llicencia = https://creativecommons.org/licenses/by/4.0/deed.ca",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/deed.ca",
+    "attribution": "Diputació de Barcelona — Oficina de Promoció Turística",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Tourism dataset includes normal commercial services that must be filtered out."
+  },
+  "guiabcn": {
+    "owner": "Ajuntament de Barcelona",
+    "dataset": "GuiaBCN live website",
+    "data_reuse_status": "unconfirmed_for_bulk_ingestion",
+    "license_basis": "Do not extend Open Data BCN dataset licenses to live GuiaBCN website or third-party images",
+    "license_url": "https://seuelectronica.ajuntament.barcelona.cat/ca/legal",
+    "attribution": "Ajuntament de Barcelona — GuiaBCN",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Only 45 manually curated reference links are in the laboratory. No mass scraper."
+  }
+}

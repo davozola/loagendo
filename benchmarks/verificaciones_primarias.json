@@ -1,0 +1,37 @@
+[
+  {
+    "fuente_origen": "diba_turismo",
+    "acte_id": "agendaturisme460611748",
+    "titulo_fuente": "Utopies, aquí i ara",
+    "organizador": "CCCB",
+    "url_primaria": "https://www.cccb.org/es/w/actividades/ernest-canada-anna-pacheco-y-carolina-del-olmo",
+    "fecha": "2026-10-22",
+    "inicio": "18:30",
+    "fin": "20:00",
+    "precio_general_eur": 4,
+    "precio_reducido_eur": 3,
+    "precio_condicional_gratis": true,
+    "lugar": "Mirador, CCCB",
+    "idioma": "Castellano",
+    "estado_verificacion": "VERIFICADO_EN_WEB_PRIMARIA_2026_10_10",
+    "nota": "La API DIBA no contenía hora real; el inicio a medianoche es solo fecha administrativa. No convertir todos los descuentos en gratuidad general."
+  },
+  {
+    "fuente_origen": "diba_turismo",
+    "acte_id": "agendaturisme460612105",
+    "titulo_fuente": "El turisme, un dret social?",
+    "organizador": "CCCB",
+    "url_primaria": "https://www.cccb.org/ca/w/activitats/el-turisme-un-dret-social",
+    "fecha": "2026-10-23",
+    "inicio": "09:30",
+    "fin": "14:00",
+    "precio_general_eur": 0,
+    "precio_reducido_eur": null,
+    "precio_condicional_gratis": false,
+    "requiere_inscripcion": true,
+    "lugar": "Mirador, CCCB",
+    "idioma": "Catalán y castellano",
+    "estado_verificacion": "VERIFICADO_EN_WEB_PRIMARIA_2026_10_10",
+    "nota": "La fuente primaria detalla programa desde 09:00 para acreditación y sesión principal 09:30–14:00. Mantener ambos datos diferenciados."
+  }
+]

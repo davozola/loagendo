@@ -1,0 +1,80 @@
+{
+  "project": "Loagendo",
+  "version": "1.2",
+  "window_inclusive_start": "2026-10-10",
+  "window_exclusive_end": "2027-01-08",
+  "source_record_counts": {
+    "diba_bibliotecas": 49,
+    "diba_turismo": 7,
+    "generalitat": 268,
+    "guiabcn": 45
+  },
+  "eligibility_preliminary": {
+    "exclude": 12,
+    "review": 357
+  },
+  "kind_preliminary": {
+    "course": 9,
+    "exhibition": 107,
+    "program": 124,
+    "service": 3,
+    "single": 126
+  },
+  "database_row_counts": {
+    "source_records": 369,
+    "source_venues": 420,
+    "source_organizers": 168,
+    "review_flags": 1095,
+    "candidate_occurrences": 41,
+    "match_candidates": 3,
+    "publication_approved": 0
+  },
+  "unverified_syntactic_candidates_by_source": {
+    "diba_bibliotecas": 18,
+    "generalitat": 23
+  },
+  "flag_counts": {
+    "DIRECT_ACTIVITY_URL_MISSING": 268,
+    "ORGANIZER_NAME_MISSING": 172,
+    "NO_PRICE_TEXT": 114,
+    "PROGRAM_MAY_CONTAIN_CHILD_EVENTS": 84,
+    "NO_SCHEDULE_SOURCE": 64,
+    "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME": 56,
+    "UNKNOWN_PRICE_NOT_FREE": 55,
+    "DESCRIPTION_MISSING": 49,
+    "NO_PRIMARY_PAGE_SNAPSHOT": 45,
+    "BENCHMARK_INTENTIONAL_NONRANDOM": 45,
+    "LONG_RANGE_DO_NOT_EXPAND": 26,
+    "ficha_heredada_sin_reverificacion_turno": 23,
+    "RECURRING_FREQUENCY_NOT_DATES": 23,
+    "NEXT_DAY_END_REVIEW": 23,
+    "MULTI_VENUE_SESSION_NOT_RESOLVED": 20,
+    "END_DATE_APPROXIMATE": 8,
+    "MIDNIGHT_PLACEHOLDER_NOT_START_TIME": 7,
+    "curso_regular": 5,
+    "limite_curso_vs_taller": 2,
+    "subseries_por_edad": 1,
+    "meeting_point_ne_organizer": 1,
+    "dos_fechas_mismo_registro": 1,
+    "contradiccion_fecha_inauguracion": 1,
+    "ciclo_vs_curso": 1,
+    "3_fechas_independientes": 1
+  },
+  "municipal_reference_sessions": 17,
+  "pair_candidates_for_manual_review": 3,
+  "limitations": [
+    "No representative city coverage estimate",
+    "No automatic deduplication or publication",
+    "Timestamp candidate is not verified occurrence",
+    "GuiaBCN reference is curated metadata, not original page snapshots",
+    "No API model tested and no token costs measured",
+    "Licenses for municipal HTML/images not established"
+  ],
+  "source_files_sha256": {
+    "actesbiblioteques_ca_filtrado.json": "c1266931668d23d209b38d816f8ad4a5c8cbce65d5ab59ed5f576c3d04ed7291",
+    "actesmuseus_filtrado.json": "a9e4999e82981907d3c0be910c598da21303ce531eb64a9793d7f4aac7aae39d",
+    "actesturisme_ca_filtrado.json": "7ed08fe5321f0f81e917dc93e797fa2a3fc53116c9d7d0703cce74e47d123d23",
+    "localizaciones_barcelona.json": "098b44c858a0f6751fbcf9b4b84ca0115c4bd9b91dfcd8e58cbb09f10e0fae29",
+    "organizadores_barcelona.json": "bbfde79c67ad7bb266c3271f68f01ebb15774ccdc6330870e4a48b3964cf4e96"
+  }
+}

@@ -1,0 +1,689 @@
+{
+  "dataset": "actesturisme_ca",
+  "ventana": [
+    "2026-10-10",
+    "2027-01-08"
+  ],
+  "fuente": "Diputacio de Barcelona",
+  "elements": [
+    {
+      "acte_id": "agendaturisme457822524",
+      "titol": "Esmorza Collserola",
+      "data_inici": "2026-01-01 00:00:00",
+      "data_fi": "2030-12-31 23:59:59",
+      "descripcio": "La visita ''Esmorza Collserola'' inclou una visita guiada per les nostres vinyes, celler i masia tradicional, un tast de 3 vins i 1 oli ecològics, i un esmorzar de pagès amb productes artesanals.",
+      "imatge": [],
+      "acte_organitzadors": "L'Olivera",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/esmorza-collserola",
+      "telefon_contacte": [
+        "630967490"
+      ],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "Masia Can Calopa de Dalt",
+        "adreca": "BV-1468, Km, 4, 8, Sarrià-Sant Gervasi, 08017 Barcelona,Barcelona",
+        "codi_postal": "08017",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.4295590,2.0619570"
+      },
+      "url_general": "https://olivera.org/ca/activitat/esmorzar-a-la-masia-can-calopa/",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Barcelonès",
+        "Gastronomia i enoturisme",
+        "Barcelona",
+        "Enoturisme",
+        "Paisatges Barcelona"
+      ],
+      "categoria": [
+        "barcelones",
+        "gastronomia_i_enoturisme",
+        "barcelona",
+        "enoturisme",
+        "paisatges_barcelona"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "Després de visitar el celler i conèixer de prop el projecte agroecològic i social de Can Calopa, entaula’t a la cuina antiga on, a més dels nostres vins i olis, tastaràs els productes elaborats pels darrers artesans de Collserola en un autèntic esmorzar de pagès. <br/>• Taula mixta de formatges i embotits artesans catalans<br/>• Amanida de temporada<br/>• Botifarra de Cal Rovira amb mongetes del ganxet<br/>• Pa amb tomàquet<br/>• Cafè o infusió amb petit four",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme457725681",
+      "titol": "Tasta el vi de Barcelona!",
+      "data_inici": "2026-01-01 00:00:00",
+      "data_fi": "2030-12-31 23:59:59",
+      "descripcio": "La visita ''Tasta Can Calopa'' inclou una visita guiada per les nostres vinyes, celler i masia tradicional, i un tast de 3 vins i 1 oli ecològics.",
+      "imatge": [],
+      "acte_organitzadors": "L'Olivera",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/tasta-el-vi-de-barcelona-",
+      "telefon_contacte": [
+        "630967490"
+      ],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "Can Calopa de Dalt",
+        "adreca": "BV-1468, Km, 4, 8, Sarrià-Sant Gervasi, 08017 Barcelona,Barcelona",
+        "codi_postal": "08017",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.4295590,2.0615930"
+      },
+      "url_general": "https://olivera.org/ca/activitat/tasta-can-calopa/",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Barcelonès",
+        "Gastronomia i enoturisme",
+        "Barcelona",
+        "Enoturisme",
+        "Paisatges Barcelona"
+      ],
+      "categoria": [
+        "barcelones",
+        "gastronomia_i_enoturisme",
+        "barcelona",
+        "enoturisme",
+        "paisatges_barcelona"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "Una masia, vinyes recuperades, un petit celler i un projecte d’inclusió social que dona sentit a tot plegat. A la masia de Can Calopa de Dalt hi trobareu un espai natural a pocs minuts del centre de Barcelona on deixar que el temps s’aturi gaudint de les vistes al Parc de Collserola, copa en mà, per descobrir com es viu el dia a dia de la feina en l’única vinya de la ciutat de Barcelona.<br/><br/>Hi descobriràs el patrimoni rural d’una masia centenària del segle XVI i el dia a dia d’un celler com n’hi ha pocs.",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme450577063",
+      "titol": "BarcelonARCH Skyline private sailing tour",
+      "data_inici": "2026-02-01 00:00:00",
+      "data_fi": "2026-12-31 23:59:59",
+      "descripcio": "Descobreix Barcelona des del mar amb un arquitecte-guia a bord. Una experiència cultural única, sostenible i exclusiva per interpretar el skyline de la ciutat des d’una nova mirada.",
+      "imatge": [],
+      "acte_organitzadors": "Costabella Sailing Events",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/barcelonarch-skyline-private-sailing-tour",
+      "telefon_contacte": [],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "Costabella Sailing",
+        "adreca": "Barcelona",
+        "codi_postal": "",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.3903000,2.2040000"
+      },
+      "url_general": "https://costabellasailing.com/barcelonarch-skyline-experience/",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Barcelonès",
+        "Cultura i tradicions",
+        "Barcelona",
+        "Visites guiades",
+        "Costa Barcelona"
+      ],
+      "categoria": [
+        "barcelones",
+        "cultura_i_tradicions",
+        "barcelona",
+        "visites_guiades",
+        "costa_barcelona"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "BarcelonARCH és una experiència cultural única per descobrir Barcelona des del mar, interpretant el seu skyline amb un arquitecte-guia. Una proposta innovadora alineada amb Barcelona Capital Mundial de l’Arquitectura 2026, que transforma la navegació en un espai cultural no massificat.<br/><br/>Durant 3 hores, navegaràs pel litoral en un entorn íntim i inspirador, descobrint la relació entre arquitectura, història i transformació urbana. L’experiència es complementa amb un mapa interactiu digital accessible a bord.<br/><br/>Activitat en format privat per a grups (a partir de 10 persones), amb opcions de personalització.",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme459415357",
+      "titol": "La Zona, on habiten els teus pitjors malsons",
+      "data_inici": "2026-10-16 00:00:00",
+      "data_fi": "2026-10-31 23:59:59",
+      "descripcio": "Aquest Halloween, el Poble Espanyol obre les portes de la segona edició de La Zona, l'experiència de terror immersiva més extrema de Barcelona. Benvinguts a la llar dels vostres pitjors malsons.",
+      "imatge": [],
+      "acte_organitzadors": "",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/la-zona-on-habiten-els-teus-pitjors-malsons",
+      "telefon_contacte": [],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "Poble Espanyol",
+        "adreca": "Barcelona",
+        "codi_postal": "",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.3688080,2.1482730"
+      },
+      "url_general": "https://www.lazona.events/",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Castanyada i Tots Sants",
+        "Barcelonès",
+        "Cultura i tradicions",
+        "Barcelona",
+        "Espectacle"
+      ],
+      "categoria": [
+        "castanyada_i_tots_sants",
+        "barcelones",
+        "cultura_i_tradicions",
+        "barcelona",
+        "espectacle"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "ON HABITEN ELS TEUS PITJORS MALSONS<br/><br/>Només 4 nits (16, 23, 30 i 31 d’octubre), el Poble Espanyol es submergeix en una foscor absoluta amb La Zona, l'experiència de terror de més alt voltatge. Les pors del teu subconscient prenen vida en un recorregut extrem no apte per a tothom.<br/><br/>En acabar, els supervivents podran relaxar-se amb música, barra i gastronomia. Busques més intensitat? Descobreix l'Extreme Room, una sala secreta i claustrofòbica on et separaran del teu grup per intentar escapar.<br/><br/>Accés recomanat per a majors de 16 anys (menors només acompanyats d'un adult).",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme459415208",
+      "titol": "Creepy Halloween Family",
+      "data_inici": "2026-10-17 00:00:00",
+      "data_fi": "2026-11-01 23:59:59",
+      "descripcio": "El Poble Espanyol acull una nova edició de Creepy Halloween Family, l'experiència ideal per a famílies que busquen diversió, fantasia i petits ensurts en l’entorn màgic de Montjuïc.",
+      "imatge": [],
+      "acte_organitzadors": "",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/creepy-halloween-family-1",
+      "telefon_contacte": [],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "Poble Espanyol",
+        "adreca": "Barcelona",
+        "codi_postal": "",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.3688080,2.1482730"
+      },
+      "url_general": "https://www.thecreepyhalloween.com/creepy-halloween-en-barcelona-2026-poble-espanyol/",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Castanyada i Tots Sants",
+        "Barcelonès",
+        "En família",
+        "Barcelona",
+        "Espectacle"
+      ],
+      "categoria": [
+        "castanyada_i_tots_sants",
+        "barcelones",
+        "en_familia",
+        "barcelona",
+        "espectacle"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "CREEPY HALLOWEEN FAMILY: EL PLA MÉS TERRORÍFICAMENT DIVERTIT<br/><br/>Dels caps de setmana del 17 d’octubre a l’1 de novembre, el Poble Espanyol es transforma en un escenari màgic. Grans i petits seran detectius resolent enigmes, creuant dos túnels misteriosos i interactuant amb més de 30 personatges. Hi haurà espectacles de màgia, jocs i food trucks.<br/><br/>Tria la teva versió segons l'edat:<br/><br/>Haunted (10h-17h, +3 anys): ensurts suaus i ambient màgic.<br/><br/>Scream (17h-21h, +7 anys): emocions més intenses i misterioses.",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme460611748",
+      "titol": "Utopies, aquí i ara",
+      "data_inici": "2026-10-22 00:00:00",
+      "data_fi": "2026-10-22 23:59:59",
+      "descripcio": "Anna Pacheco i Ernest Cañada conversen amb Carolina del Olmo sobre experiències turístiques que amplien els imaginaris del lleure, el descans i les seves possibilitats utòpiques.",
+      "imatge": [],
+      "acte_organitzadors": "CCCB",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/utopies-aqu%C3%AD-i-ara",
+      "telefon_contacte": [
+        "933 06 41 00"
+      ],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "CCCB",
+        "adreca": "Montalegre 5,Barcelona",
+        "codi_postal": "08001",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.3838000,2.1668000"
+      },
+      "url_general": "https://www.cccb.org/ca/w/activitats/ernest-canada-anna-pacheco-i-carolina-del-olmo",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Barcelonès",
+        "Cultura i tradicions",
+        "Barcelona",
+        "Museus i monuments",
+        "Costa Barcelona",
+        "Paisatges Barcelona"
+      ],
+      "categoria": [
+        "barcelones",
+        "cultura_i_tradicions",
+        "barcelona",
+        "museus_i_monuments",
+        "costa_barcelona",
+        "paisatges_barcelona"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "Coincidint amb l’estrena del pòdcast de no-ficció Utopies del descans, Anna Pacheco i Ernest Cañada conversen amb la filòsofa Carolina del Olmo sobre altres maneres d’entendre el turisme i el descans. En un context de crisi ecosocial i dependència turística, la sessió recupera experiències reals que mostren el potencial del turisme com a espai d’emancipació i transformació. Amb la moderació de Laura Grau, reflexionen sobre el paper de la imaginació política, la literatura i l’acció col·lectiva per construir futurs més habitables i repensar el treball, les cures, el temps lliure, el turisme, el descans i les formes de vida col·lectiva.",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    },
+    {
+      "acte_id": "agendaturisme460612105",
+      "titol": "El turisme, un dret social?",
+      "data_inici": "2026-10-23 00:00:00",
+      "data_fi": "2026-10-23 23:59:59",
+      "descripcio": "Acadèmics i experts en gestió pública analitzen experiències que han buscat democratitzar l’accés al turisme com a eina de benestar social, així com explorar noves polítiques turístiques per al futur.",
+      "imatge": [],
+      "acte_organitzadors": "CCCB",
+      "acte_url": "https://www.barcelonaesmoltmes.cat/-/el-turisme-un-dret-social-",
+      "telefon_contacte": [
+        "933 06 41 00"
+      ],
+      "email": [],
+      "grup_adreca": {
+        "adreca_nom": "CCCB",
+        "adreca": "Montalegre 5,Barcelona",
+        "codi_postal": "08001",
+        "municipi_nom": "Barcelona",
+        "localitzacio": "41.3838000,2.1668000"
+      },
+      "url_general": "https://www.cccb.org/ca/w/activitats/el-turisme-un-dret-social",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "12"
+      },
+      "tags": [
+        "Barcelonès",
+        "Cultura i tradicions",
+        "Barcelona",
+        "Museus i monuments",
+        "Costa Barcelona",
+        "Paisatges Barcelona",
+        "Pirineus Barcelona"
+      ],
+      "categoria": [
+        "barcelones",
+        "cultura_i_tradicions",
+        "barcelona",
+        "museus_i_monuments",
+        "costa_barcelona",
+        "paisatges_barcelona",
+        "pirineus_barcelona"
+      ],
+      "rel_punt": "",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "Catalunya és una gran destinació turística, però prop d’un terç de la població no es pot permetre una setmana de vacances fora de casa. Aquest seminari aborda la precarietat vacacional i el repte de democratitzar l’accés al descans, amb tres taules sobre les respostes a la precarietat, la història del turisme social i el turisme com a eina de benestar. Hi participen Ernest Cañada, Soledad Bravo, Martí Boneta, Daniel Lanero Táboas, Ion Martínez Lorea, Agustín Martínez Molina, Marta Domènech i Laura García Ureña, amb la moderació d’Eva Arderius.",
+      "rel_comarca": [
+        "13"
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": ""
+    }
+  ]
+}

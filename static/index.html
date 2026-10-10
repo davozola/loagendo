@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Loagendo · Laboratorio privado</title><link rel="stylesheet" href="/app.css"></head>
+<body><header class="topbar"><div class="brand"><span class="brand-icon">✳</span><div><strong>loagendo</strong><small>laboratorio privado · Barcelona</small></div></div><div class="top-actions"><span class="privacy">● Solo en este Mac</span><button id="viewExplore" class="nav active" type="button">Explorar</button><button id="viewReview" class="nav" type="button">Revisión</button><button id="viewMetrics" class="nav" type="button">Indicadores</button></div></header>
+<main><section class="hero"><div class="eyebrow">CATÁLOGO EXPERIMENTAL · SNAPSHOT 10 OCT 2026</div><h1>¿Qué pasa en <em>Barcelona?</em></h1><p>Explora las actividades encontradas y comprueba sus fuentes antes de publicarlas. Los intervalos de fechas no siempre equivalen a sesiones confirmadas.</p></section>
+<section class="stats" id="quickStats" aria-label="Resumen"></section>
+<div class="shell"><aside class="filters"><div class="filter-header"><h2>Refinar resultados</h2><button id="clear" class="linkbutton" type="button">Limpiar</button></div>
+<label for="search">Buscar actividad o espacio</label><input id="search" placeholder="Conciertos, exposiciones, biblioteca…" autocomplete="off"/>
+<label for="date">Fecha de interés</label><input id="date" type="date" min="2026-10-10" max="2027-01-07"/>
+<label for="category">Categoría provisional</label><select id="category"><option value="">Todas las categorías</option></select>
+<label for="district">Distrito identificado</label><select id="district"><option value="">Todos (también sin identificar)</option></select><p class="aside-note">No se infiere el barrio a partir de coordenadas.</p>
+<label for="source">Fuente</label><select id="source"><option value="">Todas las fuentes</option></select>
+<label for="kind">Tipo de ficha</label><select id="kind"><option value="">Todos</option></select>
+<label for="status">Estado editorial</label><select id="status"><option value="">Todos</option></select>
+<label class="check"><input type="checkbox" id="onlySessions"/> Solo horas candidatas</label>
+<div class="tip"><strong>Cómo interpretar los resultados</strong><p>«Coincide por intervalo» no garantiza función ese día. «Hora candidata» sigue pendiente de verificación.</p></div></aside>
+<section class="content"><div class="section-bar"><div><h2 id="sectionTitle">Actividades encontradas</h2><p id="sectionDesc">Fichas de origen, no eventos publicados.</p></div><div class="counter" id="totalCount" aria-live="polite"></div></div>
+<div class="notice" id="notice">Los contenidos pertenecen a una instantánea de octubre de 2026. Las fechas, horarios y condiciones pueden haber cambiado.</div>
+<div class="cards" id="cards" aria-live="polite"></div><div class="pagination" id="pages"></div>
+<div id="metrics" class="metrics hidden"></div></section></div>
+</main>
+<div id="overlay" class="overlay hidden" role="presentation"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="panel-top"><span class="eyebrow">FICHA Y EVIDENCIAS</span><button id="closePanel" class="iconbutton" type="button" aria-label="Cerrar ficha">✕</button></div><div id="detail"></div></div></div>
+<footer>LOAGENDO / MVP privado · Sin publicación automática · Sin fotografías externas · Datos abiertos con atribución sujeta a revisión</footer><script defer src="/app.js"></script></body></html>

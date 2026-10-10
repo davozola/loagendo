@@ -1,0 +1,6263 @@
+[
+  {
+    "id": "generalitat:20260210006",
+    "title": "Festival Empremtes",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-02-13",
+    "end": "2026-11-14",
+    "venue_count": 6,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026073000004",
+    "title": "Festival Dansat",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-16",
+    "end": "2026-10-25",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026082700013",
+    "title": "Temporada Alta",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-03",
+    "end": "2026-12-08",
+    "venue_count": 7,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800017",
+    "title": "Asian Film Festival Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-22",
+    "end": "2026-11-01",
+    "venue_count": 2,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100027",
+    "title": "Octubre al Palau Sant Jordi",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800012",
+    "title": "Festival ECOSS",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-22",
+    "end": "2026-11-24",
+    "venue_count": 5,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092900029",
+    "title": "Sitges Film Festival",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-08",
+    "end": "2026-10-18",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092900033",
+    "title": "L'Alternativa",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-11-12",
+    "end": "2026-11-22",
+    "venue_count": 4,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026093000060",
+    "title": "Mostra Internacional de Films de Dones de Barcelona - MIFDB",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-09-15",
+    "end": "2026-12-10",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100600036",
+    "title": "4t Lens Dans Festival",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-11-04",
+    "end": "2026-11-14",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900008",
+    "title": "Festival de Jazz i Música Creativa de Ciutat Vella",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-08",
+    "end": "2026-12-12",
+    "venue_count": 6,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900024",
+    "title": "Sâlmon",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 10,
+    "start": "2026-10-14",
+    "end": "2026-11-03",
+    "venue_count": 6,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "diba_turismo:agendaturisme459415208",
+    "title": "Creepy Halloween Family",
+    "source": "diba_turismo",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 9,
+    "start": "2026-10-17",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/creepy-halloween-family-1"
+  },
+  {
+    "id": "diba_turismo:agendaturisme459415357",
+    "title": "La Zona, on habiten els teus pitjors malsons",
+    "source": "diba_turismo",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 9,
+    "start": "2026-10-16",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/la-zona-on-habiten-els-teus-pitjors-malsons"
+  },
+  {
+    "id": "generalitat:20251027020",
+    "title": "Més Gaudí al MNAC: Reflexos i analogies",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 7,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617073",
+    "title": "Un museu fora del museu",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 7,
+    "start": "2026-06-19",
+    "end": "2026-11-30",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600019",
+    "title": "Cafès científics de la Universitat de Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 7,
+    "start": "2026-09-30",
+    "end": "2027-01-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "NO_PRICE_TEXT",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100600012",
+    "title": "Congrés Internacional Dante i Gaudí: el sagrat, entre la poesia i l'art",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 7,
+    "start": "2026-10-06",
+    "end": "2026-10-10",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED",
+      "NO_PRICE_TEXT",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques423353450",
+    "title": "Primeres lectures",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-01-21",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-6"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques424561715",
+    "title": "Cicle temàtic. 'Post Scriptum III: la imatge després de la paraula', a càrrec de Miquel del Pozo",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-15",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/post-scriptum-iii"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques435555018",
+    "title": "Primeres lectures",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-09-30",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-c%C3%B2pia-6-"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques435648206",
+    "title": "Club de lectura general",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-07-21",
+    "end": "2027-05-24",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lctura-general"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques435648244",
+    "title": "Club de lectura Literatura asiàtica",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-07-01",
+    "end": "2027-06-30",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-literatura-asi%C3%A0tica"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques435648262",
+    "title": "Club de lectura de llengua catalana (Nivell bàsic)",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-07-01",
+    "end": "2027-06-30",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-de-llengua-catalana-nivell-b%C3%A0sic-"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques435648537",
+    "title": "Club de lectura a mida. Literatura i Arquitectura",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-06-30",
+    "end": "2027-02-19",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-a-mida.-literatura-coreana"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques438025016",
+    "title": "Lletra petita. Llibres a escena. Posa’t el meu barret",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2025-10-22",
+    "end": "2026-10-22",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/lletra-petita.-llibres-a-escena.-posa-t-el-meu-barret"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques438666679",
+    "title": "Lectures compartides",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-01-20",
+    "end": "2026-11-25",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-c%C3%B2pia-6-"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques446372894",
+    "title": "Contes a la mà",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-02-04",
+    "end": "2026-11-04",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346813/contes-a-la-ma-crispetu"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques451943370",
+    "title": "Lletra petita. Contes a la mà: 'Llibres-joc, com inventar una història'",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-05-21",
+    "end": "2026-10-21",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347095/agenda_infantil_maig_26"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457213250",
+    "title": "Lectures compartides",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-11-17",
+    "end": "2026-11-25",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bis-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457386641",
+    "title": "Club de lectura puntual. Literatura italiana",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-20",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346918/club-de-lectura-puntual-literatura-italiana"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques459997137",
+    "title": "Laboratori de creació i experimentació literària",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-15",
+    "end": "2026-11-12",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346940/laboratoricreacio_agenda"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460305280",
+    "title": "Obrim per obres. Quan la biblioteca tanca i nosaltres continuem dins",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-19",
+    "end": "2026-11-02",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346872/agenda.-obrim-per-obres"
+  },
+  {
+    "id": "generalitat:20260619041",
+    "title": "Festival 42",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-11-04",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260630021",
+    "title": "Balandrau, vent salvatge",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026071000011",
+    "title": "36è Festival L'Hora del Jazz",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-09-12",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026071000020",
+    "title": "Biennal de Pensament",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-13",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026071700013",
+    "title": "XXI Festival Internacional de Putxinel·lis",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-09",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026073000005",
+    "title": "Cicle Remenuts",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-09-20",
+    "end": "2027-04-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600022",
+    "title": "9è QLit - Festival de literatura queer",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-15",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600025",
+    "title": "IndiFest - Festival de Cinema Indígena de Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-05",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600031",
+    "title": "24è Festival In-Edit Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-29",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700009",
+    "title": "Barcelona Calling l’Orient Mitjà",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-11-10",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100022",
+    "title": "Octubre al Harlem Jazz Club",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100024",
+    "title": "Octubre al Casino l'Aliança",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100026",
+    "title": "Octubre al Marula Café",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200002",
+    "title": "Octubre a la Sala Almo2bar",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200003",
+    "title": "Octubre a la Sala Apolo",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200005",
+    "title": "Octubre a la sala City Hall Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200007",
+    "title": "Octubre a La Deskomunal",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200008",
+    "title": "Octubre al Club de Jazz Jamboree",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200010",
+    "title": "Festival Escena Poblenou 2026",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-22",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200022",
+    "title": "Cicle #Pontaeri 2026",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-09-22",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200050",
+    "title": "MIRA Digital Arts Festival",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-11-06",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300009",
+    "title": "Octubre a La Nau",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300010",
+    "title": "Octubre a la Sala Laut",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300012",
+    "title": "Octubre a la Sala Luz de Gas",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300013",
+    "title": "Octubre a la sala Moog",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300016",
+    "title": "Octubre a la Sala Paral·lel 62",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300018",
+    "title": "Octubre a la Sala Razzmatazz",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300020",
+    "title": "Octubre al Club Sauvage",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300022",
+    "title": "Octubre a la Sala Upload",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300024",
+    "title": "Octubre a la Sala VOL",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300028",
+    "title": "Octubre a la Sala Wolf",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300030",
+    "title": "Octubre a la Sala Slow Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092500011",
+    "title": "Octubre al Centre Artesà Tradicionàrius (C.A.T)",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092500012",
+    "title": "Octubre al Conservatori Liceu",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092900045",
+    "title": "Octubre a l'Heliogàbal",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700045",
+    "title": "Festival 48h Open House BCN",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 6,
+    "start": "2026-10-24",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "guiabcn:G16",
+    "title": "Mostra d oficis del Coll",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-24",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/mostra-d-oficis-del-coll_99400788780.html"
+  },
+  {
+    "id": "guiabcn:G17",
+    "title": "Challenge Barcelona Triathlon 2026",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-24",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/_99400228908.html"
+  },
+  {
+    "id": "guiabcn:G18",
+    "title": "Bons i dolents",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-06",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/teatre-bons-i-dolents_99400783773.html"
+  },
+  {
+    "id": "guiabcn:G19",
+    "title": "XXI Festival Internacional de Putxinel·lis",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-09",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/"
+  },
+  {
+    "id": "guiabcn:G20",
+    "title": "Escena – Barcelona Districte Cultural",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-08",
+    "end": "2026-12-19",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/"
+  },
+  {
+    "id": "guiabcn:G21",
+    "title": "Swab Barcelona 2026",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-08",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/"
+  },
+  {
+    "id": "guiabcn:G22",
+    "title": "Setmana del Cineclubisme Català",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-06",
+    "end": "2026-10-20",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/"
+  },
+  {
+    "id": "guiabcn:G27",
+    "title": "Taller digital Explora la ciutat màquina (machinarium)",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-11-06",
+    "end": "2026-11-20",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "dos_fechas_mismo_registro"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/agenda/detall/taller-digital-explora-la-ciutat-maquina-machinarium_99400786430.html"
+  },
+  {
+    "id": "guiabcn:G29",
+    "title": "Taller Narració de contes i altres secrets",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-11-13",
+    "end": "2026-12-04",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "limite_curso_vs_taller"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-narracio-de-contes-i-altres-secrets-amb-sherezade-bardaji_99400764245.html"
+  },
+  {
+    "id": "guiabcn:G30",
+    "title": "Taller Disparadors de la creativitat",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-12-03",
+    "end": "2026-12-17",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "limite_curso_vs_taller"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-disparadors-de-la-creativitat-amb-myriam-soteras_99400751485.html"
+  },
+  {
+    "id": "guiabcn:G31",
+    "title": "Activitat familiar Espai moviment",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-14",
+    "end": "2026-11-25",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "subseries_por_edad"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/agenda/detall/activitat-familiar-espai-moviment_99400753159.html"
+  },
+  {
+    "id": "guiabcn:G32",
+    "title": "Taller per a dones Mujeres enteras",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-02",
+    "end": "2026-11-27",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ciclo_vs_curso"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-per-a-dones-mujeres-enteras_99400717597.html"
+  },
+  {
+    "id": "guiabcn:G35",
+    "title": "Taller infantil Música i creativitat en família",
+    "source": "guiabcn",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 5,
+    "start": "2026-10-16",
+    "end": "2026-12-11",
+    "venue_count": 1,
+    "flags": [
+      "3_fechas_independientes",
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/cursos/detall/taller-infantil-musica-i-creativitat-en-familia_99400786187.html"
+  },
+  {
+    "id": "generalitat:20251007024",
+    "title": "Exposició \"Sim, el dibuix i la guerra\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-05-08",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251024004",
+    "title": "Exposició \"Latent structures\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-01-22",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251024033",
+    "title": "Exposició \"Francesc Vidal i Jevellí al Palau Güell. Interiors i mobles\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-11-01",
+    "end": "2027-09-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605032",
+    "title": "Memòria en temps de guerra. Visita guiada a la Torre Bellesguard, el Pati Llimona i la Basílica dels Sants Just i Pastor",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-11-12",
+    "end": "2026-11-12",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605033",
+    "title": "Memòria en temps de guerra. Visita guiada a la Torre Bellesguard, el Pati Llimona i la Basílica dels Sants Just i Pastor",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-12-03",
+    "end": "2026-12-03",
+    "venue_count": 3,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605043",
+    "title": "Espais de poder. Visita guiada a la Torre Bellesguard i el Monestir de Pedralbes",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-10-31",
+    "end": "2026-10-31",
+    "venue_count": 2,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605044",
+    "title": "Espais de poder. Visita guiada a la Torre Bellesguard i el Monestir de Pedralbes",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-11-14",
+    "end": "2026-11-14",
+    "venue_count": 2,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605045",
+    "title": "Espais de poder. Visita guiada a la Torre Bellesguard i el Monestir de Pedralbes",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-12-12",
+    "end": "2026-12-12",
+    "venue_count": 2,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260623021",
+    "title": "Exposició \"Gaudí-Miró-Gomis: Deconstructed\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-07-08",
+    "end": "2027-01-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070300008",
+    "title": "Exposició \"Ecos. Vídeos de la donació de la Fundació Han Nefkens\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-07-09",
+    "end": "2027-01-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070300010",
+    "title": "Exposició \"Pere Portabella: la mirada compromesa\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-07-09",
+    "end": "2027-01-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "END_DATE_APPROXIMATE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100800010",
+    "title": "8a Festa de Moros i Cristians de la Vila de Gràcia",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 4,
+    "start": "2026-10-24",
+    "end": "2026-10-24",
+    "venue_count": 2,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "MULTI_VENUE_SESSION_NOT_RESOLVED"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques428018671",
+    "title": "Nascuts per Llegir. A la plaça fan ballades",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-15",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques440426159",
+    "title": "EstasON. Pintant la història amb ciència",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-02",
+    "end": "2026-11-03",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason.-descobrim-la-fauna-urbana-."
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques445608577",
+    "title": "EstasON. Desafiant la física",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-16",
+    "end": "2026-11-17",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques448520506",
+    "title": "EstasON. STEAM fantàstic",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-12",
+    "end": "2026-11-13",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-grans"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques448614012",
+    "title": "Exposició La Capsa de les besties",
+    "source": "diba_bibliotecas",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-21",
+    "end": "2026-12-11",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/exposicio-capsa-de-les-besties-biblioteca-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques450958111",
+    "title": "Primeres lectures",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-25",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-2026"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques450960837",
+    "title": "Primeres lectures",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-28",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-mayo-2026"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques455788635",
+    "title": "EstasON. Simetria i reflexió, experimentem amb miralls!",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-15",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-geometriques-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques455789819",
+    "title": "EstasON. Descobrim la taula periòdica",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-29",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor-1"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457214714",
+    "title": "Primeres lectures",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-25",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-novembre-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457383247",
+    "title": "Exposició fotogràfica “Fa 25 anys al Poble-sec: memòria d’un inici. Inauguració de la Biblioteca Francesc Boix'",
+    "source": "diba_bibliotecas",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-02",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-exposicio-fotografica-fa-25-anys-al-poble-sec-memoria-d-un-inici-inauguracio-de-la-biblioteca-francesc-boix"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques459576876",
+    "title": "Festival Munt de mots - Tocats de l’ala",
+    "source": "diba_bibliotecas",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-22",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/festival-munt-de-mots"
+  },
+  {
+    "id": "diba_turismo:agendaturisme460611748",
+    "title": "Utopies, aquí i ara",
+    "source": "diba_turismo",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-22",
+    "end": "2026-10-22",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/utopies-aqu%C3%AD-i-ara"
+  },
+  {
+    "id": "diba_turismo:agendaturisme460612105",
+    "title": "El turisme, un dret social?",
+    "source": "diba_turismo",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-23",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/el-turisme-un-dret-social-"
+  },
+  {
+    "id": "generalitat:20251024017",
+    "title": "Inauguració de la Sala del Fumador restaurada a la Casa Vicens",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-16",
+    "end": "2026-11-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251027024",
+    "title": "Exposició \"A recer del Park Güell\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-31",
+    "end": "2026-12-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251118010",
+    "title": "Oques Grasses",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-05",
+    "end": "2026-10-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251118013",
+    "title": "El Tenoriu",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-21",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260304019",
+    "title": "Descobrir la Basílica de la Sagrada Família amb tots els sentits",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-12-13",
+    "end": "2026-12-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260304028",
+    "title": "Exposició \"Sagrada Família: la força d'un somni compartit\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-01",
+    "end": "2026-12-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260305002",
+    "title": "Exposició \"Avinguda Gaudí, una memòria viva entre la Sagrada Família i l'Hospital de Sant Pau\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-07-04",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260305010",
+    "title": "Cicle \"Les cadires de Tàpies. Invocar l’escletxa\"",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-03-12",
+    "end": "2026-12-03",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260305012",
+    "title": "Cicle \"Seguint el sol. Destapant la mirada\"",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-03-21",
+    "end": "2026-12-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260409011",
+    "title": "Gaudí: l'experiència de realitat virtual",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-02-26",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260410008",
+    "title": "Exposició \"Arquitectura amb propòsit educatiu\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-04-10",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260512007",
+    "title": "Visita \"La gata Lluna del Monestir de Pedralbes\"",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-05-31",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260608023",
+    "title": "Aida",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-23",
+    "end": "2026-10-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260611033",
+    "title": "Mamma Mia!",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-26",
+    "end": "2026-12-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260616062",
+    "title": "Palabra de perro",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-28",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260616065",
+    "title": "La truita",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-06-27",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617052",
+    "title": "El Mago Pop",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-14",
+    "end": "2026-12-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260623020",
+    "title": "La setmana del diluvi",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-23",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260630026",
+    "title": "Codi Gaudí",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-22",
+    "end": "2027-01-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260630046",
+    "title": "Obra col·lectiva de trencadís",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-06-01",
+    "end": "2027-02-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026071400057",
+    "title": "Curs d’història del moble europeu fins al 1900",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-30",
+    "end": "2027-06-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026072900011",
+    "title": "Exposició \"L'era atòmica\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-26",
+    "end": "2027-05-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026081800021",
+    "title": "Exposició \"Pau Casals, un músic al servei de la pau\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-21",
+    "end": "2027-01-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026090200007",
+    "title": "Concert de carilló al Palau de la Generalitat",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-01",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026090200008",
+    "title": "Concert de carilló al Palau de la Generalitat",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-12-06",
+    "end": "2026-12-06",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600003",
+    "title": "Les ungles",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-30",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600018",
+    "title": "El Cadell",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-30",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600027",
+    "title": "La última noche con mi hermano",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-15",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600028",
+    "title": "Exposició de Josep Maria de Sucre",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-16",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600029",
+    "title": "Gota",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-15",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600030",
+    "title": "Exposició \"L'horitzó abstracte\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-09-16",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700001",
+    "title": "Calderada",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-20",
+    "end": "2026-10-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700005",
+    "title": "La llei de la gravetat",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-21",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700012",
+    "title": "Tenet",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-19",
+    "end": "2026-12-06",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700015",
+    "title": "L'hostal de les tres Camèlies",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-26",
+    "end": "2027-01-03",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700016",
+    "title": "L'allau",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-12-09",
+    "end": "2026-12-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091700019",
+    "title": "La jove Aïda",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-03",
+    "end": "2026-10-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800006",
+    "title": "I Capuleti e i Montecchi",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-30",
+    "end": "2026-11-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800023",
+    "title": "La clemenza di Tito",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-25",
+    "end": "2026-12-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100023",
+    "title": "El trencanous",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-12-08",
+    "end": "2026-12-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100028",
+    "title": "La bohème",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-12-30",
+    "end": "2027-01-19",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200007",
+    "title": "B-Murals Fest 2026",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-10",
+    "end": "2026-10-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200025",
+    "title": "Jornades Europees de Patrimoni a Catalunya",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-09",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100600019",
+    "title": "Medusa. Crónica de una desesperanza",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-11-22",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700039",
+    "title": "37è Cicle d’Orgue de la Catedral de Barcelona",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-21",
+    "end": "2027-05-19",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100800042",
+    "title": "Pau, la vida de Pau Casals",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-15",
+    "end": "2026-10-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "NO_SCHEDULE_SOURCE"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900027",
+    "title": "Berto Romero",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-01",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900028",
+    "title": "La Ruina",
+    "source": "generalitat",
+    "kind": "program",
+    "eligibility": "review",
+    "priority_score_not_probability": 3,
+    "start": "2026-10-08",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "PROGRAM_MAY_CONTAIN_CHILD_EVENTS"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "guiabcn:G01",
+    "title": "Exposició 'L'arsenal'",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-02",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-l-arsenal_99400785178.html"
+  },
+  {
+    "id": "guiabcn:G02",
+    "title": "Exposició Jardí interior",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-09-07",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-jardi-interior_99400733865.html"
+  },
+  {
+    "id": "guiabcn:G03",
+    "title": "Exposició Festival Maker: Del residu al disseny tèxtil",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-01",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/es/detall/exposicio-festival-maker-del-residu-al-disseny-textil_99400698645.html"
+  },
+  {
+    "id": "guiabcn:G04",
+    "title": "Exposició Sortint del marc",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-01",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-sortint-del-marc_99400740537.html"
+  },
+  {
+    "id": "guiabcn:G05",
+    "title": "Exposició Out-of-map. Narratives feministes de l espai públic",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-08",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-out-of-map-narratives-feministes-de-l-espai-public_99400762344.html"
+  },
+  {
+    "id": "guiabcn:G06",
+    "title": "Exposició Associació teatral El Partiquí. Escenografia de 50 anys del servei",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-09-18",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/_99400755626.html"
+  },
+  {
+    "id": "guiabcn:G07",
+    "title": "Exposició Resistències de dones a Catalunya i Palestina",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-05",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-resistencies-de-dones-a-catalunya-i-palestina_99400758638.html"
+  },
+  {
+    "id": "guiabcn:G08",
+    "title": "Exposició Venim d elles",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-05",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-venim-d-elles_99400786475.html"
+  },
+  {
+    "id": "guiabcn:G09",
+    "title": "Exposició Mostra fotogràfica de les activitats organitzades per l avv durant el curs 2025-2026",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-06",
+    "end": "2026-10-20",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-mostra-fotografica-de-les-activitats-organitzades-per-l-avv-durant-el-curs-2025-2026_99400762130.html"
+  },
+  {
+    "id": "guiabcn:G10",
+    "title": "Exposició Parelles artístiques 2026",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-01",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/detall/exposicio-parelles-artistiques-2026_99400703881.html"
+  },
+  {
+    "id": "guiabcn:G11",
+    "title": "Exposició Viure l espai públic: Activisme veïnal i recuperació de la festa al carrer a Sarrià",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-09-28",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-viure-l-espai-public-activisme-veinal-i-recuperacio-de-la-festa-al-carrer-a-sarria-1975-1979_99400751589.html"
+  },
+  {
+    "id": "guiabcn:G12",
+    "title": "Exposició Identitats. Fotografia comunitària a la Barceloneta",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-05-14",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-identitats-fotografia-comunitaria-a-la-barceloneta_99400780838.html"
+  },
+  {
+    "id": "guiabcn:G13",
+    "title": "Exposició Llum de mar i terra",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-30",
+    "end": "2026-11-20",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-llum-de-mar-i-terra_99400770224.html"
+  },
+  {
+    "id": "guiabcn:G14",
+    "title": "Exposició Urbs",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-05",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/_99400786543.html"
+  },
+  {
+    "id": "guiabcn:G15",
+    "title": "Exposició Festes del Barri: 10 anys de concurs de Pintura ràpida",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-09-28",
+    "end": "2026-10-20",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/agenda/detall/exposicio-festes-del-barri-10-anys-de-concurs-de-pintura-rapida_99400703492.html"
+  },
+  {
+    "id": "guiabcn:G23",
+    "title": "Exposició Una història americana",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-24",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "ficha_heredada_sin_reverificacion_turno"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-una-historia-americana-de-marion-scemama-i-david-wojnarowicz_99400756628.html"
+  },
+  {
+    "id": "guiabcn:G24",
+    "title": "Exposició Menys diazepam i més costura",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-02",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/exposicio-menys-diazepam-i-mes-costura_99400697583.html"
+  },
+  {
+    "id": "guiabcn:G25",
+    "title": "Exposició Liminal",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-11-02",
+    "end": "2026-11-18",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "contradiccion_fecha_inauguracion"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/agenda/detall/exposicio-liminal_99400786065.html"
+  },
+  {
+    "id": "guiabcn:G26",
+    "title": "Exposició Un camí de 10 anys fet per gegants",
+    "source": "guiabcn",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/detall/exposicio-un-cami-de-10-anys-fet-per-gegants_99400720059.html"
+  },
+  {
+    "id": "guiabcn:G28",
+    "title": "Teatre L’esquerda",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-11-26",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/teatre-l-esquerda_99400762373.html"
+  },
+  {
+    "id": "guiabcn:G39",
+    "title": "Taller Cuina terrorífica",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-27",
+    "end": "2026-10-27",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-cuina-terrorifica-nou_99400770362.html"
+  },
+  {
+    "id": "guiabcn:G40",
+    "title": "Passatge del terror",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-28",
+    "end": "2026-10-28",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/passatge-del-terror_99400718379.html"
+  },
+  {
+    "id": "guiabcn:G41",
+    "title": "Dansa NO-DO",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-23",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/es/detall/dansa-no-do_99400786058.html"
+  },
+  {
+    "id": "guiabcn:G42",
+    "title": "Concert La Juju",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-31",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/es/detall/concert-la-juju_99400786044.html"
+  },
+  {
+    "id": "guiabcn:G43",
+    "title": "Taller Carbasses",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-10-23",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-carbasses_99400466632.html"
+  },
+  {
+    "id": "guiabcn:G44",
+    "title": "Taller Fit dansa",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-12-12",
+    "end": "2026-12-12",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-fit-dansa_99400741569.html"
+  },
+  {
+    "id": "guiabcn:G45",
+    "title": "Visita Museu de les Drassanes",
+    "source": "guiabcn",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 2,
+    "start": "2026-11-27",
+    "end": "2026-11-27",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "meeting_point_ne_organizer"
+    ],
+    "source_url": "https://agenda500.barcelona.cat/es/detall/visita-museu-de-les-drassanes_99400740569.html"
+  },
+  {
+    "id": "guiabcn:G33",
+    "title": "Taller infantil Juguem i interpretem",
+    "source": "guiabcn",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": 1,
+    "start": "2026-10-05",
+    "end": "2026-11-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "curso_regular"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-infantil-juguem-i-interpretem_99400753817.html"
+  },
+  {
+    "id": "guiabcn:G34",
+    "title": "Taller infantil Circ (de 6 a 12 anys)",
+    "source": "guiabcn",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": 1,
+    "start": "2026-10-05",
+    "end": "2026-11-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "curso_regular"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-infantil-circ-de-6-a-12-anys_99400684767.html"
+  },
+  {
+    "id": "guiabcn:G36",
+    "title": "Taller Cuina infantil (de 8 a 12 anys)",
+    "source": "guiabcn",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": 1,
+    "start": "2026-10-05",
+    "end": "2026-12-14",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "curso_regular"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-cuina-infantil-de-8-a-12-anys_99400741474.html"
+  },
+  {
+    "id": "guiabcn:G37",
+    "title": "Taller Ioga Ashtanga",
+    "source": "guiabcn",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": 1,
+    "start": "2026-10-05",
+    "end": "2026-12-14",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "curso_regular"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-ioga-ashtanga_99400775831.html"
+  },
+  {
+    "id": "guiabcn:G38",
+    "title": "Taller infantil Dansa i balls urbans",
+    "source": "guiabcn",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": 1,
+    "start": "2026-09-28",
+    "end": "2026-11-30",
+    "venue_count": 1,
+    "flags": [
+      "BENCHMARK_INTENTIONAL_NONRANDOM",
+      "NO_PRIMARY_PAGE_SNAPSHOT",
+      "curso_regular"
+    ],
+    "source_url": "https://guia.barcelona.cat/ca/detall/taller-infantil-dansa-i-balls-urbans-nou_99400786188.html"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques388840320",
+    "title": "Els Esclavitzadors peninsulars a les Antilles espanyoles i les seves inversions a Barcelona, amb Martín Rodrigo Alharilla",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-28",
+    "end": "2026-10-28",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/petjada-esclavista"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques448613868",
+    "title": "Nascuts per llegir: L'aniversari del Petit Ós",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-12",
+    "end": "2026-11-13",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os-biblioteca-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques455788692",
+    "title": "EstasON. Investigadores del mar!",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-19",
+    "end": "2026-10-20",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-de-la-barcelona-del-futur-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques456941545",
+    "title": "Nascuts per Llegir. L’aniversari del Petit Ós",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-12",
+    "end": "2026-11-13",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457212059",
+    "title": "Contes a la mà",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-28",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-octubre-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457212131",
+    "title": "Contes a la mà",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-03",
+    "end": "2026-11-04",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-novembre-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457212194",
+    "title": "Lectures compartides",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-27",
+    "end": "2026-10-28",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-octubre-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457212230",
+    "title": "Lectures compartides",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-24",
+    "end": "2026-11-25",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques457381512",
+    "title": "Narració 'Contes a la mà', a càrrec de Mar González",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-03",
+    "end": "2026-12-03",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347228/narraci%C3%B3-contes-a-la-m%C3%A0-a-c%C3%A0rrec-de-mar-gonz%C3%A1lez-c%C3%B2pia-"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques458493377",
+    "title": "'Narcisa i Clementina. Quan les paraules canten', de Laberta Delpoblet",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-30",
+    "end": "2026-11-30",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/421127869/-narcisa-i-clementina.-quan-les-paraules-canten-de-laberta-delpoblet"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques458868504",
+    "title": "La Colla supersònica",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-21",
+    "end": "2026-10-21",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/colla-supers%C3%B2nica"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques459573230",
+    "title": "Presentació de llibre. “La sombra de Lina”",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-06",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-llibre-sombra-de-lina"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques459577133",
+    "title": "Setmana de l’àlbum. Tocar els colors: un taller de percepció sensorial amb el llibre 'El llibre negre dels colors'.",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-10",
+    "end": "2026-11-11",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-de-percepci%C3%B3-sensorial-el-llibre-negre-dels-colors"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460600045",
+    "title": "Xerrada 'Catalunya i la petjada esclavista. L’impacte del tràfic d’esclaus atlàntic en les societats africanes',",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-13",
+    "end": "2026-10-13",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/15755707/ag-xerrada-catalunya-i-la-petjada-esclavista-l-impacte-del-trafic-d-esclaus-atlantic-en-les-societats-africanes"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460864789",
+    "title": "Túnel del terror",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-30",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/tunel-del-terror"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460864933",
+    "title": "Sorollem poesia",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/sorollem-poesia"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460864978",
+    "title": "Presentació de tres llibres de Lluís Carrasco Martínez",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-14",
+    "end": "2026-10-15",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-de-tres-llibres-de-lluis-carrasco-martinez"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques460866280",
+    "title": "Lletra petita. La veritat de les princeses",
+    "source": "diba_bibliotecas",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-05",
+    "end": "2026-11-06",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "NEXT_DAY_END_REVIEW",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lletra-petita.-la-veritat-de-les-princeses"
+  },
+  {
+    "id": "generalitat:20251021017",
+    "title": "Exposició \"Digues, cosa. Joan Brossa i el poema objecte\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2025-11-04",
+    "end": "2027-06-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251024031",
+    "title": "Exposició \"Gaudí: finestres al futur\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-04-21",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251112011",
+    "title": "Exposició \"Basel Abbas i Ruanne Abou-Rahme\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-02-13",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251112014",
+    "title": "Exposició \"Anna Moreno. La tercera torsió\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-02-05",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20251217007",
+    "title": "Exposició \"La invenció del temps\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2025-12-13",
+    "end": "2027-09-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260203016",
+    "title": "Exposició \"Àngel Jové. De intactu\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-03-19",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260217019",
+    "title": "Trascendidos",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260225042",
+    "title": "David Navarro",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-23",
+    "end": "2026-10-23",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260226020",
+    "title": "Exposició \"La volta catalana. De la tradició a la innovació\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-02-21",
+    "end": "2026-12-05",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260304014",
+    "title": "Per Nadal l'originalitat és tornar a l'origen",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-18",
+    "end": "2026-12-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260304037",
+    "title": "Exposició \"Intramurs. El bressol de l’arquitectura moderna a Catalunya (1872-1962)\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-04-16",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260309001",
+    "title": "Exposició \"Joan Miró. Cercles\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-03-13",
+    "end": "2028-03-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260401016",
+    "title": "Intervenció artística \"Vesica Piscis\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-03-26",
+    "end": "2026-10-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402037",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-10",
+    "end": "2026-10-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402038",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-12",
+    "end": "2026-10-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402039",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-06",
+    "end": "2026-11-06",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402040",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-25",
+    "end": "2026-11-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402041",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-04",
+    "end": "2026-12-04",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402042",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-27",
+    "end": "2026-12-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402043",
+    "title": "Barcelona Guitar Trio & Dance",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-30",
+    "end": "2026-12-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402091",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-11",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402092",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-18",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402093",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-25",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402094",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-01",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402095",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-08",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402096",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-15",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402097",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-22",
+    "end": "2026-11-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402098",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-29",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402099",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-06",
+    "end": "2026-12-06",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402100",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-08",
+    "end": "2026-12-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402101",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-24",
+    "end": "2026-12-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402102",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-31",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260402103",
+    "title": "Gran Gala Flamenc",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2027-01-01",
+    "end": "2027-01-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260410030",
+    "title": "Exposició \"Gotes d'Arxiu: Som les Drassanes\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-03-20",
+    "end": "2026-11-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260410035",
+    "title": "Exposició \"L'entrada a un bosc\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-04-25",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260424004",
+    "title": "Ricard Viñes a París: diari d'un pianista",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-05-28",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260504004",
+    "title": "Exposició \"Ocells-estels\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-04-13",
+    "end": "2027-03-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260507015",
+    "title": "Exposició \"Instrumental Baschet. La utopia resonant\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-04-17",
+    "end": "2027-01-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260514015",
+    "title": "Exposició \"Barcelona i el cel: globus, aeroplans i fotografia\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-11",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260519003",
+    "title": "Aurèlia Muñoz",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-10",
+    "end": "2027-03-14",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260526037",
+    "title": "Exposició \"El culte a la bellesa\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-05-21",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260527013",
+    "title": "La flauta màgica de Wolfgang Amadeus Mozart",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-07",
+    "end": "2026-12-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260527050",
+    "title": "La traviata, de G. Verdi",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605004",
+    "title": "Exposició \"Vuit\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-11",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605006",
+    "title": "Exposició \"Declaració d’amor a Lenin\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-11",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605025",
+    "title": "Verdaguer i Gaudí. Visita guiada a la Torre Bellesguard i Vil·la Joana",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-30",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605026",
+    "title": "Verdaguer i Gaudí. Visita guiada a la Torre Bellesguard i Vil·la Joana",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-27",
+    "end": "2026-11-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605048",
+    "title": "Exposició \"Llegir la processó de Corpus. Objectes per fabular i pregar, honorar, afirmar i sentir\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-01",
+    "end": "2026-10-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260605049",
+    "title": "Exposició \"Tèrbol. Territori i visions submarines\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-11",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260611028",
+    "title": "Exposició \"La Seat: Fàbrica de Transformacions\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-05",
+    "end": "2027-02-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260612020",
+    "title": "Sergi Polo",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-04",
+    "end": "2026-12-04",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260612022",
+    "title": "Sergi Polo",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-18",
+    "end": "2026-12-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260615043",
+    "title": "Ella era Anita",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-19",
+    "end": "2026-10-19",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260616005",
+    "title": "Fills: no deu ser tan difícil!",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-24",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617011",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-27",
+    "end": "2026-10-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617014",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-13",
+    "end": "2026-11-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617015",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-17",
+    "end": "2026-11-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617016",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-20",
+    "end": "2026-11-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617017",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-24",
+    "end": "2026-11-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617018",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-27",
+    "end": "2026-11-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617019",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-01",
+    "end": "2026-12-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617020",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-29",
+    "end": "2026-12-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617021",
+    "title": "Gran Gala Flamenco",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-30",
+    "end": "2026-12-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260617031",
+    "title": "Màgic Pablo - El gran repte",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-18",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260619007",
+    "title": "Lover: A Tribute To Taylor Swift",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-24",
+    "end": "2026-11-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626001",
+    "title": "Gustavo Dudamel – Filharmònica de Nova York",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-12",
+    "end": "2026-10-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626005",
+    "title": "Concert solidari \"Mare Mundi. Un nou horitzó per a l’Alzheimer i l’envelliment\"",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-13",
+    "end": "2026-10-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626015",
+    "title": "Marina Herlop",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-16",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626017",
+    "title": "Carta blanca a Charlotte Bray",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626024",
+    "title": "Descobreix la Banda!",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626026",
+    "title": "La Quarta de Xostakóvitx",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626028",
+    "title": "Rhapsody in Blue",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-18",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626029",
+    "title": "Brahms, Un rèquiem alemany",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-21",
+    "end": "2026-10-21",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626032",
+    "title": "David Khrikuli",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2026-10-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626034",
+    "title": "La Tercera de Mahler",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2026-10-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626038",
+    "title": "Concert per a piano de Chopin",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-23",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626040",
+    "title": "Orquestra Sònica",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-24",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260626041",
+    "title": "Concert per a nadons",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-24",
+    "end": "2026-10-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260629014",
+    "title": "Los Sara Fontan",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-29",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:20260629016",
+    "title": "Abbey Road – The Beatles Show & Orchestra",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-31",
+    "end": "2026-10-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070300007",
+    "title": "Exposició \"Contrainformació: Video-nou / Servei de vídeo comunitari\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-09",
+    "end": "2027-01-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070600011",
+    "title": "Exposició \"Obrir l'arxiu 08 Sense títol (1930)\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-18",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070600012",
+    "title": "Exposició \"Manteniment\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-17",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070600023",
+    "title": "Exposició \"MEAM Hall\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-10",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070600024",
+    "title": "Exposició \"Viatge en el temps per les Drassanes Reials de Barcelona\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-17",
+    "end": "2027-03-14",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070700005",
+    "title": "Exposició \"Feminismes fílmics: 1976-2026\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-09",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070900012",
+    "title": "Exposició \" De cua d'ull\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-19",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070900013",
+    "title": "Exposició \"Randa Maroufi\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-24",
+    "end": "2027-03-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026070900014",
+    "title": "Exposició \"Nora Aurrekoetxea\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-24",
+    "end": "2027-03-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026071700004",
+    "title": "Exposició \"Modèliques. Ciutats i utopies 1859 - 1958\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-23",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026072400019",
+    "title": "Exposició \"Aurèlia Muñoz. Ens\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-05",
+    "end": "2027-03-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026072700002",
+    "title": "Exposició \"Gaudí, orígens. Forjant la tradició\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-16",
+    "end": "2027-05-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026072700003",
+    "title": "Exposició \"Picasso i l’arquitectura\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-20",
+    "end": "2027-03-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026072800020",
+    "title": "Exposició \"Milicià ferit: el rescat d'una obra insalvable\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-05-07",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026081300010",
+    "title": "SAGA Barcelona Game Fest",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-09",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026081800019",
+    "title": "Rèquiem de Verdi",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-03",
+    "end": "2026-11-04",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026081800028",
+    "title": "L’esperit d’una època: música de Narcisa Freixas i Pau Casals",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-26",
+    "end": "2026-11-26",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026081800029",
+    "title": "Orquestra Julià Carbonell de les Terres de Lleida i Pagès Corella",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-29",
+    "end": "2026-10-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026083100004",
+    "title": "Benvingut Jonathan Nott",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-03",
+    "end": "2026-12-03",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026083100010",
+    "title": "Concert de l’Oratori El Pessebre al Palau de la Música",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-15",
+    "end": "2026-12-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091600015",
+    "title": "Quartet Nonell",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-21",
+    "end": "2026-11-21",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800007",
+    "title": "Exposició \"Interrogar els llenguatges tradicionals\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-09",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800014",
+    "title": "Exposició \"Unfunny Paintings\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2026-10-30",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800016",
+    "title": "Exposició \"Charlotte Perriand. La llibertat de repensar el món\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-09",
+    "end": "2027-02-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800018",
+    "title": "Trencanous-jazz",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-07",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800019",
+    "title": "Concert de cambra I",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-18",
+    "end": "2026-11-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800020",
+    "title": "Concert de cambra II",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-20",
+    "end": "2026-11-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800021",
+    "title": "Concert de cambra III",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-22",
+    "end": "2026-11-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026091800022",
+    "title": "Miralls",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-21",
+    "end": "2026-11-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100010",
+    "title": "Exposició \"Ciutats en trànsit. Repensar per regenerar\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2027-01-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100011",
+    "title": "Exposició \"El dret a la ciutat: els barris de muntanya de Sant Genís a Trinitat Nova\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-25",
+    "end": "2026-12-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100015",
+    "title": "Exposició \"50 anys dels concerts de la Transició. Barcelona, Palau d'Esports\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-18",
+    "end": "2026-11-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100016",
+    "title": "Exposició \"Premis “Hommage à trois” 2024 i 2025\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-14",
+    "end": "2026-10-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100018",
+    "title": "Celebrar el Lliure",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-11-28",
+    "end": "2026-11-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100019",
+    "title": "Exposició \"Anselm Kiefer\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-02",
+    "end": "2027-01-24",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100020",
+    "title": "Concert La Pedrera",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-02",
+    "end": "2026-12-02",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092100025",
+    "title": "El conte de Nadal de Charles Dickens",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-12-12",
+    "end": "2026-12-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200049",
+    "title": "Postres de músic",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-13",
+    "end": "2026-10-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092200058",
+    "title": "Acte \"La cultura ja és un sector d'impacte\"",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-14",
+    "end": "2026-10-14",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300036",
+    "title": "\"Calderada\". El meu clàssic: Pere Calders",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-20",
+    "end": "2026-10-20",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300038",
+    "title": "\"Calderada\". El meu clàssic: Pere Calders",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-27",
+    "end": "2026-10-27",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092300061",
+    "title": "Frutal (Diari de moviment d'una pallassa oncològica)",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-17",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800003",
+    "title": "Exposició \"Una força del passat\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-23",
+    "end": "2027-01-10",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800006",
+    "title": "Exposició \"Taurons. Els guardians de l'oceà\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2027-09-26",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800008",
+    "title": "Exposició \"Emancipacions\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-08",
+    "end": "2027-02-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800010",
+    "title": "Exposició \"Divided\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-07-14",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092800017",
+    "title": "Exposició \"Un teatre Lliure\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-22",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092900035",
+    "title": "Exposició \"American Images\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-01",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026092900037",
+    "title": "Presentació del còmic La Edad de la Abundancia. La revuelta de los pillos",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-07",
+    "end": "2026-12-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026093000008",
+    "title": "Exposició \"Heat Shimmer, Hips Quiver, Open Smother, Lipped Lover\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2027-01-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026093000010",
+    "title": "Exposició \"Una història americana\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-31",
+    "end": "2027-03-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026093000011",
+    "title": "Exposició \"Arxiu Icària.Poblenou 1987-1992\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-31",
+    "end": "2027-03-28",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100100007",
+    "title": "Exposició \"André Ricard. Disseny en ús\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-29",
+    "end": "2027-03-14",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100100008",
+    "title": "Exposició \"Enjoia't 2026\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2026-11-29",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100100018",
+    "title": "Exposició \"Sense por d'oblidar\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-29",
+    "end": "2026-10-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200004",
+    "title": "Exposició \"Cuidar, Innovar, Avançar. 625 anys de l’Hospital de la Santa Creu i Sant Pau\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-15",
+    "end": "2026-12-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200018",
+    "title": "Exposició \"Disseny en acció. Premis ADG Laus 2026\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-01",
+    "end": "2026-11-01",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200019",
+    "title": "Exposició \"Nina Waves\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200020",
+    "title": "Exposició \"Onde atopar un refuxio\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200023",
+    "title": "Exposició \"Dear/d(ee)r Girls\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-17",
+    "end": "2026-11-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200029",
+    "title": "Exposició \"Art sacre italià del segle XX dels Museus Vaticans\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-24",
+    "end": "2026-12-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200032",
+    "title": "Exposició \"Trames. Obres tradicionals i creacions contemporànies americanes\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-18",
+    "end": "2027-04-25",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100200036",
+    "title": "Exposició \"Espais Esportius, Memòria Viva\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-06-16",
+    "end": "2027-02-07",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100500008",
+    "title": "Presentació del llibre Els secrets de la música a Barcelona",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-14",
+    "end": "2026-10-14",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100600004",
+    "title": "Exposició \"Quan la matèria ja coneix el camí\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-24",
+    "end": "2026-11-08",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100600006",
+    "title": "Exposició \"Unspoken Echoes\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-10",
+    "end": "2026-10-17",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700007",
+    "title": "Sessió \"Gaudí a Tànger\"",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-13",
+    "end": "2026-10-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700021",
+    "title": "Presentació del llibre L'altra Barcelona. Un viatge al cor de Veneçuela",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-15",
+    "end": "2026-10-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700023",
+    "title": "Exposició \"Boom Crash Candy Crush\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-28",
+    "end": "2027-01-31",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700027",
+    "title": "Josep M. Castellet i Edicions 62",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-22",
+    "end": "2026-10-22",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100700033",
+    "title": "Exposició \"Bali, mon gamelan. Un viatge al cor de la música i la dansa balinesa\"",
+    "source": "generalitat",
+    "kind": "exhibition",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-09-09",
+    "end": "2026-11-11",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100800038",
+    "title": "Casals, el cant de la Pau",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-15",
+    "end": "2026-10-15",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100800044",
+    "title": "Concert de Cor i Cobla",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-18",
+    "end": "2026-10-18",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900025",
+    "title": "Rocío Faks & Palma Sandoval",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-16",
+    "end": "2026-10-16",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "ORGANIZER_NAME_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900029",
+    "title": "Julio Iglesias Jr.",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-12",
+    "end": "2026-10-12",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "generalitat:2026100900030",
+    "title": "Djavan",
+    "source": "generalitat",
+    "kind": "single",
+    "eligibility": "review",
+    "priority_score_not_probability": 0,
+    "start": "2026-10-13",
+    "end": "2026-10-13",
+    "venue_count": 1,
+    "flags": [
+      "DIRECT_ACTIVITY_URL_MISSING",
+      "NO_PRICE_TEXT"
+    ],
+    "source_url": ""
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques448522989",
+    "title": "ESTÀSON-Per a infants de 6 a 8 anys.",
+    "source": "diba_bibliotecas",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-01-19",
+    "end": "2026-12-22",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estason-petits"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques451395873",
+    "title": "Taller EstasON. De 9 a 12 anys.",
+    "source": "diba_bibliotecas",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-04-30",
+    "end": "2026-12-30",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-9-a-12-anys-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques451396261",
+    "title": "Taller EstasON. De 6 a 8 anys.",
+    "source": "diba_bibliotecas",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-04-27",
+    "end": "2027-06-16",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-6-a-8-anys-bon-pastor"
+  },
+  {
+    "id": "diba_bibliotecas:agendabiblioteques459076287",
+    "title": "Curs d'escacs per a dones",
+    "source": "diba_bibliotecas",
+    "kind": "course",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-10-06",
+    "end": "2026-12-22",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "DESCRIPTION_MISSING",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "RECURRING_FREQUENCY_NOT_DATES",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-curs-d-escacs-per-a-dones"
+  },
+  {
+    "id": "diba_turismo:agendaturisme450577063",
+    "title": "BarcelonARCH Skyline private sailing tour",
+    "source": "diba_turismo",
+    "kind": "service",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-02-01",
+    "end": "2026-12-31",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/barcelonarch-skyline-private-sailing-tour"
+  },
+  {
+    "id": "diba_turismo:agendaturisme457725681",
+    "title": "Tasta el vi de Barcelona!",
+    "source": "diba_turismo",
+    "kind": "service",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-01-01",
+    "end": "2030-12-31",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/tasta-el-vi-de-barcelona-"
+  },
+  {
+    "id": "diba_turismo:agendaturisme457822524",
+    "title": "Esmorza Collserola",
+    "source": "diba_turismo",
+    "kind": "service",
+    "eligibility": "exclude",
+    "priority_score_not_probability": -1,
+    "start": "2026-01-01",
+    "end": "2030-12-31",
+    "venue_count": 1,
+    "flags": [
+      "ADMINISTRATIVE_DAY_END_NOT_SESSION_TIME",
+      "LONG_RANGE_DO_NOT_EXPAND",
+      "MIDNIGHT_PLACEHOLDER_NOT_START_TIME",
+      "UNKNOWN_PRICE_NOT_FREE"
+    ],
+    "source_url": "https://www.barcelonaesmoltmes.cat/-/esmorza-collserola"
+  }
+]

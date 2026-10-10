@@ -1,0 +1,4897 @@
+{
+  "dataset": "actesbiblioteques_ca",
+  "ventana": [
+    "2026-10-10",
+    "2027-01-08"
+  ],
+  "fuente": "Diputacio de Barcelona",
+  "elements": [
+    {
+      "acte_id": "agendabiblioteques438025016",
+      "titol": "Lletra petita. Llibres a escena. Posa’t el meu barret",
+      "data_inici": "2025-10-22 17:30:00",
+      "data_fi": "2026-10-22 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346997/349442060/FB+posat+la+gorra.png+ok.png/553bedbc-9292-f094-46d8-42e0efefa997?t=1758028385593"
+      ],
+      "acte_organitzadors": "Barcelona - Nou Barris. Biblioteca Nou Barris - Aurora Díaz Plaja",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/lletra-petita.-llibres-a-escena.-posa-t-el-meu-barret",
+      "telefon_contacte": [
+        "932 914 850"
+      ],
+      "email": [
+        "b.barcelona.nb@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Nou Barris - Aurora Díaz Plaja",
+        "adreca": "Plaça Major de Nou Barris, 2 08042 Barcelona",
+        "codi_postal": "08042",
+        "municipi_nom": "Barcelona - Nou Barris",
+        "localitzacio": "41.4364360,2.1717520"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/lletra-petita.-llibres-a-escena.-posa-t-el-meu-barret",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Nou Barris. Biblioteca Nou Barris - Aurora Díaz Plaja"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__nou_barris_biblioteca_nou_barris__aurora_diaz_plaja"
+      ],
+      "rel_punt": "biblioteca422816",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "45 min",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=34005&centre=18&districte=7&enviar=",
+      "id_secundari": "b881"
+    },
+    {
+      "acte_id": "agendabiblioteques448522989",
+      "titol": "ESTÀSON-Per a infants de 6 a 8 anys.",
+      "data_inici": "2026-01-19 17:30:00",
+      "data_fi": "2026-12-22 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/2026+estas+ON+6-8+%281%29.jpg/ddf7f7ba-4ba5-d349-e5c7-1dc158ea1bc8?t=1771428381758"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estason-petits",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estason-petits",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques438666679",
+      "titol": "Lectures compartides",
+      "data_inici": "2026-01-20 17:30:00",
+      "data_fi": "2026-11-25 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/lectures_compartides.png/f939e9b8-07d6-b38c-2490-b55f1ca92f78?t=1768387949812"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-c%C3%B2pia-6-",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-c%C3%B2pia-6-",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques423353450",
+      "titol": "Primeres lectures",
+      "data_inici": "2026-01-21 17:30:00",
+      "data_fi": "2026-11-26 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/1%C2%BA+lectures+2026.png/fa95e95d-fcab-9aa4-66c3-78019fd3c229?t=1768322234610"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-6",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-6",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques446372894",
+      "titol": "Contes a la mà",
+      "data_inici": "2026-02-04 17:30:00",
+      "data_fi": "2026-11-04 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346813/134371105/Lletra+petita+2024_760x428px.jpg/355f5b58-cf61-de4d-9abf-98619ac0cffc?t=1760090356762"
+      ],
+      "acte_organitzadors": "Barcelona - Horta-Guinardó. Biblioteca El Carmel - Juan Marsé",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346813/contes-a-la-ma-crispetu",
+      "telefon_contacte": [
+        "934 072 870"
+      ],
+      "email": [
+        "b.barcelona.jma@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Carmel - Juan Marsé",
+        "adreca": "Murtra, 135-145 08032 Barcelona",
+        "codi_postal": "08032",
+        "municipi_nom": "Barcelona - Horta-Guinardó",
+        "localitzacio": "41.4210570,2.1550350"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346813/contes-a-la-ma-crispetu",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Horta-Guinardó. Biblioteca El Carmel - Juan Marsé"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__hortaguinardo_biblioteca_el_carmel__juan_marse"
+      ],
+      "rel_punt": "biblioteca424088",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b872"
+    },
+    {
+      "acte_id": "agendabiblioteques451396261",
+      "titol": "Taller EstasON. De 6 a 8 anys.",
+      "data_inici": "2026-04-27 17:30:00",
+      "data_fi": "2027-06-16 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/2026-04+Estas+ON+6-8.jpg/d6dbe284-bab6-fd04-c36b-a6610be0143c?t=1776964039171"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-6-a-8-anys-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-6-a-8-anys-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques451395873",
+      "titol": "Taller EstasON. De 9 a 12 anys.",
+      "data_inici": "2026-04-30 17:30:00",
+      "data_fi": "2026-12-30 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/2026-04+Estas+ON+9-12+%281%29.jpg/59006596-5430-4f1e-6953-209843fd93c3?t=1776963609862"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-9-a-12-anys-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-de-9-a-12-anys-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques451943370",
+      "titol": "Lletra petita. Contes a la mà: 'Llibres-joc, com inventar una història'",
+      "data_inici": "2026-05-21 17:30:00",
+      "data_fi": "2026-10-21 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/347095/0/imatge+contes+a+la+m%C3%A0+%281%29.png/17aa050c-a15e-011f-8cca-99222f4b14e0?t=1777904044043"
+      ],
+      "acte_organitzadors": "Barcelona - Eixample. Biblioteca Sofia Barat",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347095/agenda_infantil_maig_26",
+      "telefon_contacte": [
+        "932 317 767"
+      ],
+      "email": [
+        "b.barcelona.sb@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Sofia Barat",
+        "adreca": "Carrer de Girona, 64-68 (interior d'illa) 08009 Barcelona",
+        "codi_postal": "08009",
+        "municipi_nom": "Barcelona - Eixample",
+        "localitzacio": "41.3946870,2.1714900"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347095/agenda_infantil_maig_26",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Infants",
+        "Barcelona - Eixample. Biblioteca Sofia Barat"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "infants",
+        "barcelona__eixample_biblioteca_sofia_barat"
+      ],
+      "rel_punt": "biblioteca423152",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b825"
+    },
+    {
+      "acte_id": "agendabiblioteques435648537",
+      "titol": "Club de lectura a mida. Literatura i Arquitectura",
+      "data_inici": "2026-06-30 18:30:00",
+      "data_fi": "2027-02-19 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346826/0/CL+corea.jpg/25033f5e-d2ed-fb1a-23c4-36dc8b92e234?t=1753799122990"
+      ],
+      "acte_organitzadors": "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-a-mida.-literatura-coreana",
+      "telefon_contacte": [
+        "932 652 435"
+      ],
+      "email": [
+        "b.barcelona.fp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Fort Pienc – Ana María Moix",
+        "adreca": "Plaça del Fort Pienc, 4-5 08013 Barcelona",
+        "codi_postal": "08013",
+        "municipi_nom": "Barcelona - Eixample",
+        "localitzacio": "41.3954729,2.1796301"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-a-mida.-literatura-coreana",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Adults",
+        "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "adults",
+        "barcelona__eixample_biblioteca_fort_pienc__ana_maria_moix"
+      ],
+      "rel_punt": "biblioteca424064",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1h",
+      "observacions_horari": "Mensual",
+      "dies": "Dilluns",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35052&curs=2633&enviar=MOSTRAR%20BIBLIOTEQUES",
+      "id_secundari": "b822"
+    },
+    {
+      "acte_id": "agendabiblioteques435648262",
+      "titol": "Club de lectura de llengua catalana (Nivell bàsic)",
+      "data_inici": "2026-07-01 10:30:00",
+      "data_fi": "2027-06-30 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346826/0/CL+catala.jpg/48a5f1d7-6ec4-4184-bd7d-5b2713dfbe41?t=1753799950515"
+      ],
+      "acte_organitzadors": "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-de-llengua-catalana-nivell-b%C3%A0sic-",
+      "telefon_contacte": [
+        "932 652 435"
+      ],
+      "email": [
+        "b.barcelona.fp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Fort Pienc – Ana María Moix",
+        "adreca": "Plaça del Fort Pienc, 4-5 08013 Barcelona",
+        "codi_postal": "08013",
+        "municipi_nom": "Barcelona - Eixample",
+        "localitzacio": "41.3954729,2.1796301"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-de-llengua-catalana-nivell-b%C3%A0sic-",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Adults",
+        "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "adults",
+        "barcelona__eixample_biblioteca_fort_pienc__ana_maria_moix"
+      ],
+      "rel_punt": "biblioteca424064",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1h",
+      "observacions_horari": "Mensual",
+      "dies": "Tercer divendres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35127&centre=4&districte=&enviar=",
+      "id_secundari": "b822"
+    },
+    {
+      "acte_id": "agendabiblioteques435648244",
+      "titol": "Club de lectura Literatura asiàtica",
+      "data_inici": "2026-07-01 18:30:00",
+      "data_fi": "2027-06-30 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346826/0/CL+asiatica.jpg/549a4bcf-a811-aaaf-9092-6fc893311a45?t=1753799984922"
+      ],
+      "acte_organitzadors": "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-literatura-asi%C3%A0tica",
+      "telefon_contacte": [
+        "932 652 435"
+      ],
+      "email": [
+        "b.barcelona.fp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Fort Pienc – Ana María Moix",
+        "adreca": "Plaça del Fort Pienc, 4-5 08013 Barcelona",
+        "codi_postal": "08013",
+        "municipi_nom": "Barcelona - Eixample",
+        "localitzacio": "41.3954729,2.1796301"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lectura-literatura-asi%C3%A0tica",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Adults",
+        "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix"
+      ],
+      "categoria": [
+        "adults",
+        "barcelona__eixample_biblioteca_fort_pienc__ana_maria_moix"
+      ],
+      "rel_punt": "biblioteca424064",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1h",
+      "observacions_horari": "Mensual",
+      "dies": "Segon dilluns",
+      "tipus": [],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35125&centre=4&districte=0&enviar=",
+      "id_secundari": "b822"
+    },
+    {
+      "acte_id": "agendabiblioteques435648206",
+      "titol": "Club de lectura general",
+      "data_inici": "2026-07-21 18:30:00",
+      "data_fi": "2027-05-24 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346826/0/CL+general.jpg/cc20b702-6823-125b-12ce-e926cdffc889?t=1753799918973"
+      ],
+      "acte_organitzadors": "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lctura-general",
+      "telefon_contacte": [
+        "932 652 435"
+      ],
+      "email": [
+        "b.barcelona.fp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Fort Pienc – Ana María Moix",
+        "adreca": "Plaça del Fort Pienc, 4-5 08013 Barcelona",
+        "codi_postal": "08013",
+        "municipi_nom": "Barcelona - Eixample",
+        "localitzacio": "41.3954729,2.1796301"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346826/club-de-lctura-general",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Adults",
+        "Barcelona - Eixample. Biblioteca Fort Pienc – Ana María Moix"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "adults",
+        "barcelona__eixample_biblioteca_fort_pienc__ana_maria_moix"
+      ],
+      "rel_punt": "biblioteca424064",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1h",
+      "observacions_horari": "Mensual",
+      "dies": "",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35126&centre=4&districte=0&enviar=",
+      "id_secundari": "b822"
+    },
+    {
+      "acte_id": "agendabiblioteques435555018",
+      "titol": "Primeres lectures",
+      "data_inici": "2026-09-30 17:30:00",
+      "data_fi": "2026-11-26 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/BV-LECTURES+COMPARTIDES/eb385e14-8b37-b4c2-4ec7-431774bca73c?t=1785318282532"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-c%C3%B2pia-6-",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-c%C3%B2pia-6-",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457383247",
+      "titol": "Exposició fotogràfica “Fa 25 anys al Poble-sec: memòria d’un inici. Inauguració de la Biblioteca Francesc Boix'",
+      "data_inici": "2026-10-02 18:00:00",
+      "data_fi": "2026-11-07 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/347008/0/25aniversari_biblioteca_ElPoblesecFrancescBoix_banner_1920x1080px.jpg/a73af4d1-81cb-53f1-5e7a-ed71bc02a69a?t=1788879619694"
+      ],
+      "acte_organitzadors": "Barcelona - Sants-Montjuïc. Biblioteca El Poble-sec - Francesc Boix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-exposicio-fotografica-fa-25-anys-al-poble-sec-memoria-d-un-inici-inauguracio-de-la-biblioteca-francesc-boix",
+      "telefon_contacte": [
+        "934 430 105"
+      ],
+      "email": [
+        "b.barcelona.ps@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Poble-sec - Francesc Boix",
+        "adreca": "Carrer Blai, 34 08004 Barcelona",
+        "codi_postal": "08004",
+        "municipi_nom": "Barcelona - Sants-Montjuïc",
+        "localitzacio": "41.3741330,2.1642020"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-exposicio-fotografica-fa-25-anys-al-poble-sec-memoria-d-un-inici-inauguracio-de-la-biblioteca-francesc-boix",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Exposició",
+        "Inauguració",
+        "Adults",
+        "Barcelona - Sants-Montjuïc. Biblioteca El Poble-sec - Francesc Boix"
+      ],
+      "categoria": [
+        "exposicioinauguracio",
+        "adults",
+        "barcelona__santsmontjuic_biblioteca_el_poblesec__francesc_boix"
+      ],
+      "rel_punt": "biblioteca423840",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Exposició",
+        "Inauguració"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b833"
+    },
+    {
+      "acte_id": "agendabiblioteques459076287",
+      "titol": "Curs d'escacs per a dones",
+      "data_inici": "2026-10-06 18:30:00",
+      "data_fi": "2026-12-22 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/347008/0/2026+Escacs+per+a+dones+WEB.jpg/ac247e64-8c1d-07f3-21de-efc90a6f03db?t=1788885834131"
+      ],
+      "acte_organitzadors": "Barcelona - Sants-Montjuïc. Biblioteca El Poble-sec - Francesc Boix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-curs-d-escacs-per-a-dones",
+      "telefon_contacte": [
+        "934 430 105"
+      ],
+      "email": [
+        "b.barcelona.ps@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Poble-sec - Francesc Boix",
+        "adreca": "Carrer Blai, 34 08004 Barcelona",
+        "codi_postal": "08004",
+        "municipi_nom": "Barcelona - Sants-Montjuïc",
+        "localitzacio": "41.3741330,2.1642020"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347008/agenda-curs-d-escacs-per-a-dones",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Curs",
+        "Taller",
+        "Barcelona - Sants-Montjuïc. Biblioteca El Poble-sec - Francesc Boix"
+      ],
+      "categoria": [
+        "curstaller",
+        "barcelona__santsmontjuic_biblioteca_el_poblesec__francesc_boix"
+      ],
+      "rel_punt": "biblioteca423840",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Curs",
+        "Taller"
+      ],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b833"
+    },
+    {
+      "acte_id": "agendabiblioteques460600045",
+      "titol": "Xerrada 'Catalunya i la petjada esclavista. L’impacte del tràfic d’esclaus atlàntic en les societats africanes',",
+      "data_inici": "2026-10-13 18:30:00",
+      "data_fi": "2026-10-13 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/15755707/0/PetjadaEsclavista_Kit_Generic_1920x1080_AmbLogoMinisteri_BV.jpg/ae82af89-52b8-991a-e845-572940f7b09c?t=1790845310555"
+      ],
+      "acte_organitzadors": "Barcelona - Sarrià-Sant Gervasi. Biblioteca Sant Gervasi - Joan Maragall",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/15755707/ag-xerrada-catalunya-i-la-petjada-esclavista-l-impacte-del-trafic-d-esclaus-atlantic-en-les-societats-africanes",
+      "telefon_contacte": [
+        "934 178 347"
+      ],
+      "email": [
+        "b.barcelona.jmg@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Sant Gervasi - Joan Maragall",
+        "adreca": "Carrer Sant Gervasi de Cassoles, 85 (Jardins de Vil·la Florida) 08022 Barcelona",
+        "codi_postal": "08022",
+        "municipi_nom": "Barcelona - Sarrià-Sant Gervasi",
+        "localitzacio": "41.4057994,2.1358825"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/15755707/ag-xerrada-catalunya-i-la-petjada-esclavista-l-impacte-del-trafic-d-esclaus-atlantic-en-les-societats-africanes",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Xerrada",
+        "Adults",
+        "Barcelona - Sarrià-Sant Gervasi. Biblioteca Sant Gervasi - Joan Maragall"
+      ],
+      "categoria": [
+        "xerrada",
+        "adults",
+        "barcelona__sarriasant_gervasi_biblioteca_sant_gervasi__joan_maragall"
+      ],
+      "rel_punt": "biblioteca365034106",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "Dimarts",
+      "tipus": [
+        "Xerrada"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b853"
+    },
+    {
+      "acte_id": "agendabiblioteques460864978",
+      "titol": "Presentació de tres llibres de Lluís Carrasco Martínez",
+      "data_inici": "2026-10-14 18:00:00",
+      "data_fi": "2026-10-15 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/presentaci%C3%B3+3+llibres.png/b5bbacdc-5c37-15da-117b-0ae113a9d360?t=1791298342388"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-de-tres-llibres-de-lluis-carrasco-martinez",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-de-tres-llibres-de-lluis-carrasco-martinez",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Presentació de llibres",
+        "Adults",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "presentacio_de_llibres",
+        "adults",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Presentació de llibres"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques428018671",
+      "titol": "Nascuts per Llegir. A la plaça fan ballades",
+      "data_inici": "2026-10-15 17:30:00",
+      "data_fi": "2026-10-16 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Musinfant.jpg/23aeed40-0e31-5531-539e-491011294070?t=1789490389708"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Familiar",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "familiar",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques455788635",
+      "titol": "EstasON. Simetria i reflexió, experimentem amb miralls!",
+      "data_inici": "2026-10-15 17:30:00",
+      "data_fi": "2026-10-16 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Estas+on+9_2026.png/99646605-6242-b878-7ed1-a81d30175ce9?t=1785318377141"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-geometriques-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-geometriques-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35237&amp;centre=19&amp;districte=&amp;enviar=",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques459997137",
+      "titol": "Laboratori de creació i experimentació literària",
+      "data_inici": "2026-10-15 18:00:00",
+      "data_fi": "2026-11-12 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346940/0/OBRADOR.jpg/371c53c8-97e3-4756-2d84-6ff854c0affa?t=1790152887599"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca La Sagrera - Marina Clotet",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346940/laboratoricreacio_agenda",
+      "telefon_contacte": [
+        "933 408 675"
+      ],
+      "email": [
+        "b.barcelona.mc@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca La Sagrera - Marina Clotet",
+        "adreca": "Josep Soldevila, 9 08027 Barcelona",
+        "codi_postal": "08027",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4260940,2.1930140"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346940/laboratoricreacio_agenda",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Adults",
+        "Barcelona - Sant Andreu. Biblioteca La Sagrera - Marina Clotet"
+      ],
+      "categoria": [
+        "taller",
+        "adults",
+        "barcelona__sant_andreu_biblioteca_la_sagrera__marina_clotet"
+      ],
+      "rel_punt": "biblioteca424288",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "Dijous",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35316&amp;centre=25&amp;districte=&amp;enviar=",
+      "id_secundari": "b894"
+    },
+    {
+      "acte_id": "agendabiblioteques424561715",
+      "titol": "Cicle temàtic. 'Post Scriptum III: la imatge després de la paraula', a càrrec de Miquel del Pozo",
+      "data_inici": "2026-10-15 18:30:00",
+      "data_fi": "2026-10-29 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346789/0/post-scriptum.png_1216690857.760x428.43feb482.jpg/e01f90c1-40f7-f311-5412-4873977da5ce?t=1790608695493"
+      ],
+      "acte_organitzadors": "Barcelona - Sarrià-Sant Gervasi. Clarà",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/post-scriptum-iii",
+      "telefon_contacte": [
+        "932 801 547"
+      ],
+      "email": [
+        "b.barcelona.cl@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Clarà",
+        "adreca": "Carrer Doctor Carulla, 22-24 08017 Barcelona",
+        "codi_postal": "08017",
+        "municipi_nom": "Barcelona - Sarrià-Sant Gervasi",
+        "localitzacio": "41.3999090,2.1294570"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/post-scriptum-iii",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Cicle temàtic",
+        "Adults",
+        "Barcelona - Sarrià-Sant Gervasi. Clarà"
+      ],
+      "categoria": [
+        "cicle_tematic",
+        "adults",
+        "barcelona__sarriasant_gervasi_clara"
+      ],
+      "rel_punt": "biblioteca423208",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Cicle temàtic"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35192&centre=38&districte=&enviar=",
+      "id_secundari": "b851"
+    },
+    {
+      "acte_id": "agendabiblioteques455788692",
+      "titol": "EstasON. Investigadores del mar!",
+      "data_inici": "2026-10-19 17:30:00",
+      "data_fi": "2026-10-20 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/estas+on+petits+_2026.png/3bf7f687-822b-6f81-f641-109e87b5bd1f?t=1785335605585"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-de-la-barcelona-del-futur-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/estiu-de-postals-de-la-barcelona-del-futur-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35208&amp;centre=19&amp;districte=&amp;enviar=",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques460305280",
+      "titol": "Obrim per obres. Quan la biblioteca tanca i nosaltres continuem dins",
+      "data_inici": "2026-10-19 18:30:00",
+      "data_fi": "2026-11-02 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346872/0/IMATGE+OBRIM+PER+OBRES++760X428.jpg/3d0c7b88-af3f-9884-f54e-b2d130c077b4?t=1790594014493"
+      ],
+      "acte_organitzadors": "Barcelona - Horta-Guinardó. Biblioteca Mercè Rodoreda",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346872/agenda.-obrim-per-obres",
+      "telefon_contacte": [
+        "934 353 170"
+      ],
+      "email": [
+        "b.barcelona.mr@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Mercè Rodoreda",
+        "adreca": "Carrer de les Camèlies, 76-80 08024 Barcelona",
+        "codi_postal": "08024",
+        "municipi_nom": "Barcelona - Horta-Guinardó",
+        "localitzacio": "41.4133530,2.1632840"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346872/agenda.-obrim-per-obres",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Adults",
+        "Barcelona - Horta-Guinardó. Biblioteca Mercè Rodoreda"
+      ],
+      "categoria": [
+        "taller",
+        "adults",
+        "barcelona__hortaguinardo_biblioteca_merce_rodoreda"
+      ],
+      "rel_punt": "biblioteca423192",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "Dilluns",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35370&amp;centre=14&amp;districte=&amp;enviar=",
+      "id_secundari": "b871"
+    },
+    {
+      "acte_id": "agendabiblioteques457386641",
+      "titol": "Club de lectura puntual. Literatura italiana",
+      "data_inici": "2026-10-20 18:30:00",
+      "data_fi": "2026-11-26 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346918/82789573/literatura+italiana+2022.png/ebd80907-847e-2d8a-1a0d-01a0fcd3fdca?t=1659431939493"
+      ],
+      "acte_organitzadors": "Barcelona - Gràcia. Jaume Fuster",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346918/club-de-lectura-puntual-literatura-italiana",
+      "telefon_contacte": [
+        "933 684 564"
+      ],
+      "email": [
+        "b.barcelona.jf@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Jaume Fuster",
+        "adreca": "Plaça Lesseps, 20-22 08023 Barcelona",
+        "codi_postal": "08023",
+        "municipi_nom": "Barcelona - Gràcia",
+        "localitzacio": "41.4073770,2.1495110"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346918/club-de-lectura-puntual-literatura-italiana",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Barcelona - Gràcia. Jaume Fuster"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "barcelona__gracia_jaume_fuster"
+      ],
+      "rel_punt": "biblioteca99355102",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1.30 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimarts;Dijous",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35300&amp;centre=11&amp;districte=&amp;enviar=",
+      "id_secundari": "b861"
+    },
+    {
+      "acte_id": "agendabiblioteques458868504",
+      "titol": "La Colla supersònica",
+      "data_inici": "2026-10-21 17:30:00",
+      "data_fi": "2026-10-21 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346997/349442060/colla.jpg/998c59a6-ca5e-25f2-bc2f-cf62b2929972?t=1788454404760"
+      ],
+      "acte_organitzadors": "Barcelona - Nou Barris. Biblioteca Nou Barris - Aurora Díaz Plaja",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/colla-supers%C3%B2nica",
+      "telefon_contacte": [
+        "932 914 850"
+      ],
+      "email": [
+        "b.barcelona.nb@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Nou Barris - Aurora Díaz Plaja",
+        "adreca": "Plaça Major de Nou Barris, 2 08042 Barcelona",
+        "codi_postal": "08042",
+        "municipi_nom": "Barcelona - Nou Barris",
+        "localitzacio": "41.4364360,2.1717520"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346997/colla-supers%C3%B2nica",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Nou Barris. Biblioteca Nou Barris - Aurora Díaz Plaja"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__nou_barris_biblioteca_nou_barris__aurora_diaz_plaja"
+      ],
+      "rel_punt": "biblioteca422816",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "45 min",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "https://s2.puntxarxa.org/cbb/cursos/registre_cursos.php?curs_vigent=35331&amp;centre=18&amp;districte=7&amp;enviar=",
+      "id_secundari": "b881"
+    },
+    {
+      "acte_id": "agendabiblioteques459576876",
+      "titol": "Festival Munt de mots - Tocats de l’ala",
+      "data_inici": "2026-10-22 17:30:00",
+      "data_fi": "2026-10-23 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Munt_de_mots_22_10_26_A4+-+c%C3%B2pia.png/0702a1a4-e737-0308-dbc2-e2111e85c540?t=1789493872688"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/festival-munt-de-mots",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/festival-munt-de-mots",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques460864933",
+      "titol": "Sorollem poesia",
+      "data_inici": "2026-10-22 18:00:00",
+      "data_fi": "2026-10-23 23:59:59",
+      "descripcio": "",
+      "imatge": [],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/sorollem-poesia",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/sorollem-poesia",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Concert, audició o recital",
+        "Adults",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "concert_audicio_o_recital",
+        "adults",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Concert, audició o recital"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457212194",
+      "titol": "Lectures compartides",
+      "data_inici": "2026-10-27 17:30:00",
+      "data_fi": "2026-10-28 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Lectures+compartides_2026.png/b2d0fb04-0121-40f1-217f-1b23aee09279?t=1785318399861"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-octubre-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-octubre-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques450960837",
+      "titol": "Primeres lectures",
+      "data_inici": "2026-10-28 17:30:00",
+      "data_fi": "2026-10-29 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/primeres.png/8a5a1608-ef27-7645-fd01-0a93548f056a?t=1784307784172"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-mayo-2026",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-mayo-2026",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457212059",
+      "titol": "Contes a la mà",
+      "data_inici": "2026-10-28 17:30:00",
+      "data_fi": "2026-10-29 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/contesma.png/da285076-2b7a-fbf6-4c2e-6f2de56b3054?t=1784307926591"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-octubre-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-octubre-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques388840320",
+      "titol": "Els Esclavitzadors peninsulars a les Antilles espanyoles i les seves inversions a Barcelona, amb Martín Rodrigo Alharilla",
+      "data_inici": "2026-10-28 18:30:00",
+      "data_fi": "2026-10-28 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346789/0/petjadaesclavista_kit_generic_761x429_amblogoministeri.jpg.webp/2bdfebed-45b2-e30a-f602-eeaf8f77bae7?t=1790610759190"
+      ],
+      "acte_organitzadors": "Barcelona - Sarrià-Sant Gervasi. Clarà",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/petjada-esclavista",
+      "telefon_contacte": [
+        "932 801 547"
+      ],
+      "email": [
+        "b.barcelona.cl@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Clarà",
+        "adreca": "Carrer Doctor Carulla, 22-24 08017 Barcelona",
+        "codi_postal": "08017",
+        "municipi_nom": "Barcelona - Sarrià-Sant Gervasi",
+        "localitzacio": "41.3999090,2.1294570"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346789/petjada-esclavista",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Conferència",
+        "Cicle temàtic",
+        "Adults",
+        "Barcelona - Sarrià-Sant Gervasi. Clarà"
+      ],
+      "categoria": [
+        "conferenciacicle_tematic",
+        "adults",
+        "barcelona__sarriasant_gervasi_clara"
+      ],
+      "rel_punt": "biblioteca423208",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Conferència",
+        "Cicle temàtic"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b851"
+    },
+    {
+      "acte_id": "agendabiblioteques455789819",
+      "titol": "EstasON. Descobrim la taula periòdica",
+      "data_inici": "2026-10-29 17:30:00",
+      "data_fi": "2026-10-30 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Estas+on+9_2026.png/99646605-6242-b878-7ed1-a81d30175ce9?t=1785318377141"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor-1",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-a-la-ma-bon-pastor-1",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques460864789",
+      "titol": "Túnel del terror",
+      "data_inici": "2026-10-30 17:15:00",
+      "data_fi": "2026-10-31 23:59:59",
+      "descripcio": "",
+      "imatge": [],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/tunel-del-terror",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/tunel-del-terror",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Jocs",
+        "Joves",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "jocs",
+        "joves",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "3 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Jocs"
+      ],
+      "public": [
+        "Joves"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques440426159",
+      "titol": "EstasON. Pintant la història amb ciència",
+      "data_inici": "2026-11-02 17:30:00",
+      "data_fi": "2026-11-03 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/estas+on+petits+_2026.png/3bf7f687-822b-6f81-f641-109e87b5bd1f?t=1785335605585"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason.-descobrim-la-fauna-urbana-.",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason.-descobrim-la-fauna-urbana-.",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457212131",
+      "titol": "Contes a la mà",
+      "data_inici": "2026-11-03 17:30:00",
+      "data_fi": "2026-11-04 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/0/contesma.png/da285076-2b7a-fbf6-4c2e-6f2de56b3054?t=1784307926591"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-novembre-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/contes-ma-novembre-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques460866280",
+      "titol": "Lletra petita. La veritat de les princeses",
+      "data_inici": "2026-11-05 17:30:00",
+      "data_fi": "2026-11-06 23:59:59",
+      "descripcio": "",
+      "imatge": [],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lletra-petita.-la-veritat-de-les-princeses",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lletra-petita.-la-veritat-de-les-princeses",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques459573230",
+      "titol": "Presentació de llibre. “La sombra de Lina”",
+      "data_inici": "2026-11-06 18:30:00",
+      "data_fi": "2026-11-07 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Maria_Barbancho-760x428.jpg/bb06cf4e-a41e-38d1-ab5b-55304ff300ac?t=1789567506626"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-llibre-sombra-de-lina",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/presentacio-llibre-sombra-de-lina",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Presentació de llibres",
+        "Adults",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "presentacio_de_llibres",
+        "adults",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Presentació de llibres"
+      ],
+      "public": [
+        "Adults"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques459577133",
+      "titol": "Setmana de l’àlbum. Tocar els colors: un taller de percepció sensorial amb el llibre 'El llibre negre dels colors'.",
+      "data_inici": "2026-11-10 17:30:00",
+      "data_fi": "2026-11-11 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Cover_El-llibre-negre-dels-colors-WEB.png/0aa949bd-2097-88d6-2dc1-a0af308e823d?t=1789572947803"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-de-percepci%C3%B3-sensorial-el-llibre-negre-dels-colors",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-de-percepci%C3%B3-sensorial-el-llibre-negre-dels-colors",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques448520506",
+      "titol": "EstasON. STEAM fantàstic",
+      "data_inici": "2026-11-12 17:30:00",
+      "data_fi": "2026-11-13 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Estas+on+9_2026.png/99646605-6242-b878-7ed1-a81d30175ce9?t=1785318377141"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-grans",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/taller-estason-grans",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques448613868",
+      "titol": "Nascuts per llegir: L'aniversari del Petit Ós",
+      "data_inici": "2026-11-12 17:30:00",
+      "data_fi": "2026-11-13 23:59:59",
+      "descripcio": "",
+      "imatge": [],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os-biblioteca-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os-biblioteca-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques456941545",
+      "titol": "Nascuts per Llegir. L’aniversari del Petit Ós",
+      "data_inici": "2026-11-12 17:30:00",
+      "data_fi": "2026-11-13 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/petit+os_2026.png/68ace8bf-bce9-d1a7-a457-94d86f75aa20?t=1785318422088"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/aniversari-del-petit-os",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques445608577",
+      "titol": "EstasON. Desafiant la física",
+      "data_inici": "2026-11-16 17:30:00",
+      "data_fi": "2026-11-17 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/estas+on+petits+_2026.png/3bf7f687-822b-6f81-f641-109e87b5bd1f?t=1785335605585"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Taller",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "taller",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "2 h",
+      "observacions_horari": "Setmanal",
+      "dies": "Dimarts",
+      "tipus": [
+        "Taller"
+      ],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457213250",
+      "titol": "Lectures compartides",
+      "data_inici": "2026-11-17 17:30:00",
+      "data_fi": "2026-11-25 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Lectures+compartides_2026.png/b2d0fb04-0121-40f1-217f-1b23aee09279?t=1785318399861"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bis-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bis-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques448614012",
+      "titol": "Exposició La Capsa de les besties",
+      "data_inici": "2026-11-21 10:00:00",
+      "data_fi": "2026-12-11 23:59:59",
+      "descripcio": "",
+      "imatge": [],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/exposicio-capsa-de-les-besties-biblioteca-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/exposicio-capsa-de-les-besties-biblioteca-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Exposició",
+        "Infants",
+        "Barcelona - Sant Andreu. Biblioteca Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "exposicio",
+        "infants",
+        "barcelona__sant_andreu_biblioteca_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [
+        "Exposició"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457212230",
+      "titol": "Lectures compartides",
+      "data_inici": "2026-11-24 17:30:00",
+      "data_fi": "2026-11-25 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Lectures+compartides_2026.png/b2d0fb04-0121-40f1-217f-1b23aee09279?t=1785318399861"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/lectures-compartides-novembre-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques450958111",
+      "titol": "Primeres lectures",
+      "data_inici": "2026-11-25 17:30:00",
+      "data_fi": "2026-11-26 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Primeres+lectures2026.png/6d0b47f0-7ad1-71da-a8a9-a472d8dbd70d?t=1785318434224"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-2026",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-2026",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Club de lectura",
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "club_de_lectura",
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "Dimecres",
+      "tipus": [
+        "Club de lectura"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques457214714",
+      "titol": "Primeres lectures",
+      "data_inici": "2026-11-25 17:30:00",
+      "data_fi": "2026-11-26 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/346756/452295076/Primeres+lectures2026.png/6d0b47f0-7ad1-71da-a8a9-a472d8dbd70d?t=1785318434224"
+      ],
+      "acte_organitzadors": "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-novembre-bon-pastor",
+      "telefon_contacte": [
+        "934 980 216"
+      ],
+      "email": [
+        "b.barcelona.bp@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca El Bon Pastor – Josefina Castellví",
+        "adreca": "Carrer de l'Estadella, 64 08030 Barcelona",
+        "codi_postal": "08030",
+        "municipi_nom": "Barcelona - Sant Andreu",
+        "localitzacio": "41.4354140,2.2047630"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/346756/primeres-lectures-novembre-bon-pastor",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Barcelona - Sant Andreu. Biblioteca El Bon Pastor – Josefina Castellví"
+      ],
+      "categoria": [
+        "barcelona__sant_andreu_biblioteca_el_bon_pastor__josefina_castellvi"
+      ],
+      "rel_punt": "biblioteca418558260",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "1 h",
+      "observacions_horari": "Mensual",
+      "dies": "",
+      "tipus": [],
+      "public": [],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b892"
+    },
+    {
+      "acte_id": "agendabiblioteques458493377",
+      "titol": "'Narcisa i Clementina. Quan les paraules canten', de Laberta Delpoblet",
+      "data_inici": "2026-11-30 17:30:00",
+      "data_fi": "2026-11-30 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/421127869/0/Imatge1+%281%29.jpg/a2d2bc40-eb5c-65bf-109e-353dcfa22efb?t=1787836665512"
+      ],
+      "acte_organitzadors": "Barcelona - Sarrià-Sant Gervasi. Biblioteca Sarrià-J.V. Foix",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/421127869/-narcisa-i-clementina.-quan-les-paraules-canten-de-laberta-delpoblet",
+      "telefon_contacte": [
+        "930 885 220"
+      ],
+      "email": [
+        "b.barcelona.jvf@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Sarrià-J.V. Foix",
+        "adreca": "Plaça de Sarrià, 1 08017 Barcelona",
+        "codi_postal": "08017",
+        "municipi_nom": "Barcelona - Sarrià-Sant Gervasi",
+        "localitzacio": "41.4000548,2.1199348"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/421127869/-narcisa-i-clementina.-quan-les-paraules-canten-de-laberta-delpoblet",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Familiar",
+        "Barcelona - Sarrià-Sant Gervasi. Biblioteca Sarrià-J.V. Foix"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "familiar",
+        "barcelona__sarriasant_gervasi_biblioteca_sarriajv_foix"
+      ],
+      "rel_punt": "biblioteca424645700",
+      "preu": "",
+      "peu_imatge": [],
+      "durada": "45 min",
+      "observacions_horari": "",
+      "dies": "Dilluns",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Familiar"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b854"
+    },
+    {
+      "acte_id": "agendabiblioteques457381512",
+      "titol": "Narració 'Contes a la mà', a càrrec de Mar González",
+      "data_inici": "2026-12-03 17:30:00",
+      "data_fi": "2026-12-03 23:59:59",
+      "descripcio": "",
+      "imatge": [
+        "https://bibliotecavirtual.diba.cat/documents/347228/0/ContesALaMa_760x428+%281%29.jpg/524584ea-e0ed-fd82-6d72-137619e2b2fb?t=1785418876062"
+      ],
+      "acte_organitzadors": "Barcelona - Gràcia. Biblioteca Vila de Rosa M. Arquimbau",
+      "acte_url": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347228/narraci%C3%B3-contes-a-la-m%C3%A0-a-c%C3%A0rrec-de-mar-gonz%C3%A1lez-c%C3%B2pia-",
+      "telefon_contacte": [
+        "932 847 790"
+      ],
+      "email": [
+        "b.barcelona.vg@diba.cat"
+      ],
+      "grup_adreca": {
+        "adreca_nom": " Biblioteca Vila de Rosa M. Arquimbau",
+        "adreca": "Carrer del Torrent de l'Olla, 104 08012 Barcelona",
+        "codi_postal": "08012",
+        "municipi_nom": "Barcelona - Gràcia",
+        "localitzacio": "41.4014940,2.1581840"
+      },
+      "url_general": "https://bibliotecavirtual.diba.cat/detall-esdeveniment/-/contingut/347228/narraci%C3%B3-contes-a-la-m%C3%A0-a-c%C3%A0rrec-de-mar-gonz%C3%A1lez-c%C3%B2pia-",
+      "colaboradors": "",
+      "rel_municipis": {
+        "ine": "08019",
+        "municipi_nom": "Barcelona",
+        "municipi_nom_curt": "Barcelona",
+        "municipi_article": "",
+        "municipi_transliterat": "barcelona",
+        "municipi_curt_transliterat": "barcelona",
+        "centre_municipal": "41.3825919,2.177333",
+        "grup_comarca": {
+          "comarca_codi": "13",
+          "comarca_nom": "Barcelonès"
+        },
+        "grup_provincia": {
+          "provincia_codi": "8",
+          "provincia_nom": "Barcelona"
+        },
+        "grup_ajuntament": {
+          "adreca-completa": "Pl. St. Jaume, 1, 08002 Barcelona",
+          "adreca": "Pl. St. Jaume, 1",
+          "codi_postal": "08002",
+          "localitzacio": "41.3825919,2.177333",
+          "telefon_contacte": "934027000",
+          "fax": "933170139",
+          "email": "",
+          "url_general": "https://www.barcelona.cat",
+          "cif": "P0801900B"
+        },
+        "municipi_escut": "https://media.diba.cat/diba/municipis/img/escuts/ec08019.png",
+        "municipi_bandera": "https://media.diba.cat/diba/municipis/img/banderes/bn08019.gif",
+        "municipi_vista": "https://media.diba.cat/diba/municipis/img/vistes/vista08019.jpg",
+        "ine6": "080193",
+        "nom_dbpedia": "Barcelona",
+        "nombre_habitants": "1731649",
+        "extensio": "101.35",
+        "altitud": "4"
+      },
+      "rel_temes": {
+        "count": 0,
+        "elements": "3"
+      },
+      "tags": [
+        "Hora del conte",
+        "Infants",
+        "Barcelona - Gràcia. Biblioteca Vila de Rosa M. Arquimbau"
+      ],
+      "categoria": [
+        "hora_del_conte",
+        "infants",
+        "barcelona__gracia_biblioteca_vila_de_rosa_m_arquimbau"
+      ],
+      "rel_punt": "biblioteca423988",
+      "preu": "Gratuït",
+      "peu_imatge": [],
+      "durada": "45 min",
+      "observacions_horari": "",
+      "dies": "Dijous",
+      "tipus": [
+        "Hora del conte"
+      ],
+      "public": [
+        "Infants"
+      ],
+      "observacions": "",
+      "rel_comarca": [
+        ""
+      ],
+      "documentacio": [],
+      "assistents": "",
+      "aforament": "",
+      "inscripcio": "",
+      "cos": "",
+      "cercador_codi": "",
+      "url_inscripcions": "",
+      "id_secundari": "b862"
+    }
+  ]
+}

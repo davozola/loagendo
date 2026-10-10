@@ -1,0 +1,52 @@
+[
+  {
+    "a": "diba_bibliotecas:agendabiblioteques448613868",
+    "b": "diba_bibliotecas:agendabiblioteques456941545",
+    "title_a": "Nascuts per llegir: L'aniversari del Petit Ós",
+    "title_b": "Nascuts per Llegir. L’aniversari del Petit Ós",
+    "similarity_heuristic": 1.0,
+    "geo_meters": 0.0,
+    "venue_similarity_heuristic": 0.9892,
+    "start_a": "2026-11-12",
+    "start_b": "2026-11-12",
+    "review_only": true,
+    "risks": [
+      "TITLE_SIMILARITY_IS_NOT_IDENTITY",
+      "SAME_SOURCE_REPEATED_RECORD"
+    ]
+  },
+  {
+    "a": "diba_bibliotecas:agendabiblioteques450958111",
+    "b": "diba_bibliotecas:agendabiblioteques457214714",
+    "title_a": "Primeres lectures",
+    "title_b": "Primeres lectures",
+    "similarity_heuristic": 1.0,
+    "geo_meters": 0.0,
+    "venue_similarity_heuristic": 1.0,
+    "start_a": "2026-11-25",
+    "start_b": "2026-11-25",
+    "review_only": true,
+    "risks": [
+      "TITLE_SIMILARITY_IS_NOT_IDENTITY",
+      "PROGRAM_CHILD_COLLISION_RISK",
+      "SAME_SOURCE_REPEATED_RECORD"
+    ]
+  },
+  {
+    "a": "generalitat:2026071700013",
+    "b": "guiabcn:G19",
+    "title_a": "XXI Festival Internacional de Putxinel·lis",
+    "title_b": "XXI Festival Internacional de Putxinel·lis",
+    "similarity_heuristic": 1.0,
+    "geo_meters": null,
+    "venue_similarity_heuristic": 1.0,
+    "start_a": "2026-10-09",
+    "start_b": "2026-10-09",
+    "review_only": true,
+    "risks": [
+      "TITLE_SIMILARITY_IS_NOT_IDENTITY",
+      "PROGRAM_CHILD_COLLISION_RISK",
+      "MUNICIPAL_NO_ARCHIVED_RAW_EVIDENCE"
+    ]
+  }
+]
