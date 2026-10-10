@@ -17,3 +17,10 @@ Requisitos:
 **No implementar aún:** scraper HTML masivo, extracción pagada de IA, recomendaciones, login externo, imágenes de terceros, despliegue cloud, publicación automática o predicción de cobertura.
 
 Entrega: código con tests, documentación de cambios, 3 ejecuciones offline idénticas e informe de efectos en la base. Los datos v1.3 son snapshots históricos y deben permanecer disponibles para auditoría.
+
+## Implementación realizada
+
+- `src/sync.py` añade conectores paginados para la forma Socrata/Generalitat y do.diba.cat, con transporte inyectable para fixtures offline, HTTPS obligatorio, filtros de Barcelona (`08019`), zona `Europe/Madrid`, reintentos 429/5xx y límites de página, filas y tiempo.
+- La operación `python3 run.py --sync … --endpoint https://…` es deliberadamente independiente del servidor local; no se añadió una ruta web de sincronización.
+- Se añadieron `sync_runs`, `source_record_versions` y `editorial_review_invalidations`. Las relaciones de recintos/organizadores se reemplazan de forma atómica solo para la ficha recibida; las fichas no presentes nunca se eliminan.
+- `tests/test_sync.py` ejecuta tres importaciones offline idénticas: la primera muta una ficha y las dos siguientes mutan cero; verifica paginación, 429/500, respuesta parcial, actualización, cambio de recinto y reversión. En una base vacía de prueba el efecto final es 1 ficha y 1 versión tras las tres ejecuciones idénticas.

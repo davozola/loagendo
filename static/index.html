@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Loagendo · Laboratorio privado</title><link rel="stylesheet" href="/app.css"></head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Loagendo · Agenda cultural de Barcelona</title><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/revamp.css"></head>
 <body><header class="topbar"><div class="brand"><span class="brand-icon">✳</span><div><strong>loagendo</strong><small>laboratorio privado · Barcelona</small></div></div><div class="top-actions"><span class="privacy">● Solo en este Mac</span><button id="viewExplore" class="nav active" type="button">Explorar</button><button id="viewReview" class="nav" type="button">Revisión</button><button id="viewMetrics" class="nav" type="button">Indicadores</button></div></header>
-<main><section class="hero"><div class="eyebrow">CATÁLOGO EXPERIMENTAL · SNAPSHOT 10 OCT 2026</div><h1>¿Qué pasa en <em>Barcelona?</em></h1><p>Explora las actividades encontradas y comprueba sus fuentes antes de publicarlas. Los intervalos de fechas no siempre equivalen a sesiones confirmadas.</p></section>
+<main><section class="hero"><div class="eyebrow">BARCELONA · AGENDA CULTURAL VIVA</div><div class="hero-grid"><div><h1>Tu ciudad<br><em>en movimiento.</em></h1><p>Una selección editorial de lo que está pasando ahora y en los próximos días. Explora, guarda el enlace de origen y decide qué no te quieres perder.</p><div class="hero-actions"><button id="jumpHighlights" class="hero-primary" type="button">Ver destacados <span>↓</span></button><button id="jumpExplore" class="hero-secondary" type="button">Explorar agenda</button></div></div><div class="hero-orbit"><span>música</span><span>escena</span><span>arte</span><span>barrio</span><b>BCN<br>HOY</b></div></div></section>
+<section class="spotlight" id="spotlight"><div class="spotlight-head"><div><div class="eyebrow">SELECCIÓN DEL MOMENTO</div><h2>Próximos días<br><em>en Barcelona</em></h2></div><p>Actividades próximas encontradas en fuentes culturales. Consulta siempre la ficha original para confirmar condiciones.</p></div><div id="spotlightCards" class="spotlight-cards" aria-live="polite"></div></section>
 <section class="stats" id="quickStats" aria-label="Resumen"></section>
 <div class="shell"><aside class="filters"><div class="filter-header"><h2>Refinar resultados</h2><button id="clear" class="linkbutton" type="button">Limpiar</button></div>
 <label for="search">Buscar actividad o espacio</label><input id="search" placeholder="Conciertos, exposiciones, biblioteca…" autocomplete="off"/>
@@ -13,10 +14,10 @@
 <label for="status">Estado editorial</label><select id="status"><option value="">Todos</option></select>
 <label class="check"><input type="checkbox" id="onlySessions"/> Solo horas candidatas</label>
 <div class="tip"><strong>Cómo interpretar los resultados</strong><p>«Coincide por intervalo» no garantiza función ese día. «Hora candidata» sigue pendiente de verificación.</p></div></aside>
-<section class="content"><div class="section-bar"><div><h2 id="sectionTitle">Actividades encontradas</h2><p id="sectionDesc">Fichas de origen, no eventos publicados.</p></div><div class="counter" id="totalCount" aria-live="polite"></div></div>
+<section class="content" id="explore"><div class="section-bar"><div><h2 id="sectionTitle">Todas las actividades</h2><p id="sectionDesc">Explora la agenda completa con sus datos de origen.</p></div><div class="counter" id="totalCount" aria-live="polite"></div></div>
 <div class="notice" id="notice">Los contenidos pertenecen a una instantánea de octubre de 2026. Las fechas, horarios y condiciones pueden haber cambiado.</div>
 <div class="cards" id="cards" aria-live="polite"></div><div class="pagination" id="pages"></div>
 <div id="metrics" class="metrics hidden"></div></section></div>
 </main>
 <div id="overlay" class="overlay hidden" role="presentation"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="panel-top"><span class="eyebrow">FICHA Y EVIDENCIAS</span><button id="closePanel" class="iconbutton" type="button" aria-label="Cerrar ficha">✕</button></div><div id="detail"></div></div></div>
-<footer>LOAGENDO / MVP privado · Sin publicación automática · Sin fotografías externas · Datos abiertos con atribución sujeta a revisión</footer><script defer src="/app.js"></script></body></html>
+<footer>LOAGENDO / MVP privado · Datos con procedencia y atribución · La disponibilidad debe confirmarse en la fuente original</footer><script defer src="/app.js"></script></body></html>

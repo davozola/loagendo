@@ -1,33 +1,24 @@
 __pycache__/
-*.pyc
-.DS_Store
-.pytest_cache/
-reports/*.sqlite3-journal
-reports/*.sqlite3-wal
-reports/*.sqlite3-shm
-
-# macOS
-.DS_Store
-
-# Python
-__pycache__/
 *.py[cod]
+.DS_Store
 .pytest_cache/
 .venv/
 venv/
 
-# Bases de datos locales
+# Bases de datos y media generados en cada instalación local
 *.db
 *.sqlite
 *.sqlite3
+reports/*.sqlite3-journal
+reports/*.sqlite3-wal
+reports/*.sqlite3-shm
+data/media/
 
-# Credenciales
+# Credenciales y temporales locales
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-
-# Archivos temporales
 *.log
 tmp/

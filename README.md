@@ -1,6 +1,6 @@
 # Loagendo — MVP privado v1.3
 
-**Estado:** prototipo local navegable; no es un servicio de producción ni una agenda actualizada automáticamente. **Sin conexión a Internet durante la ejecución**, sin claves de API y sin dependencias de Python externas. Requiere Python 3.9+.
+**Estado:** prototipo local navegable; no es un servicio de producción ni una agenda actualizada automáticamente. La navegación no hace llamadas de red; existe una sincronización manual y limitada para APIs autorizadas. Sin claves de API ni dependencias de Python externas. Requiere Python 3.9+.
 
 ## Arranque en Mac (dos pasos)
 
@@ -26,7 +26,7 @@ La primera ejecución puede tardar unos segundos si no está incluida la base SQ
 - Página de indicadores; API JSON local para conectar posteriormente un frontend.
 - Interfaz sin fotografías, sin IA y sin fuentes externas para evitar derechos y costes no verificados.
 
-**Advertencias de interpretación:** el filtro por día incluye actividades cuyo *intervalo* atraviesa esa fecha; para un festival eso no confirma que haya una función ese día. Las exposiciones se presentan como intervalos, nunca como decenas de sesiones generadas. Los datos corresponden a una captura del **10 de octubre de 2026**, con ventana hasta **7 de enero de 2027**. El prototipo no realiza sincronización incremental.
+**Advertencias de interpretación:** el filtro por día incluye actividades cuyo *intervalo* atraviesa esa fecha; para un festival eso no confirma que haya una función ese día. Las exposiciones se presentan como intervalos, nunca como decenas de sesiones generadas. Los datos corresponden a una captura del **10 de octubre de 2026**, con ventana hasta **7 de enero de 2027**. La sincronización incremental no se ejecuta al arrancar ni desde la interfaz: es una operación explícita de CLI, auditable y con límites.
 
 ## API local
 
@@ -55,6 +55,20 @@ python3 run.py --rebuild-snapshot
 
 La base de datos y las notas se guardan en `reports/loagendo_v12.sqlite3`. Haz una copia de este archivo si quieres conservarlas al sustituir versiones del proyecto.
 
+## Sincronización incremental (solo CLI local)
+
+Las fuentes permitidas son `generalitat`, `diba_bibliotecas`, `diba_turismo` y `guiabcn`. El operador debe proporcionar el endpoint HTTPS autorizado de cada API, salvo el conector experimental local de GuiaBCN, que usa el JSON declarado por su frontend. GuiaBCN no descarga ni sirve imágenes y sus registros quedan marcados como no verificados para publicación.
+
+```bash
+python3 run.py --sync diba_bibliotecas --endpoint 'https://API-AUTORIZADA.example/actes' \
+  --page-size 100 --max-rows 1000 --sync-timeout 30
+
+# Prueba limitada, sin imágenes ni publicación
+python3 run.py --sync guiabcn --page-size 10 --max-rows 10 --sync-timeout 30
+```
+
+El resultado JSON incluye `SyncRun` (estado, HTTP, cursor, páginas, filas recibidas/rechazadas/mutadas y advertencias). Las tablas `source_record_versions` y `editorial_review_invalidations` conservan el JSON/hash y los campos que cambiaron. Si una ficha con estado `reviewed` cambia en un campo de origen, pasa a `needs_evidence`, pero su nota e historial se conservan. Una ejecución parcial, agotada por límite o fallida **nunca borra ni cancela** fichas ausentes.
+
 ## Comprobar el proyecto
 
 ```bash
@@ -65,5 +79,5 @@ Este MVP amplía el laboratorio v1.2 y conserva sus pruebas, source registry y s
 
 ## Lo que no está construido todavía
 
-Ingesta diaria incremental, scraping autorizado de GuiaBCN, revisión y verificación de cada sesión primaria, permisos de uso de imágenes, aprobación publicable con historial por versión, arquitectura multiusuario, seguimiento de bajas/cancelaciones, IA medida contra un gold set independiente, geocodificación de barrio y despliegue público. Consulta `docs/HOJA_DE_RUTA_MVP.md`.
+Scraping autorizado de GuiaBCN, revisión y verificación de cada sesión primaria, permisos de uso de imágenes, aprobación publicable con historial por versión, arquitectura multiusuario, seguimiento de bajas/cancelaciones, IA medida contra un gold set independiente, geocodificación de barrio y despliegue público. Consulta `docs/HOJA_DE_RUTA_MVP.md`.
 # loagendo

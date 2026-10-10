@@ -134,7 +134,8 @@ def row_to_event(conn, row, detail=False):
         'occurrences':occurrences,'has_candidate':bool(occurrences),
         'date_precision':'point' if start==end else 'range',
         'evidence_level':evidence_level,
-        'published':False
+        'published':(conn.execute('SELECT status FROM publication_decisions WHERE source=? AND id=?',(source,id)).fetchone() or ('draft',))[0]=='approved',
+        'media':[{'asset_id':r[0],'url':'/media/'+str(r[0]),'alt':r[1],'rights_status':r[2]} for r in conn.execute('SELECT asset_id,alt_text,rights_status FROM media_assets WHERE source=? AND id=? AND local_path IS NOT NULL ORDER BY asset_id',(source,id))]
     }
     if detail:
         price,free=source_price(raw,source)
@@ -149,6 +150,8 @@ def row_to_event(conn, row, detail=False):
             'links':source_links(raw,source,url),
             'raw_sha256':conn.execute('SELECT raw_sha256 FROM source_records WHERE source=? AND id=?',(source,id)).fetchone()[0],
             'evidence':{'level':evidence_level,'date_is_verified':False,'schedule_is_verified':False,'rights_for_media_verified':False},
+            'verified_fields':[{'field':r[0],'value':json.loads(r[1]),'evidence_url':r[2],'checked_on':r[3],'note':r[4],'updated_at':r[5]} for r in conn.execute('SELECT field_name,value_json,evidence_url,checked_on,note,updated_at FROM field_verifications WHERE source=? AND id=? ORDER BY field_name',(source,id))],
+            'publication_status':(conn.execute('SELECT status FROM publication_decisions WHERE source=? AND id=?',(source,id)).fetchone() or ('draft',))[0],
         })
     return events
 
@@ -166,7 +169,27 @@ def initialize(conn):
        old_status TEXT, new_status TEXT NOT NULL, old_note TEXT, new_note TEXT,
        changed_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS field_verifications (
+       source TEXT NOT NULL, id TEXT NOT NULL, field_name TEXT NOT NULL, value_json TEXT NOT NULL,
+       evidence_url TEXT NOT NULL, checked_on TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL,
+       PRIMARY KEY(source,id,field_name), FOREIGN KEY(source,id) REFERENCES source_records(source,id)
+    );
+    CREATE TABLE IF NOT EXISTS field_verification_log (
+       seq INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, id TEXT NOT NULL, field_name TEXT NOT NULL,
+       old_value_json TEXT, new_value_json TEXT NOT NULL, evidence_url TEXT NOT NULL, checked_on TEXT NOT NULL, changed_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS publication_decisions (
+       source TEXT NOT NULL, id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', note TEXT NOT NULL DEFAULT '', decided_at TEXT NOT NULL,
+       PRIMARY KEY(source,id), FOREIGN KEY(source,id) REFERENCES source_records(source,id)
+    );
+    CREATE TABLE IF NOT EXISTS media_assets (
+       asset_id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, id TEXT NOT NULL, original_url TEXT NOT NULL,
+       alt_text TEXT NOT NULL DEFAULT '', credit TEXT NOT NULL DEFAULT '', rights_status TEXT NOT NULL DEFAULT 'unknown',
+       sha256 TEXT, local_path TEXT, UNIQUE(source,id,original_url), FOREIGN KEY(source,id) REFERENCES source_records(source,id)
+    );
     ''')
+    columns={r[1] for r in conn.execute('PRAGMA table_info(media_assets)')}
+    if 'content_type' not in columns: conn.execute('ALTER TABLE media_assets ADD COLUMN content_type TEXT')
 
 
 def connect(db):
@@ -182,7 +205,7 @@ def all_events(conn):
     return [row_to_event(conn,r) for r in rows]
 
 
-def query_events(conn, *, query='', date='', category='', district='', source='', status='', kind='', only_sessions=False,page=1,page_size=24):
+def query_events(conn, *, query='', date='', category='', district='', source='', status='', kind='', only_sessions=False,featured=False,page=1,page_size=24):
     if date and not parse_date(date):raise ValueError('Fecha no válida')
     if page<1 or page>9999:raise ValueError('Página no válida')
     if page_size<1 or page_size>100:raise ValueError('Tamaño de página no válido')
@@ -201,9 +224,14 @@ def query_events(conn, *, query='', date='', category='', district='', source=''
             if date and not any(occ['date']==date for occ in e['occurrences']):
                 continue
         match.append(e)
+    # Featured cards deliberately prioritize imminent records with a local image.
+    if featured:
+        baseline='2026-10-10'; horizon='2026-10-24'
+        match=[e for e in match if e['end']>=baseline and e['start']<=horizon and e['eligibility']!='exclude']
+        match.sort(key=lambda e:(not bool(e['media']),max(e['start'],baseline),e['title'].casefold()))
     # Show useful upcoming items first. A long program spanning the selected
     # day is weaker evidence than an explicit dated candidate or a one-day act.
-    if date:
+    elif date:
         def rank(e):
             has_time=any(o['date']==date for o in e['occurrences'])
             if has_time:return 0
@@ -239,11 +267,16 @@ def stats(conn):
         d={}
         for e in items:d[e[key]]=d.get(e[key],0)+1
         return d
-    return {'total':len(items),'candidate_occurrences':sum(len(x['occurrences']) for x in items),'published':0,
+    has_sync=conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='sync_runs'").fetchone()
+    sync=[]
+    if has_sync:
+        sync=[{'source':r[0],'status':r[1],'finished_at':r[2],'rows_received':r[3],'rows_mutated':r[4]} for r in conn.execute('''SELECT source,status,finished_at,rows_received,rows_mutated FROM sync_runs
+          WHERE id IN (SELECT MAX(id) FROM sync_runs GROUP BY source) ORDER BY source''')]
+    return {'total':len(items),'candidate_occurrences':sum(len(x['occurrences']) for x in items),'published':sum(1 for x in items if x['published']),
             'sources':grouped('source'),'kinds':grouped('kind'),'statuses':grouped('status'),
             'district_known':sum(bool(x['district']) for x in items),'district_unknown':sum(not x['district'] for x in items),
             'by_category':grouped('category'),'source_date_start':'2026-10-10','source_date_end':'2027-01-07',
-            'provisional_taxonomy':True}
+            'provisional_taxonomy':True,'sync_runs':sync}
 
 
 def save_review(conn, source, id, status, note):
@@ -261,3 +294,30 @@ def save_review(conn, source, id, status, note):
         conn.execute('INSERT INTO editorial_review_log(source,id,old_status,new_status,old_note,new_note,changed_at) VALUES(?,?,?,?,?,?,?)',
             (source,id,prev[0],status,prev[1],note,now))
     return {'status':status,'note':note,'updated_at':now,'published':False}
+
+
+def save_field_verification(conn, source, id, field_name, value, evidence_url, checked_on, note=''):
+    allowed={'title','start','end','time_text','price_text','venue','organizer','category','district','neighborhood','occurrence'}
+    if field_name not in allowed:raise ValueError('Campo verificable no permitido')
+    if not isinstance(value,(str,int,float,bool,dict,list)) or value in ('',None):raise ValueError('Valor verificado requerido')
+    if not isinstance(evidence_url,str) or not evidence_url.startswith('https://'):raise ValueError('URL HTTPS de evidencia requerida')
+    if not parse_date(checked_on):raise ValueError('Fecha de comprobación no válida')
+    note=note.strip()
+    if len(note)>2000:raise ValueError('Nota demasiado larga (máx. 2.000 caracteres)')
+    if not conn.execute('SELECT 1 FROM source_records WHERE source=? AND id=?',(source,id)).fetchone():raise LookupError('Actividad no encontrada')
+    encoded=json.dumps(value,ensure_ascii=False,sort_keys=True);now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+    old=conn.execute('SELECT value_json FROM field_verifications WHERE source=? AND id=? AND field_name=?',(source,id,field_name)).fetchone()
+    with conn:
+        conn.execute('''INSERT INTO field_verifications(source,id,field_name,value_json,evidence_url,checked_on,note,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(source,id,field_name) DO UPDATE SET value_json=excluded.value_json,evidence_url=excluded.evidence_url,checked_on=excluded.checked_on,note=excluded.note,updated_at=excluded.updated_at''',(source,id,field_name,encoded,evidence_url,checked_on,note,now))
+        conn.execute('INSERT INTO field_verification_log(source,id,field_name,old_value_json,new_value_json,evidence_url,checked_on,changed_at) VALUES(?,?,?,?,?,?,?,?)',(source,id,field_name,old[0] if old else None,encoded,evidence_url,checked_on,now))
+    return {'field':field_name,'value':value,'evidence_url':evidence_url,'checked_on':checked_on,'updated_at':now}
+
+
+def save_publication_decision(conn, source, id, status, note):
+    if status not in ('draft','blocked','approved'):raise ValueError('Estado de publicación no permitido')
+    if not conn.execute('SELECT 1 FROM source_records WHERE source=? AND id=?',(source,id)).fetchone():raise LookupError('Actividad no encontrada')
+    now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+    with conn:
+        conn.execute('''INSERT INTO publication_decisions(source,id,status,note,decided_at) VALUES(?,?,?,?,?) ON CONFLICT(source,id) DO UPDATE SET status=excluded.status,note=excluded.note,decided_at=excluded.decided_at''',(source,id,status,note.strip(),now))
+    # `published` is a local API flag. The HTTP server remains bound to 127.0.0.1.
+    return {'status':status,'note':note.strip(),'updated_at':now,'published':status=='approved'}

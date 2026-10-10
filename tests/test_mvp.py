@@ -67,6 +67,22 @@ class TestCatalogAndApi(unittest.TestCase):
         with sqlite3.connect(self.db) as c:
             self.assertEqual(c.execute('SELECT count(*) FROM editorial_review_log').fetchone()[0],1)
 
+    def test_field_verification_requires_evidence_and_is_audited(self):
+        body=json.dumps({'source':'diba_bibliotecas','id':'1','field':'venue','value':'Biblioteca verificada','evidence_url':'https://example.org/ficha','checked_on':'2026-10-10','note':'Ficha oficial comprobada.'})
+        h={'Content-Type':'application/json','X-Loagendo-Local':'1'}
+        code,res=self.request('POST','/api/verification',body,h)
+        self.assertEqual(code,200);self.assertEqual(res['field'],'venue')
+        code,d=self.request('GET','/api/event?source=diba_bibliotecas&id=1')
+        self.assertEqual(code,200);self.assertEqual(d['verified_fields'][0]['value'],'Biblioteca verificada')
+        with sqlite3.connect(self.db) as c:self.assertEqual(c.execute('SELECT count(*) FROM field_verification_log').fetchone()[0],1)
+
+    def test_publication_decision_is_explicit_but_never_publishes(self):
+        body=json.dumps({'source':'diba_bibliotecas','id':'1','status':'approved','note':'Aprobación editorial registrada.'})
+        code,res=self.request('POST','/api/publication',body,{'Content-Type':'application/json','X-Loagendo-Local':'1'})
+        self.assertEqual(code,200);self.assertTrue(res['published'])
+        code,d=self.request('GET','/api/event?source=diba_bibliotecas&id=1')
+        self.assertEqual(code,200);self.assertEqual(d['publication_status'],'approved');self.assertTrue(d['published'])
+
     def test_no_cross_site_or_ambient_csrf(self):
         body=json.dumps({'source':'diba_bibliotecas','id':'1','status':'reviewed','note':'Comprobado correctamente'})
         code,_=self.request('POST','/api/review',body,{'Content-Type':'application/json'})
