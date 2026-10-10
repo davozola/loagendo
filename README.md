@@ -66,3 +66,4 @@ Este MVP amplía el laboratorio v1.2 y conserva sus pruebas, source registry y s
 ## Lo que no está construido todavía
 
 Ingesta diaria incremental, scraping autorizado de GuiaBCN, revisión y verificación de cada sesión primaria, permisos de uso de imágenes, aprobación publicable con historial por versión, arquitectura multiusuario, seguimiento de bajas/cancelaciones, IA medida contra un gold set independiente, geocodificación de barrio y despliegue público. Consulta `docs/HOJA_DE_RUTA_MVP.md`.
+# loagendo
