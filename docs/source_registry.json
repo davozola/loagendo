@@ -53,8 +53,9 @@
     "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos ni imágenes.",
     "attribution": "MACBA Museu d'Art Contemporani de Barcelona",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Colector limitado a la página pública de agenda y sus enlaces de calendario; no infiere bajas."
+    "image_reuse_confirmed": true,
+    "remarks": "Colector limitado a la página pública de agenda y sus enlaces de calendario; no infiere bajas.",
+    "image_reuse_basis": "Decisión editorial de David Sola (17-10-2026, opción A): mostrar la imagen promocional que la propia institución publica para el acto en su agenda, con crédito a la institución y enlace a su página. Se registra como política de fuente; cada activo conserva su URL de origen. Revisable por fuente; los textos siguen siendo metadata_reference_only."
   },
   "web_cccb": {
     "owner": "CCCB",
@@ -63,8 +64,9 @@
     "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos ni imágenes.",
     "attribution": "CCCB",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Colector limitado a la página pública de calendario; no infiere bajas."
+    "image_reuse_confirmed": true,
+    "remarks": "Colector limitado a la página pública de calendario; no infiere bajas.",
+    "image_reuse_basis": "Decisión editorial de David Sola (17-10-2026, opción A): mostrar la imagen promocional que la propia institución publica para el acto en su agenda, con crédito a la institución y enlace a su página. Se registra como política de fuente; cada activo conserva su URL de origen. Revisable por fuente; los textos siguen siendo metadata_reference_only."
   },
   "web_teatre_lliure": {
     "owner": "Teatre Lliure",
@@ -73,8 +75,9 @@
     "license_basis": "La temporada se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
     "attribution": "Teatre Lliure",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Colector limitado a la página pública de temporada; conserva las fechas de intervalo y no infiere bajas."
+    "image_reuse_confirmed": true,
+    "remarks": "Colector limitado a la página pública de temporada; conserva las fechas de intervalo y no infiere bajas.",
+    "image_reuse_basis": "Decisión editorial de David Sola (17-10-2026, opción A): mostrar la imagen promocional que la propia institución publica para el acto en su agenda, con crédito a la institución y enlace a su página. Se registra como política de fuente; cada activo conserva su URL de origen. Revisable por fuente; los textos siguen siendo metadata_reference_only."
   },
   "web_auditori": {
     "owner": "L'Auditori",
@@ -83,8 +86,9 @@
     "license_basis": "La página se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
     "attribution": "L'Auditori",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Colector limitado a los datos estructurados de próximos eventos incluidos por la propia página; no infiere bajas."
+    "image_reuse_confirmed": true,
+    "remarks": "Colector limitado a los datos estructurados de próximos eventos incluidos por la propia página; no infiere bajas.",
+    "image_reuse_basis": "Decisión editorial de David Sola (17-10-2026, opción A): mostrar la imagen promocional que la propia institución publica para el acto en su agenda, con crédito a la institución y enlace a su página. Se registra como política de fuente; cada activo conserva su URL de origen. Revisable por fuente; los textos siguen siendo metadata_reference_only."
   },
   "web_centres_civics": {
     "owner": "Ajuntament de Barcelona — Centres Cívics",
@@ -93,8 +97,9 @@
     "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
     "attribution": "Centres Cívics de Barcelona",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Colector paginado y limitado a fichas publicadas por los propios centros; no infiere bajas ni altera decisiones editoriales."
+    "image_reuse_confirmed": true,
+    "remarks": "Colector paginado y limitado a fichas publicadas por los propios centros; no infiere bajas ni altera decisiones editoriales.",
+    "image_reuse_basis": "Decisión editorial de David Sola (17-10-2026, opción A): mostrar la imagen promocional que la propia institución publica para el acto en su agenda, con crédito a la institución y enlace a su página. Se registra como política de fuente; cada activo conserva su URL de origen. Revisable por fuente; los textos siguen siendo metadata_reference_only."
   },
   "web_conciertos_club": {
     "owner": "Conciertos.Club",
