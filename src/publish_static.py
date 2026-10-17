@@ -203,10 +203,10 @@ def credits_html(registry, generated_at='', counts=None):
         rows.append(f'<article class="credit"><h2>{html.escape(label)}</h2><p><b>Titular:</b> {html.escape(entry.get("owner", ""))}</p><p><b>Dataset:</b> {html.escape(entry.get("dataset", ""))} {link}</p>'
                     f'<p><b>Licencia / base de reutilización:</b> {licence}. {html.escape(entry.get("license_basis", ""))}</p><p><b>Atribución:</b> {html.escape(entry.get("attribution", ""))}</p><p><b>Imágenes:</b> {images}</p></article>')
     counts = counts or {}
-    return ('<!DOCTYPE html><html lang="es" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Loagendo</title>'
-            '<meta name="description" content="De dónde salen los datos y las imágenes de Loagendo, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css"></head>'
+    return ('<!DOCTYPE html><html lang="es" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Brollant</title>'
+            '<meta name="description" content="De dónde salen los datos y las imágenes de Brollant, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css"></head>'
             '<body class="credits-page"><main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
-            '<p>Loagendo recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
+            '<p>Brollant recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
             'Los textos descriptivos y las imágenes pertenecen a quien los publica: se muestran con su crédito y su enlace de origen, bajo la licencia o la política de cada fuente que se detalla abajo. '
             'Cada ficha conserva la URL original y la fecha de la última sincronización. Los horarios y precios se reproducen tal y como los publica la fuente; confirma siempre en la fuente antes de ir. '
             'Las fechas de conciertos se contrastan además con directorios de conciertos: esas fichas muestran sólo título, fecha, hora y sala, enlazan a la web de la sala o a la venta de entradas y no reproducen textos ni imágenes de terceros.</p>'

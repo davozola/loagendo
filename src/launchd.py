@@ -7,7 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-LABEL = "com.loagendo.engine"
+LABEL = "com.brollant.engine"
+OLD_LABELS = ("com.loagendo.engine",)  # nombre anterior (Loagendo, hasta 17-10-2026)
 
 
 def plist_data(root: Path, interval=900):

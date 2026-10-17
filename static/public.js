@@ -11,7 +11,9 @@ const params = new URLSearchParams(location.search);
    La interfaz se muestra en castellano o catalán; el contenido de cada ficha
    (título, descripción, horarios) se deja en el idioma en que lo publica la
    fuente, nunca se traduce automáticamente. */
-const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = localStorage.getItem('loagendo-lang') || '' } catch (_) {} return ['es','ca'].includes(q) ? q : ['es','ca'].includes(saved) ? saved : 'es' })();
+// Preferencias del navegador: nombre nuevo (brollant-*) y, si no existe, el de Loagendo, para no perder eventos guardados.
+function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
+const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca'].includes(q) ? q : ['es','ca'].includes(saved) ? saved : 'es' })();
 const CA = {
   'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri',
   'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
@@ -78,7 +80,7 @@ let state = {
   sub: params.get('sub') || '',
   savedOnly: false, saved: [], detail: null, page: 1, items: [], total: 0,
 };
-try { state.saved = JSON.parse(localStorage.getItem('loagendo-saved') || '[]') } catch (_) { state.saved = [] }
+try { state.saved = JSON.parse(pref('saved') || '[]') } catch (_) { state.saved = [] }
 let returnFocus = null, agendaRequest = 0, SUBTYPES = {};
 
 const fetchJson = async (path, opts) => { const r = await fetch(path, opts); const d = await r.json(); if (!r.ok) throw Error(d.error || 'Error'); return d };
@@ -208,7 +210,7 @@ function syncUrl(push) {
 }
 const detailFromLocation = () => { const m = location.pathname.match(/^\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
 function scrollToId(id) { const el = $(id); if (el) window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth'}) }
-function saveState() { try { localStorage.setItem('loagendo-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
+function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
 
 /* ---------- filters panel ---------- */
 function activeFilterList() {
@@ -392,7 +394,7 @@ async function openDetail(k, focus, opts = {}) {
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     const scheduleBits = [conflict ? `${t('Horas publicadas')}: ${conflict.join(LANG === 'ca' ? ' i ' : ' y ')} (${t('las fuentes no coinciden; confirma en la sala')})` : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
-    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Loagendo · ${esc(t(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
+    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Brollant · ${esc(t(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
     const osm = e.coordinates ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(e.coordinates.lat)}&mlon=${encodeURIComponent(e.coordinates.lon)}#map=17/${encodeURIComponent(e.coordinates.lat)}/${encodeURIComponent(e.coordinates.lon)}` : '';
     const map = e.coordinates ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venues?.[0]?.name || e.venue_names?.[0] || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div><span>${t('Cómo llegar')} ↗</span></a></section>` : '';
@@ -414,7 +416,7 @@ function mountSheetMap(e) {
   setTimeout(() => sheetMap && sheetMap.invalidateSize(), 60);
 }
 async function shareEvent(k) {
-  const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Loagendo';
+  const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Brollant';
   try { if (navigator.share) { await navigator.share({title, url}); return } } catch (_) { return }
   try { await navigator.clipboard.writeText(url); const b = document.querySelector('[data-share]'); if (b) { b.textContent = '✓ ' + t('Enlace copiado'); setTimeout(() => { b.textContent = '⇪ ' + t('Compartir') }, 1800) } } catch (_) { prompt(t('Enlace de la ficha'), url) }
 }
@@ -433,8 +435,8 @@ let searchTimer = null;
 document.addEventListener('click', e => {
   const button = e.target.closest('button,a[href^="#"]'); if (!button) return;
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
-  if (button.id === 'lang') { const next = LANG === 'ca' ? 'es' : 'ca'; try { localStorage.setItem('loagendo-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href); return }
-  if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('loagendo-theme', document.documentElement.dataset.theme) } catch (_) {} return }
+  if (button.id === 'lang') { const next = LANG === 'ca' ? 'es' : 'ca'; try { localStorage.setItem('brollant-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href); return }
+  if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'openFilters') { openDrawer(true); return }
@@ -500,7 +502,7 @@ function typeHero() {
 }
 
 (async () => {
-  let theme = 'dark'; try { theme = localStorage.getItem('loagendo-theme') || 'dark' } catch (_) {}  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
+  let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
   try { SUBTYPES = await fetchJson(STATIC ? '/data/subtypes.json' : '/api/subtypes') } catch (_) { SUBTYPES = {} }
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address

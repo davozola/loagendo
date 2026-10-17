@@ -1,4 +1,4 @@
-"""Bounded, auditable local scheduler for Loagendo ingestion jobs.
+"""Bounded, auditable local scheduler for Brollant ingestion jobs.
 
 It deliberately has no daemon or web endpoint: launchd (or another local
 scheduler) invokes ``run.py --run-jobs``.  Each job writes its own audit row,

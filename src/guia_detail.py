@@ -205,7 +205,7 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
             # caused later detail pages to fail without a schedule.
             if done or failed:
                 time.sleep(delay_seconds if not fetcher else 0)
-            req=Request(url,headers={'Accept':'text/html','User-Agent':'Loagendo/1.3 local enrichment'})
+            req=Request(url,headers={'Accept':'text/html','User-Agent':'Brollant/1.3 (+https://brollant.com) enrichment'})
             if fetcher: content=fetcher(url,timeout)
             else: content=_fetch_html(req,timeout)
             parser=MetaParser();parser.feed(content);description=parser.description; schedule_time,schedule_text=parser.schedule; facts=detail_facts(content); now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')

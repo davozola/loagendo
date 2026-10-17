@@ -44,7 +44,7 @@ TYPE_CATEGORY = {"MusicEvent": "Música y vida nocturna", "Festival": "Música y
                  "EducationEvent": "Talleres y experiencias", "ChildrensEvent": "Talleres y experiencias", "SportsEvent": "Deporte", "FoodEvent": "Gastronomía"}
 VENUE_CATEGORY = {"music": "Música y vida nocturna", "festival": "Música y vida nocturna", "theatre": "Artes escénicas", "cinema": "Cine y audiovisual", "culture": "Arte y exposiciones"}
 EVENT_TYPES = {"Event", "MusicEvent", "TheaterEvent", "DanceEvent", "ComedyEvent", "ScreeningEvent", "Festival", "ExhibitionEvent", "VisualArtsEvent", "LiteraryEvent", "EducationEvent", "ChildrensEvent", "SocialEvent"}
-USER_AGENT = "Loagendo/1.3 venue census (reads published schema.org data; contact in README)"
+USER_AGENT = "Brollant/1.3 (+https://brollant.com) venue census (reads published schema.org data)"
 
 
 def load_venues(path=VENUES_PATH):
@@ -55,7 +55,7 @@ def load_venues(path=VENUES_PATH):
 _ROBOTS: dict[str, robotparser.RobotFileParser | None] = {}
 
 
-def robots_allows(url, user_agent="Loagendo", timeout=10):
+def robots_allows(url, user_agent="Brollant", timeout=10):
     """Respect each host's robots.txt (ticketing sites in particular publish
     one). Unreachable robots.txt counts as allowed; a parse error too."""
     host = "{0.scheme}://{0.netloc}".format(urlsplit(url))
@@ -268,7 +268,7 @@ def record_id(slug, url, start, title):
 
 
 def record_from_jsonld(venue, node, page_url):
-    """Normalise one schema.org Event into Loagendo's record shape."""
+    """Normalise one schema.org Event into Brollant's record shape."""
     title = _text(node.get("name"))
     start, end = _date(node.get("startDate")), _date(node.get("endDate")) or _date(node.get("startDate"))
     if not title or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", start): return None

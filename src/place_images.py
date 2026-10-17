@@ -30,7 +30,7 @@ RETRY_AFTER_DAYS = 30
 FETCH_VERSION = 3  # bump when the page strategy changes: earlier failures are retried once
 # v3 (17-10-2026): respeta robots.txt y añade la página por id de Barcelona Cultura (las canónicas espais-associacions dan 404).
 PSEUDO_PLACE_WORDS = ("diferents espais", "diversos espais", "varios espacios", "diferentes espacios", "espais de la ciutat", "carrers del barri", "diversos llocs", "en línia", "online")
-USER_AGENT = "Loagendo/1.3 venue photo (one request per venue page)"
+USER_AGENT = "Brollant/1.3 (+https://brollant.com) venue photo (one request per venue page)"
 ALLOWED_PAGE_HOSTS = ("barcelona.cat",)
 
 

@@ -48,7 +48,7 @@ def urllib_transport(url: str, params: Mapping[str, object], timeout: float) -> 
     # taxonomy prefixes; encoding them changes their meaning on that service.
     query = urlencode({k: v for k, v in params.items() if v is not None}, doseq=True, safe="*,:", quote_via=quote)
     request = Request(url + (("&" if "?" in url else "?") + query if query else ""),
-                      headers={"Accept": "*/*", "User-Agent": "Loagendo/1.3 local sync"})
+                      headers={"Accept": "*/*", "User-Agent": "Brollant/1.3 (+https://brollant.com) sync"})
     try:
         with urlopen(request, timeout=timeout, context=tls_context()) as response:  # nosec B310: explicit public API endpoint supplied by operator
             return HttpResponse(response.status, json.loads(response.read().decode("utf-8")), dict(response.headers.items()))

@@ -91,7 +91,7 @@ def _download(conn, asset_id, directory):
     url=row[0]; parsed=urlsplit(url)
     if parsed.scheme not in ('http','https') or not parsed.netloc: raise ValueError('URL de imagen no permitida')
     from src.network import ascii_url
-    request=urllib.request.Request(ascii_url(url),headers={'Accept':'image/avif,image/webp,image/*','User-Agent':'Loagendo/1.3 local preview'})
+    request=urllib.request.Request(ascii_url(url),headers={'Accept':'image/avif,image/webp,image/*','User-Agent':'Brollant/1.3 (+https://brollant.com) image preview'})
     with urllib.request.urlopen(request,timeout=20,context=tls_context()) as response:  # nosec B310: URL is recorded from an event source
         content=response.read(10_000_000)
         content_type=response.headers.get_content_type()

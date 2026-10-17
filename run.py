@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private local-only Loagendo prototype; standard library, never a public web server."""
+"""Private local-only Brollant (antes Loagendo) prototype; standard library, never a public web server."""
 from __future__ import annotations
 import argparse
 import json
@@ -51,7 +51,7 @@ def make_handler(db):
         def _allowed_host(self):
             host=self.headers.get('Host','')
             return host in (f'127.0.0.1:{self.server.server_port}',f'localhost:{self.server.server_port}')
-        server_version = 'LoagendoLocal/0.13'
+        server_version = 'BrollantLocal/0.13'
         def log_message(self, fmt,*args):
             print('[LOCAL]',fmt%args)
         def _json(self, data,status=200):
@@ -173,7 +173,7 @@ def make_handler(db):
 
 
 def main():
-    parser=argparse.ArgumentParser(description='Loagendo MVP privado (localhost)')
+    parser=argparse.ArgumentParser(description='Brollant MVP privado (localhost)')
     parser.add_argument('--port',type=int,default=8765)
     parser.add_argument('--rebuild-snapshot',action='store_true',help='Reimporta los snapshots (conserva revisiones)')
     parser.add_argument('--sync',choices=('generalitat','diba_bibliotecas','diba_turismo','guiabcn'),help='Sincroniza una API autorizada y termina; no inicia el servidor')
@@ -336,7 +336,7 @@ def main():
         return 0 if result['status']=='completed' else 2
     warm_listing()
     server=ThreadingHTTPServer(('127.0.0.1',a.port),make_handler(DB))
-    print(f'Loagendo local: http://127.0.0.1:{a.port}')
+    print(f'Brollant local: http://127.0.0.1:{a.port}')
     print('Solo en este Mac. Las imágenes locales pueden estar pendientes de derechos. Ctrl+C para detenerlo.')
     try:server.serve_forever()
     except KeyboardInterrupt:pass

@@ -17,7 +17,7 @@ job() {  # ejecuta un trabajo; si el motor automático está ocupado, espera y r
 }
 
 echo "0/6 · Diagnóstico: ¿qué Python usa el motor automático?"
-MOTOR_PY=$(plutil -extract ProgramArguments.0 raw ~/Library/LaunchAgents/com.loagendo.engine.plist 2>/dev/null)
+MOTOR_PY=$(plutil -extract ProgramArguments.0 raw ~/Library/LaunchAgents/com.brollant.engine.plist 2>/dev/null || plutil -extract ProgramArguments.0 raw ~/Library/LaunchAgents/com.loagendo.engine.plist 2>/dev/null)
 echo "   Terminal: $(command -v python3)   ·   Motor: ${MOTOR_PY:-no encontrado}"
 for py in python3 "$MOTOR_PY"; do
   [ -z "$py" ] && continue

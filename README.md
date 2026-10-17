@@ -1,4 +1,4 @@
-# Loagendo — MVP privado v1.3
+# Brollant (antes Loagendo) — MVP privado v1.3
 
 **Estado:** motor local navegable y automatizable; no es un servicio de producción. La navegación no hace llamadas de red. Las tareas de ingesta se ejecutan por CLI mediante un programador local, sin claves de API ni dependencias de Python externas. Requiere Python 3.9+.
 

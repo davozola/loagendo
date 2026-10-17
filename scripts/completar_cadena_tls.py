@@ -66,7 +66,7 @@ def main(host):
     print(f'{host}: no verifica ({error}). Busco el intermedio que falta…')
     url = issuer_url(leaf_pem(host))
     print(f'Emisor publicado en: {url}')
-    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Loagendo/1.3'}), timeout=30) as response:  # nosec B310: URL del propio certificado; el contenido se verifica abajo
+    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Brollant/1.3 (+https://brollant.com)'}), timeout=30) as response:  # nosec B310: URL del propio certificado; el contenido se verifica abajo
         intermediate = to_pem(response.read(200_000))
     ok, error = verifies(host, intermediate)
     if not ok:
