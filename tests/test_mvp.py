@@ -59,7 +59,13 @@ class TestCatalogAndApi(unittest.TestCase):
         self.assertEqual(res['items'][0]['district'],'Nou Barris')
 
     def test_readiness_endpoint_is_local_and_reports_coverage(self):
-        code,res=self.request('GET','/api/readiness')
+        # Los datos de ejemplo están fechados el 17-10-2026: el informe se calcula a esa fecha para que el test no caduque.
+        import datetime as _dt
+        from unittest import mock
+        import src.readiness as readiness
+        real_report = readiness.report
+        with mock.patch.object(readiness, 'report', lambda conn, **kw: real_report(conn, **{'today': _dt.date(2026, 10, 17), **kw})):
+            code,res=self.request('GET','/api/readiness')
         self.assertEqual(code,200)
         self.assertEqual(res['events_next_days'],3)
         self.assertIn(res['release_status'],('not_ready','ready_for_manual_release'))

@@ -51,12 +51,12 @@ class PlaceImageTests(unittest.TestCase):
             self.assertNotIn('imagen de la fuente', catalog.featured_score(items['1'], '2026-10-20')[1])
             detail = catalog.event_detail(conn, 'opendatabcn_agenda', '2'); self.assertTrue(detail['media'][0]['fallback'])
             # a failure is recorded and not retried for a month
-            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '4', 'Sense pàgina', '2026-10-20', '2026-12-31', 'program', 'review', 'x', '', 'h', json.dumps({'name': 'x', 'from_relationships': [{'entity_core_type': 'place', 'entity_id': 777, 'entity_name': 'Casal', 'entity_canonical_url': 'https://www.barcelona.cat/ca/casal-777'}], 'addresses': [], 'loagendo': {}}))); conn.commit()
+            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '4', 'Sense pàgina', '2026-10-20', '2099-12-31', 'program', 'review', 'x', '', 'h', json.dumps({'name': 'x', 'from_relationships': [{'entity_core_type': 'place', 'entity_id': 777, 'entity_name': 'Casal', 'entity_canonical_url': 'https://www.barcelona.cat/ca/casal-777'}], 'addresses': [], 'loagendo': {}}))); conn.commit()
             def failing(url, timeout): raise OSError('timeout')
             out = fetch_place_images(conn, root / 'media', fetcher=failing, downloader=downloader, today=__import__('datetime').date(2026, 10, 13))
             self.assertEqual((out['fetched'], out['failed']), (0, 1))
             self.assertEqual(places_needing_images(conn, today=__import__('datetime').date(2026, 10, 13)), [])
-            self.assertEqual([p['place_id'] for p in places_needing_images(conn, today=__import__('datetime').date(2026, 11, 20))], ['777'])
+            self.assertEqual([p['place_id'] for p in places_needing_images(conn, today=__import__('datetime').date.today() + __import__('datetime').timedelta(days=31))], ['777'])  # el fallo se apunta con la hora real: reintento >30 días después de hoy
             catalog.invalidate_cache(); conn.close()
 
 
