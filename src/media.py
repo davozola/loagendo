@@ -90,7 +90,8 @@ def _download(conn, asset_id, directory):
     if not row: raise LookupError('Imagen no encontrada')
     url=row[0]; parsed=urlsplit(url)
     if parsed.scheme not in ('http','https') or not parsed.netloc: raise ValueError('URL de imagen no permitida')
-    request=urllib.request.Request(url,headers={'Accept':'image/avif,image/webp,image/*','User-Agent':'Loagendo/1.3 local preview'})
+    from src.network import ascii_url
+    request=urllib.request.Request(ascii_url(url),headers={'Accept':'image/avif,image/webp,image/*','User-Agent':'Loagendo/1.3 local preview'})
     with urllib.request.urlopen(request,timeout=20,context=tls_context()) as response:  # nosec B310: URL is recorded from an event source
         content=response.read(10_000_000)
         content_type=response.headers.get_content_type()
@@ -109,7 +110,8 @@ def download_authorized(conn, asset_id, directory):
     return _download(conn,asset_id,directory)
 
 
-TRANSIENT_DOWNLOAD_ERRORS = ('CERTIFICATE_VERIFY_FAILED', 'timed out', 'Connection reset', 'Remote end closed', 'HTTP Error 5', 'Tunnel connection failed', 'Temporary failure in name resolution')
+# "codec can't encode": URLs con © o acentos que fallaban antes de network.ascii_url (17-10-2026); se reintentan una vez arreglado.
+TRANSIENT_DOWNLOAD_ERRORS = ("codec can't encode", 'CERTIFICATE_VERIFY_FAILED', 'timed out', 'Connection reset', 'Remote end closed', 'HTTP Error 5', 'Tunnel connection failed', 'Temporary failure in name resolution')
 RETRY_TRANSIENT_AFTER_DAYS = 1
 
 

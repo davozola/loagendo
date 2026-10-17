@@ -20,7 +20,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
-from src.network import tls_context
+from src.network import ascii_url, tls_context
 
 
 def now_utc():
@@ -80,7 +80,7 @@ def candidate_pages(place_id, name, canonical_url):
 def fetch_page(url, timeout=20):
     host = urlsplit(url).netloc.lower()
     if not any(host == h or host.endswith("." + h) for h in ALLOWED_PAGE_HOSTS): raise ValueError("Host no permitido para fotos de equipamiento")
-    request = urllib.request.Request(url, headers={"Accept": "text/html", "User-Agent": USER_AGENT})
+    request = urllib.request.Request(ascii_url(url), headers={"Accept": "text/html", "User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout, context=tls_context()) as response:  # nosec B310: municipal venue pages only
         return response.geturl(), response.read(2_000_000).decode("utf-8", "replace")
 
@@ -96,7 +96,7 @@ def image_from_page(page, base_url):
 
 
 def download(url, directory, timeout=20):
-    request = urllib.request.Request(url, headers={"Accept": "image/*", "User-Agent": USER_AGENT})
+    request = urllib.request.Request(ascii_url(url), headers={"Accept": "image/*", "User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout, context=tls_context()) as response:  # nosec B310: image named by the municipal page
         content = response.read(10_000_000); content_type = response.headers.get_content_type()
     if not content_type.startswith("image/") or len(content) > 10_000_000: raise ValueError("Contenido de imagen no permitido")

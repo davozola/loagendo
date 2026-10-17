@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ssl
 from pathlib import Path
+from urllib.parse import quote, urlsplit, urlunsplit
 
 
 EXTRA_CA = Path(__file__).resolve().parents[1] / 'config' / 'extra-ca.pem'
@@ -30,3 +31,16 @@ def tls_context():
         try: context.load_verify_locations(cafile=str(EXTRA_CA))
         except ssl.SSLError: pass
     return context
+
+
+def ascii_url(url):
+    """Percent-encode non-ASCII characters (©, accents, spaces) in an URL taken
+    from a source, as browsers do, so urllib can send it. Already-encoded
+    sequences and reserved characters are left untouched; the host is IDNA."""
+    parts = urlsplit(url)
+    try: host = parts.hostname.encode('idna').decode('ascii') if parts.hostname else ''
+    except UnicodeError: host = parts.hostname or ''
+    netloc = host + (f':{parts.port}' if parts.port else '')
+    if parts.username: netloc = parts.username + (':' + parts.password if parts.password else '') + '@' + netloc
+    keep = "/%:@!$&'()*+,;=-._~"
+    return urlunsplit((parts.scheme, netloc, quote(parts.path, safe=keep), quote(parts.query, safe=keep + '?'), quote(parts.fragment, safe=keep + '?')))
