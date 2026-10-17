@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Loagendo · home escritorio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,"SF Pro Text","Helvetica Neue",Helvetica,sans-serif;background:#f6f5f1;color:#17171a}
+a{color:#17171a;text-decoration:none}a:hover{color:#5236e8}
+.hero{background-image:url(../assets/foto-atardecer.jpg);background-size:cover;background-position:center 70%}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1560px; box-sizing: border-box; display: flex; flex-direction: column; background: #f6f5f1">
+
+  <!-- Barra superior -->
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 40px; background: #ffffff; border-bottom: 1px solid #e6e4dd">
+    <a href="#" style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em">loagendo<span style="color: #5236e8">.</span></a>
+    <nav aria-label="Secciones" style="display: flex; gap: 4px">
+      <a href="#" style="padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: #f0eee8">Agenda</a>
+      <a href="#" style="padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 500; color: #3a3a40">Selección</a>
+      <a href="#" style="padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 500; color: #3a3a40">Barrios</a>
+    </nav>
+    <div style="display: flex; gap: 8px">
+      <button type="button" style="display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #17171a">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+        Guardados
+      </button>
+      <button type="button" aria-label="Cambiar a tema oscuro" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Cabecera con foto -->
+  
+
+  <!-- Panel flotante: periodo + días -->
+  <section class="hero" aria-label="Qué hacer en Barcelona" style="position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 460px; padding: 56px 40px 112px; color: #ffffff">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,8,30,0.25) 0%, rgba(10,8,30,{{dim}}) 70%, rgba(10,8,30,0.92) 100%)"></div>
+    <div style="position: relative; max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
+      <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #d9d4ff">Agenda cultural · Barcelona</p>
+      <h1 style="margin: 0; font-size: 64px; line-height: 1; font-weight: 700; letter-spacing: -0.03em; max-width: 760px">Qué hacer en Barcelona <span style="color: #c9bfff">hoy.</span></h1>
+      <p style="margin: 0; font-size: 18px; line-height: 1.5; max-width: 560px; color: #e8e6f5">Conciertos, teatro, exposiciones, cine y planes de barrio, con horario y enlace a la fuente oficial. Actualizada varias veces al día.</p>
+      <form role="search" style="display: flex; gap: 8px; max-width: 640px; margin-top: 8px">
+        <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar en la agenda</label>
+        <div style="flex: 1; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px; background: #ffffff; border-radius: 14px; color: #17171a">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c5c63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="q" type="search" placeholder="Artista, sala, barrio, obra…" style="flex: 1; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; color: #17171a">
+        </div>
+        <button type="submit" style="min-height: 52px; padding: 0 22px; border: 0; border-radius: 14px; background: #5236e8; color: #ffffff; font: inherit; font-size: 15px; font-weight: 600">Buscar</button>
+      </form>
+    </div>
+  </section><div style="position: relative; margin: -72px auto 0; width: 100%; max-width: 1200px; box-sizing: border-box; padding: 0 40px">
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 20px; box-shadow: 0 16px 40px rgba(20,18,40,0.12)">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+        <p style="margin: 0; font-size: 15px; color: #5c5c63"><b style="color: #17171a; font-weight: 700; font-size: 18px">91 planes</b> · Hoy, lunes 13 de octubre</p>
+        <div role="tablist" aria-label="Periodo" style="display: flex; gap: 4px; padding: 4px; background: #ebe9e3; border-radius: 999px">
+          <button type="button" role="tab" aria-selected="true" style="min-height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: #17171a; color: #ffffff; font: inherit; font-size: 14px; font-weight: 600">Hoy</button>
+          <button type="button" role="tab" aria-selected="false" style="min-height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #3a3a40; font: inherit; font-size: 14px; font-weight: 500">7 días</button>
+          <button type="button" role="tab" aria-selected="false" style="min-height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #3a3a40; font: inherit; font-size: 14px; font-weight: 500">30 días</button>
+          <button type="button" role="tab" aria-selected="false" style="min-height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #3a3a40; font: inherit; font-size: 14px; font-weight: 500">6 meses</button>
+          <button type="button" style="min-height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: #3a3a40; font: inherit; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+            Fecha
+          </button>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button type="button" aria-label="Días anteriores" style="flex: none; width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+        <div style="flex: 1; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px">
+          <button type="button" aria-pressed="true" style="min-height: 68px; border: 0; border-radius: 14px; background: #5236e8; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase">Hoy</span><span style="font-size: 24px; font-weight: 600; line-height: 1.1">13</span><span style="font-size: 11px; opacity: 0.85">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">mar</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">14</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">mié</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">15</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">jue</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">16</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">vie</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">17</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #cfcbe9; border-radius: 14px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5236e8">sáb</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">18</span><span style="font-size: 11px; color: #5236e8">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #cfcbe9; border-radius: 14px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5236e8">dom</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">19</span><span style="font-size: 11px; color: #5236e8">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">lun</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">20</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">mar</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">21</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">mié</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">22</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">jue</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">23</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #dedcd5; border-radius: 14px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6b73">vie</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">24</span><span style="font-size: 11px; color: #6b6b73">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #cfcbe9; border-radius: 14px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5236e8">sáb</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">25</span><span style="font-size: 11px; color: #5236e8">oct</span></button>
+          <button type="button" style="min-height: 68px; border: 1px solid #cfcbe9; border-radius: 14px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: inherit"><span style="font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5236e8">dom</span><span style="font-size: 24px; font-weight: 500; line-height: 1.1">26</span><span style="font-size: 11px; color: #5236e8">oct</span></button>
+        </div>
+        <button type="button" aria-label="Días siguientes" style="flex: none; width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selección de la semana -->
+  <section aria-labelledby="sel" style="width: 100%; max-width: 1200px; margin: 40px auto 0; box-sizing: border-box; padding: 0 40px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px">
+      <h2 id="sel" style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em">Selección de la semana</h2>
+      <a href="#" style="font-size: 14px; font-weight: 600; color: #5236e8">Ver las 12 →</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+      <article style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 18px; overflow: hidden">
+        <div aria-hidden="true" style="height: 150px; background: #2a2458"></div>
+        <div style="padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px">
+          <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Conciertos</p>
+          <h3 style="margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600">Concert solidari «Mare Mundi»</h3>
+          <p style="margin: 0; font-size: 13px; color: #5c5c63">Hoy · 19:30 · L'Auditori</p>
+        </div>
+      </article>
+      <article style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 18px; overflow: hidden">
+        <div aria-hidden="true" style="height: 150px; background: #3c2d6e"></div>
+        <div style="padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px">
+          <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Música</p>
+          <h3 style="margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600">Djavan</h3>
+          <p style="margin: 0; font-size: 13px; color: #5c5c63">Hoy · 21:00 · Teatre Coliseum</p>
+        </div>
+      </article>
+      <article style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 18px; overflow: hidden">
+        <div aria-hidden="true" style="height: 150px; background: #4a3a86"></div>
+        <div style="padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px">
+          <p style="margin: 0; display: flex; gap: 8px; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Música <span style="padding: 2px 8px; border-radius: 999px; background: #e9e5ff; color: #3b27b8; letter-spacing: 0; text-transform: none; font-size: 11px">Gratis</span></p>
+          <h3 style="margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600">Postres de músic</h3>
+          <p style="margin: 0; font-size: 13px; color: #5c5c63">Hoy · 18:00 · Centre Cívic El Sortidor</p>
+        </div>
+      </article>
+      <article style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 18px; overflow: hidden">
+        <div aria-hidden="true" style="height: 150px; background: #5a4a9c"></div>
+        <div style="padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px">
+          <p style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Festivales</p>
+          <h3 style="margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600">Biennal de Pensament</h3>
+          <p style="margin: 0; font-size: 13px; color: #5c5c63">Hasta el 19 oct · CCCB</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Agenda + barra de filtros -->
+  <section aria-labelledby="agenda" style="width: 100%; max-width: 1200px; margin: 48px auto 0; box-sizing: border-box; padding: 0 40px 64px; display: flex; flex-direction: column; gap: 16px">
+    <h2 id="agenda" style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em">Agenda de hoy</h2>
+    <div role="group" aria-label="Filtros" style="position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 16px">
+      <div role="group" aria-label="Categoría" style="display: flex; gap: 6px; flex-wrap: wrap">
+        <button type="button" aria-pressed="true" style="min-height: 36px; padding: 0 14px; border: 1px solid #17171a; border-radius: 999px; background: #17171a; color: #ffffff; font: inherit; font-size: 13px; font-weight: 600">Todo</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Conciertos</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Música</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Teatro</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Exposiciones</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Cine</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Familia</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Talleres</button>
+        <button type="button" aria-pressed="false" style="min-height: 36px; padding: 0 14px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; font: inherit; font-size: 13px; font-weight: 500">Barrio</button>
+      </div>
+      <span aria-hidden="true" style="width: 1px; height: 24px; background: #e6e4dd"></span>
+      <label style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; font-size: 13px; font-weight: 500; color: #17171a">Distrito
+        <select style="border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #17171a"><option>Todos</option><option>Eixample</option><option>Gràcia</option><option>Sants-Montjuïc</option></select>
+      </label>
+      <label style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; font-size: 13px; font-weight: 500; color: #17171a">Formato
+        <select style="border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #17171a"><option>Todos</option><option>Actos y funciones</option><option>Cursos</option><option>Festivales</option></select>
+      </label>
+      <button type="button" aria-expanded="false" style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; font: inherit; font-size: 13px; font-weight: 500; color: #17171a">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+        Gratis · horario · cursos <span style="min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #5236e8; color: #ffffff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">1</span>
+      </button>
+      <span style="flex: 1"></span>
+      <button type="button" style="min-height: 36px; padding: 0 10px; border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #5236e8">Limpiar</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4dd; border-radius: 18px; overflow: hidden">
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #efede7">
+        <time style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">18:00</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Música <span style="padding: 2px 8px; border-radius: 999px; background: #e9e5ff; color: #3b27b8; letter-spacing: 0; text-transform: none; font-weight: 600">Gratis</span></span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Postres de músic</span>
+          <span style="font-size: 14px; color: #5c5c63">Centre Cívic El Sortidor · Sants-Montjuïc</span>
+        </a>
+        <button type="button" aria-label="Guardar Postres de músic" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #efede7">
+        <time style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">18:30</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Barrio · Charla</span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Xerrada «Catalunya i la petjada esclavista»</span>
+          <span style="font-size: 14px; color: #5c5c63">Biblioteca Sant Gervasi – Joan Maragall · Sarrià-Sant Gervasi</span>
+        </a>
+        <button type="button" aria-label="Guardar Xerrada Catalunya i la petjada esclavista" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #efede7">
+        <time style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">19:30</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Conciertos · Clásica</span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Concert solidari «Mare Mundi. Un nou horitzó per a l'Alzheimer i l'envelliment»</span>
+          <span style="font-size: 14px; color: #5c5c63">L'Auditori · Eixample</span>
+        </a>
+        <button type="button" aria-label="Guardar Concert solidari Mare Mundi" style="width: 40px; height: 40px; border: 1px solid #5236e8; border-radius: 999px; background: #5236e8; display: inline-flex; align-items: center; justify-content: center; color: #ffffff"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #efede7">
+        <time style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">20:00</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Barrio <span style="padding: 2px 8px; border-radius: 999px; background: #e9e5ff; color: #3b27b8; letter-spacing: 0; text-transform: none; font-weight: 600">Gratis</span></span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Sessió «Gaudí a Tànger»</span>
+          <span style="font-size: 14px; color: #5c5c63">Fundació Joan Maragall – La Balmesiana · Eixample</span>
+        </a>
+        <button type="button" aria-label="Guardar Sessió Gaudí a Tànger" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #efede7">
+        <time style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em">21:00</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Música · Pop y rock</span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Djavan</span>
+          <span style="font-size: 14px; color: #5c5c63">Teatre Coliseum · Eixample</span>
+        </a>
+        <button type="button" aria-label="Guardar Djavan" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+      <div style="padding: 12px 20px; background: #faf9f6; border-bottom: 1px solid #efede7; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6b73">Durante todo el día</div>
+      <article style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 48px; align-items: center; gap: 16px; padding: 18px 20px">
+        <time style="font-size: 13px; font-weight: 600; color: #5c5c63; line-height: 1.3">10:00–13:00</time>
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">Exposiciones · Arte contemporáneo</span>
+          <span style="font-size: 17px; font-weight: 600; line-height: 1.3">Exposició «Unspoken Echoes»</span>
+          <span style="font-size: 14px; color: #5c5c63">Galeria Hub/Art Barcelona · Ciutat Vella · hasta el 30 oct</span>
+        </a>
+        <button type="button" aria-label="Guardar Exposició Unspoken Echoes" style="width: 40px; height: 40px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; display: inline-flex; align-items: center; justify-content: center; color: #17171a"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></button>
+      </article>
+    </div>
+    <button type="button" style="align-self: center; min-height: 44px; padding: 0 22px; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 600; color: #17171a">Mostrar 85 planes más</button>
+  </section>
+
+  <footer style="margin-top: auto; padding: 24px 40px; border-top: 1px solid #e6e4dd; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #5c5c63">
+    <span>Datos del Ajuntament de Barcelona, la Generalitat y las propias salas · actualizado hoy a las 12:15</span>
+    <a href="#" style="font-weight: 600; color: #5236e8">Fuentes y créditos</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"heroDim":{"editor":"range","default":0.72,"min":0.3,"max":0.95,"step":0.01,"section":"Cabecera"},"$preview":{"width":1280,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() { return { dim: this.props.heroDim ?? 0.72 }; }
+}
+</script>
+</body>
+</html>

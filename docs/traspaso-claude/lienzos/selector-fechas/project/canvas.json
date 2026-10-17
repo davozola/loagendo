@@ -1,0 +1,13 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-10-13T09:40:00Z"},"title":"Loagendo · selector de fechas","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1280,"h":300,"title":"A · Tira de días + periodos como pestañas"},
+"Compacto.dc.html":{"x":0,"y":420,"w":1280,"h":300,"title":"B · Periodos primero, días debajo"},
+"Movil.dc.html":{"x":1360,"y":0,"w":390,"h":420,"title":"A en móvil"},
+"MovilB.dc.html":{"x":1830,"y":0,"w":390,"h":420,"title":"B en móvil"}
+},
+"order":["Main.dc.html","Compacto.dc.html","Movil.dc.html","MovilB.dc.html"],
+"notes":{
+"t1":{"x":0,"y":-260,"text":"Loagendo · cabecera de la agenda: dos propuestas","kind":"title1","maxW":1280},
+"n1":{"x":1360,"y":480,"w":420,"text":"Qué cambia respecto a lo actual: el periodo pasa de un desplegable a pestañas visibles (una pulsación, se ve lo elegido); el campo dd/mm/aaaa nativo se sustituye por un botón «Elegir fecha» que abre el calendario; el día activo se marca con el acento; las flechas y el degradado indican que la tira se desplaza; el contador de planes queda bajo el título y con contexto («8 planes · Próximos 6 meses · 2 filtros»).","fill":"blue"}
+},
+"designSystems":[]}

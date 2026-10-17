@@ -8,8 +8,9 @@
     "catalog_url": "https://datos.gob.es/ca/catalogo/a09002970-agenda-cultural-de-catalunya-metadatos-cultural-la-localitzacions",
     "attribution": "Generalitat de Catalunya. Departament de Cultura",
     "update_date_required": true,
-    "image_reuse_confirmed": false,
-    "remarks": "Data reutilization subject to specific notices, third party media rights, privacy and attribution."
+    "image_reuse_confirmed": true,
+    "remarks": "Data reutilization subject to specific notices, third party media rights, privacy and attribution.",
+    "image_reuse_basis": "Decisión editorial de David Sola (12-10-2026): las imágenes servidas por las API/datasets públicos (campos imatges/imgapp del dataset de la Generalitat) pueden usarse en Loagendo. Se registra como política de fuente; cada activo conserva su URL de origen y el crédito a la Generalitat de Catalunya."
   },
   "diba_bibliotecas": {
     "owner": "Diputació de Barcelona",
@@ -41,7 +42,128 @@
     "license_url": "https://seuelectronica.ajuntament.barcelona.cat/ca/legal",
     "attribution": "Ajuntament de Barcelona — GuiaBCN",
     "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "remarks": "Conector incremental de la búsqueda pública de agenda, con paginación, historial de versiones y enriquecimiento individual de fichas. No se presume derecho de reutilización de imágenes ni se infieren bajas a partir de una respuesta parcial.",
+    "image_reuse_basis": "Decisión editorial de David Sola (12-10-2026): las imágenes servidas por la API/dataset municipal pueden usarse en Loagendo. Se registra como política de fuente; cada activo conserva su URL de origen y el crédito al Ajuntament de Barcelona."
+  },
+  "web_macba": {
+    "owner": "MACBA Museu d'Art Contemporani de Barcelona",
+    "dataset": "Agenda pública del MACBA",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos ni imágenes.",
+    "attribution": "MACBA Museu d'Art Contemporani de Barcelona",
+    "update_date_required": true,
     "image_reuse_confirmed": false,
-    "remarks": "Only 45 manually curated reference links are in the laboratory. No mass scraper."
+    "remarks": "Colector limitado a la página pública de agenda y sus enlaces de calendario; no infiere bajas."
+  },
+  "web_cccb": {
+    "owner": "CCCB",
+    "dataset": "Calendario público del CCCB",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos ni imágenes.",
+    "attribution": "CCCB",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector limitado a la página pública de calendario; no infiere bajas."
+  },
+  "web_teatre_lliure": {
+    "owner": "Teatre Lliure",
+    "dataset": "Temporada pública del Teatre Lliure",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "La temporada se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
+    "attribution": "Teatre Lliure",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector limitado a la página pública de temporada; conserva las fechas de intervalo y no infiere bajas."
+  },
+  "web_auditori": {
+    "owner": "L'Auditori",
+    "dataset": "Próximos eventos publicados en la temporada de L'Auditori",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "La página se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
+    "attribution": "L'Auditori",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector limitado a los datos estructurados de próximos eventos incluidos por la propia página; no infiere bajas."
+  },
+  "web_centres_civics": {
+    "owner": "Ajuntament de Barcelona — Centres Cívics",
+    "dataset": "Agenda pública de Centros Cívicos",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "La agenda se consulta como fuente primaria; no se presume licencia de reutilización de textos o imágenes.",
+    "attribution": "Centres Cívics de Barcelona",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector paginado y limitado a fichas publicadas por los propios centros; no infiere bajas ni altera decisiones editoriales."
+  },
+  "web_conciertos_club": {
+    "owner": "Conciertos.Club",
+    "dataset": "Cartelera pública de conciertos en Barcelona",
+    "data_reuse_status": "discovery_metadata_only",
+    "license_basis": "Fuente agregadora usada solo para detectar sesiones. No se presume autorización para reutilizar textos, imágenes ni enlaces de afiliación.",
+    "attribution": "Conciertos.Club",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector limitado al municipio de Barcelona según addressLocality. Conserva título, fecha, hora, sala y URL de ficha. Para la copia local puede descargar la referencia de imagen como previsualización con derechos desconocidos; no implica autorización ni se debe publicar sin contraste con fuente primaria. No infiere bajas.",
+    "public_presentation": "venue_link_only",
+    "public_credit": false,
+    "presentation_basis": "Directorio privado de conciertos usado para descubrir y contrastar fechas (decisión editorial de David Sola, 12-10-2026). En público la ficha enlaza a la web de la sala (config/venues.json) y a la ticketera si la hay; no se enlaza ni se nombra el directorio, no se reproducen sus textos ni sus imágenes. La procedencia completa queda archivada en source_records."
+  },
+  "opendatabcn_agenda": {
+    "owner": "Ajuntament de Barcelona — Open Data BCN",
+    "dataset": "Agenda cultural de la ciutat de Barcelona (agenda-cultural), recurso JSON diario",
+    "data_reuse_status": "cc_by_4_metadata",
+    "license_basis": "CKAN package_show license_id=CC-BY-4.0; frequency DIARIA",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "catalog_url": "https://opendata-ajuntament.barcelona.cat/data/ca/dataset/agenda-cultural",
+    "attribution": "Ajuntament de Barcelona — Agenda cultural (Open Data BCN)",
+    "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "remarks": "Mismo register_id que GuiaBCN: la ficha de este dataset sustituye en público a la fila GuiaBCN equivalente. Las imágenes (estatics-nasia.dtibcn.cat) llevan type_license nulo y se registran con derechos desconocidos. La descarga del recurso está protegida por un cortafuegos anti-bots (hCaptcha) que puede bloquear clientes automáticos: el conector admite --opendata-file con un JSON descargado desde el navegador.",
+    "image_reuse_basis": "Decisión editorial de David Sola (12-10-2026): las imágenes servidas por la API/dataset municipal pueden usarse en Loagendo. Se registra como política de fuente; cada activo conserva su URL de origen y el crédito al Ajuntament de Barcelona."
+  },
+  "venue_*": {
+    "owner": "Cada recinto (config/venues.json)",
+    "dataset": "Datos estructurados schema.org/Event publicados por la propia web del recinto",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "El recinto publica los datos en JSON-LD para su reutilización por buscadores; Loagendo muestra título, fecha, hora, recinto, precio declarado y enlace a la página del recinto. No se copia prosa en público ni se asumen derechos de imagen (rights_status=unknown) sin acuerdo.",
+    "attribution": "Nombre del recinto, con enlace a su página",
+    "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "remarks": "Un recinto se activa con enabled=true en config/venues.json tras comprobar con --venue-census que publica JSON-LD. Las condiciones particulares de un recinto se registran con la clave venue_<slug>.",
+    "image_reuse_basis": "Decisión editorial de David Sola (12-10-2026): mostrar la imagen promocional que el recinto o la ticketera publica para el evento, con crédito y enlace a su página. Revisable por fuente con la clave venue_<slug>."
+  },
+  "ticketing_*": {
+    "owner": "Cada ticketera o agregador (config/venues.json, type ticketing/aggregator)",
+    "dataset": "JSON-LD schema.org/Event de sus páginas de ciudad",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "Se muestran título, fecha, hora, recinto y precio declarado con enlace a la página de compra (tráfico cualificado hacia la ticketera). Se respeta robots.txt en cada petición. Antes de publicar en abierto: revisar las condiciones de uso de cada ticketera o entrar en su programa de afiliación/API, que suele ser la vía que ellas prefieren.",
+    "attribution": "Nombre de la ticketera, con enlace a la entrada",
+    "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "remarks": "Las fichas llevan THIRD_PARTY_TICKETING_LISTING; en público se agrupan bajo el registro canónico cuando el mismo acto existe en una fuente primaria.",
+    "image_reuse_basis": "Decisión editorial de David Sola (12-10-2026): mostrar la imagen promocional que el recinto o la ticketera publica para el evento, con crédito y enlace a su página. Revisable por fuente con la clave venue_<slug>."
+  },
+  "aggregator_*": {
+    "owner": "Cada directorio (config/venues.json, type=aggregator)",
+    "dataset": "Datos estructurados schema.org/Event publicados por directorios privados de conciertos (Songkick, Bandsintown, Resident Advisor)",
+    "data_reuse_status": "discovery_metadata_only",
+    "license_basis": "Sólo hechos (título, fecha, hora, sala): no se copian textos, imágenes ni enlaces de afiliación. Se usan para descubrir conciertos y contrastar fechas entre fuentes.",
+    "attribution": "Sala que acoge el concierto (enlace a su web)",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "public_presentation": "venue_link_only",
+    "public_credit": false,
+    "presentation_basis": "Directorio privado de conciertos usado para descubrir y contrastar fechas (decisión editorial de David Sola, 12-10-2026). En público la ficha enlaza a la web de la sala (config/venues.json) y a la ticketera si la hay; no se enlaza ni se nombra el directorio, no se reproducen sus textos ni sus imágenes. La procedencia completa queda archivada en source_records."
+  },
+  "place": {
+    "owner": "Ajuntament de Barcelona",
+    "dataset": "Fotografías de equipamientos municipales (página de cada equipamiento en barcelona.cat, imagen og:image)",
+    "data_reuse_status": "municipal_site_image",
+    "license_basis": "Imagen publicada por el Ayuntamiento en la ficha pública del equipamiento; se usa como imagen de respaldo de actividades sin imagen propia, rotulada «Imagen del equipamiento» y con crédito al Ayuntamiento.",
+    "attribution": "Ajuntament de Barcelona",
+    "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "image_reuse_basis": "Decisión editorial de David Sola (13-10-2026): las fotos de los equipamientos municipales pueden usarse como imagen de respaldo, siempre rotuladas como imagen del equipamiento y nunca presentadas como imagen de la actividad."
   }
 }

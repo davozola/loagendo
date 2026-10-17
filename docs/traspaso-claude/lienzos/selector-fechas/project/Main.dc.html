@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda · propuesta A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,"SF Pro Text","Helvetica Neue",Helvetica,sans-serif;background:#f6f5f1;color:#17171a}
+a{color:#17171a}a:hover{color:#5236e8}
+</style>
+</helmet>
+<div style="width: 1280px; height: 300px; box-sizing: border-box; padding: 36px 48px 24px; display: flex; flex-direction: column; gap: 22px; background: #f6f5f1">
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h2 style="margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1">Agenda</h2>
+      <p style="margin: 0; font-size: 15px; color: #5c5c63"><b style="color: #17171a; font-weight: 600">8 planes</b> · Próximos 6 meses · Conciertos · Jazz y blues</p>
+    </div>
+    <div role="tablist" aria-label="Periodo" style="display: flex; gap: 4px; padding: 4px; background: #ebe9e3; border-radius: 999px">
+      <button type="button" role="tab" aria-selected="false" style="min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #3a3a40">Hoy</button>
+      <button type="button" role="tab" aria-selected="false" style="min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #3a3a40">7 días</button>
+      <button type="button" role="tab" aria-selected="false" style="min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #3a3a40">30 días</button>
+      <button type="button" role="tab" aria-selected="true" style="min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: #17171a; font: inherit; font-size: 14px; font-weight: 600; color: #ffffff">6 meses</button>
+      <button type="button" aria-label="Elegir una fecha en el calendario" style="min-height: 40px; padding: 0 14px 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #3a3a40; display: inline-flex; align-items: center; gap: 8px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+        Elegir fecha
+      </button>
+    </div>
+  </div>
+  <div style="position: relative; display: flex; align-items: center; gap: 10px">
+    <button type="button" aria-label="Días anteriores" style="width: 44px; height: 44px; flex: none; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #8a8a92; display: inline-flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <div style="display: flex; gap: 10px; flex: 1 1 auto; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent)">
+      <button type="button" aria-pressed="true" style="flex: none; width: 104px; height: 118px; border: 2px solid #5236e8; border-radius: 20px; background: #5236e8; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85">Hoy · mar</span>
+        <span style="font-size: 40px; font-weight: 600; line-height: 1">13</span>
+        <span style="font-size: 12px; opacity: 0.85">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">mié</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">14</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">jue</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">15</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">vie</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">16</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #cfcbe9; border-radius: 20px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">sáb</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">17</span>
+        <span style="font-size: 12px; color: #5236e8">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #cfcbe9; border-radius: 20px; background: #f1effc; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5236e8">dom</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">18</span>
+        <span style="font-size: 12px; color: #5236e8">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">lun</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">19</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">mar</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">20</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">mié</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">21</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+      <button type="button" style="flex: none; width: 104px; height: 118px; border: 1px solid #dedcd5; border-radius: 20px; background: #ffffff; color: #17171a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #7a7a82">jue</span>
+        <span style="font-size: 40px; font-weight: 500; line-height: 1">22</span>
+        <span style="font-size: 12px; color: #7a7a82">oct</span>
+      </button>
+    </div>
+    <button type="button" aria-label="Días siguientes" style="width: 44px; height: 44px; flex: none; border: 1px solid #dedcd5; border-radius: 999px; background: #ffffff; color: #17171a; display: inline-flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5236e8","options":["#5236e8","#17171a","#d9574f","#1f7a5c"]},"$preview":{"width":1280,"height":300}}'>
+class Component extends DCLogic {
+  renderVals() { return { accent: this.props.accent ?? '#5236e8' }; }
+}
+</script>
+</body>
+</html>

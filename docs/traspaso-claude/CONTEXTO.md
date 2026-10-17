@@ -1,0 +1,43 @@
+# Loagendo · contexto de traspaso para Claude
+
+**Para quien lee esto (un Claude nuevo):** este paquete es la memoria de trabajo de Loagendo tal como estaba en la cuenta de Claude anterior de David el 17-10-2026. Léelo entero antes de la primera tarea y trabaja como si hubieras estado en el proyecto desde el principio. Lo que hay aquí son decisiones y estado; el código y los datos reales están en el repositorio (`/Users/david/Projects/loagendo`) y mandan sobre cualquier cifra de estos documentos si difieren.
+
+## Qué es Loagendo en una frase
+
+Agenda cultural de Barcelona, exhaustiva y fiable, construida sobre fuentes públicas con importación automática; MVP en Python + SQLite que corre en el Mac mini de David, exportado como sitio estático a Cloudflare Pages (https://loagendo.pages.dev, aún sin dominio propio).
+
+## Quién es David y cómo trabaja
+
+David es el único desarrollador y editor del proyecto; no es un proyecto de empresa, es suyo. Quiere propuestas estructuradas en texto primero para revisarlas, y solo después pasarlas a código o a lienzo. Responde bien a crítica estructural específica y accionable, y a marcos con evidencia. Le gusta el lienzo de Claude Design para propuestas visuales de la web (en este paquete van dos lienzos exportados, ver abajo).
+
+## Las reglas que nunca se rompen
+
+Vienen de David y están en `memoria/loagendo-decisiones.md`; las más importantes: no borrar datos ni decisiones editoriales (todo se marca, versiona o excluye, nunca se borra); no inventar horarios, precios, imágenes ni descripciones; mantener procedencia e historial por registro; no rebajar TLS; sin IA que reescriba contenido sin evaluación y trazabilidad explícitas; preferir soluciones implementables y escalables a procesos manuales.
+
+## Estado a 17-10-2026
+
+Lo que hay hecho y verificado se describe en `docs/loagendo-diagnostico-2026-10-12.md` (diagnóstico completo del código y plan por fases, con las fases 0 y parte de la 1 ya ejecutadas) y en `docs/loagendo-publicacion-web-2026-10-12.md` (exportación estática y despliegue en Cloudflare Pages). En resumen: rendimiento del catálogo resuelto (caché + prefetch), taxonomía GuiaBCN por códigos oficiales, exclusiones trazables, dedupe por bloques (solo candidatos, nunca fusiona), conectores de Generalitat y Diputació activados, conector nuevo de Open Data BCN (licencia clara, sustituye a GuiaBCN en el listado público), exportación estática con puerta de calidad y publicación automática desde launchd. Suite de pruebas en verde (102 en la última cifra conocida).
+
+Lo que estaba abierto cuando se cerró la cuenta anterior: la revisión de UI (ver lienzos), los horarios de actos puntuales (objetivo 70 % con evidencia), las descripciones (objetivo 60 %), el modelo de derechos de imagen por fuente, la agrupación de duplicados (fase 3), el gazetteer de recintos, y las integraciones JSON-LD de ticketeras decididas el 13-10. También pendía de David: dominio propio y `site_url`, y limpiar los `.bak-2026-10-12` y `dist-prueba-sin-imagenes.tgz`.
+
+## Decisiones de producto que condicionan cualquier trabajo nuevo
+
+Horizonte público de 6 meses; búsqueda que cubre todos los días. Bilingüe castellano/catalán con castellano por defecto, traduciendo interfaz y no contenido. Filtros en columna izquierda siempre visible en escritorio, desplegable en móvil. Clasificación de segundo nivel granular pero sin añadir por añadir, siempre con «Sin clasificar». Cursos empezados se distinguen u ocultan; lista ordenada por fecha de inicio. Agregadores privados (Conciertos.Club, Songkick…) solo para descubrir y contrastar; en público se enlaza a la sala, promotor, fuente pública o ticketera, nunca al agregador. Imágenes de Open Data BCN y GuiaBCN utilizables sin restricción; el resto solo con derechos claros. Fase actual: enseñar la web y captar primeros usuarios.
+
+## Qué hay en este paquete
+
+- `CONTEXTO.md` — este fichero.
+- `memoria/loagendo-decisiones.md` — volcado literal de la memoria de Claude sobre el proyecto (todas las decisiones con fecha).
+- `docs/loagendo-diagnostico-2026-10-12.md` — diagnóstico técnico y plan por fases.
+- `docs/loagendo-publicacion-web-2026-10-12.md` — estado de la publicación estática en Cloudflare Pages.
+- `lienzos/revision-ui/` — lienzo «Loagendo · revisión UI» (13-10-2026): home escritorio claro, cabecera oscura, home móvil y ficha móvil, con las dos fotos de cabecera de David en `assets/` y las notas de diseño en `project/canvas.json`. Propuesta: cabecera con foto y velo, buscador y selector de periodo dentro, filtros como barra encima de la agenda, filas más limpias. Nota: David después dijo que prefiere la barra lateral de filtros siempre visible en escritorio, así que la parte «filtros como barra» de esta propuesta quedó descartada.
+- `lienzos/selector-fechas/` — lienzo «Loagendo · selector de fechas» (13-10-2026): dos propuestas (A: tira de días + periodos como pestañas; B: periodos primero, días debajo) en escritorio y móvil.
+
+Los lienzos son ficheros `.dc.html` del formato de Claude Design; se pueden abrir como HTML normal para verlos, y un Claude con el tipo Design puede recrear el lienzo a partir de ellos en una nueva cuenta.
+
+## Cómo arrancar en la cuenta nueva
+
+1. Crear un proyecto «Loagendo» en claude.ai y subir como conocimiento del proyecto `CONTEXTO.md`, `memoria/loagendo-decisiones.md` y los dos ficheros de `docs/`.
+2. Si se usa Cowork en el Mac, vincular la carpeta `/Users/david/Projects/loagendo` (este paquete vive en `docs/traspaso-claude/` dentro de ella).
+3. En la primera conversación: «Lee docs/traspaso-claude/CONTEXTO.md y seguimos con Loagendo». La memoria de la cuenta nueva irá rellenándose sola a partir de ahí.
+4. Comprobar en el Mac que el repositorio está al día: `git status`, `python3 -m unittest discover -s tests -q`, `python3 run.py --readiness-report`.

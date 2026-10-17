@@ -1,0 +1,76 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Ficha.dc.html": {
+      "h": 1180,
+      "title": "Ficha · móvil",
+      "w": 390,
+      "x": 3190,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 1560,
+      "title": "Home · escritorio (tema claro, foto del atardecer)",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Movil.dc.html": {
+      "h": 1480,
+      "title": "Home · móvil",
+      "w": 390,
+      "x": 2720,
+      "y": 0
+    },
+    "Oscuro.dc.html": {
+      "expand": "fill",
+      "h": 720,
+      "title": "Cabecera · tema oscuro (foto nocturna)",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-13T12:40:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "n1": {
+      "fill": "blue",
+      "text": "Qué cambia y por qué\n\n1. Cabecera con tu foto del atardecer (noche en tema oscuro) y un velo de color: título, buscador y el selector de periodo/día viven ahí, que es lo primero que la gente quiere tocar.\n\n2. Los filtros dejan de ser una columna lateral pegada a la «Selección» (que no filtran) y pasan a ser una barra fija encima de la agenda: categoría como chips, distrito y formato como selectores, y «Más» para precio, horario y cursos empezados.\n\n3. Filas de la agenda: una sola etiqueta de categoría (sin «Actos y funciones ·» ni «· Barcelona»), sala · distrito, y «Gratis» como chip.\n\n4. Móvil: la navegación ya no se corta; el buscador y «Filtros» están a mano, el selector de periodo cabe en una fila con el botón de fecha debajo.\n\n5. Horario: un único control con franjas (Mañana / Tarde / Noche) y rango con etiqueta visible, en vez de dos deslizadores sin hora.",
+      "w": 560,
+      "x": 1360,
+      "y": 800
+    },
+    "n2": {
+      "fill": "gray",
+      "text": "Sin cambios: la paleta (violeta #5236e8 como único acento), la tipografía del sistema, la tira de días, el mapa, «Próximamente en esta sala», los enlaces a la fuente y el comportamiento de Atrás. Nada de datos nuevos: el diseño usa fichas reales de hoy.",
+      "w": 560,
+      "x": 1360,
+      "y": 1240
+    },
+    "t1": {
+      "kind": "title1",
+      "maxW": 3580,
+      "text": "Loagendo · propuesta de rediseño: cabecera con foto, filtros como barra y fichas más limpias",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Oscuro.dc.html",
+    "Movil.dc.html",
+    "Ficha.dc.html"
+  ],
+  "pages": [],
+  "title": "Loagendo · revisión UI"
+}
