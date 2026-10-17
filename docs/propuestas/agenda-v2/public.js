@@ -559,10 +559,12 @@ function renderAgenda() {
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
   else host.innerHTML = model.mode === 'day' ? renderDay(model) : renderRange(model);
   $('agendaMore').innerHTML = '';
-  const context = [win && !state.savedOnly ? win.label : labelDay(state.day), t(state.cat), t(state.sub), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
-  const s = model.sections, upcoming = model.mode === 'day' ? s.fixed.length : (model.counts?.fixed || 0);
-  const lead = model.mode === 'day' && model.live ? `<b>${clock(model.now.min)}</b> · ${upcoming.toLocaleString('es-ES')} ${L('planes que empiezan desde ahora', 'plans que comencen des d\'ara')}` : `<b>${upcoming.toLocaleString('es-ES')} ${L('planes con hora', 'plans amb hora')}</b>`;
-  $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : `${lead} · ${context} · ${state.total.toLocaleString('es-ES')} ${L('en total', 'en total')}`;
+  // Sumatorio = suma exacta de los tres botones del día (hora fija + horario amplio + por confirmar).
+  const s = model.sections, n = (model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc)).toLocaleString('es-ES');
+  const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui')}</b> ${L('desde las', 'des de les')} ${clock(model.now.min)}`
+    : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans')}</b> · ${esc(win.label)}`;
+  const extra = [t(state.cat), t(state.sub), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
+  $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
   stick();
 }
 function stick() { const h = document.querySelector('.site-header'); if (h) document.documentElement.style.setProperty('--stick', h.getBoundingClientRect().height + 'px') }
