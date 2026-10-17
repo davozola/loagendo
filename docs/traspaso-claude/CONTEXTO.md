@@ -14,7 +14,22 @@ David es el único desarrollador y editor del proyecto; no es un proyecto de emp
 
 Vienen de David y están en `memoria/loagendo-decisiones.md`; las más importantes: no borrar datos ni decisiones editoriales (todo se marca, versiona o excluye, nunca se borra); no inventar horarios, precios, imágenes ni descripciones; mantener procedencia e historial por registro; no rebajar TLS; sin IA que reescriba contenido sin evaluación y trazabilidad explícitas; preferir soluciones implementables y escalables a procesos manuales.
 
-## Estado a 17-10-2026
+## Estado verificado en el código (17-10-2026, primera sesión en la cuenta nueva)
+
+Esta sección manda sobre la siguiente, que es el estado tal como lo dejó la cuenta anterior.
+
+- **Git al día y en GitHub.** El trabajo del 12 y 13-10 no estaba en git porque un `.git/index.lock` atascado desde el 12-10 hacía fallar todos los commits. Se quitó el bloqueo y se guardó todo. `dist/`, `.wrangler/`, `data/cache/` y las copias de seguridad de `reports/` quedan fuera del historial.
+- **Pruebas: 133 en verde.** Tres pruebas dependían de la fecha real y caducaban (`test_automation` el 16-10, `test_mvp` readiness el 18-10, `test_place_images` hacia el 21-10). Se arreglaron solo en los tests, sin cambiar el código de producción. Se comprobó simulando fechas hasta 2028-01-01.
+- **Revisión de la interfaz: hecha** (`static/`, 13-10 a las 14:37). Incluye la cabecera con foto en claro y oscuro (`img/hero-*.webp`), los periodos como pestañas con botón de calendario y tira de días (es la propuesta A del selector de fechas), los filtros en columna lateral con cajón en móvil, el horario por franjas Mañana / Tarde / Noche con rango etiquetado, y las filas con una sola etiqueta de categoría y «Gratis». Los lienzos ya son solo histórico.
+- **Horarios y descripciones: objetivos superados.** Según el readiness, en los 30 días siguientes y contando solo las fuentes que se publican (sin GuiaBCN ni agregadores), el 94 % de los actos puntuales tienen hora (objetivo: 70 %) y el 95 % de las fichas tienen descripción (objetivo: 60 %). Todas las ocurrencias con hora llevan `evidence_field` y URL de la ficha, salvo una de la Generalitat. En la base completa: horas 91,7 % y descripciones 94,8 %.
+- **Abierto, por prioridad:**
+  1. **Imágenes.** Solo el 25 % de las fichas publicables tiene imagen local. Falta el modelo de derechos de imagen por fuente.
+  2. **Duplicados.** Hay 4.103 pares candidatos en la ventana de 30 días (el 12-10 eran 134). Falta medir cuántos se ven en público; es la fase 3.
+  3. **Huecos menores.** `diba_bibliotecas` tiene 0 de 50 fichas con descripción (la API viva sí la trae) y `venue_eventbrite` 0 de 112 actos puntuales con hora.
+  4. Gazetteer de recintos, JSON-LD de ticketeras, dominio propio y `site_url`.
+- **Limpieza:** las copias del 12-10 (`.bak`, su journal y `dist-prueba-sin-imagenes.tgz`, 93 MB) están en `_para_borrar/`, en la raíz del repositorio, para que David las borre a mano.
+
+## Estado a 17-10-2026 (según la cuenta anterior)
 
 Lo que hay hecho y verificado se describe en `docs/loagendo-diagnostico-2026-10-12.md` (diagnóstico completo del código y plan por fases, con las fases 0 y parte de la 1 ya ejecutadas) y en `docs/loagendo-publicacion-web-2026-10-12.md` (exportación estática y despliegue en Cloudflare Pages). En resumen: rendimiento del catálogo resuelto (caché + prefetch), taxonomía GuiaBCN por códigos oficiales, exclusiones trazables, dedupe por bloques (solo candidatos, nunca fusiona), conectores de Generalitat y Diputació activados, conector nuevo de Open Data BCN (licencia clara, sustituye a GuiaBCN en el listado público), exportación estática con puerta de calidad y publicación automática desde launchd. Suite de pruebas en verde (102 en la última cifra conocida).
 
