@@ -607,7 +607,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=6
+PROJECTION_VERSION=7  # 7: place_id por nombre para diba_bibliotecas (17-10-2026)
 
 
 def project_raw(source, id, title, start, end, kind, url, raw):

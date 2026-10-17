@@ -27,7 +27,8 @@ def now_utc():
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 RETRY_AFTER_DAYS = 30
-FETCH_VERSION = 2  # bump when the page strategy changes: earlier failures are retried once
+FETCH_VERSION = 3  # bump when the page strategy changes: earlier failures are retried once
+# v3 (17-10-2026): respeta robots.txt y añade la página por id de Barcelona Cultura (las canónicas espais-associacions dan 404).
 PSEUDO_PLACE_WORDS = ("diferents espais", "diversos espais", "varios espacios", "diferentes espacios", "espais de la ciutat", "carrers del barri", "diversos llocs", "en línia", "online")
 USER_AGENT = "Loagendo/1.3 venue photo (one request per venue page)"
 ALLOWED_PAGE_HOSTS = ("barcelona.cat",)
@@ -57,7 +58,18 @@ def place_of(raw, source):
         item = raw.get("api_item") or {}
         if item.get("equipment_id"):
             return (str(item["equipment_id"]), str(item.get("institutionname") or ""), "")
+    if source == "diba_bibliotecas":
+        # Sin id de equipamiento: se enlaza por nombre exacto (normalizado) con un
+        # equipamiento municipal que ya tenga foto; ver local_place_images.
+        name = str((raw.get("grup_adreca") or {}).get("adreca_nom") or "").strip()
+        if name: return (name_key(name), name, "")
     return None
+
+
+def name_key(name):
+    """Clave de recinto por nombre exacto, normalizado solo en mayúsculas, acentos y puntuación."""
+    import unicodedata
+    return "name:" + re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode().lower()).strip()
 
 
 def candidate_pages(place_id, name, canonical_url):
@@ -74,12 +86,15 @@ def candidate_pages(place_id, name, canonical_url):
         slug = re.sub(r"[^a-z0-9]+", "-", unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()).strip("-")
     if slug: out.append(f"https://guia.barcelona.cat/ca/detall/{slug}_{place_id}.html")
     if canonical_url: out.append(canonical_url)
+    if place_id: out.append(f"https://www.barcelona.cat/barcelonacultura/ca/detail/{place_id}")
     return out
 
 
 def fetch_page(url, timeout=20):
     host = urlsplit(url).netloc.lower()
     if not any(host == h or host.endswith("." + h) for h in ALLOWED_PAGE_HOSTS): raise ValueError("Host no permitido para fotos de equipamiento")
+    from src.venue_feeds import robots_allows
+    if not robots_allows(url): raise PermissionError("robots.txt no permite esta página")
     request = urllib.request.Request(ascii_url(url), headers={"Accept": "text/html", "User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=timeout, context=tls_context()) as response:  # nosec B310: municipal venue pages only
         return response.geturl(), response.read(2_000_000).decode("utf-8", "replace")
@@ -166,5 +181,12 @@ def fetch_place_images(conn, media_root, *, limit=60, today=None, fetcher=fetch_
 def local_place_images(conn):
     """{place_id: {...}} for every venue photo on disk."""
     initialize(conn)
-    return {r[0]: {"place_id": r[0], "name": r[1], "page_url": r[2], "image_url": r[3], "local_path": r[4], "content_type": r[5], "sha256": r[6]}
-            for r in conn.execute("SELECT place_id,name,page_url,image_url,local_path,content_type,sha256 FROM place_images WHERE status='ok' AND local_path IS NOT NULL")}
+    places = {r[0]: {"place_id": r[0], "name": r[1], "page_url": r[2], "image_url": r[3], "local_path": r[4], "content_type": r[5], "sha256": r[6]}
+              for r in conn.execute("SELECT place_id,name,page_url,image_url,local_path,content_type,sha256 FROM place_images WHERE status='ok' AND local_path IS NOT NULL")}
+    # Alias por nombre exacto para fuentes sin id de equipamiento (bibliotecas de la
+    # Diputació). Solo nombres únicos: si dos equipamientos se llaman igual, no hay alias.
+    by_name = {}
+    for place in places.values():
+        if place["name"]: by_name.setdefault(name_key(place["name"]), []).append(place)
+    places.update({key: found[0] for key, found in by_name.items() if len(found) == 1 and key != "name:"})
+    return places

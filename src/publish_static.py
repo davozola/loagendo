@@ -93,7 +93,7 @@ class ImageExporter:
             credit = {'source': 'place', 'source_label': 'Ajuntament de Barcelona', 'attribution': entry.get('attribution') or 'Ajuntament de Barcelona', 'original_url': place.get('page_url') or place.get('image_url') or '', 'license_url': entry.get('license_url', ''), 'basis': 'venue_photo', 'fallback': True}
             if place.get('sha256') and place['sha256'] in self.by_sha: result = {'url': self.by_sha[place['sha256']], 'credit': credit}; self.stats['reused'] += 1
             else:
-                name = self._write('place-' + str(place_id), Path(place['local_path']), place.get('content_type') or '')
+                name = self._write('place-' + str(place['place_id']), Path(place['local_path']), place.get('content_type') or '')
                 if name:
                     result = {'url': '/img/' + name, 'credit': credit}
                     if place.get('sha256'): self.by_sha[place['sha256']] = result['url']

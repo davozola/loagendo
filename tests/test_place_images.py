@@ -23,8 +23,16 @@ class PlaceImageTests(unittest.TestCase):
     def test_candidate_pages_prefer_guiabcn_and_fall_back_to_the_canonical_page(self):
         from src.place_images import candidate_pages
         self.assertEqual(candidate_pages('92086002380', 'Centre Cívic Cotxeres de Sants', 'https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-cotxeres-de-sants-92086002380'),
-                         ['https://guia.barcelona.cat/ca/detall/centre-civic-cotxeres-de-sants_92086002380.html', 'https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-cotxeres-de-sants-92086002380'])
-        self.assertEqual(candidate_pages('92086011957', 'Parc de la Guineueta', ''), ['https://guia.barcelona.cat/ca/detall/parc-de-la-guineueta_92086011957.html'])
+                         ['https://guia.barcelona.cat/ca/detall/centre-civic-cotxeres-de-sants_92086002380.html', 'https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-cotxeres-de-sants-92086002380',
+                          'https://www.barcelona.cat/barcelonacultura/ca/detail/92086002380'])
+        self.assertEqual(candidate_pages('92086011957', 'Parc de la Guineueta', ''), ['https://guia.barcelona.cat/ca/detall/parc-de-la-guineueta_92086011957.html', 'https://www.barcelona.cat/barcelonacultura/ca/detail/92086011957'])
+
+    def test_fetch_page_respects_robots_txt(self):
+        from unittest import mock
+        from src import place_images
+        with mock.patch('src.venue_feeds.robots_allows', return_value=False), mock.patch('urllib.request.urlopen') as urlopen:
+            with self.assertRaises(PermissionError): place_images.fetch_page('https://www.barcelona.cat/barcelonacultura/ca/detail/1')
+            urlopen.assert_not_called()
 
     def test_job_fetches_one_photo_per_venue_and_the_photo_backs_records_without_their_own(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -58,6 +66,21 @@ class PlaceImageTests(unittest.TestCase):
             self.assertEqual(places_needing_images(conn, today=__import__('datetime').date(2026, 10, 13)), [])
             self.assertEqual([p['place_id'] for p in places_needing_images(conn, today=__import__('datetime').date.today() + __import__('datetime').timedelta(days=31))], ['777'])  # el fallo se apunta con la hora real: reintento >30 días después de hoy
             catalog.invalidate_cache(); conn.close()
+
+    def test_libraries_link_to_a_venue_photo_only_by_exact_unique_name(self):
+        import sqlite3
+        from src.place_images import initialize, local_place_images, place_of
+        conn = sqlite3.connect(':memory:'); initialize(conn)
+        rows = [('1', 'Biblioteca El Bon Pastor – Josefina Castellví'), ('2', 'Centre Cívic Can Déu'), ('3', 'Centre Cívic Can Déu')]
+        for pid, name in rows:
+            conn.execute("INSERT INTO place_images(place_id,name,page_url,image_url,local_path,status) VALUES(?,?,'','','/x.jpg','ok')", (pid, name))
+        places = local_place_images(conn)
+        key = place_of({'grup_adreca': {'adreca_nom': ' Biblioteca el Bon Pastor - Josefina Castellvi'}}, 'diba_bibliotecas')[0]
+        self.assertEqual(places[key]['place_id'], '1')  # mayúsculas, acentos y guiones no cuentan
+        other = place_of({'grup_adreca': {'adreca_nom': 'Biblioteca Bon Pastor – Josefina Castellví'}}, 'diba_bibliotecas')[0]
+        self.assertNotIn(other, places)  # sin «El» no es el mismo nombre: no se adivina
+        self.assertNotIn(place_of({'grup_adreca': {'adreca_nom': 'Centre Cívic Can Déu'}}, 'diba_bibliotecas')[0], places)  # nombre repetido: sin alias
+        self.assertIsNone(place_of({'grup_adreca': {}}, 'diba_bibliotecas'))
 
 
 if __name__ == '__main__':
