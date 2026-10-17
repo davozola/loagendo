@@ -1,15 +1,24 @@
-"""Detail-page enrichment for GuiaBCN records; media stays reference-only."""
+"""Audited detail-page enrichment; media stays reference-only."""
 from __future__ import annotations
 import datetime as dt
 import html
 import sqlite3
+import re
+import time
 from html.parser import HTMLParser
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from src.media import register
+from src.media import is_event_image, register
+from src.network import tls_context
+
+# Also versions the description selection. GuiaBCN exposes a metadata-only
+# meta description ("Quan / On") alongside the actual body copy.
+SCHEDULE_PARSER_VERSION = 4
 
 class MetaParser(HTMLParser):
-    def __init__(self): super().__init__(); self.meta={}; self.links=[]; self.images=[]
+    def __init__(self):
+        super().__init__(); self.meta={}; self.links=[]; self.images=[]; self._paragraphs=[]; self._content_paragraphs=[]; self._in_p=False; self._in_content_p=False; self._buffer=[]; self._content_depth=0; self._schedule_depth=0; self._schedule=[]
     def handle_starttag(self, tag, attrs):
         attrs=dict(attrs)
         if tag=='meta':
@@ -19,25 +28,182 @@ class MetaParser(HTMLParser):
         elif tag=='img':
             candidate=attrs.get('src') or attrs.get('data-src') or attrs.get('data-lazy-src')
             if candidate: self.images.append((candidate,attrs.get('alt','')))
+        elif tag=='p':
+            self._in_p=True; self._in_content_p=bool(self._content_depth); self._buffer=[]
+        if self._content_depth:
+            self._content_depth+=1
+        elif tag=='div' and 'cos' in attrs.get('class','').split():
+            # GuiaBCN wraps its prose in `.cos`; the generic paragraphs that
+            # precede it belong to navigation and filters, not the event.
+            self._content_depth=1
+        if self._schedule_depth:
+            self._schedule_depth+=1
+        elif tag=='div' and attrs.get('id')=='horari':
+            self._schedule_depth=1
+    def handle_data(self, data):
+        if self._in_p: self._buffer.append(data)
+        if self._schedule_depth: self._schedule.append(data)
+    def handle_endtag(self, tag):
+        if tag=='p' and self._in_p:
+            value=' '.join(''.join(self._buffer).split())
+            if len(value)>=40: self._paragraphs.append(value)
+            if len(value)>=40 and self._in_content_p:self._content_paragraphs.append(value)
+            self._in_p=False; self._in_content_p=False; self._buffer=[]
+        if self._content_depth:
+            self._content_depth-=1
+        if self._schedule_depth:
+            self._schedule_depth-=1
+
+    @property
+    def description(self):
+        meta=self.meta.get('description') or self.meta.get('og:description') or ''
+        # GuiaBCN puts date, venue and telephone fields in the HTML meta tag.
+        # That is useful provenance but not a readable event description;
+        # favour the first substantive body paragraph instead.
+        if re.match(r'^\s*Quan\s*:',meta,re.I):
+            return (self._content_paragraphs or self._paragraphs or [''])[0]
+        return meta or (self._content_paragraphs or self._paragraphs or [''])[0]
+
+    @property
+    def schedule(self):
+        """Return every explicit local time stated in the official schedule."""
+        text=' '.join(''.join(self._schedule).split())
+        matches=re.findall(r'\ba\s+les\s+(\d{1,2})[.:](\d{2})\s*(?:h\b)?',text,re.I)
+        if not matches:
+            matches=re.findall(r'\b(?:de\s+)?(\d{1,2})[.:](\d{2})\s*h\b',text,re.I)
+        times=[]
+        for hour,minute in matches:
+            hour,minute=int(hour),int(minute)
+            value=f'{hour:02d}:{minute:02d}'
+            if hour<=23 and minute<=59 and value not in times:times.append(value)
+        if not times:return ('','')
+        return (' · '.join(times),' · '.join(f'{value.replace(":", ".")} h' for value in times))
 
 def initialize(conn):
     conn.execute('''CREATE TABLE IF NOT EXISTS source_enrichments (
       source TEXT NOT NULL,id TEXT NOT NULL, fetched_at TEXT NOT NULL, source_url TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '', links_json TEXT NOT NULL DEFAULT '[]', raw_html_sha256 TEXT NOT NULL,
       PRIMARY KEY(source,id), FOREIGN KEY(source,id) REFERENCES source_records(source,id))''')
+    columns={r[1] for r in conn.execute('PRAGMA table_info(source_enrichments)')}
+    if 'schedule_time' not in columns: conn.execute('ALTER TABLE source_enrichments ADD COLUMN schedule_time TEXT NOT NULL DEFAULT \'\'')
+    if 'schedule_text' not in columns: conn.execute('ALTER TABLE source_enrichments ADD COLUMN schedule_text TEXT NOT NULL DEFAULT \'\'')
+    if 'schedule_checked_at' not in columns: conn.execute('ALTER TABLE source_enrichments ADD COLUMN schedule_checked_at TEXT NOT NULL DEFAULT \'\'')
+    if 'schedule_parser_version' not in columns: conn.execute('ALTER TABLE source_enrichments ADD COLUMN schedule_parser_version INTEGER NOT NULL DEFAULT 0')
+    conn.execute('''CREATE TABLE IF NOT EXISTS source_detail_facts (
+      source TEXT NOT NULL,id TEXT NOT NULL,fetched_at TEXT NOT NULL,
+      facts_json TEXT NOT NULL DEFAULT '{}', PRIMARY KEY(source,id),
+      FOREIGN KEY(source,id) REFERENCES source_records(source,id))''')
 
-def enrich(conn, limit=10, timeout=20):
-    initialize(conn); rows=conn.execute("""SELECT id,source_url FROM source_records
-      WHERE source='guiabcn' AND source_url<>'' AND id NOT LIKE 'G%'
-      ORDER BY CASE WHEN end_date>='2026-10-10' THEN 0 ELSE 1 END, start_date, id LIMIT ?""",(limit,)).fetchall(); done=failed=media=0
-    import hashlib,json
-    for record_id,url in rows:
+
+def _fetch_html(request, timeout):
+    """Fetch a public detail page with bounded backoff for rate limiting."""
+    for attempt in range(4):
         try:
+            with urlopen(request,timeout=timeout,context=tls_context()) as response:
+                return response.read(2_000_000).decode('utf-8','replace')
+        except HTTPError as error:
+            if error.code != 429 or attempt == 3:
+                raise
+            time.sleep(2 ** attempt)
+
+
+def relevant_links(page_url, links):
+    """Keep useful links from a detail page, not its navigation chrome."""
+    page=urlsplit(page_url)
+    out=[]; seen=set()
+    generic_paths={'','/','/ca','/es','/en','/ca/','/es/','/en/','/contacte','/contacto'}
+    for link in links:
+        if not link: continue
+        absolute=urljoin(page_url,link)
+        parsed=urlsplit(absolute)
+        if parsed.scheme not in ('http','https') or not parsed.netloc: continue
+        if parsed.netloc==page.netloc and (parsed.path in generic_paths or parsed.path==page.path): continue
+        normalized=absolute.split('#',1)[0]
+        if normalized and normalized not in seen:
+            out.append(normalized); seen.add(normalized)
+    return out
+
+
+def _plain(markup):
+    return ' '.join(html.unescape(re.sub(r'<[^>]+>',' ',markup or '')).replace('\xa0',' ').split())
+
+
+def detail_facts(content):
+    """Extract labelled facts from a GuiaBCN detail page without guessing.
+
+    These facts remain in the enrichment layer because the source feed did
+    not provide them. The raw page hash in ``source_enrichments`` makes every
+    imported value traceable to the exact fetch.
+    """
+    facts={}
+    schedule=re.search(r'<div\s+id=["\']horari["\'][^>]*>(.*?)</table>',content,re.I|re.S)
+    if schedule:
+        cells=[_plain(x) for x in re.findall(r'<td[^>]*class=["\'][^"\']*content-info[^"\']*["\'][^>]*>(.*?)</td>',schedule.group(1),re.I|re.S)]
+        if len(cells)>=3:
+            facts.update({'schedule_days':cells[0], 'schedule_hours':cells[1], 'price_text':cells[2]})
+            if len(cells)>=4: facts['schedule_note']=cells[3]
+    for label,key in ((r'Se celebra a:', 'venue'),(r'Organitzat per:', 'organizer')):
+        match=re.search(r'<dt[^>]*>\s*'+label+r'\s*</dt>\s*<dd[^>]*>(.*?)</dd>',content,re.I|re.S)
+        if match: facts[key]=_plain(match.group(1)).rstrip('.').strip()
+    address=re.search(r'Adreça:\s*</dt>\s*<dd[^>]*>(.*?)</dd>',content,re.I|re.S)
+    if address: facts['address']=_plain(address.group(1))
+    coords=re.search(r'loadmapdetall\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)',content)
+    if coords: facts['coordinates']={'lat':float(coords.group(1)),'lon':float(coords.group(2))}
+    note=facts.get('schedule_note','').casefold()
+    facts['registration_required']=bool(re.search(r'inscripci',note))
+    return {key:value for key,value in facts.items() if value not in ('',None,False)}
+
+def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetcher=None, record_ids=None, delay_seconds=0.5):
+    """Archive presentation metadata without modifying imported source records."""
+    initialize(conn)
+    if sources is None:
+        sources=('guiabcn','web_macba','web_cccb','web_teatre_lliure','web_auditori','web_centres_civics')
+    if not sources: return {'attempted':0,'enriched':0,'failed':0,'media_references':0}
+    marks=','.join('?' for _ in sources)
+    record_ids=tuple(record_ids or ())
+    id_filter='' if not record_ids else f" AND id IN ({','.join('?' for _ in record_ids)})"
+    retry_before=(dt.datetime.now(dt.timezone.utc)-dt.timedelta(days=7)).isoformat(timespec='seconds')
+    today=dt.date.today()
+    priority_until=(today+dt.timedelta(days=14)).isoformat()
+    # The API listing for GuiaBCN has no schedule.  Old enrichment rows must
+    # therefore be revisited once after this field was introduced, then only
+    # periodically when no explicit hour was found.
+    missing='' if refresh else """AND (
+      NOT EXISTS (SELECT 1 FROM source_enrichments x WHERE x.source=source_records.source AND x.id=source_records.id)
+      OR (source_records.source='guiabcn' AND EXISTS (
+        SELECT 1 FROM source_enrichments x WHERE x.source=source_records.source AND x.id=source_records.id
+          AND (COALESCE(x.schedule_parser_version,0)<? OR (COALESCE(x.schedule_time,'')='' AND (COALESCE(x.schedule_checked_at,'')='' OR x.schedule_checked_at<?)))
+      ))
+    )"""
+    missing_params=() if refresh else (SCHEDULE_PARSER_VERSION,retry_before)
+    rows=conn.execute(f"""SELECT id,source,source_url FROM source_records
+      WHERE source IN ({marks}) AND source_url<>'' {id_filter} {missing}
+      ORDER BY CASE
+                 WHEN source='guiabcn' AND start_date=end_date AND start_date>=? AND start_date<=? THEN 0
+                 WHEN source='guiabcn' AND start_date=end_date AND start_date>=? THEN 1
+                 WHEN source='guiabcn' AND end_date>=? THEN 2
+                 ELSE 3 END,
+               start_date, id LIMIT ?""",(*sources,*record_ids,*missing_params,today.isoformat(),priority_until,today.isoformat(),today.isoformat(),limit)).fetchall(); done=failed=media=resolved=0
+    import hashlib,json
+    errors={}
+    for record_id,source,url in rows:
+        try:
+            # GuiaBCN is a public service, not a bulk-download endpoint. A
+            # small, deterministic pause avoids the burst that previously
+            # caused later detail pages to fail without a schedule.
+            if done or failed:
+                time.sleep(delay_seconds if not fetcher else 0)
             req=Request(url,headers={'Accept':'text/html','User-Agent':'Loagendo/1.3 local enrichment'})
-            with urlopen(req,timeout=timeout) as response: content=response.read(2_000_000).decode('utf-8','replace')
-            parser=MetaParser();parser.feed(content);description=parser.meta.get('description',''); now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+            if fetcher: content=fetcher(url,timeout)
+            else: content=_fetch_html(req,timeout)
+            parser=MetaParser();parser.feed(content);description=parser.description; schedule_time,schedule_text=parser.schedule; facts=detail_facts(content); now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+            resolved+=bool(schedule_time)
             with conn:
-                conn.execute('''INSERT INTO source_enrichments VALUES(?,?,?,?,?,?,?) ON CONFLICT(source,id) DO UPDATE SET fetched_at=excluded.fetched_at,source_url=excluded.source_url,description=excluded.description,links_json=excluded.links_json,raw_html_sha256=excluded.raw_html_sha256''',('guiabcn',record_id,now,url,description,json.dumps(parser.links[:20]),hashlib.sha256(content.encode()).hexdigest()))
+                links=relevant_links(url,parser.links)
+                conn.execute('''INSERT INTO source_detail_facts(source,id,fetched_at,facts_json) VALUES(?,?,?,?)
+                  ON CONFLICT(source,id) DO UPDATE SET fetched_at=excluded.fetched_at,facts_json=excluded.facts_json''',(source,record_id,now,json.dumps(facts,ensure_ascii=False,sort_keys=True)))
+                conn.execute('''INSERT INTO source_enrichments(source,id,fetched_at,source_url,description,links_json,raw_html_sha256,schedule_time,schedule_text,schedule_checked_at,schedule_parser_version)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(source,id) DO UPDATE SET fetched_at=excluded.fetched_at,source_url=excluded.source_url,description=excluded.description,links_json=excluded.links_json,raw_html_sha256=excluded.raw_html_sha256,schedule_time=excluded.schedule_time,schedule_text=excluded.schedule_text,schedule_checked_at=excluded.schedule_checked_at,schedule_parser_version=excluded.schedule_parser_version''',(source,record_id,now,url,description,json.dumps(links[:20]),hashlib.sha256(content.encode()).hexdigest(),schedule_time,schedule_text,now,SCHEDULE_PARSER_VERSION))
                 image=parser.meta.get('og:image')
                 candidates=[]
                 if image: candidates.append((image,parser.meta.get('og:image:alt','')))
@@ -45,8 +211,14 @@ def enrich(conn, limit=10, timeout=20):
                 seen=set()
                 for image,alt in candidates:
                     image=urljoin(url,image)
-                    if image in seen or not image.startswith(('https://','http://')): continue
-                    seen.add(image); register(conn,'guiabcn',record_id,image,alt=alt,rights_status='unknown');media+=1
+                    if image in seen or not image.startswith(('https://','http://')) or not is_event_image(image,alt): continue
+                    seen.add(image); register(conn,source,record_id,image,alt=alt,rights_status='unknown');media+=1
             done+=1
-        except Exception: failed+=1
-    return {'attempted':len(rows),'enriched':done,'failed':failed,'media_references':media}
+        except Exception as error:
+            failed+=1; kind=type(error).__name__+': '+str(error)[:80]; errors[kind]=errors.get(kind,0)+1
+    return {'attempted':len(rows),'enriched':done,'failed':failed,'media_references':media,'schedules_resolved':resolved,'errors':dict(sorted(errors.items(),key=lambda x:-x[1])[:5])}
+
+
+def enrich(conn, limit=10, timeout=20):
+    """Compatibility entry point for the original GuiaBCN-only command."""
+    return enrich_sources(conn,limit,timeout,sources=('guiabcn',))

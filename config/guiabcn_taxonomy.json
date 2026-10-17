@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "provenance": "Códigos `code_prop` de tipo de actividad (prefijo 0061901) que GuiaBCN adjunta a cada fila de su búsqueda pública. Las etiquetas catalanas proceden del filtro «Per temes» de https://guia.barcelona.cat/ca/agenda (18 temas). Tres códigos están confirmados por enlaces de la propia web (009 exposicions, 010 fires/mercats, 023 festes majors); el resto se asignó contrastando muestras de títulos el 2026-10-12. Un código sin etiqueta confirmada no clasifica: la ficha cae en la heurística de título.",
+  "activity_type_prefix": "0061901",
+  "priority": ["019","014","002","009","013","012","008","010","017","023","020","003","026","029","018","004"],
+  "codes": {
+    "019": {"label_ca": "Música", "category": "Música y vida nocturna", "confidence": "sample_verified"},
+    "014": {"label_ca": "Teatre, circ i dansa", "category": "Artes escénicas", "confidence": "sample_verified"},
+    "002": {"label_ca": "Cinema i projeccions circuit no comercial", "category": "Cine y audiovisual", "confidence": "sample_verified"},
+    "009": {"label_ca": "Exposicions", "category": "Arte y exposiciones", "confidence": "site_link"},
+    "013": {"label_ca": "Literatura", "category": "Literatura y palabra", "confidence": "sample_verified"},
+    "012": {"label_ca": "Visites, rutes i excursions", "category": "Patrimonio y rutas", "confidence": "sample_verified"},
+    "008": {"label_ca": "Esports", "category": "Deporte", "confidence": "sample_verified"},
+    "010": {"label_ca": "Fires, mostres i mercats ocasionals", "category": "Ferias y mercados", "confidence": "site_link"},
+    "017": {"label_ca": "Moda i desfilades", "category": "Ferias y mercados", "confidence": "sample_verified"},
+    "023": {"label_ca": "Festes populars i diades", "category": "Cultura popular y fiestas", "confidence": "site_link"},
+    "020": {"label_ca": "Religiosos, actes", "category": "Cultura popular y fiestas", "confidence": "sample_verified"},
+    "003": {"label_ca": "Congressos, conferències i col·loquis", "category": "Ciencia y divulgación", "confidence": "sample_verified"},
+    "026": {"label_ca": "Jocs", "category": "Talleres y experiencias", "confidence": "sample_verified"},
+    "029": {"label_ca": "Solidaritat i sensibilització", "category": "Comunidad y encuentros", "confidence": "sample_verified"},
+    "018": {"label_ca": "Premis, concursos i gales", "category": "Comunidad y encuentros", "confidence": "sample_verified"},
+    "004": {"label_ca": "Colònies i casals", "category": "Talleres y experiencias", "confidence": "sample_verified"},
+    "001": {"label_ca": "Nens i nenes: activitats", "category": null, "audience": "family", "confidence": "sample_verified"},
+    "030": {"label_ca": "Calendaris de dies festius i canvis d'horari", "category": null, "exclude_reason": "CALENDAR_NOTICE_NOT_AN_EVENT", "confidence": "sample_verified"}
+  }
+}

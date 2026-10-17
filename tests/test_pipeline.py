@@ -76,7 +76,9 @@ class ValidationTests(unittest.TestCase):
             out=Path(d);run(out=out)
             conn=sqlite3.connect(out/'loagendo_v12.sqlite3')
             self.assertEqual(conn.execute('SELECT COUNT(*) FROM publication_approved').fetchone()[0],0)
-            self.assertEqual(conn.execute('SELECT COUNT(*) FROM candidate_occurrences').fetchone()[0],41)
+            # 41 bare-time candidates of the v1.2 lab, plus 66 Generalitat rows whose
+            # 'horari' states the time followed by a duration clause or per-day times.
+            self.assertEqual(conn.execute('SELECT COUNT(*) FROM candidate_occurrences').fetchone()[0],107)
             conn.close()
     def test_idempotency_and_provenance(self):
         with tempfile.TemporaryDirectory() as d:

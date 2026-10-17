@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "provenance": "Segundo nivel de clasificación pública. Se deriva únicamente de los árboles oficiales del dataset «Agenda cultural» de Open Data BCN (CC BY 4.0): `secondary_filters_data[].full_path` (prefijo «Agenda >>» o «Cursos i tallers >>») y `classifications_data[].full_path` (prefijo «Especialitats AG >>»). Una ruta coincide si es igual al patrón o empieza por el patrón seguido de ' >> '. Nada se infiere del título: la ficha sin ruta reconocida cae en «Sin clasificar», que siempre se ofrece como opción para que ningún registro quede fuera.",
+  "unclassified_label": "Sin clasificar",
+  "groups": {
+    "Exposiciones": {
+      "applies_to": [
+        "Exposiciones"
+      ],
+      "subtypes": [
+        {
+          "label": "Fotografía",
+          "match": [
+            "Agenda >> Exposicions >> Fotografia",
+            "Especialitats AG >> Cultura i arts >> Fotografia"
+          ]
+        },
+        {
+          "label": "Pintura y dibujo",
+          "match": [
+            "Agenda >> Exposicions >> Dibuix i pintura",
+            "Agenda >> Exposicions >> Pintura",
+            "Agenda >> Exposicions >> Dibuix",
+            "Agenda >> Exposicions >> Gravat",
+            "Agenda >> Exposicions >> Cartells",
+            "Especialitats AG >> Cultura i arts >> Pintura",
+            "Especialitats AG >> Cultura i arts >> Dibuix",
+            "Especialitats AG >> Cultura i arts >> Il·lustracions",
+            "Especialitats AG >> Cultura i arts >> Còmic"
+          ]
+        },
+        {
+          "label": "Arte contemporáneo",
+          "match": [
+            "Agenda >> Exposicions >> Instal.lacions",
+            "Agenda >> Exposicions >> Escultura",
+            "Agenda >> Exposicions >> Performances",
+            "Agenda >> Exposicions >> Arts plàstiques",
+            "Agenda >> Exposicions >> Audiovisuals",
+            "Agenda >> Exposicions >> Video",
+            "Especialitats AG >> Cultura i arts >> Art contemporani",
+            "Especialitats AG >> Cultura i arts >> Escultura",
+            "Especialitats AG >> Cultura i arts >> Arts plàstiques"
+          ]
+        },
+        {
+          "label": "Historia y patrimonio",
+          "match": [
+            "Agenda >> Exposicions >> Història",
+            "Agenda >> Exposicions >> Història i arqueologia",
+            "Agenda >> Exposicions >> Arqueologia",
+            "Agenda >> Exposicions >> Etnologia",
+            "Agenda >> Exposicions >> Literatura",
+            "Especialitats AG >> Humanitats, lletres, ciències socials >> Història",
+            "Especialitats AG >> Humanitats, lletres, ciències socials >> Arqueologia"
+          ]
+        },
+        {
+          "label": "Arquitectura y diseño",
+          "match": [
+            "Agenda >> Exposicions >> Arquitectura",
+            "Agenda >> Exposicions >> Arquitectura i urbanisme",
+            "Agenda >> Exposicions >> Urbanisme",
+            "Agenda >> Exposicions >> Disseny",
+            "Agenda >> Exposicions >> Moda",
+            "Agenda >> Exposicions >> Moda i teixits",
+            "Agenda >> Exposicions >> Artesania",
+            "Especialitats AG >> Cultura i arts >> Arquitectura",
+            "Especialitats AG >> Cultura i arts >> Disseny"
+          ]
+        },
+        {
+          "label": "Ciencia y naturaleza",
+          "match": [
+            "Agenda >> Exposicions >> Medi ambient i ciències naturals",
+            "Agenda >> Exposicions >> Ciències naturals",
+            "Agenda >> Exposicions >> Tecnologia",
+            "Agenda >> Exposicions >> Flors i plantes",
+            "Agenda >> Exposicions >> Animals",
+            "Especialitats AG >> Ciències"
+          ]
+        }
+      ]
+    },
+    "Conciertos": {
+      "applies_to": [
+        "Conciertos",
+        "Música"
+      ],
+      "subtypes": [
+        {
+          "label": "Clásica y ópera",
+          "match": [
+            "Agenda >> Música >> Clàssica",
+            "Agenda >> Música >> Òpera i sarsuela",
+            "Agenda >> Música >> Música antiga",
+            "Agenda >> Música >> Contemporània, experimental",
+            "Agenda >> Música >> Contemporània i experimental",
+            "Especialitats AG >> Música >> Música clàssica",
+            "Especialitats AG >> Música >> Òpera",
+            "Especialitats AG >> Música >> Música antiga"
+          ]
+        },
+        {
+          "label": "Pop y rock",
+          "match": [
+            "Agenda >> Música >> Pop i rock",
+            "Agenda >> Música >> Cantautors i cantants solistes",
+            "Agenda >> Música >> Reggae",
+            "Especialitats AG >> Música >> Pop",
+            "Especialitats AG >> Música >> Rock",
+            "Especialitats AG >> Música >> Cantautors",
+            "Especialitats AG >> Música >> Música independent, indie",
+            "Especialitats AG >> Música >> Hip-hop, rap",
+            "Especialitats AG >> Música >> Musicals"
+          ]
+        },
+        {
+          "label": "Jazz y blues",
+          "match": [
+            "Agenda >> Música >> Jazz i blues",
+            "Especialitats AG >> Música >> Jazz, Blues"
+          ]
+        },
+        {
+          "label": "Flamenco y músicas del mundo",
+          "match": [
+            "Agenda >> Música >> Flamenc i rumbes",
+            "Agenda >> Música >> Músiques del món",
+            "Agenda >> Música >> Popular llatina",
+            "Especialitats AG >> Música >> Flamenc",
+            "Especialitats AG >> Música >> Música folklòrica i ètnica",
+            "Especialitats AG >> Música >> Música popular llatina"
+          ]
+        },
+        {
+          "label": "Electrónica",
+          "match": [
+            "Agenda >> Música >> Electrònica, techno i dance",
+            "Agenda >> Música >> Discjoqueis",
+            "Especialitats AG >> Música >> Música electrònica,  techno, dance",
+            "Especialitats AG >> Música >> Discjòqueis"
+          ]
+        },
+        {
+          "label": "Coral y tradicional",
+          "match": [
+            "Agenda >> Música >> Cant coral i cant gregorià",
+            "Agenda >> Música >> Popular catalana",
+            "Agenda >> Música >> Cobles i havaneres",
+            "Especialitats AG >> Música >> Cant coral"
+          ]
+        }
+      ]
+    },
+    "Talleres": {
+      "applies_to": [
+        "Talleres"
+      ],
+      "subtypes": [
+        {
+          "label": "Arte y manualidades",
+          "match": [
+            "Cursos i tallers >> Dibuix i pintura",
+            "Cursos i tallers >> Manualitats i artesania",
+            "Cursos i tallers >> Fotografia i audiovisual",
+            "Cursos i tallers >> Costura i moda",
+            "Agenda >> Cursos i tallers >> Dibuix",
+            "Agenda >> Cursos i tallers >> Pintura",
+            "Agenda >> Cursos i tallers >> Artesania",
+            "Agenda >> Cursos i tallers >> Costura",
+            "Agenda >> Cursos i tallers >> Ceràmica",
+            "Agenda >> Cursos i tallers >> Fotografia",
+            "Agenda >> Cursos i tallers >> Treballs manuals",
+            "Especialitats AG >> Artesania i manualitats",
+            "Especialitats AG >> Moda i tèxtil",
+            "Especialitats AG >> Cultura i arts >> Dibuix",
+            "Especialitats AG >> Cultura i arts >> Pintura",
+            "Especialitats AG >> Cultura i arts >> Fotografia",
+            "Especialitats AG >> Cultura i arts >> Ceràmica",
+            "Especialitats AG >> Cultura i arts >> Treballs manuals"
+          ]
+        },
+        {
+          "label": "Música, danza y teatro",
+          "match": [
+            "Cursos i tallers >> Música, dansa, teatre, circ",
+            "Agenda >> Cursos i tallers >> Cant, música, dansa i balls",
+            "Agenda >> Cursos i tallers >> Teatre i mim",
+            "Especialitats AG >> Música",
+            "Especialitats AG >> Dansa, ballet i balls de saló",
+            "Especialitats AG >> Cultura i arts >> Teatre",
+            "Especialitats AG >> Cultura i arts >> Circ",
+            "Especialitats AG >> Cultura i arts >> Expressió corporal",
+            "Especialitats AG >> Esports >> Balls esportius"
+          ]
+        },
+        {
+          "label": "Cuerpo y salud",
+          "match": [
+            "Cursos i tallers >> Esports i expressió corporal",
+            "Cursos i tallers >> Salut i creixement personal",
+            "Agenda >> Cursos i tallers >> Esports",
+            "Agenda >> Cursos i tallers >> Ioga",
+            "Agenda >> Sanitat >> Cursos i tallers",
+            "Agenda >> Cursos i tallers >> Alimentació, medicina, sexualitat i psicologia",
+            "Especialitats AG >> Esports",
+            "Especialitats AG >> Sanitat i salut"
+          ]
+        },
+        {
+          "label": "Idiomas",
+          "match": [
+            "Cursos i tallers >> Idiomes",
+            "Agenda >> Cursos i tallers >> Idiomes",
+            "Especialitats AG >> Idiomes"
+          ]
+        },
+        {
+          "label": "Cocina",
+          "match": [
+            "Cursos i tallers >> Cuina i gastronomia",
+            "Agenda >> Cursos i tallers >> Cuina i gastronomia",
+            "Especialitats AG >> Cuina, gastronomia, alimentació i nutrició"
+          ]
+        },
+        {
+          "label": "Humanidades y ciencia",
+          "match": [
+            "Cursos i tallers >> Ciències socials",
+            "Cursos i tallers >> Literatura",
+            "Cursos i tallers >> Medi ambient i ciències naturals",
+            "Agenda >> Cursos i tallers >> Història",
+            "Agenda >> Cursos i tallers >> Literatura",
+            "Agenda >> Cursos i tallers >> Medi Ambient",
+            "Especialitats AG >> Humanitats, lletres, ciències socials",
+            "Especialitats AG >> Ciències"
+          ]
+        },
+        {
+          "label": "Tecnología",
+          "match": [
+            "Cursos i tallers >> Informàtica, internet i noves tecnologies",
+            "Agenda >> Cursos i tallers >> Informàtica, Internet",
+            "Especialitats AG >> Informàtica, Internet, noves tecnologies",
+            "Especialitats AG >> Tecnologia, tècnica"
+          ]
+        }
+      ]
+    }
+  }
+}

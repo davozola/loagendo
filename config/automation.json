@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "timezone": "Europe/Madrid",
+  "jobs": [
+    {"name": "api-guiabcn", "kind": "api", "source": "guiabcn", "every_minutes": 180, "page_size": 250, "max_rows": 10000, "timeout_seconds": 180, "enabled": true},
+    {"name": "opendata-bcn-agenda", "kind": "opendata", "source": "opendatabcn_agenda", "every_minutes": 1440, "timeout_seconds": 900, "enabled": true},
+    {"name": "api-generalitat", "kind": "api", "source": "generalitat", "endpoint": "https://analisi.transparenciacatalunya.cat/resource/rhpv-yr4f.json", "every_minutes": 360, "page_size": 500, "max_rows": 10000, "timeout_seconds": 180, "enabled": true, "organizers_endpoint": "https://analisi.transparenciacatalunya.cat/resource/2n2k-gg9s.json", "since_days": 7},
+    {"name": "api-diba-bibliotecas", "kind": "api", "source": "diba_bibliotecas", "endpoint": "https://do.diba.cat/api/dataset/actesbiblioteques_ca/format/json", "every_minutes": 360, "page_size": 100, "max_rows": 3000, "timeout_seconds": 180, "enabled": true, "since_days": 30},
+    {"name": "api-diba-turismo", "kind": "api", "source": "diba_turismo", "endpoint": "https://do.diba.cat/api/dataset/actesturisme_ca/format/json", "every_minutes": 360, "page_size": 100, "max_rows": 1000, "timeout_seconds": 180, "enabled": true, "since_days": 30},
+    {"name": "web-macba", "kind": "web", "source": "web_macba", "every_minutes": 360, "enabled": true},
+    {"name": "web-cccb", "kind": "web", "source": "web_cccb", "every_minutes": 360, "enabled": true},
+    {"name": "web-teatre-lliure", "kind": "web", "source": "web_teatre_lliure", "every_minutes": 360, "enabled": true},
+    {"name": "web-auditori", "kind": "web", "source": "web_auditori", "every_minutes": 360, "retry_after_minutes": 360, "enabled": true},
+    {"name": "web-centres-civics", "kind": "web", "source": "web_centres_civics", "every_minutes": 360, "enabled": true},
+    {"name": "web-conciertos-club", "kind": "web", "source": "web_conciertos_club", "every_minutes": 180, "enabled": true, "note": "Directorio privado: en público enlaza a la sala (public_presentation=venue_link_only)"},
+    {"name": "recintos-schema-org", "kind": "venues", "source": "", "every_minutes": 360, "timeout_seconds": 25, "enabled": true},
+    {"name": "enriquecer-fichas", "kind": "enrich", "every_minutes": 60, "limit": 500, "enabled": true},
+    {"name": "previsualizaciones-locales", "kind": "media", "every_minutes": 60, "limit": 600, "enabled": true},
+    {"name": "mantenimiento-medios", "kind": "media_maintenance", "every_minutes": 1440, "enabled": true},
+    {"name": "fotos-equipamientos", "kind": "places", "every_minutes": 360, "limit": 60, "timeout_seconds": 20, "enabled": true, "note": "Una foto por equipamiento municipal (og:image de su página en barcelona.cat) como imagen de respaldo de las fichas sin imagen propia"},
+    {"name": "duplicados-entre-fuentes", "kind": "dedupe", "every_minutes": 180, "enabled": true, "note": "Recalcula los pares candidatos a duplicado; sin esto las fichas nuevas de dos fuentes no se fusionan en público"},
+    {"name": "publicar-web", "kind": "publish", "every_minutes": 180, "out_dir": "dist", "deploy_command": "npx --yes wrangler pages deploy dist --project-name loagendo --branch main --commit-dirty=true", "site_url": "", "enabled": true}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "note": "Puntos que suma un evento en la 'Selección de la semana' por la sala que lo acoge. Criterio editorial, no un dato de las fuentes: equipamientos de referencia de la ciudad arriba, salas y teatros consolidados en medio, red de proximidad (centros cívicos, bibliotecas, casals) abajo. La coincidencia es por nombre normalizado (sin acentos, artículos ni 'sala/teatre'): basta con que el nombre de la sala contenga el patrón. Un patrón 'slug:<id>' coincide cuando el directorio config/venues.json identifica la sala con ese id (para nombres que la normalización deja ambiguos, como 'Sant Jordi Club'). Un nombre que no coincide con nada suma 0.",
+  "tiers": [
+    {"points": 12, "label": "Equipamientos de referencia", "patterns": [
+      "liceu", "palau musica", "l auditori", "slug:auditori", "tnc", "nacional catalunya", "lliure", "mercat flors", "macba", "museu art contemporani", "cccb", "centre cultura contemporania",
+      "mnac", "museu nacional art catalunya", "fundacio joan miro", "caixaforum", "apolo", "razzmatazz", "palau sant jordi", "slug:sant_jordi_club", "museu picasso", "pedrera", "museu disseny",
+      "fabra i coats", "tapies", "virreina centre imatge", "santa monica", "filmoteca", "grec", "sonar", "primavera sound", "cruilla", "mira festival", "loop", "festival jardins pedralbes"
+    ]},
+    {"points": 8, "label": "Salas, teatros, museos y cines consolidados", "patterns": [
+      "poliorama", "romea", "coliseum", "tivoli", "victoria", "goya", "condal", "borras", "beckett", "villarroel", "antic", "teatreneu", "sat sant andreu", "seca espai brossa", "barts",
+      "jamboree", "harlem jazz", "sidecar", "heliogabal", "luz gas", "bikini", "paral lel 62", "nau", "upload", "wolf", "vol", "salamandra", "marula",
+      "zumzeig", "cinemes girona", "verdi", "phenomena", "malda", "cinema comedia", "renoir", "cosmocaixa", "museu maritim", "museu historia", "born", "museu ciencies naturals",
+      "museu etnologic", "museu musica", "capella", "hangar", "palau robert", "ateneu barcelones", "biblioteca catalunya", "casa batllo", "casa vicens", "palau guell",
+      "sagrada familia", "poble espanyol", "vila casas", "fundacio joan brossa", "fundacio foto colectania", "conservatori liceu", "monestir pedralbes", "torre bellesguard",
+      "museu frederic mares", "fundacio suno", "institut estudis catalans", "arts santa monica", "mercat santa caterina", "parc forum", "la model", "nau ivanow", "la caldera", "graner"
+    ]},
+    {"points": 3, "label": "Red de proximidad", "patterns": [
+      "centre civic", "centro civico", "biblioteca", "casal barri", "casal joves", "ateneu", "fabrica creacio", "espai jove", "centre cultural", "centre art"
+    ]}
+  ]
+}

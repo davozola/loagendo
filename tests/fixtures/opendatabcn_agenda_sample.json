@@ -1,0 +1,1919 @@
+[
+ {
+  "register_id": 99400783090,
+  "prefix": null,
+  "suffix": null,
+  "name": "Concert \"La Segona de Mahler\", amb Ludovic Morlot i l'Orfeó Català",
+  "created": "2026-06-11T11:36:29.429348+02:00",
+  "modified": "2026-06-11T11:46:35.108988+02:00",
+  "status": "published",
+  "status_name": "Publicat",
+  "core_type": "event",
+  "core_type_name": "Agenda",
+  "body": "<p>OBC</p><p>Ludovic Morlot, direcció</p><p>Christiane Karg, soprano</p><p>Helena Rasker, contralt</p><p>Orfeó Català</p><p>BLAI SOLER</p><p>Cassandra</p><p>GUSTAV MAHLER</p><p>Simfonia n. 2 \"Resurrecció\"</p>",
+  "tickets_data": [
+   {
+    "id": 4,
+    "name": "Pagament"
+   }
+  ],
+  "addresses": [
+   {
+    "place": "Sala 1 Pau Casals",
+    "district_name": "Eixample",
+    "district_id": "02",
+    "neighborhood_name": "el Fort Pienc",
+    "neighborhood_id": "05",
+    "address_name": "Carrer de Lepant",
+    "address_id": "178308",
+    "block_id": null,
+    "start_street_number": 150,
+    "end_street_number": null,
+    "street_number_1": "150",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": "08013",
+    "province": "Barcelona",
+    "town": "Barcelona",
+    "country": "Espanya",
+    "comments": null,
+    "position": 0,
+    "position_relative": "",
+    "main_address": true,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": "Carrer",
+    "roadtype_id": "02",
+    "location_4326": {
+     "type": "GeometryCollection",
+     "geometries": [
+      {
+       "type": "Point",
+       "coordinates": [
+        41.39902945785681,
+        2.1850328705474387
+       ]
+      }
+     ]
+    },
+    "related_entity": 99021123351,
+    "related_entity_data": {
+     "id": 99021123351,
+     "prefix": null,
+     "suffix": null,
+     "visible": true,
+     "prefix_ca": null,
+     "suffix_ca": null,
+     "name": "Sala 1 Pau Casals",
+     "status": "published",
+     "core_type": "place",
+     "is_section_of_name": "L'Auditori de Barcelona",
+     "start_date": "",
+     "end_date": "",
+     "canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/sala-1-pau-casals-99021123351"
+    },
+    "hide_address": false,
+    "transport_data": null
+   }
+  ],
+  "entity_types_data": [
+   {
+    "id": 101,
+    "name": "agenda"
+   },
+   {
+    "id": 100,
+    "name": "registre"
+   }
+  ],
+  "values": [
+   {
+    "id": 738220,
+    "value": "https://www.auditori.cat/ca",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://www.auditori.cat/ca",
+    "url_visible_value": "www.auditori.cat/ca",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 30014,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Web venda d'entrades",
+    "attribute_web_name": "Web venda d'entrades",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   },
+   {
+    "id": 738221,
+    "value": "932479300",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": "932479300",
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": null,
+    "url_visible_value": null,
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 20006,
+    "category_id": 4,
+    "category_name": "Telèfons",
+    "attribute_name": "Informació",
+    "attribute_web_name": "Informació",
+    "attribute_type": "char",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   },
+   {
+    "id": 738222,
+    "value": "AG.123.2026.06.30",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": "AG.123.2026.06.30",
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": null,
+    "url_visible_value": null,
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 100077,
+    "category_id": 1,
+    "category_name": "Variables",
+    "attribute_name": "Numero fitxa Call Center Extern",
+    "attribute_web_name": "Numero fitxa Call Center Extern",
+    "attribute_type": "char",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   }
+  ],
+  "from_relationships": [
+   {
+    "type_id": 1004,
+    "name": "es venen les entrades a",
+    "entity_id": 98097151404,
+    "entity_prefix": null,
+    "entity_name": "L'Auditori de Barcelona",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/punts-interes/l-auditori-de-barcelona-98097151404",
+    "observation": "<p>Dilluns: tancat</p><p>De dimarts a divendres: de 17h a 21h</p><p>Dissabtes: de 10h a 13h i de 17h a 21h</p><p>Diumenges: obert des d’una hora abans del concert.</p><p>Horaris especials Nadal:</p><p>Els dies 25 i 26 de desembre i l’1 de gener, les taquilles estaran obertes des d’una hora abans dels espectacles fins al seu inici.</p><p>Els dies 24 i 31 de desembre obriran de 17 h a 20 h.</p><p>El dia 6 de gener les taquilles romandran tancades.</p>",
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   },
+   {
+    "type_id": 1002,
+    "name": "se celebra a",
+    "entity_id": 99021123351,
+    "entity_prefix": null,
+    "entity_name": "Sala 1 Pau Casals",
+    "entity_institution": "L'Auditori de Barcelona",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/sala-1-pau-casals-99021123351",
+    "observation": null,
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   }
+  ],
+  "to_relationships": [],
+  "classifications_data": [
+   {
+    "id": 2004,
+    "name": "Concerts",
+    "full_path": "Tipologia AG >> Concerts",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201004",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 42793722,
+    "name": "Música clàssica",
+    "full_path": "Especialitats AG >> Música >> Música clàssica",
+    "dependency_group": 3033964,
+    "parent_id": 117001,
+    "tree_id": 117,
+    "asia_id": "0011702001003",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 14827624,
+    "name": "Programa de l'Orquestra Ciutat de Barcelona i Nacional de Catalunya",
+    "full_path": "Marcs i cicles AG >> Cicles de música >> Música clàssica >> Programa de l'Orquestra Ciutat de Barcelona i Nacional de Catalunya",
+    "dependency_group": 3033964,
+    "parent_id": 45800720,
+    "tree_id": 120,
+    "asia_id": "0012003008001001",
+    "core_type": "event",
+    "level": 3
+   },
+   {
+    "id": 507015,
+    "name": "Activitats per al públic en general",
+    "full_path": "Col·lectius AG >> Activitats per al públic en general",
+    "dependency_group": 3033964,
+    "parent_id": 507,
+    "tree_id": 507,
+    "asia_id": "0050701015",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 614000,
+    "name": "Música",
+    "full_path": "Agenda 500 >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 614,
+    "tree_id": 614,
+    "asia_id": "0061401000",
+    "core_type": "event",
+    "level": 1
+   }
+  ],
+  "secondary_filters_data": [
+   {
+    "id": 524006,
+    "name": "Concerts",
+    "full_path": "Setmana Santa >> Concerts",
+    "dependency_group": 3033954,
+    "parent_id": 524,
+    "tree_id": 524,
+    "asia_id": "0052401006"
+   },
+   {
+    "id": 19138749,
+    "name": "Música clàssica",
+    "full_path": "Barcelona Cultura Antic >> Disciplines >> Música >> Música clàssica",
+    "dependency_group": 2267775,
+    "parent_id": 27550040,
+    "tree_id": 547,
+    "asia_id": "0054703001007000"
+   },
+   {
+    "id": 27549034,
+    "name": "Concerts",
+    "full_path": "Barcelona Cultura Antic >> Tipologies >> Concerts",
+    "dependency_group": 2267775,
+    "parent_id": 547000,
+    "tree_id": 547,
+    "asia_id": "0054702000001"
+   },
+   {
+    "id": 400019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 400,
+    "tree_id": 400,
+    "asia_id": "0040001019"
+   },
+   {
+    "id": 28982598,
+    "name": "Clàssica",
+    "full_path": "Agenda >> Música >> Clàssica",
+    "dependency_group": 3033954,
+    "parent_id": 400019,
+    "tree_id": 400,
+    "asia_id": "0040002019003"
+   },
+   {
+    "id": 626001,
+    "name": "Música",
+    "full_path": "Agenda Barcelona Cultura >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601001"
+   },
+   {
+    "id": 32342761,
+    "name": "Clàssica",
+    "full_path": "Agenda Barcelona Cultura >> Música >> Clàssica",
+    "dependency_group": 2267775,
+    "parent_id": 626001,
+    "tree_id": 626,
+    "asia_id": "0062602001009"
+   },
+   {
+    "id": 643010,
+    "name": "Música",
+    "full_path": "Barcelona Cultura - Recomanem >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301010"
+   },
+   {
+    "id": 619019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 619,
+    "tree_id": 619,
+    "asia_id": "0061901019"
+   },
+   {
+    "id": 25360755,
+    "name": "Clàssica",
+    "full_path": "Agenda >> Música >> Clàssica",
+    "dependency_group": 3033954,
+    "parent_id": 619019,
+    "tree_id": 619,
+    "asia_id": "0061902019003"
+   }
+  ],
+  "timetable": {
+   "id": 150796,
+   "html": "<table class=\"timetable-table\"><tr class=\"timetable-header\"><th class=\"weekdays\">Dies</th><th class=\"hours\">Hores</th><th class=\"prices\">Preus</th></tr><tr><td class=\"timetable-day\" rowspan=1><div>Divendres i dissabte</div></td><td class=\"timetable-hour\" rowspan=1><div>a les 19.00&nbsp;h</div></td><td class=\"timetable-price\" rowspan=1><div>Entrada general de: 20 a 58 € <p style=\"margin:0\">(+ despeses de gestió)</p></div></td></tr></table>",
+   "hide": false,
+   "alert": "",
+   "descriptions_control": 0
+  },
+  "image_data": {
+   "id": 80326,
+   "name": "la segona.jpg",
+   "image": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/la_segona.e369c198b.jpg",
+   "title": null,
+   "alt": null,
+   "author": null,
+   "source": null,
+   "type_license": null,
+   "description": "",
+   "image_thumb": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/la_segona.thumb-150x150.e369c198.jpg",
+   "image_optimized": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/la_segona.optimized.e369c198.jpg",
+   "cuts": []
+  },
+  "gallery_data": [],
+  "warnings": [],
+  "geo_epgs_25831": {
+   "x": 431874.7478828657,
+   "y": 4583375.068554597
+  },
+  "geo_epgs_23031": {
+   "x": 431968.8490794927,
+   "y": 4583579.424885851
+  },
+  "geo_epgs_4326_latlon": {
+   "lat": 41.39902945785681,
+   "lon": 2.1850328705474387
+  },
+  "is_section_of_data": null,
+  "sections_data": null,
+  "start_date": "2026-11-13T03:00:00+01:00",
+  "end_date": "2026-11-14T03:00:00+01:00",
+  "estimated_dates": null,
+  "languages_data": [
+   {
+    "id": 1,
+    "language": "Indiferent"
+   }
+  ],
+  "type": "unique",
+  "type_name": "Puntual",
+  "period": null,
+  "period_name": "",
+  "event_status_name": "Correcte",
+  "event_status": "ok",
+  "ical": "BEGIN:VCALENDAR\r\nPRODID:ics.py - http://git.io/lLljaA\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234249Z\r\nDTSTART:20261113T190000Z\r\nDTEND:20261113T210000Z\r\nSUMMARY:Concert \"La Segona de Mahler\"\\, amb Ludovic Morlot i l'Orfeó Català\r\nTRANSP:OPAQUE\r\nUID:79559b14-b1ff-4433-bdd9-1a8fcb6f9006@7955.org\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234249Z\r\nDTSTART:20261114T190000Z\r\nDTEND:20261114T210000Z\r\nSUMMARY:Concert \"La Segona de Mahler\"\\, amb Ludovic Morlot i l'Orfeó Català\r\nTRANSP:OPAQUE\r\nUID:c271c6fb-046a-487c-9afc-cd4a9a111bcb@c271.org\r\nEND:VEVENT\r\nEND:VCALENDAR",
+  "ownership": null,
+  "accessibility": null
+ },
+ {
+  "register_id": 99400783421,
+  "prefix": "Dia mundial de la salut mental",
+  "suffix": null,
+  "name": "3a Convocatòria 'Cantem obertament sobre salut mental'",
+  "created": "2026-06-18T10:08:04.640782+02:00",
+  "modified": "2026-06-18T10:17:39.145842+02:00",
+  "status": "published",
+  "status_name": "Publicat",
+  "core_type": "event",
+  "core_type_name": "Agenda",
+  "body": "<p>Un concert gratuït obert a tothom per a parlar obertaMent sobre salut mental a través de la música.</p><p>Vols venir a tocar, cantar, expressar la teva veu poètica?&nbsp;</p><p>I obrir espais de reflexió sobre la salut mental a través de cantar obertaMent?&nbsp;</p><p>Us proposem interpretar una o dues peces que tinguin a veure amb la salut mental i que ens expliqueu què us ha portat a crear-le",
+  "tickets_data": [
+   {
+    "id": 3,
+    "name": "Lliure"
+   }
+  ],
+  "addresses": [
+   {
+    "place": "Plaça de la Virreina",
+    "district_name": "Gràcia",
+    "district_id": "06",
+    "neighborhood_name": "la Vila de Gràcia",
+    "neighborhood_id": "31",
+    "address_name": "Plaça de la Virreina",
+    "address_id": "366400",
+    "block_id": null,
+    "start_street_number": 9999,
+    "end_street_number": 9999,
+    "street_number_1": "9999",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": "08024",
+    "province": "Barcelona",
+    "town": "Barcelona",
+    "country": "Espanya",
+    "comments": null,
+    "position": 1,
+    "position_relative": "",
+    "main_address": false,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": "Plaça",
+    "roadtype_id": "04",
+    "location_4326": {
+     "type": "GeometryCollection",
+     "geometries": [
+      {
+       "type": "Point",
+       "coordinates": [
+        41.40479137384526,
+        2.157376727283835
+       ]
+      }
+     ]
+    },
+    "related_entity": null,
+    "related_entity_data": null,
+    "hide_address": true,
+    "transport_data": "W3siX2lkIjogeyIkb2lkIjogIjZhMzNhOGMyZjRiYzEwZTY1MmFlMWRlZSJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7IkNPRElfRVNUQUNJTyI6IDMyOSwgIkNPRElfTElOSUEiOiAzLCAiREVTQ19TRVJWRUkiOiAiWm9uYSBVbml2ZXJzaXRcdTAwZTByaWEgLSBUcmluaXRhdCBOb3ZhIiwgIkRFU1RJX1NFUlZFSSI6ICJUcmluaXRhdCBOb3ZhIiwgIk5PTV9FU1RBQ0lPIjogIkZvbnRhbmEiLCAiTk9NX0xJTklBIjogIkwzIiwgIk5PTV9USVBVU19BQ0NFU1NJQklMSVRBVCI6ICJBY2Nlc3NpYmxlIiwgIk5PTV9USVBVU19FU1RBVCI6ICJPcGVyYXRpdSIsICJPUklHRU5fU0VSVkVJIjogIlpvbmEgVW5pdmVyc2l0XHUwMGUwcmlhIiwgIkFDQ0VTU09TIjogW3siQ09ESV9BQ0NFUyI6IDMyOTAxLCAiTk9NX0FDQ0VTIjogIkdyYW4gZGUgR3JcdTAwZTBjaWEgLyBBc3RcdTAwZmFyaWVzIiwgIk5PTV9USVBVU19BQ0NFU1NJQklMSVRBVCI6ICJBY2Nlc3NpYmxlIiwgIk5VTV9BU0NFTlNPUlMiOiAwLCAiQ09PUkRFTkFERVMiOiBbMi4xNTI2NzgxMSwgNDEuNDAyNTg0NTddLCAiQUNDRVNTT1NfRklTSUNTIjogWyJSYW1wYSJdLCAiQ09SUkVTUE9OREVOQ0lFUyI6IHsiQ29udmVuY2lvbmFscyI6IFsiMjciLCAiMjQiLCAiMjIiXSwgIkRpYWdvbmFscyI6IFsiRDQwIl0sICJWZXJ0aWNhbHMiOiBbIlYxNyJdfX1dLCAiQ09SUkVTUE9OREVOQ0lFUyI6IHsiRGlhZ29uYWxzIjogWyJENDAiLCAiRDQwIl0sICJWZXJ0aWNhbHMiOiBbIlYxNSIsICJWMTciXSwgIkNvbnZlbmNpb25hbHMiOiBbIjIyIiwgIjI0IiwgIjI3IiwgIjI3Il19LCAidGlwbyI6ICJtZXRybyIsICJjb3JyZXNwb25kZW5jaWEiOiBbXX0sICJuYW1lIjogIm1ldHJvZXN0YWNpb25zdG1iIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTUzMDIyNDQsIDQxLjQwMjAwODg4XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3ODE3Nzc2MzQ3NzN9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGQwMTRlYTczODBhYjVmY2NhIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjEwLCAiRGVzY3JpcGNpbyI6ICJQbCBkZSBsYSBWaXJyZWluYSIsICJMaW5lYSI6ICIxMTQiLCAiQ29kTGluZWEiOiAxMTQsICJOb21icmUiOiAiR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIiwgIkNvZGlnbyI6IDI0ODEsICJBZHJlY2EiOiAiT3IsIDI1IiwgIlNlbnRpdCI6ICJHclx1MDBlMGNpYSIsICJLZXl3b3JkcyI6ICJidXMgR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIFBsIGRlIGxhIFZpcnJlaW5hIDExNCAyMTAiLCAiTGluaWVzIjogIiIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbIiJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE1NzI0NzIzLCA0MS40MDQ2Njg4OF19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU3Nzc3fX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzQ5MDE0ZWE3MzgwYWI1ZjRmZCJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDIxMSwgIkRlc2NyaXBjaW8iOiAiUHJvdmlkXHUwMGU4bmNpYSAtIEFsemluYSIsICJMaW5lYSI6ICIzOSIsICJDb2RMaW5lYSI6IDM5LCAiTm9tYnJlIjogIlBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIiwgIkNvZGlnbyI6IDkxMCwgIkFkcmVjYSI6ICJQcm92aWRcdTAwZThuY2lhLCAzMyIsICJTZW50aXQiOiAiUGwuIFVycXVpbmFvbmEiLCAiS2V5d29yZHMiOiAiYnVzIFBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIFByb3ZpZFx1MDBlOG5jaWEgLSBBbHppbmEgMzkgMjExIiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTY2MTMsIDQxLjQwNjQ1NDldfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1MzM1NH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0OTAxNGVhNzM4MGFiNWY1MTMifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMTMsICJEZXNjcmlwY2lvIjogIlRvcnJlbnQgZGUgbCdPbGxhIC0gQXN0XHUwMGZhcmllcyIsICJMaW5lYSI6ICIzOSIsICJDb2RMaW5lYSI6IDM5LCAiTm9tYnJlIjogIlBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIiwgIkNvZGlnbyI6IDEzOTQsICJBZHJlY2EiOiAiVG9ycmVudCBkZSBsJ09sbGEsIDEzMSIsICJTZW50aXQiOiAiUGwuIFVycXVpbmFvbmEiLCAiS2V5d29yZHMiOiAiYnVzIFBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIFRvcnJlbnQgZGUgbCdPbGxhIC0gQXN0XHUwMGZhcmllcyAzOSAyMTMiLCAiTGluaWVzIjogIjExNCIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbIjExNCJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE1NTg4OTYsIDQxLjQwMzI2MjY2XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTM0MDZ9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGQwMTRlYTczODBhYjVmY2JkIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjA5LCAiRGVzY3JpcGNpbyI6ICJFbmNhcm5hY2lcdTAwZjMgLSBUb3JyZW50IGRlIGxlcyBGbG9ycyIsICJMaW5lYSI6ICIxMTQiLCAiQ29kTGluZWEiOiAxMTQsICJOb21icmUiOiAiR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIiwgIkNvZGlnbyI6IDI0ODAsICJBZHJlY2EiOiAiRW5jYXJuYWNpXHUwMGYzLCAzOSIsICJTZW50aXQiOiAiR3JcdTAwZTBjaWEiLCAiS2V5d29yZHMiOiAiYnVzIEdyXHUwMGUwY2lhIC8gQ2FuIEJhclx1MDBmMyBFbmNhcm5hY2lcdTAwZjMgLSBUb3JyZW50IGRlIGxlcyBGbG9ycyAxMTQgMjA5IiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTk3MDY2MSwgNDEuNDA2MjE3NTNdfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1Nzc1MH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0OTAxNGVhNzM4MGFiNWY0ZmUifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMTIsICJEZXNjcmlwY2lvIjogIkJpYWRhIC0gVG9ycmVudCBkZSBsJ09sbGEiLCAiTGluZWEiOiAiMzkiLCAiQ29kTGluZWEiOiAzOSwgIk5vbWJyZSI6ICJQbC4gVXJxdWluYW9uYSAvIFBsLiBDYXRhbGFuYSIsICJDb2RpZ28iOiA5MTEsICJBZHJlY2EiOiAiUHJvdmlkXHUwMGU4bmNpYSwgMSIsICJTZW50aXQiOiAiUGwuIFVycXVpbmFvbmEiLCAiS2V5d29yZHMiOiAiYnVzIFBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIEJpYWRhIC0gVG9ycmVudCBkZSBsJ09sbGEgMzkgMjEyIiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTQzMTcwMiwgNDEuNDA0OTM3MzldfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1MzM1Nn19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0YzAxNGVhNzM4MGFiNWZiM2MifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMDksICJEZXNjcmlwY2lvIjogIlRvcnJlbnQgZGUgbGVzIEZsb3JzIC0gU2FudCBMbHVcdTAwZWRzIiwgIkxpbmVhIjogIjExNiIsICJDb2RMaW5lYSI6IDExNiwgIk5vbWJyZSI6ICJMYSBTYWx1dCIsICJDb2RpZ28iOiAyMDIwLCAiQWRyZWNhIjogIlRvcnJlbnQgZGUgbGVzIEZsb3JzLCA1MyIsICJTZW50aXQiOiAiR3JcdTAwZTBjaWEiLCAiS2V5d29yZHMiOiAiYnVzIExhIFNhbHV0IFRvcnJlbnQgZGUgbGVzIEZsb3JzIC0gU2FudCBMbHVcdTAwZWRzIDExNiAyMDkiLCAiTGluaWVzIjogIiIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbIiJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE2MDIwMjE3LCA0MS40MDYxNTE3Ml19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU2ODgyfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRkMDE0ZWE3MzgwYWI1ZmNjYiJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDIxMiwgIkRlc2NyaXBjaW8iOiAiUm9zIGRlIE9sYW5vIC0gVG9ycmVudCBkZSBsJ09sbGEiLCAiTGluZWEiOiAiMTE0IiwgIkNvZExpbmVhIjogMTE0LCAiTm9tYnJlIjogIkdyXHUwMGUwY2lhIC8gQ2FuIEJhclx1MDBmMyIsICJDb2RpZ28iOiAyNDgyLCAiQWRyZWNhIjogIlJvcyBkZSBPbGFubywgMzciLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBHclx1MDBlMGNpYSAvIENhbiBCYXJcdTAwZjMgUm9zIGRlIE9sYW5vIC0gVG9ycmVudCBkZSBsJ09sbGEgMTE0IDIxMiIsICJMaW5pZXMiOiAiIiwgInRpcG8iOiAiYnVzIiwgImNvcnJlc3BvbmRlbmNpYSI6IFsiIl19LCAibmFtZSI6ICJidXNwYXJhZGVzIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTU2NjM3NTQsIDQxLjQwMjE1MzEzXX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTc3Nzl9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGQwMTRlYTczODBhYjVmY2IwIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjE0LCAiRGVzY3JpcGNpbyI6ICJNb250c2VueSAtIFRyYXZlc3NpYSBkZSBTYW50IEFudG9uaSIsICJMaW5lYSI6ICIxMTQiLCAiQ29kTGluZWEiOiAxMTQsICJOb21icmUiOiAiR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIiwgIkNvZGlnbyI6IDM5MTYsICJBZHJlY2EiOiAiTW9udHNlbnksIDI0LTI4IiwgIlNlbnRpdCI6ICJHclx1MDBlMGNpYSIsICJLZXl3b3JkcyI6ICJidXMgR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIE1vbnRzZW55IC0gVHJhdmVzc2lhIGRlIFNhbnQgQW50b25pIDExNCAyMTQiLCAiTGluaWVzIjogIiIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbIiJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE1NTQyMTEsIDQxLjQwMjI5MDg1XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTc3MDh9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGMwMTRlYTczODBhYjVmYjNiIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjA4LCAiRGVzY3JpcGNpbyI6ICJQbCBSb3ZpcmEgaSBUcmlhcyIsICJMaW5lYSI6ICIxMTYiLCAiQ29kTGluZWEiOiAxMTYsICJOb21icmUiOiAiTGEgU2FsdXQiLCAiQ29kaWdvIjogMTk5NiwgIkFkcmVjYSI6ICJQbC4gUm92aXJhIGkgVHJpYXMiLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBMYSBTYWx1dCBQbCBSb3ZpcmEgaSBUcmlhcyAxMTYgMjA4IiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTg3ODEyNiwgNDEuNDA3NTg1MjRdfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1Njg4MH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0OTAxNGVhNzM4MGFiNWY1MWEifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMTAsICJEZXNjcmlwY2lvIjogIlByb3ZpZFx1MDBlOG5jaWEgLSBUb3JyZW50IGRlIGxlcyBGbG9ycyIsICJMaW5lYSI6ICIzOSIsICJDb2RMaW5lYSI6IDM5LCAiTm9tYnJlIjogIlBsLiBVcnF1aW5hb25hIC8gUGwuIENhdGFsYW5hIiwgIkNvZGlnbyI6IDEzODUsICJBZHJlY2EiOiAiUHJvdmlkXHUwMGU4bmNpYSwgNzEiLCAiU2VudGl0IjogIlBsLiBVcnF1aW5hb25hIiwgIktleXdvcmRzIjogImJ1cyBQbC4gVXJxdWluYW9uYSAvIFBsLiBDYXRhbGFuYSBQcm92aWRcdTAwZThuY2lhIC0gVG9ycmVudCBkZSBsZXMgRmxvcnMgMzkgMjEwIiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTg5Mjc5LCA0MS40MDc5MDExN119LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTUzNDI1fX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRjMDE0ZWE3MzgwYWI1ZmIzOCJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDExNiwgIkRlc2NyaXBjaW8iOiAiTWFzc2VucywgNTUiLCAiTGluZWEiOiAiMTE2IiwgIkNvZExpbmVhIjogMTE2LCAiTm9tYnJlIjogIkxhIFNhbHV0IiwgIkNvZGlnbyI6IDk1OTksICJBZHJlY2EiOiAiTWFzc2VucywgNTUiLCAiU2VudGl0IjogIkxhIFNhbHV0IiwgIktleXdvcmRzIjogImJ1cyBMYSBTYWx1dCBNYXNzZW5zLCA1NSAxMTYgMTE2IiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTY0ODczNywgNDEuNDA4MzU1NzFdfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1Njg3NX19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0YzAxNGVhNzM4MGFiNWZiM2QifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMTAsICJEZXNjcmlwY2lvIjogIlBsIEpvYW5pYyIsICJMaW5lYSI6ICIxMTYiLCAiQ29kTGluZWEiOiAxMTYsICJOb21icmUiOiAiTGEgU2FsdXQiLCAiQ29kaWdvIjogMjAyMSwgIkFkcmVjYSI6ICJSYW1vbiBZIENhamFsLCAxNDAiLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBMYSBTYWx1dCBQbCBKb2FuaWMgMTE2IDIxMCIsICJMaW5pZXMiOiAiIiwgInRpcG8iOiAiYnVzIiwgImNvcnJlc3BvbmRlbmNpYSI6IFsiIl19LCAibmFtZSI6ICJidXNwYXJhZGVzIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTYyNDc5OCwgNDEuNDA0OTI4NTJdfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1Njg4NH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0ZDAxNGVhNzM4MGFiNWZjYzEifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMjEsICJEZXNjcmlwY2lvIjogIkVzY29yaWFsIC0gTWV0cm8gSm9hbmljIiwgIkxpbmVhIjogIjExNCIsICJDb2RMaW5lYSI6IDExNCwgIk5vbWJyZSI6ICJHclx1MDBlMGNpYSAvIENhbiBCYXJcdTAwZjMiLCAiQ29kaWdvIjogMzkxMSwgIkFkcmVjYSI6ICJFc2NvcmlhbCwgMjQiLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBHclx1MDBlMGNpYSAvIENhbiBCYXJcdTAwZjMgRXNjb3JpYWwgLSBNZXRybyBKb2FuaWMgMTE0IDIyMSIsICJMaW5pZXMiOiAiTDQgLSBMNCIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNjIxOTUwNiwgNDEuNDA2NDUyNjddfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1Nzc2MH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDc0YzAxNGVhNzM4MGFiNWZiM2UifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJNdW5pY2lwaSI6ICJCYXJjZWxvbmEiLCAiT3JkcmUiOiAyMTEsICJEZXNjcmlwY2lvIjogIkVzY29yaWFsIC0gU2FudCBMbHVcdTAwZWRzIiwgIkxpbmVhIjogIjExNiIsICJDb2RMaW5lYSI6IDExNiwgIk5vbWJyZSI6ICJMYSBTYWx1dCIsICJDb2RpZ28iOiAxOTg0LCAiQWRyZWNhIjogIkVzY29yaWFsLCAyMCIsICJTZW50aXQiOiAiR3JcdTAwZTBjaWEiLCAiS2V5d29yZHMiOiAiYnVzIExhIFNhbHV0IEVzY29yaWFsIC0gU2FudCBMbHVcdTAwZWRzIDExNiAyMTEiLCAiTGluaWVzIjogIkw0IC0gTDQiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogW119LCAibmFtZSI6ICJidXNwYXJhZGVzIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTYyMjk3NTMsIDQxLjQwNjM0NDczXX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTY4ODZ9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGQwMTRlYTczODBhYjVmY2I1In0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjE1LCAiRGVzY3JpcGNpbyI6ICJUb3JyZW50IGRlIGwnT2xsYSAtIFBlbmVkXHUwMGU4cyIsICJMaW5lYSI6ICIxMTQiLCAiQ29kTGluZWEiOiAxMTQsICJOb21icmUiOiAiR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIiwgIkNvZGlnbyI6IDIxOCwgIkFkcmVjYSI6ICJUb3JyZW50IGRlIGwnT2xsYSwgNjciLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBHclx1MDBlMGNpYSAvIENhbiBCYXJcdTAwZjMgVG9ycmVudCBkZSBsJ09sbGEgLSBQZW5lZFx1MDBlOHMgMTE0IDIxNSIsICJMaW5pZXMiOiAiMzkiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIzOSJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE1ODcyNzMyLCA0MS40MDA5MTUwOF19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU3NzE4fX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRjMDE0ZWE3MzgwYWI1ZmIzMSJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDEwMiwgIkRlc2NyaXBjaW8iOiAiRXNjb3JpYWwgLSBMZWdhbGl0YXQiLCAiTGluZWEiOiAiMTE2IiwgIkNvZExpbmVhIjogMTE2LCAiTm9tYnJlIjogIkxhIFNhbHV0IiwgIkNvZGlnbyI6IDc4NywgIkFkcmVjYSI6ICJFc2NvcmlhbCwgNDItNjIiLCAiU2VudGl0IjogIkxhIFNhbHV0IiwgIktleXdvcmRzIjogImJ1cyBMYSBTYWx1dCBFc2NvcmlhbCAtIExlZ2FsaXRhdCAxMTYgMTAyIiwgIkxpbmllcyI6ICIzOSAtIDExNCIsICJ0aXBvIjogImJ1cyIsICJjb3JyZXNwb25kZW5jaWEiOiBbIjM5IiwgIjExNCJdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE2MDc5MTE3LCA0MS40MDc5NDM3NV19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU2ODYzfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzQ5MDE0ZWE3MzgwYWI1ZjUxYyJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDExMCwgIkRlc2NyaXBjaW8iOiAiRXNjb3JpYWwgLSBQbCBKb2FuaWMiLCAiTGluZWEiOiAiMzkiLCAiQ29kTGluZWEiOiAzOSwgIk5vbWJyZSI6ICJQbC4gVXJxdWluYW9uYSAvIFBsLiBDYXRhbGFuYSIsICJDb2RpZ28iOiAxMzM1LCAiQWRyZWNhIjogIkVzY29yaWFsLCAxNCIsICJTZW50aXQiOiAiUGwuIENhdGFsYW5hIiwgIktleXdvcmRzIjogImJ1cyBQbC4gVXJxdWluYW9uYSAvIFBsLiBDYXRhbGFuYSBFc2NvcmlhbCAtIFBsIEpvYW5pYyAzOSAxMTAiLCAiTGluaWVzIjogIkw0IiwgInRpcG8iOiAiYnVzIiwgImNvcnJlc3BvbmRlbmNpYSI6IFtdfSwgIm5hbWUiOiAiYnVzcGFyYWRlcyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE2MjUxNjc4LCA0MS40MDYxMTM1N119LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTUzNDMwfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRkMDE0ZWE3MzgwYWI1ZmQzOCJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDEwOSwgIkRlc2NyaXBjaW8iOiAiR3JhbiBkZSBHclx1MDBlMGNpYSAtIFBsIFRyaWxsYSIsICJMaW5lYSI6ICIyNCIsICJDb2RMaW5lYSI6IDI0LCAiTm9tYnJlIjogIlBsLiBDYXRhbHVueWEgLyBFbCBDYXJtZWwiLCAiQ29kaWdvIjogMTExNywgIkFkcmVjYSI6ICJHcmFuIGRlIEdyXHUwMGUwY2lhLCAxOTgiLCAiU2VudGl0IjogIkVsIENhcm1lbCIsICJLZXl3b3JkcyI6ICJidXMgUGwuIENhdGFsdW55YSAvIEVsIENhcm1lbCBHcmFuIGRlIEdyXHUwMGUwY2lhIC0gUGwgVHJpbGxhIDI0IDEwOSIsICJMaW5pZXMiOiAiMjIgLSBWMTciLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIyMiIsICJWMTciXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTIxODEyOSwgNDEuNDAzNDczOV19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU3OTcxfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRkMDE0ZWE3MzgwYWI1ZmNjOSJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDIxMywgIkRlc2NyaXBjaW8iOiAiUm9zIGRlIE9sYW5vIC0gR3JhbiBkZSBHclx1MDBlMGNpYSIsICJMaW5lYSI6ICIxMTQiLCAiQ29kTGluZWEiOiAxMTQsICJOb21icmUiOiAiR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIiwgIkNvZGlnbyI6IDI0ODMsICJBZHJlY2EiOiAiUm9zIGRlIE9sYW5vLCA3IiwgIlNlbnRpdCI6ICJHclx1MDBlMGNpYSIsICJLZXl3b3JkcyI6ICJidXMgR3JcdTAwZTBjaWEgLyBDYW4gQmFyXHUwMGYzIFJvcyBkZSBPbGFubyAtIEdyYW4gZGUgR3JcdTAwZTBjaWEgMTE0IDIxMyIsICJMaW5pZXMiOiAiTDMiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogW119LCAibmFtZSI6ICJidXNwYXJhZGVzIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTU0NjgzNDEsIDQxLjQwMTA0NzQyXX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTc3NzZ9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NGQwMTRlYTczODBhYjVmZDM5In0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMTA4LCAiRGVzY3JpcGNpbyI6ICJHcmFuIGRlIEdyXHUwMGUwY2lhIC0gTWV0cm8gRm9udGFuYSIsICJMaW5lYSI6ICIyNCIsICJDb2RMaW5lYSI6IDI0LCAiTm9tYnJlIjogIlBsLiBDYXRhbHVueWEgLyBFbCBDYXJtZWwiLCAiQ29kaWdvIjogMTI2MSwgIkFkcmVjYSI6ICJHcmFuIGRlIEdyXHUwMGUwY2lhLCAxNDIiLCAiU2VudGl0IjogIkVsIENhcm1lbCIsICJLZXl3b3JkcyI6ICJidXMgUGwuIENhdGFsdW55YSAvIEVsIENhcm1lbCBHcmFuIGRlIEdyXHUwMGUwY2lhIC0gTWV0cm8gRm9udGFuYSAyNCAxMDgiLCAiTGluaWVzIjogIlYxNyAtIEwzIC0gMjIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyJWMTciLCAiMjIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTMyNzQxLCA0MS40MDE4MDg4NF19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0NTU3OTcyfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NzRkMDE0ZWE3MzgwYWI1ZmNjNyJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7Ik11bmljaXBpIjogIkJhcmNlbG9uYSIsICJPcmRyZSI6IDIwOCwgIkRlc2NyaXBjaW8iOiAiRW5jYXJuYWNpXHUwMGYzIC0gRXNjb3JpYWwiLCAiTGluZWEiOiAiMTE0IiwgIkNvZExpbmVhIjogMTE0LCAiTm9tYnJlIjogIkdyXHUwMGUwY2lhIC8gQ2FuIEJhclx1MDBmMyIsICJDb2RpZ28iOiAyNDc5LCAiQWRyZWNhIjogIkVuY2FybmFjaVx1MDBmMywgNzciLCAiU2VudGl0IjogIkdyXHUwMGUwY2lhIiwgIktleXdvcmRzIjogImJ1cyBHclx1MDBlMGNpYSAvIENhbiBCYXJcdTAwZjMgRW5jYXJuYWNpXHUwMGYzIC0gRXNjb3JpYWwgMTE0IDIwOCIsICJMaW5pZXMiOiAiIiwgInRpcG8iOiAiYnVzIiwgImNvcnJlc3BvbmRlbmNpYSI6IFsiIl19LCAibmFtZSI6ICJidXNwYXJhZGVzIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTYxNzc1ODQsIDQxLjQwNzUyNjMyXX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQ1NTc3NzN9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ3NDkwMTRlYTczODBhYjVmNDdmIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiTXVuaWNpcGkiOiAiQmFyY2Vsb25hIiwgIk9yZHJlIjogMjIxLCAiRGVzY3JpcGNpbyI6ICJQZyBkZSBTYW50IEpvYW4gLSBUcmF2IGRlIEdyXHUwMGUwY2lhIiwgIkxpbmVhIjogIlYxOSIsICJDb2RMaW5lYSI6IDIxOSwgIk5vbWJyZSI6ICJCYXJjZWxvbmV0YSAvIFBsLiBBbGZvbnNvIENvbVx1MDBlZG4iLCAiQ29kaWdvIjogMTMwNywgIkFkcmVjYSI6ICJQZy4gU2FudCBKb2FuLCAxOTUiLCAiU2VudGl0IjogIkJhcmNlbG9uZXRhIiwgIktleXdvcmRzIjogImJ1cyBCYXJjZWxvbmV0YSAvIFBsLiBBbGZvbnNvIENvbVx1MDBlZG4gUGcgZGUgU2FudCBKb2FuIC0gVHJhdiBkZSBHclx1MDBlMGNpYSBWMTkgMjIxIiwgIkxpbmllcyI6ICIiLCAidGlwbyI6ICJidXMiLCAiY29ycmVzcG9uZGVuY2lhIjogWyIiXX0sICJuYW1lIjogImJ1c3BhcmFkZXMiLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNjMxODc2OCwgNDEuNDAzOTI4NTldfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDU1MzA3NH19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDYxN2Y5MmViNGQ3ZTNiMmE4YzgifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJpZCI6ICIyMjkiLCAic3RyZWV0IjogIkMvIERFIExBIFNBTlRBQ1JFVSwgMiAoUEwuIERFIExBIFZJUlJFSU5BKSIsICJ0aXBvIjogImJpY2luZyJ9LCAibmFtZSI6ICJiaWNpbmciLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTY5MTYxLCA0MS40MDUwOTY4XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQyNDc4NjF9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ2MTdmOTJlYjRkN2UzYjJhOGM5In0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiaWQiOiAiMjI4IiwgInN0cmVldCI6ICJQTC4gREVMIE5PUkQsIDUiLCAidGlwbyI6ICJiaWNpbmcifSwgIm5hbWUiOiAiYmljaW5nIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTU1ODM1NCwgNDEuNDA2ODQxN119LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0MjQ3ODYyfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NjE3ZjkyZWI0ZDdlM2IyYThjYiJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7ImlkIjogIjIyNiIsICJzdHJlZXQiOiAiQy8gTU9OVE1BTlksIDEiLCAidGlwbyI6ICJiaWNpbmcifSwgIm5hbWUiOiAiYmljaW5nIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTYwOTM0NSwgNDEuNDAzNTYwOF19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0MjQ3ODY1fX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NjE3ZjkyZWI0ZDdlM2IyYThjYSJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7ImlkIjogIjIyNyIsICJzdHJlZXQiOiAiQy8gREVMIFRPUlJFTlQgREUgTEVTIEZMT1JTLCAxMDIiLCAidGlwbyI6ICJiaWNpbmcifSwgIm5hbWUiOiAiYmljaW5nIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTU4NjcwNCwgNDEuNDA3ODQ1Nl19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0MjQ3ODY0fX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NjE3ZjkyZWI0ZDdlM2IyYThjZiJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7ImlkIjogIjIyMiIsICJzdHJlZXQiOiAiQy8gREVMIENBTlx1MDBkMywgMSIsICJ0aXBvIjogImJpY2luZyJ9LCAibmFtZSI6ICJiaWNpbmciLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTc0NDM5LCA0MS40MDEzMjk2XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQyNDc4NzF9fSwgeyJfaWQiOiB7IiRvaWQiOiAiNjhmMDQ2MThmOTJlYjRkN2UzYjJhOTNmIn0sICJ0eXBlIjogIkZlYXR1cmUiLCAicHJvcGVydGllcyI6IHsiaWQiOiAiMTA2IiwgInN0cmVldCI6ICIgUEwgIEpPQU5JQyAtIEMgLyBCUlVOSVFVRVIsIDU5IiwgInRpcG8iOiAiYmljaW5nIn0sICJuYW1lIjogImJpY2luZyIsICJnZW9tZXRyeSI6IHsidHlwZSI6ICJQb2ludCIsICJjb29yZGluYXRlcyI6IFsyLjE2MjI1NDgsIDQxLjQwNTUxOThdfSwgImNyZWF0aW9uX2RhdGUiOiB7IiRkYXRlIjogMTc2MDU4NDI0ODEzMn19LCB7Il9pZCI6IHsiJG9pZCI6ICI2OGYwNDYxN2Y5MmViNGQ3ZTNiMmE4ZDAifSwgInR5cGUiOiAiRmVhdHVyZSIsICJwcm9wZXJ0aWVzIjogeyJpZCI6ICIyMjEiLCAic3RyZWV0IjogIkdSQU4gREUgR1JcdTAwYzBDSUEsIDE1NSAoTUVUUk8gRk9OVEFOQSkiLCAidGlwbyI6ICJiaWNpbmcifSwgIm5hbWUiOiAiYmljaW5nIiwgImdlb21ldHJ5IjogeyJ0eXBlIjogIlBvaW50IiwgImNvb3JkaW5hdGVzIjogWzIuMTUyNDcwNCwgNDEuNDAyNTM5Ml19LCAiY3JlYXRpb25fZGF0ZSI6IHsiJGRhdGUiOiAxNzYwNTg0MjQ3ODczfX0sIHsiX2lkIjogeyIkb2lkIjogIjY4ZjA0NjE3ZjkyZWI0ZDdlM2IyYThjNyJ9LCAidHlwZSI6ICJGZWF0dXJlIiwgInByb3BlcnRpZXMiOiB7ImlkIjogIjIzMCIsICJzdHJlZXQiOiAiQy8gREUgTklMIEZBQlJBLCAxNi0yMCIsICJ0aXBvIjogImJpY2luZyJ9LCAibmFtZSI6ICJiaWNpbmciLCAiZ2VvbWV0cnkiOiB7InR5cGUiOiAiUG9pbnQiLCAiY29vcmRpbmF0ZXMiOiBbMi4xNTE3OTc3LCA0MS40MDU5MzU2XX0sICJjcmVhdGlvbl9kYXRlIjogeyIkZGF0ZSI6IDE3NjA1ODQyNDc4NTl9fV0="
+   }
+  ],
+  "entity_types_data": [
+   {
+    "id": 101,
+    "name": "agenda"
+   },
+   {
+    "id": 100,
+    "name": "registre"
+   }
+  ],
+  "values": [
+   {
+    "id": 739200,
+    "value": "https://www.instagram.com/p/DZXPb6eNPCZ/",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://www.instagram.com/p/DZXPb6eNPCZ/",
+    "url_visible_value": "www.instagram.com",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 100008,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Instagram",
+    "attribute_web_name": "Instagram",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   },
+   {
+    "id": 739218,
+    "value": "https://docs.google.com/forms/d/1PAkd0r230COduhlx67geE11sq-7dHzZ1yQoIXFVVHXA/viewform?pli=1&pli=1&edit_requested=true",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://docs.google.com/forms/d/1PAkd0r230COduhlx67geE11sq-7dHzZ1yQoIXFVVHXA/viewform?pli=1&pli=1&edit_requested=true",
+    "url_visible_value": "docs.google.com/forms",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 30012,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Web inscripcions",
+    "attribute_web_name": "Web inscripcions",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   }
+  ],
+  "from_relationships": [
+   {
+    "type_id": 1006,
+    "name": "organitzat per",
+    "entity_id": 99400366242,
+    "entity_prefix": null,
+    "entity_name": "Cuida la Vida. Associació de Facilitadores pel Benestar",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/cuida-la-vida-associacio-de-facilitadores-pel-benestar-99400366242",
+    "observation": null,
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   }
+  ],
+  "to_relationships": [],
+  "classifications_data": [
+   {
+    "id": 2004,
+    "name": "Concerts",
+    "full_path": "Tipologia AG >> Concerts",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201004",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 2037,
+    "name": "Trobades",
+    "full_path": "Tipologia AG >> Trobades",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201037",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 117001,
+    "name": "Música",
+    "full_path": "Especialitats AG >> Música",
+    "dependency_group": 3033964,
+    "parent_id": 117,
+    "tree_id": 117,
+    "asia_id": "0011701001",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 117018,
+    "name": "Sanitat i salut",
+    "full_path": "Especialitats AG >> Sanitat i salut",
+    "dependency_group": 3033964,
+    "parent_id": 117,
+    "tree_id": 117,
+    "asia_id": "0011701018",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 507015,
+    "name": "Activitats per al públic en general",
+    "full_path": "Col·lectius AG >> Activitats per al públic en general",
+    "dependency_group": 3033964,
+    "parent_id": 507,
+    "tree_id": 507,
+    "asia_id": "0050701015",
+    "core_type": "event",
+    "level": 1
+   }
+  ],
+  "secondary_filters_data": [
+   {
+    "id": 524006,
+    "name": "Concerts",
+    "full_path": "Setmana Santa >> Concerts",
+    "dependency_group": 3033954,
+    "parent_id": 524,
+    "tree_id": 524,
+    "asia_id": "0052401006"
+   },
+   {
+    "id": 27549034,
+    "name": "Concerts",
+    "full_path": "Barcelona Cultura Antic >> Tipologies >> Concerts",
+    "dependency_group": 2267775,
+    "parent_id": 547000,
+    "tree_id": 547,
+    "asia_id": "0054702000001"
+   },
+   {
+    "id": 28966603,
+    "name": "Trobades",
+    "full_path": "Agenda >> Congressos, conferències i col·loquis >> Trobades",
+    "dependency_group": 3033954,
+    "parent_id": 400003,
+    "tree_id": 400,
+    "asia_id": "0040002003008"
+   },
+   {
+    "id": 400019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 400,
+    "tree_id": 400,
+    "asia_id": "0040001019"
+   },
+   {
+    "id": 626001,
+    "name": "Música",
+    "full_path": "Agenda Barcelona Cultura >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601001"
+   },
+   {
+    "id": 643010,
+    "name": "Música",
+    "full_path": "Barcelona Cultura - Recomanem >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301010"
+   },
+   {
+    "id": 25344761,
+    "name": "Jornades",
+    "full_path": "Agenda >> Congressos, conferències i col·loquis >> Jornades",
+    "dependency_group": 3033954,
+    "parent_id": 619003,
+    "tree_id": 619,
+    "asia_id": "0061902003009"
+   },
+   {
+    "id": 25344757,
+    "name": "Seminaris",
+    "full_path": "Agenda >> Congressos, conferències i col·loquis >> Seminaris",
+    "dependency_group": 3033954,
+    "parent_id": 619003,
+    "tree_id": 619,
+    "asia_id": "0061902003005"
+   },
+   {
+    "id": 619019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 619,
+    "tree_id": 619,
+    "asia_id": "0061901019"
+   }
+  ],
+  "timetable": {
+   "id": 151110,
+   "html": "<table class=\"timetable-table\"><tr class=\"timetable-header\"><th class=\"weekdays\">Dies</th><th class=\"hours\">Hores</th><th class=\"prices\">Preus</th><th class=\"description\">Observacions</th></tr><tr><td class=\"timetable-day\" rowspan=1><div>Dimarts</div></td><td class=\"timetable-hour\" rowspan=1><div>de 17.00&nbsp;h a 19.00&nbsp;h</div></td><td class=\"timetable-price\" rowspan=1><div>Entrada Gratuïta</div></td><td class=\"timetable-description\" rowspan=1><div><p style=\"margin:0\">Cal inscripció prèvia abans del 26 de juliol</p></div></td></tr></table>",
+   "hide": false,
+   "alert": "",
+   "descriptions_control": 1
+  },
+  "image_data": {
+   "id": 80745,
+   "name": "Sense títol.png",
+   "image": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/Sense_titol.753d056fb.png",
+   "title": null,
+   "alt": null,
+   "author": null,
+   "source": null,
+   "type_license": null,
+   "description": "",
+   "image_thumb": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/Sense_titol.thumb-150x150.753d056f.jpg",
+   "image_optimized": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/Sense_titol.optimized.753d056f.jpg",
+   "cuts": []
+  },
+  "gallery_data": [],
+  "warnings": [],
+  "geo_epgs_25831": {
+   "x": 429569.099,
+   "y": 4584036.866
+  },
+  "geo_epgs_23031": {
+   "x": 429663.1987499669,
+   "y": 4584241.203811037
+  },
+  "geo_epgs_4326_latlon": {
+   "lat": 41.40479137384526,
+   "lon": 2.157376727283835
+  },
+  "is_section_of_data": null,
+  "sections_data": null,
+  "start_date": "2026-10-13T03:00:00+02:00",
+  "end_date": "2026-10-13T03:00:00+02:00",
+  "estimated_dates": null,
+  "languages_data": [
+   {
+    "id": 2,
+    "language": "Català"
+   }
+  ],
+  "type": "unique",
+  "type_name": "Puntual",
+  "period": null,
+  "period_name": "",
+  "event_status_name": "Correcte",
+  "event_status": "ok",
+  "ical": "BEGIN:VCALENDAR\r\nPRODID:ics.py - http://git.io/lLljaA\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234355Z\r\nDTSTART:20261013T170000Z\r\nDTEND:20261013T190000Z\r\nSUMMARY:3a Convocatòria 'Cantem obertament sobre salut mental'\r\nTRANSP:OPAQUE\r\nUID:e175e1c8-a706-4dcd-b852-b245e6cbce29@e175.org\r\nEND:VEVENT\r\nEND:VCALENDAR",
+  "ownership": null,
+  "accessibility": null
+ },
+ {
+  "register_id": 99400787233,
+  "prefix": null,
+  "suffix": null,
+  "name": "Exposició 'Trames. Obres tradicionals i creacions contemporànies americanes'",
+  "created": "2026-09-09T09:09:58.049741+02:00",
+  "modified": "2026-10-09T07:59:21.756428+02:00",
+  "status": "published",
+  "status_name": "Publicat",
+  "core_type": "event",
+  "core_type_name": "Agenda",
+  "body": "<p>L'exposició comissariada per Estela Ocampo, proposa una aproximació a les cultures americanes a través de les seves expressions artístiques i dels sistemes de creences i de pensament que s'hi reflecteixen.El recorregut s'articula a partir de la relació entre obres de sis artistes contemporanis i peces del Museu Etnològic i de Cultures del Món, posant de manifest tant la persistència com la tran",
+  "tickets_data": [
+   {
+    "id": 4,
+    "name": "Pagament"
+   }
+  ],
+  "addresses": [
+   {
+    "place": "Museu Etnològic i de Cultures del Món *c.  Montcada",
+    "district_name": "Ciutat Vella",
+    "district_id": "01",
+    "neighborhood_name": "Sant Pere, Santa Caterina i la Ribera",
+    "neighborhood_id": "04",
+    "address_name": "Carrer de Montcada",
+    "address_id": "217501",
+    "block_id": null,
+    "start_street_number": 12,
+    "end_street_number": null,
+    "street_number_1": "12",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": "08003",
+    "province": "Barcelona",
+    "town": "Barcelona",
+    "country": "Espanya",
+    "comments": null,
+    "position": 0,
+    "position_relative": "",
+    "main_address": true,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": "Carrer",
+    "roadtype_id": "02",
+    "location_4326": {
+     "type": "GeometryCollection",
+     "geometries": [
+      {
+       "type": "Point",
+       "coordinates": [
+        41.38506495287382,
+        2.18092969589886
+       ]
+      }
+     ]
+    },
+    "related_entity": 99400367586,
+    "related_entity_data": {
+     "id": 99400367586,
+     "prefix": null,
+     "suffix": null,
+     "visible": true,
+     "prefix_ca": null,
+     "suffix_ca": null,
+     "name": "Museu Etnològic i de Cultures del Món *c.  Montcada",
+     "status": "published",
+     "core_type": "place",
+     "is_section_of_name": null,
+     "start_date": "",
+     "end_date": "",
+     "canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/museu-etnologic-i-de-cultures-del-mon-c-montcada-99400367586"
+    },
+    "hide_address": false,
+    "transport_data": null
+   }
+  ],
+  "entity_types_data": [
+   {
+    "id": 101,
+    "name": "agenda"
+   },
+   {
+    "id": 100,
+    "name": "registre"
+   }
+  ],
+  "values": [
+   {
+    "id": 754999,
+    "value": "https://www.barcelona.cat/museu-etnologic-culturesmon/ca/node/2503",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://www.barcelona.cat/museu-etnologic-culturesmon/ca/node/2503",
+    "url_visible_value": "www.barcelona.cat/museu-etnologic-culturesmon/ca/node/2503",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 100003,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Web",
+    "attribute_web_name": "Web",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   }
+  ],
+  "from_relationships": [
+   {
+    "type_id": 1002,
+    "name": "se celebra a",
+    "entity_id": 99400367586,
+    "entity_prefix": null,
+    "entity_name": "Museu Etnològic i de Cultures del Món *c.  Montcada",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/museu-etnologic-i-de-cultures-del-mon-c-montcada-99400367586",
+    "observation": null,
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   }
+  ],
+  "to_relationships": [],
+  "classifications_data": [
+   {
+    "id": 2001,
+    "name": "Exposicions",
+    "full_path": "Tipologia AG >> Exposicions",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201001",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 42798722,
+    "name": "Etnologia",
+    "full_path": "Especialitats AG >> Ciències >> Etnologia",
+    "dependency_group": 3033964,
+    "parent_id": 117006,
+    "tree_id": 117,
+    "asia_id": "0011702006003",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 42799721,
+    "name": "Història",
+    "full_path": "Especialitats AG >> Humanitats, lletres, ciències socials >> Història",
+    "dependency_group": 3033964,
+    "parent_id": 117007,
+    "tree_id": 117,
+    "asia_id": "0011702007002",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 148414869,
+    "name": "Registres vinculats al Portal de Museus",
+    "full_path": "Gestió BI >> Registres vinculats al Portal de Museus",
+    "dependency_group": 3033964,
+    "parent_id": 112,
+    "tree_id": 112,
+    "asia_id": "0011201061",
+    "core_type": "entity",
+    "level": 1
+   },
+   {
+    "id": 45804880,
+    "name": "Activitats dels museus i arxius de Barcelona",
+    "full_path": "Marcs i cicles AG >> Altres marcs i cicles >> Activitats dels museus i arxius de Barcelona",
+    "dependency_group": 3033964,
+    "parent_id": 120012,
+    "tree_id": 120,
+    "asia_id": "0012002012161",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 507015,
+    "name": "Activitats per al públic en general",
+    "full_path": "Col·lectius AG >> Activitats per al públic en general",
+    "dependency_group": 3033964,
+    "parent_id": 507,
+    "tree_id": 507,
+    "asia_id": "0050701015",
+    "core_type": "event",
+    "level": 1
+   }
+  ],
+  "secondary_filters_data": [
+   {
+    "id": 524007,
+    "name": "Exposicions",
+    "full_path": "Setmana Santa >> Exposicions",
+    "dependency_group": 3033954,
+    "parent_id": 524,
+    "tree_id": 524,
+    "asia_id": "0052401007"
+   },
+   {
+    "id": 19134754,
+    "name": "Etnologia",
+    "full_path": "Barcelona Cultura Antic >> Disciplines >> Ciències >> Etnologia",
+    "dependency_group": 2267775,
+    "parent_id": 27550036,
+    "tree_id": 547,
+    "asia_id": "0054703001003005"
+   },
+   {
+    "id": 27549035,
+    "name": "Exposicions",
+    "full_path": "Barcelona Cultura Antic >> Tipologies >> Exposicions",
+    "dependency_group": 2267775,
+    "parent_id": 547000,
+    "tree_id": 547,
+    "asia_id": "0054702000002"
+   },
+   {
+    "id": 400009,
+    "name": "Exposicions",
+    "full_path": "Agenda >> Exposicions",
+    "dependency_group": 3033954,
+    "parent_id": 400,
+    "tree_id": 400,
+    "asia_id": "0040001009"
+   },
+   {
+    "id": 28972614,
+    "name": "Etnologia",
+    "full_path": "Agenda >> Exposicions >> Etnologia",
+    "dependency_group": 3033954,
+    "parent_id": 400009,
+    "tree_id": 400,
+    "asia_id": "0040002009019"
+   },
+   {
+    "id": 28972620,
+    "name": "Història",
+    "full_path": "Agenda >> Exposicions >> Història",
+    "dependency_group": 3033954,
+    "parent_id": 400009,
+    "tree_id": 400,
+    "asia_id": "0040002009025"
+   },
+   {
+    "id": 626047,
+    "name": "Ciència",
+    "full_path": "Agenda Barcelona Cultura >> Ciència",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601047"
+   },
+   {
+    "id": 626003,
+    "name": "Exposicions",
+    "full_path": "Agenda Barcelona Cultura >> Exposicions",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601003"
+   },
+   {
+    "id": 626045,
+    "name": "Innovació",
+    "full_path": "Agenda Barcelona Cultura >> Innovació",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601045"
+   },
+   {
+    "id": 643000,
+    "name": "Ciència",
+    "full_path": "Barcelona Cultura - Recomanem >> Ciència",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301000"
+   },
+   {
+    "id": 643006,
+    "name": "Exposicions",
+    "full_path": "Barcelona Cultura - Recomanem >> Exposicions",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301006"
+   },
+   {
+    "id": 643007,
+    "name": "Innovació",
+    "full_path": "Barcelona Cultura - Recomanem >> Innovació",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301007"
+   },
+   {
+    "id": 619009,
+    "name": "Exposicions",
+    "full_path": "Agenda >> Exposicions",
+    "dependency_group": 3033954,
+    "parent_id": 619,
+    "tree_id": 619,
+    "asia_id": "0061901009"
+   },
+   {
+    "id": 25350777,
+    "name": "Història i arqueologia",
+    "full_path": "Agenda >> Exposicions >> Història i arqueologia",
+    "dependency_group": 3033954,
+    "parent_id": 619009,
+    "tree_id": 619,
+    "asia_id": "0061902009025"
+   },
+   {
+    "id": 46116185,
+    "name": "Etnologia",
+    "full_path": "Agenda >> Exposicions >> Més exposicions >> Etnologia",
+    "dependency_group": 3033954,
+    "parent_id": 25350799,
+    "tree_id": 619,
+    "asia_id": "0061903009047006"
+   }
+  ],
+  "timetable": {
+   "id": 154864,
+   "html": "<table class=\"timetable-table\"><tr class=\"timetable-header\"><th class=\"period\">Període</th><th class=\"weekdays\">Dies</th><th class=\"hours\">Hores</th><th class=\"prices\">Preus</th></tr><tr><td class=\"timetable-period\" rowspan=1><div>Del 18 setembre al 30 setembre</div></td><td class=\"timetable-day\" rowspan=1><div>Dimarts, dimecres, dijous, divendres, dissabte i diumenge i  festius</div></td><td class=\"timetable-hour\" rowspan=1><div>de 10:00 h a 20:00 h</div></td><td class=\"timetable-price\" rowspan=3><div>Entrada general: 3 € <p style=\"margin:0\"><br></p><p style=\"margin:0\"><strong>Reduïda</strong> (caldrà acreditar la condició): 2.10 €</p><p style=\"margin:0\">- Persones de 16 a 29 anys</p><p style=\"margin:0\">- Persones de 65 anys o més</p><p style=\"margin:0\">- Titulars targeta rosa reduïda</p><p style=\"margin:0\">- Persones a l'atur</p><p style=\"margin:0\">- Titulars del carnet de familia nombrosa o monoparental</p><p style=\"margin:0\">- Titulars del carnet de Biblioteques de Barcelona</p><p style=\"margin:0\">- Famílies màxim 2 adults, sempre que un sigui tutor legal</p><p style=\"margin:0\"><br></p><p style=\"margin:0\"><strong>Gratuïta</strong> (caldrà acreditar la condició):</p><p style=\"margin:0\">- El 1r diumenge de cada mes de 10 a 20 h</p><p style=\"margin:0\">- Tots els diumenges de 15 a 20 h</p><p style=\"margin:0\">- Menors de 16 anys</p><p style=\"margin:0\">- Registrats al programa Gaudir+BCN</p><p style=\"margin:0\">- Titulars targeta rosa gratuïta</p><p style=\"margin:0\">- Titulars passi metropolità d'acompanyant d'un discapacitat</p><p style=\"margin:0\">- Carnet de l'ICOM</p><p style=\"margin:0\">- Membres acreditats Ass. Museòlegs Catalunya</p><p style=\"margin:0\">- Professors ensenyament reglat</p><p style=\"margin:0\">acreditats</p><p style=\"margin:0\">- Professors ensenyament reglat</p><p style=\"margin:0\">quan aconpanyin grups d'estudiants</p><p style=\"margin:0\">- Els guies turístics en lexercici de la seva feina</p><p style=\"margin:0\">- Els periodistes acreditats</p><p style=\"margin:0\">- Titulars targeta BCN Card</p><p style=\"margin:0\">- 12 de febrer (Santa Eulàlia)</p><p style=\"margin:0\">- 24 de setembre (Mare de Déu de la Mercè)</p><p style=\"margin:0\"><br></p><p style=\"margin:0\">Col·lecció permanent + exposició temporal: </p><p style=\"margin:0\">- 5,20 € (general)</p><p style=\"margin:0\">- 3,70 €<strong> </strong>(reduïda)</p></div></td></tr><tr><td class=\"timetable-period current\" rowspan=2><div>De l'1 octubre al 25 abril</div></td><td class=\"timetable-day\" rowspan=1><div><p style=\"margin:0\">De dimarts a dissabte</p></div></td><td class=\"timetable-hour\" rowspan=1><div>de 10:00 h a 19:00 h</div></td></tr><tr><td class=\"timetable-day\" rowspan=1><div><p style=\"margin:0\">Diumenge i festius </p><p style=\"margin:0\">Tancat  25 desembre, 26 desembre, 1 gener i 6 gener</p></div></td><td class=\"timetable-hour\" rowspan=1><div>de 10:00 h a 20:00 h</div></td></tr></table>",
+   "hide": false,
+   "alert": "",
+   "descriptions_control": 0
+  },
+  "image_data": {
+   "id": 83466,
+   "name": "destacat.jpg",
+   "image": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/destacat.26db411bb.jpg",
+   "title": null,
+   "alt": null,
+   "author": null,
+   "source": null,
+   "type_license": null,
+   "description": "",
+   "image_thumb": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/destacat.thumb-150x150.26db411b.jpg",
+   "image_optimized": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/destacat.optimized.26db411b.jpg",
+   "cuts": []
+  },
+  "gallery_data": [],
+  "warnings": [],
+  "geo_epgs_25831": {
+   "x": 431517.09467293386,
+   "y": 4581827.984576506
+  },
+  "geo_epgs_23031": {
+   "x": 431611.20816260064,
+   "y": 4582032.3405927
+  },
+  "geo_epgs_4326_latlon": {
+   "lat": 41.38506495287382,
+   "lon": 2.18092969589886
+  },
+  "is_section_of_data": null,
+  "sections_data": null,
+  "start_date": "2026-09-18T03:00:00+02:00",
+  "end_date": "2027-04-25T12:00:00+02:00",
+  "estimated_dates": null,
+  "languages_data": [
+   {
+    "id": 1,
+    "language": "Indiferent"
+   }
+  ],
+  "type": "unique",
+  "type_name": "Puntual",
+  "period": null,
+  "period_name": "",
+  "event_status_name": "Correcte",
+  "event_status": "ok",
+  "ical": "BEGIN:VCALENDAR\r\nPRODID:ics.py - http://git.io/lLljaA\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234055Z\r\nDTSTART:20270314T100000Z\r\nDTEND:20270314T200000Z\r\nSUMMARY:Exposició 'Trames. Obres tradicionals i creacions contemporànies americanes'\r\nTRANSP:OPAQUE\r\nUID:d0b1b3cd-e400-4bbe-aa84-ddda89698a3f@d0b1.org\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234055Z\r\nDTSTART:20270313T100000Z\r\nDTEND:20270313T190000Z\r\nSUMMARY:Exposició 'Trames. Obres tradicionals i creacions contemporànies americanes'\r\nTRANSP:OPAQUE\r\nUID:0c11ac9e-a714-476e-a2b0-cd6987ac438c@0c11.org\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234055Z\r\nDTSTART:20270312T100000Z\r\nDTEND:20270312T190000Z\r\nSUMMARY:Exposició 'Trames. Obres tradicionals i creacions contemporànies americanes'\r\nTRANSP:OPAQUE\r\nUID:427bfe86-92fe-4a62-89b7-2a28c550c279@427b.org\r\nEND:VEVENT\r\nEND:VCALENDAR",
+  "ownership": null,
+  "accessibility": null
+ },
+ {
+  "register_id": 99400788244,
+  "prefix": "",
+  "suffix": null,
+  "name": "Concert \"Fiesta ¡FA!\"",
+  "created": "2026-09-29T12:36:47.398138+02:00",
+  "modified": "2026-09-29T12:45:06.662521+02:00",
+  "status": "published",
+  "status_name": "Publicat",
+  "core_type": "event",
+  "core_type_name": "Agenda",
+  "body": "",
+  "tickets_data": [
+   {
+    "id": 4,
+    "name": "Pagament"
+   }
+  ],
+  "addresses": [
+   {
+    "place": "Razzmatazz",
+    "district_name": "Sant Martí",
+    "district_id": "10",
+    "neighborhood_name": "el Parc i la Llacuna del Poblenou",
+    "neighborhood_id": "66",
+    "address_name": "C Almogàvers",
+    "address_id": "011200",
+    "block_id": null,
+    "start_street_number": 122,
+    "end_street_number": null,
+    "street_number_1": "122",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": "08018",
+    "province": "BARCELONA",
+    "town": "BARCELONA",
+    "country": "ESPANYA",
+    "comments": null,
+    "position": 0,
+    "position_relative": "",
+    "main_address": true,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": null,
+    "roadtype_id": null,
+    "location_4326": {
+     "type": "GeometryCollection",
+     "geometries": [
+      {
+       "type": "Point",
+       "coordinates": [
+        41.3977561996673,
+        2.1910974309944122
+       ]
+      }
+     ]
+    },
+    "related_entity": 333173100,
+    "related_entity_data": {
+     "id": 333173100,
+     "prefix": null,
+     "suffix": null,
+     "visible": true,
+     "prefix_ca": null,
+     "suffix_ca": null,
+     "name": "Razzmatazz",
+     "status": "published",
+     "core_type": "place",
+     "is_section_of_name": null,
+     "start_date": "",
+     "end_date": "",
+     "canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/razzmatazz-333173100"
+    },
+    "hide_address": false,
+    "transport_data": null
+   }
+  ],
+  "entity_types_data": [
+   {
+    "id": 101,
+    "name": "agenda"
+   },
+   {
+    "id": 100,
+    "name": "registre"
+   }
+  ],
+  "values": [
+   {
+    "id": 757626,
+    "value": "https://www.entradas.com/artist/fiesta-fa/",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://www.entradas.com/artist/fiesta-fa/",
+    "url_visible_value": "www.entradas.com",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 30014,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Web venda d'entrades",
+    "attribute_web_name": "Web venda d'entrades",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   },
+   {
+    "id": 757627,
+    "value": "AG.204.2026.09.30",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": "AG.204.2026.09.30",
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": null,
+    "url_visible_value": null,
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 100077,
+    "category_id": 1,
+    "category_name": "Variables",
+    "attribute_name": "Numero fitxa Call Center Extern",
+    "attribute_web_name": "Numero fitxa Call Center Extern",
+    "attribute_type": "char",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   }
+  ],
+  "from_relationships": [
+   {
+    "type_id": 1002,
+    "name": "se celebra a",
+    "entity_id": 333173100,
+    "entity_prefix": null,
+    "entity_name": "Razzmatazz",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/espais-associacions/razzmatazz-333173100",
+    "observation": null,
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   }
+  ],
+  "to_relationships": [],
+  "classifications_data": [
+   {
+    "id": 2004,
+    "name": "Concerts",
+    "full_path": "Tipologia AG >> Concerts",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201004",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 117001,
+    "name": "Música",
+    "full_path": "Especialitats AG >> Música",
+    "dependency_group": 3033964,
+    "parent_id": 117,
+    "tree_id": 117,
+    "asia_id": "0011701001",
+    "core_type": "event",
+    "level": 1
+   }
+  ],
+  "secondary_filters_data": [
+   {
+    "id": 524006,
+    "name": "Concerts",
+    "full_path": "Setmana Santa >> Concerts",
+    "dependency_group": 3033954,
+    "parent_id": 524,
+    "tree_id": 524,
+    "asia_id": "0052401006"
+   },
+   {
+    "id": 27549034,
+    "name": "Concerts",
+    "full_path": "Barcelona Cultura Antic >> Tipologies >> Concerts",
+    "dependency_group": 2267775,
+    "parent_id": 547000,
+    "tree_id": 547,
+    "asia_id": "0054702000001"
+   },
+   {
+    "id": 400019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 400,
+    "tree_id": 400,
+    "asia_id": "0040001019"
+   },
+   {
+    "id": 626001,
+    "name": "Música",
+    "full_path": "Agenda Barcelona Cultura >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601001"
+   },
+   {
+    "id": 643010,
+    "name": "Música",
+    "full_path": "Barcelona Cultura - Recomanem >> Música",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301010"
+   },
+   {
+    "id": 619019,
+    "name": "Música",
+    "full_path": "Agenda >> Música",
+    "dependency_group": 3033954,
+    "parent_id": 619,
+    "tree_id": 619,
+    "asia_id": "0061901019"
+   }
+  ],
+  "timetable": {
+   "id": 155737,
+   "html": "<table class=\"timetable-table\"><tr class=\"timetable-header\"><th class=\"weekdays\">Dies</th><th class=\"hours\">Hores</th><th class=\"prices\">Preus</th><th class=\"description\">Observacions</th></tr><tr><td class=\"timetable-day\" rowspan=1><div>Dijous</div></td><td class=\"timetable-hour\" rowspan=1><div>a les 20.30&nbsp;h</div></td><td class=\"timetable-price\" rowspan=1><div>Entrada general: 44 € <p style=\"margin:0\">(+ despeses de gestió)</p></div></td><td class=\"timetable-description\" rowspan=1><div><p style=\"margin:0\">Obertura de portes a les 19 hores.</p></div></td></tr></table>",
+   "hide": false,
+   "alert": "",
+   "descriptions_control": 1
+  },
+  "image_data": {
+   "id": 84468,
+   "name": "fiestafa.jpg",
+   "image": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/fiestafa.cf53609db.jpg",
+   "title": null,
+   "alt": null,
+   "author": null,
+   "source": null,
+   "type_license": null,
+   "description": "",
+   "image_thumb": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/fiestafa.thumb-150x150.cf53609d.jpg",
+   "image_optimized": "https://estatics-nasia.dtibcn.cat/nasia-pro/media/fiestafa.optimized.cf53609d.jpg",
+   "cuts": []
+  },
+  "gallery_data": [],
+  "warnings": [
+   {
+    "id": 57602,
+    "text": "<p>El concert previst pel 09/10/26 queda ajornat al 27/05/27.</p><p>Les entrades adquirides són vàlides per la nova data.</p><p>Es pot sol·licitar la devolució a través del formulari del web entradas.com o enviant un correu electrònic a atenciónalcliente@entradas.com.</p>",
+    "type": "public",
+    "dependency_group_data": {
+     "name": "EMPRESA EXTERNA - Call Center",
+     "id": 2370159
+    },
+    "dependency_group": 2370159
+   }
+  ],
+  "geo_epgs_25831": {
+   "x": 432380.38499909575,
+   "y": 4583228.962081264
+  },
+  "geo_epgs_23031": {
+   "x": 432474.48652035487,
+   "y": 4583433.322475576
+  },
+  "geo_epgs_4326_latlon": {
+   "lat": 41.3977561996673,
+   "lon": 2.1910974309944122
+  },
+  "is_section_of_data": null,
+  "sections_data": null,
+  "start_date": "2027-05-27T12:00:00+02:00",
+  "end_date": "2027-05-27T12:00:00+02:00",
+  "estimated_dates": null,
+  "languages_data": [
+   {
+    "id": 1,
+    "language": "Indiferent"
+   }
+  ],
+  "type": "unique",
+  "type_name": "Puntual",
+  "period": null,
+  "period_name": "",
+  "event_status_name": "Ajornat",
+  "event_status": "deferred",
+  "ical": "BEGIN:VCALENDAR\r\nPRODID:ics.py - http://git.io/lLljaA\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234125Z\r\nDTSTART:20270527T203000Z\r\nDTEND:20270527T223000Z\r\nSUMMARY:Concert \"Fiesta ¡FA!\"\r\nTRANSP:OPAQUE\r\nUID:696c2ccf-0a20-4f5e-a3af-c5e727c6d49d@696c.org\r\nEND:VEVENT\r\nEND:VCALENDAR",
+  "ownership": null,
+  "accessibility": null
+ },
+ {
+  "register_id": 99400772307,
+  "prefix": "",
+  "suffix": null,
+  "name": "Taller 'Aromes de tardor: plantes aromàtiques, olfacte i rituals quotidians'",
+  "created": "2026-01-28T12:05:50.177481+01:00",
+  "modified": "2026-07-31T10:57:11.683034+02:00",
+  "status": "published",
+  "status_name": "Publicat",
+  "core_type": "event",
+  "core_type_name": "Agenda",
+  "body": "<p class=\"ql-align-justify\">Tallerista: AromaConCiencia</p>",
+  "tickets_data": [
+   {
+    "id": 8,
+    "name": "Inscripcions"
+   },
+   {
+    "id": 4,
+    "name": "Pagament"
+   }
+  ],
+  "addresses": [
+   {
+    "place": "Recinte del Campus de l’Alimentació de Torribera (UB - Santa Coloma)",
+    "district_name": null,
+    "district_id": null,
+    "neighborhood_name": null,
+    "neighborhood_id": null,
+    "address_name": "prat de la riba",
+    "address_id": null,
+    "block_id": null,
+    "start_street_number": 171,
+    "end_street_number": null,
+    "street_number_1": "171",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": null,
+    "province": "Barcelona",
+    "town": "Santa Coloma de Gramenet",
+    "country": "ESPANYA",
+    "comments": null,
+    "position": 0,
+    "position_relative": "",
+    "main_address": true,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": null,
+    "roadtype_id": null,
+    "location_4326": null,
+    "related_entity": null,
+    "related_entity_data": null,
+    "hide_address": false,
+    "transport_data": null
+   },
+   {
+    "place": "Centre Cívic Guinardó",
+    "district_name": "Horta-Guinardó",
+    "district_id": "07",
+    "neighborhood_name": "el Guinardó",
+    "neighborhood_id": "35",
+    "address_name": "Ronda del Guinardó",
+    "address_id": "152905",
+    "block_id": null,
+    "start_street_number": 113,
+    "end_street_number": 133,
+    "street_number_1": "113 - 133",
+    "street_number_2": null,
+    "stairs": null,
+    "level": null,
+    "door": null,
+    "zip_code": "08041",
+    "province": "Barcelona",
+    "town": "Barcelona",
+    "country": "Espanya",
+    "comments": null,
+    "position": 1,
+    "position_relative": "",
+    "main_address": false,
+    "road_name": null,
+    "road_id": null,
+    "roadtype_name": "Ronda",
+    "roadtype_id": "24",
+    "location_4326": {
+     "type": "GeometryCollection",
+     "geometries": [
+      {
+       "type": "Point",
+       "coordinates": [
+        41.41607687588995,
+        2.1733610333293782
+       ]
+      }
+     ]
+    },
+    "related_entity": 92086003455,
+    "related_entity_data": {
+     "id": 92086003455,
+     "prefix": null,
+     "suffix": null,
+     "visible": true,
+     "prefix_ca": null,
+     "suffix_ca": null,
+     "name": "Centre Cívic Guinardó",
+     "status": "published",
+     "core_type": "place",
+     "is_section_of_name": null,
+     "start_date": "",
+     "end_date": "",
+     "canonical_url": "https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-guinardo-92086003455"
+    },
+    "hide_address": false,
+    "transport_data": null
+   }
+  ],
+  "entity_types_data": [
+   {
+    "id": 101,
+    "name": "agenda"
+   },
+   {
+    "id": 100,
+    "name": "registre"
+   }
+  ],
+  "values": [
+   {
+    "id": 709212,
+    "value": "https://ajuntament.barcelona.cat/ccivics/guinardo",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": null,
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": "https://ajuntament.barcelona.cat/ccivics/guinardo",
+    "url_visible_value": "ajuntament.barcelona.cat/ccivics/guinardo",
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 30012,
+    "category_id": 2,
+    "category_name": "Informació d'interès",
+    "attribute_name": "Web inscripcions",
+    "attribute_web_name": "Web inscripcions",
+    "attribute_type": "url",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   },
+   {
+    "id": 749207,
+    "value": "AG.164.2026.08.14",
+    "integer_value": null,
+    "float_value": null,
+    "char_value": "AG.164.2026.08.14",
+    "text_value": null,
+    "datetime_value": null,
+    "option_value": null,
+    "email_value": null,
+    "phone_value": null,
+    "url_value": null,
+    "url_visible_value": null,
+    "contact_person_value": null,
+    "responsible_value": null,
+    "icon_option_value": null,
+    "outstanding": false,
+    "description": "",
+    "attribute": 100077,
+    "category_id": 1,
+    "category_name": "Variables",
+    "attribute_name": "Numero fitxa Call Center Extern",
+    "attribute_web_name": "Numero fitxa Call Center Extern",
+    "attribute_type": "char",
+    "option_value_data": null,
+    "icon_option_value_data": null,
+    "responsible_title": null,
+    "responsible_jobtitle": null
+   }
+  ],
+  "from_relationships": [
+   {
+    "type_id": 1005,
+    "name": "inscripcions a",
+    "entity_id": 92086003455,
+    "entity_prefix": null,
+    "entity_name": "Centre Cívic Guinardó",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-guinardo-92086003455",
+    "observation": "<p>Inscripcions a partir del 7 de setembre a les 9:30 hores.</p><p>Presencialment: a la recepció del Centre Cívic Guinardó</p><p>Internet: ajuntament.barcelona.cat/ccivics/guinardo</p>",
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   },
+   {
+    "type_id": 1002,
+    "name": "se celebra a",
+    "entity_id": 92086003455,
+    "entity_prefix": null,
+    "entity_name": "Centre Cívic Guinardó",
+    "entity_institution": "",
+    "entity_suffix": null,
+    "entity_core_type": "place",
+    "entity_canonical_url": "https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-guinardo-92086003455",
+    "observation": null,
+    "start_date": null,
+    "end_date": null,
+    "estimated_dates": null
+   }
+  ],
+  "to_relationships": [],
+  "classifications_data": [
+   {
+    "id": 2003,
+    "name": "Cursos i tallers",
+    "full_path": "Tipologia AG >> Cursos i tallers",
+    "dependency_group": 3033964,
+    "parent_id": 2,
+    "tree_id": 2,
+    "asia_id": "0000201003",
+    "core_type": "event",
+    "level": 1
+   },
+   {
+    "id": 42798723,
+    "name": "Medi ambient, sostenibilitat, ecologia",
+    "full_path": "Especialitats AG >> Ciències >> Medi ambient, sostenibilitat, ecologia",
+    "dependency_group": 3033964,
+    "parent_id": 117006,
+    "tree_id": 117,
+    "asia_id": "0011702006004",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 42810719,
+    "name": "Teràpies naturals ",
+    "full_path": "Especialitats AG >> Sanitat i salut >> Teràpies naturals ",
+    "dependency_group": 3033964,
+    "parent_id": 117018,
+    "tree_id": 117,
+    "asia_id": "0011702018000",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 45804756,
+    "name": "Activitats als Centres Cívics ",
+    "full_path": "Marcs i cicles AG >> Altres marcs i cicles >> Activitats als Centres Cívics ",
+    "dependency_group": 3033964,
+    "parent_id": 120012,
+    "tree_id": 120,
+    "asia_id": "0012002012037",
+    "core_type": "event",
+    "level": 2
+   },
+   {
+    "id": 507015,
+    "name": "Activitats per al públic en general",
+    "full_path": "Col·lectius AG >> Activitats per al públic en general",
+    "dependency_group": 3033964,
+    "parent_id": 507,
+    "tree_id": 507,
+    "asia_id": "0050701015",
+    "core_type": "event",
+    "level": 1
+   }
+  ],
+  "secondary_filters_data": [
+   {
+    "id": 537002,
+    "name": "Cursos i tallers",
+    "full_path": "Sanitat >> Cursos i tallers",
+    "dependency_group": 3033954,
+    "parent_id": 537,
+    "tree_id": 537,
+    "asia_id": "0053701002"
+   },
+   {
+    "id": 27550033,
+    "name": "Activitats als Centres Civics",
+    "full_path": "Barcelona Cultura Antic >> Disciplines >> Activitats als Centres Civics",
+    "dependency_group": 2267775,
+    "parent_id": 547001,
+    "tree_id": 547,
+    "asia_id": "0054702001000"
+   },
+   {
+    "id": 19134758,
+    "name": "Medi ambient, sostenible, ecologia",
+    "full_path": "Barcelona Cultura Antic >> Disciplines >> Ciències >> Medi ambient, sostenible, ecologia",
+    "dependency_group": 2267775,
+    "parent_id": 27550036,
+    "tree_id": 547,
+    "asia_id": "0054703001003009"
+   },
+   {
+    "id": 27549039,
+    "name": "Cursos i tallers",
+    "full_path": "Barcelona Cultura Antic >> Tipologies >> Cursos i tallers",
+    "dependency_group": 2267775,
+    "parent_id": 547000,
+    "tree_id": 547,
+    "asia_id": "0054702000006"
+   },
+   {
+    "id": 400006,
+    "name": "Cursos i tallers",
+    "full_path": "Agenda >> Cursos i tallers",
+    "dependency_group": 3033954,
+    "parent_id": 400,
+    "tree_id": 400,
+    "asia_id": "0040001006"
+   },
+   {
+    "id": 28969624,
+    "name": "Medi Ambient",
+    "full_path": "Agenda >> Cursos i tallers >> Medi Ambient",
+    "dependency_group": 3033954,
+    "parent_id": 400006,
+    "tree_id": 400,
+    "asia_id": "0040002006029"
+   },
+   {
+    "id": 28991598,
+    "name": "Cursos i tallers",
+    "full_path": "Agenda >> Sanitat >> Cursos i tallers",
+    "dependency_group": 3033954,
+    "parent_id": 400028,
+    "tree_id": 400,
+    "asia_id": "0040002028003"
+   },
+   {
+    "id": 618007,
+    "name": "Medi ambient i ciències naturals",
+    "full_path": "Cursos i tallers >> Medi ambient i ciències naturals",
+    "dependency_group": 3033954,
+    "parent_id": 618,
+    "tree_id": 618,
+    "asia_id": "0061801007"
+   },
+   {
+    "id": 618041,
+    "name": "Salut i creixement personal",
+    "full_path": "Cursos i tallers >> Salut i creixement personal",
+    "dependency_group": 3033954,
+    "parent_id": 618,
+    "tree_id": 618,
+    "asia_id": "0061801041"
+   },
+   {
+    "id": 24382755,
+    "name": "Salut i teràpies naturals",
+    "full_path": "Cursos i tallers >> Salut i creixement personal >> Salut i teràpies naturals",
+    "dependency_group": 3033954,
+    "parent_id": 618041,
+    "tree_id": 618,
+    "asia_id": "0061802041003"
+   },
+   {
+    "id": 626047,
+    "name": "Ciència",
+    "full_path": "Agenda Barcelona Cultura >> Ciència",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601047"
+   },
+   {
+    "id": 626045,
+    "name": "Innovació",
+    "full_path": "Agenda Barcelona Cultura >> Innovació",
+    "dependency_group": 2267775,
+    "parent_id": 626,
+    "tree_id": 626,
+    "asia_id": "0062601045"
+   },
+   {
+    "id": 643000,
+    "name": "Ciència",
+    "full_path": "Barcelona Cultura - Recomanem >> Ciència",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301000"
+   },
+   {
+    "id": 643007,
+    "name": "Innovació",
+    "full_path": "Barcelona Cultura - Recomanem >> Innovació",
+    "dependency_group": 2267775,
+    "parent_id": 643,
+    "tree_id": 643,
+    "asia_id": "0064301007"
+   }
+  ],
+  "timetable": {
+   "id": 142350,
+   "html": "<table class=\"timetable-table\"><tr class=\"timetable-header\"><th class=\"weekdays\">Dies</th><th class=\"hours\">Hores</th><th class=\"prices\">Preus</th><th class=\"description\">Observacions</th></tr><tr><td class=\"timetable-day\" rowspan=1><div>Divendres</div></td><td class=\"timetable-hour\" rowspan=1><div>de 16.30&nbsp;h a 18.00&nbsp;h</div></td><td class=\"timetable-price\" rowspan=1><div>Entrada general: 60.62 € <p style=\"margin:0\">+ suplement de 25 €</p><p style=\"margin:0\"><br></p><p style=\"margin:0\">Reducció i subvenció dels imports als cursos, informeu-vos en el mateix centre.</p></div></td><td class=\"timetable-description\" rowspan=1><div><p style=\"margin:0\">Cal inscripció prèvia</p><p style=\"margin:0\">Places limitades</p></div></td></tr></table>",
+   "hide": false,
+   "alert": "",
+   "descriptions_control": 1
+  },
+  "image_data": null,
+  "gallery_data": [],
+  "warnings": [],
+  "geo_epgs_25831": null,
+  "geo_epgs_23031": null,
+  "geo_epgs_4326_latlon": null,
+  "is_section_of_data": null,
+  "sections_data": null,
+  "start_date": "2026-10-02T03:00:00+02:00",
+  "end_date": "2026-12-04T03:00:00+01:00",
+  "estimated_dates": null,
+  "languages_data": [
+   {
+    "id": 1,
+    "language": "Indiferent"
+   }
+  ],
+  "type": "unique",
+  "type_name": "Puntual",
+  "period": null,
+  "period_name": "",
+  "event_status_name": "Correcte",
+  "event_status": "ok",
+  "ical": "BEGIN:VCALENDAR\r\nPRODID:ics.py - http://git.io/lLljaA\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234702Z\r\nDTSTART:20261204T163000Z\r\nDTEND:20261204T180000Z\r\nSUMMARY:Taller 'Aromes de tardor: plantes aromàtiques\\, olfacte i rituals quotidians'\r\nTRANSP:OPAQUE\r\nUID:5e299845-b2dc-4db8-939b-f9fb90f2a33d@5e29.org\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234702Z\r\nDTSTART:20261009T163000Z\r\nDTEND:20261009T180000Z\r\nSUMMARY:Taller 'Aromes de tardor: plantes aromàtiques\\, olfacte i rituals quotidians'\r\nTRANSP:OPAQUE\r\nUID:8122d077-605e-4fd3-bba2-ee17236a47b8@8122.org\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nDTSTAMP:20261011T234702Z\r\nDTSTART:20261127T163000Z\r\nDTEND:20261127T180000Z\r\nSUMMARY:Taller 'Aromes de tardor: plantes aromàtiques\\, olfacte i rituals quotidians'\r\nTRANSP:OPAQUE\r\nUID:6b7d3fd4-2865-4efe-a318-bcd96d01f1e4@6b7d.org\r\nEND:VEVENT\r\nEND:VCALENDAR",
+  "ownership": null,
+  "accessibility": null
+ }
+]

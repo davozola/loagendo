@@ -1,0 +1,271 @@
+"""Blocked duplicate-candidate detection across sources.
+
+The snapshot pipeline compared every pair of records (O(n²)); with ~10.000
+live records that is 50 million comparisons and it never ran after a sync, so
+the ``match_candidates`` table stayed frozen at three rows. This module keeps
+the same conservative decision rules but only compares records that share
+title tokens and overlap in time. It never merges: it writes review-only
+candidate pairs with the rule that produced them, so an editor (or a later
+grouping step) can trace every suggestion back to its evidence.
+"""
+from __future__ import annotations
+
+import collections
+import datetime as dt
+import json
+import re
+import sqlite3
+
+from src.pipeline import day, delta, geo_meters, title_similarity, tokens
+
+GENERATOR = "dedupe-blocked-v1"
+MIN_TITLE_SIMILARITY = 0.79
+MIN_TITLE_SIMILARITY_SAME_SLOT = 0.55
+MIN_TITLE_SIMILARITY_RARE_TOKEN = 0.45
+RARE_TOKEN_MAX_DOCS = 6
+MAX_TOKEN_DOCUMENT_FREQUENCY = 400  # tokens shared by more records are not discriminative
+# Normalised short names used by first-party agendas for venues GuiaBCN lists
+# under their full name. Mapping names is venue metadata, not event data.
+VENUE_ALIASES = {
+    "cccb": "centre de cultura contemporania de barcelona cccb",
+    "macba": "museu d art contemporani de barcelona macba",
+    "l auditori": "l auditori de barcelona",
+    "auditori": "l auditori de barcelona",
+    "teatre lliure": "teatre lliure gracia montjuic",
+    "gracia": "teatre lliure gracia",
+    "montjuic": "teatre lliure montjuic",
+}
+
+
+def _venue_text(name):
+    base = " ".join(str(name or "").casefold().replace("'", " ").split())
+    # "Sala Upload Barcelona", "Upload" and "Sala Upload" are one hall, and the
+    # directory's aliases map a hall's rooms ("Sala 1 Pau Casals") to its venue.
+    from src.venue_directory import normalise, site_for
+    entry = site_for(base)
+    if entry: return "venue:" + entry["slug"]
+    if base in VENUE_ALIASES: return VENUE_ALIASES[base]
+    return normalise(base) or base
+
+
+NUMBER_TOKEN = re.compile(r"\b(?:\d{1,3}|grup [a-z0-9]+|grupo [a-z0-9]+|nivell \w+|nivel \w+)\b")  # years (2026) are not distinguishing
+
+
+def _distinguishing_numbers(a_title, b_title):
+    """Titles that differ only in a number or group letter ("de 5 a 7 anys" /
+    "de 7 a 9 anys", "grup A" / "grup B") are sibling records, never twins."""
+    na = set(NUMBER_TOKEN.findall(str(a_title or "").casefold())); nb = set(NUMBER_TOKEN.findall(str(b_title or "").casefold()))
+    return bool(na or nb) and na != nb
+
+
+def _venue_similarity(a_venues, b_venues):
+    return max((title_similarity(_venue_text(x), _venue_text(y)) for x in a_venues for y in b_venues), default=0)
+
+
+def load_records(conn: sqlite3.Connection, *, since: str | None = None) -> list[dict]:
+    """Records with their venues; ``since`` keeps only rows still active on that date."""
+    venues: dict[tuple[str, str], list[dict]] = collections.defaultdict(list)
+    for s, i, name, lat, lon in conn.execute("SELECT source,id,venue,lat,lon FROM source_venues ORDER BY source,id,seq"):
+        venues[(s, i)].append({"name": name or "", "coords": (lat, lon) if lat is not None and lon is not None else None})
+    where, params = "", ()
+    if since:
+        where, params = "WHERE end_date>=?", (since,)
+    out = []
+    for s, i, title, start, end, kind, eligibility in conn.execute(f"SELECT source,id,title,start_date,end_date,kind,eligibility FROM source_records {where}", params):
+        out.append({"source": s, "id": i, "key": f"{s}:{i}", "title": title or "", "start": start or "", "end": end or "", "kind": kind, "eligibility": eligibility, "venues": venues.get((s, i), [])})
+    return out
+
+
+def candidate_pairs(records: list[dict]) -> list[dict]:
+    """Review-only pairs. Same rules as the snapshot matcher, blocked by shared title tokens."""
+    by_token: dict[str, list[int]] = collections.defaultdict(list)
+    record_tokens = []
+    for index, record in enumerate(records):
+        toks = tokens(record["title"])
+        record_tokens.append(toks)
+        for token in toks:
+            by_token[token].append(index)
+    shared: dict[tuple[int, int], int] = collections.Counter()
+    for token, members in by_token.items():
+        if len(members) > MAX_TOKEN_DOCUMENT_FREQUENCY or len(members) < 2:
+            continue
+        for position, first in enumerate(members):
+            for second in members[position + 1:]:
+                shared[(first, second)] += 1
+    out = []
+    for (ia, ib), count in shared.items():
+        a, b = records[ia], records[ib]
+        smallest = min(len(record_tokens[ia]), len(record_tokens[ib]))
+        if count < 2 and smallest > 2:
+            continue
+        if a["source"] == b["source"] and a["source"] != "diba_bibliotecas":
+            continue
+        a0, a1, b0, b1 = map(day, (a["start"], a["end"], b["start"], b["end"]))
+        if None in (a0, a1, b0, b1) or a0 > b1 or b0 > a1:
+            continue
+        similarity = title_similarity(a["title"], b["title"])
+        va = [v["coords"] for v in a["venues"] if v["coords"]]
+        vb = [v["coords"] for v in b["venues"] if v["coords"]]
+        distances = [geo_meters(x, y) for x in va for y in vb]
+        dist = min(distances) if distances else None
+        venue_sim = _venue_similarity([v["name"] for v in a["venues"]], [v["name"] for v in b["venues"]])
+        same_place = (dist is not None and dist <= 200) or venue_sim >= 0.8
+        strict_dates = a["start"] == b["start"] and a["end"] == b["end"]
+        # Same day, same place and a one-day act: a lower title bar is enough
+        # ('Gustavo Dudamel – Filharmònica' vs 'Concert "Gustavo Dudamel", amb la Filarmònica').
+        threshold = MIN_TITLE_SIMILARITY if not (strict_dates and same_place and a["start"] == a["end"]) else MIN_TITLE_SIMILARITY_SAME_SLOT
+        # Same dates, same place and a rare name in common ("MIRA Digital Arts
+        # Festival" / "MIRA Festival 2026"): the name carries the identity even
+        # when the rest of the title differs.
+        rare_shared = [t for t in record_tokens[ia] & record_tokens[ib] if len(t) >= 4 and len(by_token[t]) <= RARE_TOKEN_MAX_DOCS]
+        short_span = (delta(a["start"], a["end"]) or 0) <= 4
+        if strict_dates and same_place and short_span and rare_shared:
+            threshold = min(threshold, MIN_TITLE_SIMILARITY_RARE_TOKEN)
+        # Same dates and place for a short act (up to four days): a lower bar,
+        # as for one-day acts, so a two-day festival told two ways collapses.
+        if strict_dates and same_place and short_span and not _distinguishing_numbers(a["title"], b["title"]):
+            threshold = min(threshold, MIN_TITLE_SIMILARITY_SAME_SLOT)
+        if similarity < threshold:
+            continue
+        if _distinguishing_numbers(a["title"], b["title"]) and similarity < 0.97:
+            continue
+        if dist is not None and dist > 200 and venue_sim < 0.8:
+            continue
+        if dist is None and venue_sim < 0.55:
+            continue
+        a_span, b_span = delta(a["start"], a["end"]), delta(b["start"], b["end"])
+        if a["source"] == b["source"] and ((a_span or 0) > 7 or (b_span or 0) > 7):
+            continue
+        risks = ["TITLE_SIMILARITY_IS_NOT_IDENTITY"]
+        if a["kind"] == "program" or b["kind"] == "program":
+            risks.append("PROGRAM_CHILD_COLLISION_RISK")
+        if not strict_dates:
+            risks.append("DATE_RANGE_NOT_EQUAL")
+        if same_place and strict_dates and (a["start"] == a["end"] or short_span):
+            risks.append("SAME_DAY_SAME_PLACE")
+        if strict_dates and same_place and short_span and rare_shared:
+            risks.append("SAME_DATES_SAME_PLACE_RARE_TOKEN")
+        if a["source"] == b["source"]:
+            risks.append("SAME_SOURCE_REPEATED_RECORD")
+        if dist is None:
+            risks.append("VENUE_MATCHED_BY_NAME_ONLY")
+        first, second = sorted((a, b), key=lambda r: r["key"])
+        out.append({"a": first["key"], "b": second["key"], "title_a": first["title"], "title_b": second["title"], "similarity_heuristic": similarity,
+                    "geo_meters": round(dist, 1) if dist is not None else None, "venue_similarity_heuristic": round(venue_sim, 4),
+                    "start_a": first["start"], "start_b": second["start"], "review_only": True, "risks": risks})
+    return sorted(out, key=lambda x: (-x["similarity_heuristic"], len(x["risks"]), x["a"], x["b"]))
+
+
+def initialize(conn: sqlite3.Connection) -> None:
+    conn.execute("CREATE TABLE IF NOT EXISTS match_candidates(a TEXT,b TEXT,score REAL,reason TEXT,PRIMARY KEY(a,b))")
+    columns = {r[1] for r in conn.execute("PRAGMA table_info(match_candidates)")}
+    if "generated_by" not in columns:
+        conn.execute("ALTER TABLE match_candidates ADD COLUMN generated_by TEXT NOT NULL DEFAULT 'snapshot-pipeline'")
+    if "generated_at" not in columns:
+        conn.execute("ALTER TABLE match_candidates ADD COLUMN generated_at TEXT NOT NULL DEFAULT ''")
+    if "evidence_json" not in columns:
+        conn.execute("ALTER TABLE match_candidates ADD COLUMN evidence_json TEXT NOT NULL DEFAULT '{}'")
+
+
+def refresh_match_candidates(conn: sqlite3.Connection, *, since: str | None = None, now: str | None = None) -> dict:
+    """Recompute candidates for records active from ``since`` (default: today).
+
+    Existing rows are upserted by pair, never deleted, so a pair an editor is
+    already looking at keeps its identity; ``generated_at`` tells which pairs
+    the latest run still supports.
+    """
+    initialize(conn)
+    since = since or dt.date.today().isoformat()
+    now = now or dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    records = load_records(conn, since=since)
+    pairs = candidate_pairs(records)
+    with conn:
+        for pair in pairs:
+            evidence = {k: pair[k] for k in ("geo_meters", "venue_similarity_heuristic", "start_a", "start_b")}
+            conn.execute("""INSERT INTO match_candidates(a,b,score,reason,generated_by,generated_at,evidence_json) VALUES(?,?,?,?,?,?,?)
+                ON CONFLICT(a,b) DO UPDATE SET score=excluded.score,reason=excluded.reason,generated_by=excluded.generated_by,
+                generated_at=excluded.generated_at,evidence_json=excluded.evidence_json""",
+                (pair["a"], pair["b"], pair["similarity_heuristic"], ";".join(pair["risks"]), GENERATOR, now, json.dumps(evidence, ensure_ascii=False)))
+    by_sources = collections.Counter(tuple(sorted((p["a"].split(":")[0], p["b"].split(":")[0]))) for p in pairs)
+    return {"since": since, "records_compared": len(records), "pairs": len(pairs), "generated_by": GENERATOR,
+            "by_source_pair": {" + ".join(k): v for k, v in sorted(by_sources.items(), key=lambda x: -x[1])},
+            "top": pairs[:10]}
+
+
+def duplicates_for(conn: sqlite3.Connection, source: str, record_id: str) -> list[dict]:
+    """Candidate pairs involving one record, for the detail view."""
+    if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='match_candidates'").fetchone():
+        return []
+    columns = {r[1] for r in conn.execute("PRAGMA table_info(match_candidates)")}
+    extra = ",generated_by,generated_at" if {"generated_by", "generated_at"} <= columns else ",'snapshot-pipeline',''"
+    key = f"{source}:{record_id}"
+    out = []
+    for a, b, score, reason, generated_by, generated_at in conn.execute(f"SELECT a,b,score,reason{extra} FROM match_candidates WHERE a=? OR b=? ORDER BY score DESC", (key, key)):
+        other = b if a == key else a
+        other_source, other_id = other.split(":", 1)
+        title = conn.execute("SELECT title FROM source_records WHERE source=? AND id=?", (other_source, other_id)).fetchone()
+        out.append({"key": other, "source": other_source, "id": other_id, "title": title[0] if title else "", "score": score,
+                    "risks": reason.split(";") if reason else [], "generated_by": generated_by, "generated_at": generated_at, "review_only": True})
+    return out
+
+
+SOURCE_PRIORITY = ("opendatabcn_agenda", "generalitat", "diba_bibliotecas", "diba_turismo", "guiabcn", "web_macba", "web_cccb", "web_auditori", "web_teatre_lliure", "web_centres_civics", "web_conciertos_club")
+
+
+def source_rank(source):
+    """Lower is more authoritative: licensed open data, then the venue's own
+    structured data, first-party web agendas, ticketing sites, and last the
+    private concert directories (used to discover and cross-check only)."""
+    if source in SOURCE_PRIORITY and source != "web_conciertos_club": return SOURCE_PRIORITY.index(source)
+    base = len(SOURCE_PRIORITY)
+    if source.startswith("venue_"):
+        from src.venue_directory import venue_type
+        kind = venue_type(source[6:])
+        return base + {"ticketing": 20, "aggregator": 30}.get(kind, 5)
+    if source == "web_conciertos_club": return base + 31
+    return base + 10
+
+
+DIRECTORY_RANK = len(SOURCE_PRIORITY) + 20  # ticketing sites and private directories rank here or below
+COLLAPSE_MIN_SCORE = 0.95
+COLLAPSE_MIN_SCORE_SAME_SLOT = 0.6
+
+
+def _collapsible(score, risks):
+    if "DATE_RANGE_NOT_EQUAL" in risks or "SAME_SOURCE_REPEATED_RECORD" in risks:
+        return False
+    return score >= COLLAPSE_MIN_SCORE or (score >= COLLAPSE_MIN_SCORE_SAME_SLOT and "SAME_DAY_SAME_PLACE" in risks) or (score >= MIN_TITLE_SIMILARITY_RARE_TOKEN and "SAME_DATES_SAME_PLACE_RARE_TOKEN" in risks)
+
+
+def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
+    """Map every collapsed record key to its canonical twin's key.
+
+    Only near-identical pairs collapse (same dates, and either an almost equal
+    title or same day + same place with a clearly similar title). The
+    canonical row is chosen by source priority (licensed open data first,
+    third-party listings last). Reversible: nothing is written.
+    """
+    if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='match_candidates'").fetchone():
+        return {}
+    parent: dict[str, str] = {}
+    def find(x):
+        while parent.get(x, x) != x:
+            parent[x] = parent.get(parent[x], parent[x]); x = parent[x]
+        return x
+    def union(x, y):
+        rx, ry = find(x), find(y)
+        if rx != ry: parent[rx] = ry
+    for a, b, score, reason in conn.execute("SELECT a,b,score,reason FROM match_candidates"):
+        if _collapsible(score or 0, (reason or "").split(";")):
+            parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
+    groups: dict[str, list[str]] = {}
+    for key in list(parent):
+        groups.setdefault(find(key), []).append(key)
+    def rank(key):
+        return (source_rank(key.split(":", 1)[0]), key)
+    out = {}
+    for members in groups.values():
+        canonical = min(members, key=rank)
+        for member in members:
+            if member != canonical: out[member] = canonical
+    return out

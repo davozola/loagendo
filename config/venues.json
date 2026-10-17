@@ -1,0 +1,614 @@
+{
+  "version": 1,
+  "note": "Censo de recintos privados y agendas de primer nivel. `python3 run.py --venue-census` comprueba cada URL y anota si publica datos estructurados (JSON-LD schema.org/Event, iCal o RSS). Un recinto pasa a sincronizarse con `enabled: true` cuando el censo confirma JSON-LD y se ha registrado su condición de uso en docs/source_registry.json (clave `venue_<slug>`). Las URL son las agendas públicas conocidas en octubre de 2026 y pueden cambiar: el censo informa de 404 y redirecciones. El censo prueba también la portada del sitio y los enlaces que parecen la programación, y anota `suggested_url` cuando encuentra datos estructurados en otra página. Las ticketeras y agregadores (type ticketing/aggregator) se clasifican por el @type schema.org de cada evento, se filtran a la localidad Barcelona y llevan la alerta THIRD_PARTY_TICKETING_LISTING; antes de leer cualquier página se comprueba robots.txt.",
+  "venues": [
+    {
+      "slug": "sala_apolo",
+      "name": "Sala Apolo",
+      "type": "music",
+      "url": "https://www.sala-apolo.com/",
+      "enabled": true,
+      "aliases": [
+        "Apolo",
+        "La 2 de Apolo",
+        "La [2] de Apolo",
+        "Sala Apolo"
+      ]
+    },
+    {
+      "slug": "razzmatazz",
+      "name": "Razzmatazz",
+      "type": "music",
+      "url": "https://www.salarazzmatazz.com/",
+      "enabled": false,
+      "aliases": [
+        "Razzmatazz 1",
+        "Razzmatazz 2",
+        "Razzmatazz 3",
+        "Sala Razzmatazz",
+        "Razzmatazz Clubs"
+      ]
+    },
+    {
+      "slug": "jamboree",
+      "name": "Jamboree Jazz Club",
+      "type": "music",
+      "url": "https://www.jamboreejazz.com/",
+      "enabled": false,
+      "aliases": [
+        "Jamboree"
+      ]
+    },
+    {
+      "slug": "sidecar",
+      "name": "Sidecar",
+      "type": "music",
+      "url": "https://sidecar.es/",
+      "enabled": true,
+      "aliases": [
+        "Sidecar Factory Club"
+      ],
+      "site": "https://sidecar.es/",
+      "feed": {
+        "kind": "html",
+        "url": "https://sidecar.es/programacio/",
+        "item": "div.info-box",
+        "fields": {
+          "title": "a.title",
+          "url": "a.title@href",
+          "date": "a.date",
+          "category": "a.category",
+          "style": "a.style",
+          "price": "div.tickets span",
+          "tickets": "div.tickets a@href"
+        },
+        "skip": {
+          "category": [
+            "DJ session",
+            "DJ Session",
+            "Dj session"
+          ]
+        },
+        "details": true
+      },
+      "note": "Programació en HTML (un bloque div.info-box por concierto: fecha, hora, título, estilo, precio); se omiten las DJ sessions. Imagen y texto de la página de cada concierto."
+    },
+    {
+      "slug": "paral_lel_62",
+      "name": "Paral·lel 62",
+      "type": "music",
+      "url": "https://www.parallel62.com/agenda/",
+      "enabled": false,
+      "aliases": [
+        "Paral·lel 62",
+        "Sala Paral·lel 62",
+        "Parallel 62",
+        "Club P62",
+        "P62"
+      ]
+    },
+    {
+      "slug": "heliogabal",
+      "name": "Heliogàbal",
+      "type": "music",
+      "url": "https://heliogabal.com/",
+      "enabled": true,
+      "aliases": [
+        "Heliogàbal",
+        "Heliogabal"
+      ],
+      "site": "https://www.heliogabal.com/",
+      "feed": {
+        "kind": "wp_fullcalendar",
+        "url": "https://www.heliogabal.com/wp-admin/admin-ajax.php?action=WP_FullCalendar",
+        "details": true
+      },
+      "note": "Agenda publicada por el plugin WP FullCalendar (JSON por rango de fechas); imagen y texto de la propia página de cada concierto (og:image / og:description)."
+    },
+    {
+      "slug": "sala_upload",
+      "name": "Sala Upload",
+      "type": "music",
+      "url": "https://www.salaupload.com/",
+      "enabled": false,
+      "aliases": [
+        "Upload"
+      ]
+    },
+    {
+      "slug": "luz_de_gas",
+      "name": "Luz de Gas",
+      "type": "music",
+      "url": "https://www.luzdegas.com/",
+      "enabled": false,
+      "aliases": [
+        "Sala Luz de Gas"
+      ]
+    },
+    {
+      "slug": "sala_bikini",
+      "name": "Bikini",
+      "type": "music",
+      "url": "https://bikinibcn.com/",
+      "enabled": false,
+      "aliases": [
+        "Sala Bikini"
+      ]
+    },
+    {
+      "slug": "sala_wolf",
+      "name": "Wolf",
+      "type": "music",
+      "url": "https://www.salawolf.com/",
+      "enabled": false,
+      "aliases": [
+        "Wolf Barcelona",
+        "Sala Wolf"
+      ]
+    },
+    {
+      "slug": "la_nau_bostik",
+      "name": "Nau Bostik",
+      "type": "music",
+      "url": "https://naubostik.com/",
+      "enabled": true,
+      "aliases": [
+        "Nau Bostik",
+        "La Nau Bostik"
+      ]
+    },
+    {
+      "slug": "la_nau",
+      "name": "La Nau",
+      "type": "music",
+      "url": "https://lanaubarcelona.es/",
+      "aliases": [
+        "Sala La Nau",
+        "La Nau Barcelona"
+      ],
+      "enabled": false,
+      "note": "URL facilitada por David Sola (12-10-2026); pendiente de censo para activar el conector."
+    },
+    {
+      "slug": "harlem_jazz_club",
+      "name": "Harlem Jazz Club",
+      "type": "music",
+      "url": "https://www.harlemjazzclub.es/",
+      "aliases": [
+        "Harlem Jazz",
+        "Harlem"
+      ],
+      "enabled": false,
+      "note": "URL facilitada por David Sola (12-10-2026); pendiente de censo para activar el conector."
+    },
+    {
+      "slug": "sala_vol",
+      "name": "Sala VOL",
+      "type": "music",
+      "url": "https://salavol.com/",
+      "enabled": true,
+      "aliases": [
+        "VOL",
+        "Sala Vol"
+      ],
+      "site": "https://salavol.com/",
+      "feed": {
+        "kind": "html",
+        "url": "https://salavol.com/agenda/",
+        "item": "a.dataModule",
+        "fields": {
+          "title": "div.dataModule__col--right div",
+          "url": ".@href"
+        },
+        "details": true
+      },
+      "note": "Agenda en HTML (un bloque a.dataModule por noche: día, dd/mm/aaaa hh:mm, precio a la izquierda; artistas a la derecha, unidos con \" + \"). Las fechas pasadas del histórico se descartan."
+    },
+    {
+      "slug": "auditori",
+      "name": "L'Auditori",
+      "type": "music",
+      "url": "https://www.auditori.cat/",
+      "aliases": [
+        "L'Auditori de Barcelona",
+        "Sala 1 Pau Casals",
+        "Sala 2 Oriol Martorell",
+        "Sala 3 Tete Montoliu",
+        "Sala 4 Alicia de Larrocha",
+        "L'Auditori · Sala 1 Pau Casals",
+        "L'Auditori. Sala 1 Pau Casals"
+      ],
+      "enabled": false,
+      "note": "Cubierto por el conector propio web_auditori; entrada del directorio para enlazar y para reconocer sus salas como un mismo recinto."
+    },
+    {
+      "slug": "palau_musica",
+      "name": "Palau de la Música Catalana",
+      "type": "music",
+      "url": "https://www.palaumusica.cat/ca/agenda",
+      "enabled": false,
+      "aliases": [
+        "Palau de la Musica Catalana",
+        "Palau de la Música",
+        "Petit Palau",
+        "Sala de Concerts del Palau de la Música"
+      ]
+    },
+    {
+      "slug": "liceu",
+      "name": "Gran Teatre del Liceu",
+      "type": "music",
+      "url": "https://www.liceubarcelona.cat/ca/temporada-2026-2027",
+      "enabled": false,
+      "aliases": [
+        "Liceu",
+        "Gran Teatre del Liceu"
+      ]
+    },
+    {
+      "slug": "sant_jordi_club",
+      "name": "Sant Jordi Club / Palau Sant Jordi",
+      "type": "music",
+      "url": "https://www.palausantjordi.cat/es/agenda",
+      "enabled": false,
+      "aliases": [
+        "Sant Jordi Club",
+        "Palau Sant Jordi"
+      ],
+      "site": "https://www.palausantjordi.cat/"
+    },
+    {
+      "slug": "la_marina_festivals",
+      "name": "Primavera Sound",
+      "type": "festival",
+      "url": "https://www.primaverasound.com/es/barcelona",
+      "enabled": false,
+      "aliases": [
+        "Parc del Fòrum"
+      ]
+    },
+    {
+      "slug": "sonar",
+      "name": "Sónar",
+      "type": "festival",
+      "url": "https://sonar.es/es",
+      "enabled": false
+    },
+    {
+      "slug": "cruilla",
+      "name": "Cruïlla",
+      "type": "festival",
+      "url": "https://www.cruillabarcelona.com/",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_lliure",
+      "name": "Teatre Lliure",
+      "type": "theatre",
+      "url": "https://www.teatrelliure.com/es/temporada-26-27",
+      "enabled": false
+    },
+    {
+      "slug": "tnc",
+      "name": "Teatre Nacional de Catalunya",
+      "type": "theatre",
+      "url": "https://www.tnc.cat/ca/temporada",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_romea",
+      "name": "Teatre Romea",
+      "type": "theatre",
+      "url": "https://www.teatreromea.cat/es/programacion",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_goya",
+      "name": "Teatre Goya",
+      "type": "theatre",
+      "url": "https://www.teatregoya.cat/es/programacion",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_condal",
+      "name": "Teatre Condal",
+      "type": "theatre",
+      "url": "https://www.teatrecondal.cat/es/programacion",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_poliorama",
+      "name": "Teatre Poliorama",
+      "type": "theatre",
+      "url": "https://www.teatrepoliorama.com/",
+      "enabled": true
+    },
+    {
+      "slug": "teatre_tivoli",
+      "name": "Teatre Tívoli",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "enabled": false,
+      "aliases": [
+        "Teatre Tívoli",
+        "Teatro Tívoli",
+        "Tívoli"
+      ],
+      "site": "https://www.grupbalana.com/"
+    },
+    {
+      "slug": "teatre_apolo",
+      "name": "Teatre Apolo",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "enabled": false,
+      "aliases": [
+        "Teatre Apolo",
+        "Teatro Apolo"
+      ]
+    },
+    {
+      "slug": "teatre_victoria",
+      "name": "Teatre Victòria",
+      "type": "theatre",
+      "url": "https://www.teatrevictoria.com/",
+      "enabled": false,
+      "aliases": [
+        "Teatre Victòria",
+        "Teatro Victoria"
+      ]
+    },
+    {
+      "slug": "teatreneu",
+      "name": "Teatreneu",
+      "type": "theatre",
+      "url": "https://www.teatreneu.com/",
+      "enabled": false
+    },
+    {
+      "slug": "sala_beckett",
+      "name": "Sala Beckett",
+      "type": "theatre",
+      "url": "https://www.salabeckett.cat/es/espectacles/",
+      "enabled": false
+    },
+    {
+      "slug": "la_villarroel",
+      "name": "La Villarroel",
+      "type": "theatre",
+      "url": "https://www.lavillarroel.cat/es/programacion",
+      "enabled": false
+    },
+    {
+      "slug": "teatre_borras",
+      "name": "Teatre Borràs",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "enabled": false,
+      "aliases": [
+        "Teatre Borràs",
+        "Teatro Borrás"
+      ]
+    },
+    {
+      "slug": "mercat_flors",
+      "name": "Mercat de les Flors",
+      "type": "theatre",
+      "url": "https://mercatflors.cat/es/programacion/",
+      "enabled": false,
+      "aliases": [
+        "Mercat de les Flors"
+      ]
+    },
+    {
+      "slug": "antic_teatre",
+      "name": "Antic Teatre",
+      "type": "theatre",
+      "url": "https://www.anticteatre.com/es/programacio/",
+      "enabled": false
+    },
+    {
+      "slug": "filmoteca",
+      "name": "Filmoteca de Catalunya",
+      "type": "cinema",
+      "url": "https://www.filmoteca.cat/web/ca/programacio",
+      "enabled": false,
+      "aliases": [
+        "Filmoteca de Catalunya"
+      ]
+    },
+    {
+      "slug": "cinemes_girona",
+      "name": "Cinemes Girona",
+      "type": "cinema",
+      "url": "https://www.cinemesgirona.cat/",
+      "enabled": true
+    },
+    {
+      "slug": "zumzeig",
+      "name": "Zumzeig Cinema",
+      "type": "cinema",
+      "url": "https://zumzeigcine.coop/es/",
+      "enabled": false
+    },
+    {
+      "slug": "cinema_maldà",
+      "name": "Cinema Maldà",
+      "type": "cinema",
+      "url": "https://www.cinemamalda.com/",
+      "enabled": false
+    },
+    {
+      "slug": "verdi",
+      "name": "Cines Verdi",
+      "type": "cinema",
+      "url": "https://barcelona.cines-verdi.com/",
+      "enabled": true
+    },
+    {
+      "slug": "phenomena",
+      "name": "Phenomena Experience",
+      "type": "cinema",
+      "url": "https://www.phenomena-experience.com/",
+      "enabled": false
+    },
+    {
+      "slug": "cccb",
+      "name": "CCCB (ya cubierto por conector propio)",
+      "type": "culture",
+      "url": "https://www.cccb.org/es/calendario",
+      "enabled": false,
+      "aliases": [
+        "CCCB",
+        "Centre de Cultura Contemporània de Barcelona"
+      ]
+    },
+    {
+      "slug": "caixaforum",
+      "name": "CaixaForum Barcelona",
+      "type": "culture",
+      "url": "https://caixaforum.org/es/barcelona/actividades",
+      "enabled": false
+    },
+    {
+      "slug": "fundacio_miro",
+      "name": "Fundació Joan Miró",
+      "type": "culture",
+      "url": "https://www.fmirobcn.org/es/actividades/",
+      "enabled": false
+    },
+    {
+      "slug": "mnac",
+      "name": "MNAC",
+      "type": "culture",
+      "url": "https://www.museunacional.cat/es/actividades",
+      "enabled": false
+    },
+    {
+      "slug": "fabra_i_coats",
+      "name": "Fabra i Coats",
+      "type": "culture",
+      "url": "https://ajuntament.barcelona.cat/fabraicoats/",
+      "enabled": false
+    },
+    {
+      "slug": "entradas_com",
+      "name": "Entradas.com",
+      "type": "ticketing",
+      "url": "https://www.entradas.com/city/barcelona-397/",
+      "enabled": false
+    },
+    {
+      "slug": "ticketmaster_es",
+      "name": "Ticketmaster España",
+      "type": "ticketing",
+      "url": "https://www.ticketmaster.es/city/barcelona/197",
+      "enabled": true
+    },
+    {
+      "slug": "fever",
+      "name": "Fever",
+      "type": "ticketing",
+      "url": "https://feverup.com/es/barcelona",
+      "enabled": false
+    },
+    {
+      "slug": "dice",
+      "name": "DICE",
+      "type": "ticketing",
+      "url": "https://dice.fm/browse/barcelona",
+      "enabled": false
+    },
+    {
+      "slug": "wegow",
+      "name": "Wegow",
+      "type": "ticketing",
+      "url": "https://www.wegow.com/es/conciertos/barcelona",
+      "enabled": true
+    },
+    {
+      "slug": "atrapalo",
+      "name": "Atrápalo",
+      "type": "ticketing",
+      "url": "https://www.atrapalo.com/entradas/barcelona/",
+      "enabled": false
+    },
+    {
+      "slug": "entradium",
+      "name": "Entradium",
+      "type": "ticketing",
+      "url": "https://entradium.com/es/events?city=Barcelona",
+      "enabled": false
+    },
+    {
+      "slug": "taquilla_com",
+      "name": "Taquilla.com",
+      "type": "ticketing",
+      "url": "https://www.taquilla.com/entradas/barcelona",
+      "enabled": false
+    },
+    {
+      "slug": "tomaticket",
+      "name": "Tomaticket",
+      "type": "ticketing",
+      "url": "https://www.tomaticket.es/entradas-barcelona",
+      "enabled": false
+    },
+    {
+      "slug": "eventbrite",
+      "name": "Eventbrite",
+      "type": "ticketing",
+      "url": "https://www.eventbrite.es/d/spain--barcelona/events/",
+      "enabled": true
+    },
+    {
+      "slug": "koobin",
+      "name": "Koobin (taquillas de teatros)",
+      "type": "ticketing",
+      "url": "https://www.koobin.com/",
+      "enabled": false
+    },
+    {
+      "slug": "codetickets",
+      "name": "Codetickets",
+      "type": "ticketing",
+      "url": "https://www.codetickets.com/",
+      "enabled": false
+    },
+    {
+      "slug": "bandsintown",
+      "name": "Bandsintown",
+      "type": "aggregator",
+      "url": "https://www.bandsintown.com/c/barcelona-spain",
+      "enabled": false,
+      "note": "Devuelve 403 a clientes automáticos (12-10-2026); activar cuando responda."
+    },
+    {
+      "slug": "songkick",
+      "name": "Songkick",
+      "type": "aggregator",
+      "url": "https://www.songkick.com/metro-areas/28714-spain-barcelona",
+      "enabled": true,
+      "note": "Agregador privado: se usa para descubrir y contrastar conciertos; en público la ficha enlaza a la sala, sin imágenes ni textos del agregador (política aggregator_* en docs/source_registry.json). Se leen 8 páginas del listado (unos 400 conciertos, varios meses) para cubrir las salas pequeñas que no publican datos estructurados (Heliogàbal, Sidecar, Vol…).",
+      "urls": [
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=2",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=3",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=4",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=5",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=6",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=7",
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona?page=8"
+      ],
+      "follow_links": false
+    },
+    {
+      "slug": "resident_advisor",
+      "name": "Resident Advisor",
+      "type": "aggregator",
+      "url": "https://ra.co/events/es/barcelona",
+      "enabled": false,
+      "note": "Devuelve 403 a clientes automáticos (12-10-2026); activar cuando responda."
+    }
+  ]
+}

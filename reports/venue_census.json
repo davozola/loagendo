@@ -1,0 +1,1416 @@
+{
+  "checked_at": "2026-10-12T18:19:17+00:00",
+  "venues": 59,
+  "by_verdict": {
+    "jsonld": 9,
+    "html_only": 32,
+    "rss": 4,
+    "unreachable": 8,
+    "ical": 5,
+    "robots_disallowed": 1
+  },
+  "results": [
+    {
+      "slug": "sala_apolo",
+      "name": "Sala Apolo",
+      "type": "music",
+      "url": "https://www.sala-apolo.com/es/conciertos/afers",
+      "status": 200,
+      "final_url": "https://www.sala-apolo.com/es/conciertos/afers",
+      "bytes": 81841,
+      "jsonld_events": 4,
+      "sample": [
+        {
+          "name": "Ciclo AFERS con Lins EFX & Your Boy Posca en la CINC de Apolo - 22 de octubre de",
+          "startDate": "2026-10-22 CEST 19:30",
+          "type": "Event"
+        },
+        {
+          "name": "Ciclo AFERS con Cloe Riembau & MALVA en la CINC de Apolo - 19 de noviembre de 20",
+          "startDate": "2026-11-19 CET 19:30",
+          "type": "Event"
+        },
+        {
+          "name": "Ciclo AFERS con Júlia Colom & Gaia Banfi en la CINC de Apolo - 10 de diciembre d",
+          "startDate": "2026-12-10 CET 19:30",
+          "type": "Event"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:14:46+00:00",
+      "tried": [
+        "https://www.sala-apolo.com/",
+        "https://www.sala-apolo.com/es/conciertos/sordina-sessions",
+        "https://www.sala-apolo.com/es/agenda",
+        "https://www.sala-apolo.com/es/conciertos/afers"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": "https://www.sala-apolo.com/es/conciertos/afers"
+    },
+    {
+      "slug": "razzmatazz",
+      "name": "Razzmatazz",
+      "type": "music",
+      "url": "https://www.salarazzmatazz.com/",
+      "status": 200,
+      "final_url": "https://www.salarazzmatazz.com/",
+      "bytes": 312502,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:14:46+00:00",
+      "tried": [
+        "https://www.salarazzmatazz.com/",
+        "https://www.salarazzmatazz.com/agenda/",
+        "https://www.salarazzmatazz.com/agenda/16-10-2026-stvw/",
+        "https://www.salarazzmatazz.com/agenda/clubs/?club=Fuego",
+        "https://www.salarazzmatazz.com/agenda/clubs/?club=Human"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "jamboree",
+      "name": "Jamboree Jazz Club",
+      "type": "music",
+      "url": "https://www.jamboreejazz.com/",
+      "status": 200,
+      "final_url": "https://jamboreejazz.com/",
+      "bytes": 215075,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [
+        "https://jamboreejazz.com/comments/feed/",
+        "https://jamboreejazz.com/feed/"
+      ],
+      "checked_at": "2026-10-12T18:14:50+00:00",
+      "tried": [
+        "https://www.jamboreejazz.com/"
+      ],
+      "verdict": "rss",
+      "suggested_url": null
+    },
+    {
+      "slug": "sidecar",
+      "name": "Sidecar",
+      "type": "music",
+      "url": "https://sidecar.es/",
+      "status": 200,
+      "final_url": "https://sidecar.es/",
+      "bytes": 49008,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:14:52+00:00",
+      "tried": [
+        "https://sidecar.es/",
+        "https://sidecar.es/programacio/",
+        "https://sidecar.es/category/concert/",
+        "https://sidecar.es/category/dj-session/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "paral_lel_62",
+      "name": "Paral·lel 62",
+      "type": "music",
+      "url": "https://www.parallel62.com/agenda/",
+      "status": 0,
+      "final_url": "https://www.parallel62.com/agenda/",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:14:59+00:00",
+      "error": "[Errno 8] nodename nor servname provided, or not known",
+      "tried": [
+        "https://www.parallel62.com/agenda/",
+        "https://www.parallel62.com/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "heliogabal",
+      "name": "Heliogàbal",
+      "type": "music",
+      "url": "https://heliogabal.com/",
+      "status": 200,
+      "final_url": "https://www.heliogabal.com/",
+      "bytes": 162505,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:03+00:00",
+      "tried": [
+        "https://heliogabal.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "sala_upload",
+      "name": "Sala Upload",
+      "type": "music",
+      "url": "https://www.salaupload.com/",
+      "status": 0,
+      "final_url": "https://www.salaupload.com/",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:03+00:00",
+      "error": "[Errno 8] nodename nor servname provided, or not known",
+      "tried": [
+        "https://www.salaupload.com/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "luz_de_gas",
+      "name": "Luz de Gas",
+      "type": "music",
+      "url": "https://www.luzdegas.com/",
+      "status": 200,
+      "final_url": "https://luzdegas.com/es/",
+      "bytes": 178545,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [
+        "https://luzdegas.com/es/calendar/"
+      ],
+      "rss": [
+        "https://luzdegas.com/es/comments/feed/",
+        "https://luzdegas.com/es/feed/"
+      ],
+      "checked_at": "2026-10-12T18:15:09+00:00",
+      "tried": [
+        "https://www.luzdegas.com/"
+      ],
+      "verdict": "ical",
+      "suggested_url": "https://luzdegas.com/es/"
+    },
+    {
+      "slug": "sala_bikini",
+      "name": "Bikini",
+      "type": "music",
+      "url": "https://bikinibcn.com/",
+      "status": 200,
+      "final_url": "https://bikinibcn.com/",
+      "bytes": 80684,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [
+        "https://bikinibcn.com/comments/feed/",
+        "https://bikinibcn.com/feed/"
+      ],
+      "checked_at": "2026-10-12T18:15:10+00:00",
+      "tried": [
+        "https://bikinibcn.com/",
+        "https://bikinibcn.com/conciertos/"
+      ],
+      "verdict": "rss",
+      "suggested_url": null
+    },
+    {
+      "slug": "sala_wolf",
+      "name": "Wolf",
+      "type": "music",
+      "url": "https://www.salawolf.com/",
+      "status": 0,
+      "final_url": "https://www.salawolf.com/",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:10+00:00",
+      "error": "[Errno 8] nodename nor servname provided, or not known",
+      "tried": [
+        "https://www.salawolf.com/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "la_nau_bostik",
+      "name": "Nau Bostik",
+      "type": "music",
+      "url": "https://naubostik.com/",
+      "status": 200,
+      "final_url": "https://naubostik.com/",
+      "bytes": 315128,
+      "jsonld_events": 2,
+      "sample": [
+        {
+          "name": "Festival Ciutat Flamenco",
+          "startDate": "2026-10-18T18:00:00+02:00",
+          "type": "Event"
+        },
+        {
+          "name": "Mash Beer Fest 2026",
+          "startDate": "2026-10-23T13:00:00+02:00",
+          "type": "Event"
+        }
+      ],
+      "ical": [],
+      "rss": [
+        "https://naubostik.com/comments/feed/",
+        "https://naubostik.com/feed/"
+      ],
+      "checked_at": "2026-10-12T18:15:11+00:00",
+      "tried": [
+        "https://naubostik.com/"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": null
+    },
+    {
+      "slug": "sala_vol",
+      "name": "Sala VOL",
+      "type": "music",
+      "url": "https://salavol.com/",
+      "status": 200,
+      "final_url": "https://salavol.com/",
+      "bytes": 107849,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:15+00:00",
+      "tried": [
+        "https://salavol.com/",
+        "https://salavol.com/agenda/concert-benefic-per-som-barri-i-vallcarca",
+        "https://salavol.com/agenda/festa-concert-assaigobert-diga-licomvulguis-amb-la-ludwig-band",
+        "https://salavol.com/agenda/science-man",
+        "https://salavol.com/agenda/lequipe-presenta-lords-of-lounge"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "palau_musica",
+      "name": "Palau de la Música Catalana",
+      "type": "music",
+      "url": "https://www.palaumusica.cat/",
+      "status": 200,
+      "final_url": "https://www.palaumusica.cat/ca",
+      "bytes": 154565,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:36+00:00",
+      "tried": [
+        "https://www.palaumusica.cat/ca/agenda",
+        "https://www.palaumusica.cat/",
+        "https://www.palaumusica.cat/programacio_1158636",
+        "https://www.palaumusica.cat/ca/programacio_1158636",
+        "https://www.palaumusica.cat/ca/programacio-i-entrades_1159091",
+        "https://www.palaumusica.cat/ca/programacio_1158636?external=0&secondary-promoted-season=1&startDate=0"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "liceu",
+      "name": "Gran Teatre del Liceu",
+      "type": "music",
+      "url": "https://www.liceubarcelona.cat/",
+      "status": 200,
+      "final_url": "https://www.liceubarcelona.cat/ca",
+      "bytes": 148191,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:15:37+00:00",
+      "tried": [
+        "https://www.liceubarcelona.cat/ca/temporada-2026-2027",
+        "https://www.liceubarcelona.cat/",
+        "https://www.liceubarcelona.cat/ca/programacio?buscadorString=&category=all&set=Espect%C3%A1culos&view=calendarView",
+        "https://www.liceubarcelona.cat/ca/programacio",
+        "https://www.liceubarcelona.cat/ca/liceu-apren/programacio",
+        "https://www.liceubarcelona.cat/ca/programacio-i-entrades/taquilles"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "sant_jordi_club",
+      "name": "Sant Jordi Club / Palau Sant Jordi",
+      "type": "music",
+      "url": "https://www.palausantjordi.cat/es/agenda",
+      "status": 0,
+      "final_url": "https://www.palausantjordi.cat/es/agenda",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:13+00:00",
+      "error": "timed out",
+      "tried": [
+        "https://www.palausantjordi.cat/es/agenda",
+        "https://www.palausantjordi.cat/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "la_marina_festivals",
+      "name": "Primavera Sound",
+      "type": "festival",
+      "url": "https://www.primaverasound.com/es/barcelona",
+      "status": 200,
+      "final_url": "https://www.primaverasound.com/es/barcelona",
+      "bytes": 56759,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [
+        "https://www.primaverasound.com/es/feed"
+      ],
+      "checked_at": "2026-10-12T18:16:38+00:00",
+      "tried": [
+        "https://www.primaverasound.com/es/barcelona",
+        "https://www.primaverasound.com/"
+      ],
+      "verdict": "rss",
+      "suggested_url": null
+    },
+    {
+      "slug": "sonar",
+      "name": "Sónar",
+      "type": "festival",
+      "url": "https://sonar.es/es",
+      "status": 200,
+      "final_url": "https://sonar.es/es",
+      "bytes": 219404,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:39+00:00",
+      "tried": [
+        "https://sonar.es/es",
+        "https://sonar.es/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "cruilla",
+      "name": "Cruïlla",
+      "type": "festival",
+      "url": "https://www.cruillabarcelona.com/",
+      "status": 200,
+      "final_url": "https://www.cruillabarcelona.cat/",
+      "bytes": 359294,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:42+00:00",
+      "tried": [
+        "https://www.cruillabarcelona.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_lliure",
+      "name": "Teatre Lliure",
+      "type": "theatre",
+      "url": "https://www.teatrelliure.com/es/temporada-26-27",
+      "status": 200,
+      "final_url": "https://www.teatrelliure.com/es/temporada-26-27",
+      "bytes": 144578,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [
+        "https://www.teatrelliure.com/css/calendar/calendar.css?6"
+      ],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:43+00:00",
+      "tried": [
+        "https://www.teatrelliure.com/es/temporada-26-27"
+      ],
+      "verdict": "ical",
+      "suggested_url": null
+    },
+    {
+      "slug": "tnc",
+      "name": "Teatre Nacional de Catalunya",
+      "type": "theatre",
+      "url": "https://www.tnc.cat/",
+      "status": 200,
+      "final_url": "https://www.tnc.cat/ca",
+      "bytes": 133197,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:43+00:00",
+      "tried": [
+        "https://www.tnc.cat/ca/temporada",
+        "https://www.tnc.cat/",
+        "https://www.tnc.cat/ca/espectacle/premsa/presentacio-temporada-2026-2027",
+        "https://www.tnc.cat/ca/temporada-2026-2027",
+        "https://www.tnc.cat/ca/material-de-premsa-temporada-2026-2027",
+        "https://www.tnc.cat/ca/altres-temes-institucionals-temporada-actual"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_romea",
+      "name": "Teatre Romea",
+      "type": "theatre",
+      "url": "https://www.teatreromea.cat/es/programacion",
+      "status": 200,
+      "final_url": "https://www.teatreromea.cat/es/programacion/",
+      "bytes": 134427,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:46+00:00",
+      "tried": [
+        "https://www.teatreromea.cat/es/programacion",
+        "https://www.teatreromea.cat/",
+        "https://www.teatreromea.cat/ca/season/",
+        "https://www.teatreromea.cat/ca/familiadeteatrerus/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_goya",
+      "name": "Teatre Goya",
+      "type": "theatre",
+      "url": "https://www.teatregoya.cat/es/programacion",
+      "status": 200,
+      "final_url": "https://www.teatregoya.cat/es/programacion/",
+      "bytes": 142029,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:53+00:00",
+      "tried": [
+        "https://www.teatregoya.cat/es/programacion",
+        "https://www.teatregoya.cat/",
+        "https://www.teatregoya.cat/ca/season/",
+        "https://www.teatregoya.cat/ca/season"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_condal",
+      "name": "Teatre Condal",
+      "type": "theatre",
+      "url": "https://www.teatrecondal.cat/es/programacion",
+      "status": 200,
+      "final_url": "https://www.teatrecondal.cat/es/programacion/",
+      "bytes": 132069,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:16:57+00:00",
+      "tried": [
+        "https://www.teatrecondal.cat/es/programacion",
+        "https://www.teatrecondal.cat/",
+        "https://www.teatrecondal.cat/ca/season/",
+        "https://www.teatrecondal.cat/ca/season"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_poliorama",
+      "name": "Teatre Poliorama",
+      "type": "theatre",
+      "url": "https://www.teatrepoliorama.com/ca/programacio/c/923-cyrano.html",
+      "status": 200,
+      "final_url": "https://www.teatrepoliorama.com/ca/programacio/c/923-cyrano.html",
+      "bytes": 453033,
+      "jsonld_events": 6,
+      "sample": [
+        {
+          "name": "CYRANO",
+          "startDate": "2027-02-08T19:30:00+01:00",
+          "type": "Event"
+        },
+        {
+          "name": "CYRANO",
+          "startDate": "2027-02-09T19:30:00+01:00",
+          "type": "Event"
+        },
+        {
+          "name": "CYRANO",
+          "startDate": "2027-02-15T19:30:00+01:00",
+          "type": "Event"
+        }
+      ],
+      "ical": [
+        "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270208T183000Z/20270208T193000Z&ctz=Europe/Madrid&text=CYRANO+-+Dirigida+per+Paco+Mir&details=%3Cp%3E%3Cstrong%3EAMOR+PEL+TEATRE%3C%2Fstrong%3E%3C%2Fp%3E+%3Cp%3ECYRANO+DE+BERGERAC+ho+t%C3%A9+tot%3A+personatges+fascinants%2C+herois%2C+aventura%2C+acci%C3%B3%2C+amistat%2C+enginy%2C+humor+i%2C+sobretot%2C+amor%3B+un+AMOR+en+maj%C3%BAscules%2C+aquell+AMOR+que+tothom+persegueix+i+que+molt+pocs+%28i+gaireb%C3%A9+sempre+a+la+ficci%C3%B3%29+aconsegueixen+trobar.%3C%2Fp%3E+%3Cp%3EEl+nostre+Cyrano+est%C3%A0+fet+per+enamorar+%28encara+m%C3%A9s%29+els+espectadors.+N%E2%80%99hem+redu%C3%AFt+la+durada+a+uns+noranta+minuts%3B+el+text%2C+tot+i+ser+rimat%2C+%C3%A9s+molt+proper%2C+o+ho+%C3%A9s+perqu%C3%A8+la+rima+mai+no+%C3%A9s+for%C3%A7ada.+L%E2%80%99escenografia+i+el+vestuari+s%C3%B3n+un+cant+a+l%E2%80%99ofici+del+teatre+i+al+potencial+de+la+imaginaci%C3%B3%2C+i+els+sis+int%C3%A8rprets%2C+que+donen+vida+a+disset+personatges%2C+fan+que+el+text+esdevingui+una+obra+absolutament+coral.%3C%2Fp%3E+%3Cp%3E+DURADA%3A+90+minuts+%3C%2Fp%3E",
+        "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270209T183000Z/20270209T193000Z&ctz=Europe/Madrid&text=CYRANO+-+Dirigida+per+Paco+Mir&details=%3Cp%3E%3Cstrong%3EAMOR+PEL+TEATRE%3C%2Fstrong%3E%3C%2Fp%3E+%3Cp%3ECYRANO+DE+BERGERAC+ho+t%C3%A9+tot%3A+personatges+fascinants%2C+herois%2C+aventura%2C+acci%C3%B3%2C+amistat%2C+enginy%2C+humor+i%2C+sobretot%2C+amor%3B+un+AMOR+en+maj%C3%BAscules%2C+aquell+AMOR+que+tothom+persegueix+i+que+molt+pocs+%28i+gaireb%C3%A9+sempre+a+la+ficci%C3%B3%29+aconsegueixen+trobar.%3C%2Fp%3E+%3Cp%3EEl+nostre+Cyrano+est%C3%A0+fet+per+enamorar+%28encara+m%C3%A9s%29+els+espectadors.+N%E2%80%99hem+redu%C3%AFt+la+durada+a+uns+noranta+minuts%3B+el+text%2C+tot+i+ser+rimat%2C+%C3%A9s+molt+proper%2C+o+ho+%C3%A9s+perqu%C3%A8+la+rima+mai+no+%C3%A9s+for%C3%A7ada.+L%E2%80%99escenografia+i+el+vestuari+s%C3%B3n+un+cant+a+l%E2%80%99ofici+del+teatre+i+al+potencial+de+la+imaginaci%C3%B3%2C+i+els+sis+int%C3%A8rprets%2C+que+donen+vida+a+disset+personatges%2C+fan+que+el+text+esdevingui+una+obra+absolutament+coral.%3C%2Fp%3E+%3Cp%3E+DURADA%3A+90+minuts+%3C%2Fp%3E",
+        "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270215T183000Z/20270215T193000Z&ctz=Europe/Madrid&text=CYRANO+-+Dirigida+per+Paco+Mir&details=%3Cp%3E%3Cstrong%3EAMOR+PEL+TEATRE%3C%2Fstrong%3E%3C%2Fp%3E+%3Cp%3ECYRANO+DE+BERGERAC+ho+t%C3%A9+tot%3A+personatges+fascinants%2C+herois%2C+aventura%2C+acci%C3%B3%2C+amistat%2C+enginy%2C+humor+i%2C+sobretot%2C+amor%3B+un+AMOR+en+maj%C3%BAscules%2C+aquell+AMOR+que+tothom+persegueix+i+que+molt+pocs+%28i+gaireb%C3%A9+sempre+a+la+ficci%C3%B3%29+aconsegueixen+trobar.%3C%2Fp%3E+%3Cp%3EEl+nostre+Cyrano+est%C3%A0+fet+per+enamorar+%28encara+m%C3%A9s%29+els+espectadors.+N%E2%80%99hem+redu%C3%AFt+la+durada+a+uns+noranta+minuts%3B+el+text%2C+tot+i+ser+rimat%2C+%C3%A9s+molt+proper%2C+o+ho+%C3%A9s+perqu%C3%A8+la+rima+mai+no+%C3%A9s+for%C3%A7ada.+L%E2%80%99escenografia+i+el+vestuari+s%C3%B3n+un+cant+a+l%E2%80%99ofici+del+teatre+i+al+potencial+de+la+imaginaci%C3%B3%2C+i+els+sis+int%C3%A8rprets%2C+que+donen+vida+a+disset+personatges%2C+fan+que+el+text+esdevingui+una+obra+absolutament+coral.%3C%2Fp%3E+%3Cp%3E+DURADA%3A+90+minuts+%3C%2Fp%3E",
+        "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270216T183000Z/20270216T193000Z&ctz=Europe/Madrid&text=CYRANO+-+Dirigida+per+Paco+Mir&details=%3Cp%3E%3Cstrong%3EAMOR+PEL+TEATRE%3C%2Fstrong%3E%3C%2Fp%3E+%3Cp%3ECYRANO+DE+BERGERAC+ho+t%C3%A9+tot%3A+personatges+fascinants%2C+herois%2C+aventura%2C+acci%C3%B3%2C+amistat%2C+enginy%2C+humor+i%2C+sobretot%2C+amor%3B+un+AMOR+en+maj%C3%BAscules%2C+aquell+AMOR+que+tothom+persegueix+i+que+molt+pocs+%28i+gaireb%C3%A9+sempre+a+la+ficci%C3%B3%29+aconsegueixen+trobar.%3C%2Fp%3E+%3Cp%3EEl+nostre+Cyrano+est%C3%A0+fet+per+enamorar+%28encara+m%C3%A9s%29+els+espectadors.+N%E2%80%99hem+redu%C3%AFt+la+durada+a+uns+noranta+minuts%3B+el+text%2C+tot+i+ser+rimat%2C+%C3%A9s+molt+proper%2C+o+ho+%C3%A9s+perqu%C3%A8+la+rima+mai+no+%C3%A9s+for%C3%A7ada.+L%E2%80%99escenografia+i+el+vestuari+s%C3%B3n+un+cant+a+l%E2%80%99ofici+del+teatre+i+al+potencial+de+la+imaginaci%C3%B3%2C+i+els+sis+int%C3%A8rprets%2C+que+donen+vida+a+disset+personatges%2C+fan+que+el+text+esdevingui+una+obra+absolutament+coral.%3C%2Fp%3E+%3Cp%3E+DURADA%3A+90+minuts+%3C%2Fp%3E",
+        "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270222T183000Z/20270222T193000Z&ctz=Europe/Madrid&text=CYRANO+-+Dirigida+per+Paco+Mir&details=%3Cp%3E%3Cstrong%3EAMOR+PEL+TEATRE%3C%2Fstrong%3E%3C%2Fp%3E+%3Cp%3ECYRANO+DE+BERGERAC+ho+t%C3%A9+tot%3A+personatges+fascinants%2C+herois%2C+aventura%2C+acci%C3%B3%2C+amistat%2C+enginy%2C+humor+i%2C+sobretot%2C+amor%3B+un+AMOR+en+maj%C3%BAscules%2C+aquell+AMOR+que+tothom+persegueix+i+que+molt+pocs+%28i+gaireb%C3%A9+sempre+a+la+ficci%C3%B3%29+aconsegueixen+trobar.%3C%2Fp%3E+%3Cp%3EEl+nostre+Cyrano+est%C3%A0+fet+per+enamorar+%28encara+m%C3%A9s%29+els+espectadors.+N%E2%80%99hem+redu%C3%AFt+la+durada+a+uns+noranta+minuts%3B+el+text%2C+tot+i+ser+rimat%2C+%C3%A9s+molt+proper%2C+o+ho+%C3%A9s+perqu%C3%A8+la+rima+mai+no+%C3%A9s+for%C3%A7ada.+L%E2%80%99escenografia+i+el+vestuari+s%C3%B3n+un+cant+a+l%E2%80%99ofici+del+teatre+i+al+potencial+de+la+imaginaci%C3%B3%2C+i+els+sis+int%C3%A8rprets%2C+que+donen+vida+a+disset+personatges%2C+fan+que+el+text+esdevingui+una+obra+absolutament+coral.%3C%2Fp%3E+%3Cp%3E+DURADA%3A+90+minuts+%3C%2Fp%3E"
+      ],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:02+00:00",
+      "tried": [
+        "https://www.teatrepoliorama.com/",
+        "https://www.teatrepoliorama.com/ca/programacio/c/temporada-202627-27.html",
+        "https://www.teatrepoliorama.com/ca/programacio.html",
+        "https://www.teatrepoliorama.com/ca/programacio/c/923-cyrano.html"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": "https://www.teatrepoliorama.com/ca/programacio/c/923-cyrano.html"
+    },
+    {
+      "slug": "teatre_tivoli",
+      "name": "Teatre Tívoli",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "status": 200,
+      "final_url": "https://www.grupbalana.com/",
+      "bytes": 6598,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:03+00:00",
+      "tried": [
+        "https://www.grupbalana.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_apolo",
+      "name": "Teatre Apolo",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "status": 200,
+      "final_url": "https://www.grupbalana.com/",
+      "bytes": 6598,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:03+00:00",
+      "tried": [
+        "https://www.grupbalana.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_victoria",
+      "name": "Teatre Victòria",
+      "type": "theatre",
+      "url": "https://www.teatrevictoria.com/",
+      "status": 200,
+      "final_url": "https://www.teatrevictoria.com/",
+      "bytes": 342627,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:04+00:00",
+      "tried": [
+        "https://www.teatrevictoria.com/",
+        "https://www.teatrevictoria.com/ca/cartellera.html",
+        "https://www.teatrevictoria.com/ca/lloga-el-victoria.html"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatreneu",
+      "name": "Teatreneu",
+      "type": "theatre",
+      "url": "https://www.teatreneu.com/",
+      "status": 200,
+      "final_url": "https://www.teatreneu.com/",
+      "bytes": 432694,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:06+00:00",
+      "tried": [
+        "https://www.teatreneu.com/",
+        "https://www.teatreneu.com/ca/agenda-setmanal.html"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "sala_beckett",
+      "name": "Sala Beckett",
+      "type": "theatre",
+      "url": "https://www.salabeckett.cat/es/espectacles/",
+      "status": 200,
+      "final_url": "https://www.salabeckett.cat/espectacles/",
+      "bytes": 152107,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:11+00:00",
+      "tried": [
+        "https://www.salabeckett.cat/es/espectacles/",
+        "https://www.salabeckett.cat/",
+        "https://www.salabeckett.cat/activitats/",
+        "https://www.salabeckett.cat/espectacles/",
+        "https://www.salabeckett.cat/espectacle/gola/",
+        "https://www.salabeckett.cat/espectacle/torcidxs/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "la_villarroel",
+      "name": "La Villarroel",
+      "type": "theatre",
+      "url": "https://www.lavillarroel.cat/es/programacion",
+      "status": 200,
+      "final_url": "https://www.lavillarroel.cat/es/programacion/",
+      "bytes": 143013,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:13+00:00",
+      "tried": [
+        "https://www.lavillarroel.cat/es/programacion",
+        "https://www.lavillarroel.cat/",
+        "https://www.lavillarroel.cat/ca/season/",
+        "https://www.lavillarroel.cat/ca/season"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "teatre_borras",
+      "name": "Teatre Borràs",
+      "type": "theatre",
+      "url": "https://www.grupbalana.com/",
+      "status": 200,
+      "final_url": "https://www.grupbalana.com/",
+      "bytes": 6598,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:16+00:00",
+      "tried": [
+        "https://www.grupbalana.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "mercat_flors",
+      "name": "Mercat de les Flors",
+      "type": "theatre",
+      "url": "https://mercatflors.cat/es/programacion/",
+      "status": 200,
+      "final_url": "https://mercatflors.cat/es/programacion/",
+      "bytes": 277254,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [
+        "https://mercatflors.cat/es/feed/"
+      ],
+      "checked_at": "2026-10-12T18:17:16+00:00",
+      "tried": [
+        "https://mercatflors.cat/es/programacion/",
+        "https://mercatflors.cat/",
+        "https://mercatflors.cat/programacio/entrades-i-abonaments/funcions-matinals-sessions-relaxades-temporada-2024-25/",
+        "https://mercatflors.cat/programacio/menus-de-temporada/",
+        "https://mercatflors.cat/programacio/presentacio-temporada/",
+        "https://mercatflors.cat/programacio/presentacio-temporada-2023-24/"
+      ],
+      "verdict": "rss",
+      "suggested_url": null
+    },
+    {
+      "slug": "antic_teatre",
+      "name": "Antic Teatre",
+      "type": "theatre",
+      "url": "https://www.anticteatre.com/es/programacio/",
+      "status": 200,
+      "final_url": "https://www.anticteatre.com/programacio/",
+      "bytes": 313793,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:25+00:00",
+      "tried": [
+        "https://www.anticteatre.com/es/programacio/",
+        "https://www.anticteatre.com/",
+        "https://www.anticteatre.com/programacio/",
+        "https://www.anticteatre.com/programacio/arxiu/",
+        "https://www.anticteatre.com/programacio/premsa/",
+        "https://www.anticteatre.com/programacio/descarregues/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "filmoteca",
+      "name": "Filmoteca de Catalunya",
+      "type": "cinema",
+      "url": "https://www.filmoteca.cat/",
+      "status": 200,
+      "final_url": "https://www.filmoteca.cat/",
+      "bytes": 180,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:34+00:00",
+      "tried": [
+        "https://www.filmoteca.cat/web/ca/programacio",
+        "https://www.filmoteca.cat/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "cinemes_girona",
+      "name": "Cinemes Girona",
+      "type": "cinema",
+      "url": "https://www.cinemesgirona.cat/",
+      "status": 200,
+      "final_url": "https://www.cinemesgirona.cat/",
+      "bytes": 208134,
+      "jsonld_events": 2,
+      "sample": [
+        {
+          "name": "La vida de una mujer (VOSE)",
+          "startDate": "2026-10-12T20:00:00+02:00",
+          "type": "ScreeningEvent"
+        },
+        {
+          "name": "Su propio infierno (VOSE)",
+          "startDate": "2026-10-12T20:00:00+02:00",
+          "type": "ScreeningEvent"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:35+00:00",
+      "tried": [
+        "https://www.cinemesgirona.cat/"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": null
+    },
+    {
+      "slug": "zumzeig",
+      "name": "Zumzeig Cinema",
+      "type": "cinema",
+      "url": "https://zumzeigcine.coop/cinema/calendari/",
+      "status": 200,
+      "final_url": "https://zumzeigcine.coop/cinema/calendari/",
+      "bytes": 48843,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [
+        "https://calendar.google.com/calendar/u/1?cid=Y19ucDVub3IwN3Q5OHRzOW9yY2dkbGJvN3ZoY0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t",
+        "webcal://calendar.google.com/calendar/ical/c_np5nor07t98ts9orcgdlbo7vhc%40group.calendar.google.com/public/basic.ics"
+      ],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:38+00:00",
+      "tried": [
+        "https://zumzeigcine.coop/es/",
+        "https://zumzeigcine.coop/",
+        "https://zumzeigcine.coop/cinema/sessions/",
+        "https://zumzeigcine.coop/cinema/calendari/"
+      ],
+      "verdict": "ical",
+      "suggested_url": "https://zumzeigcine.coop/cinema/calendari/"
+    },
+    {
+      "slug": "cinema_maldà",
+      "name": "Cinema Maldà",
+      "type": "cinema",
+      "url": "https://www.cinemamalda.com/",
+      "status": 451,
+      "final_url": "https://www.cinemamalda.com/",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:38+00:00",
+      "error": "robots.txt disallows this path",
+      "tried": [
+        "https://www.cinemamalda.com/"
+      ],
+      "verdict": "robots_disallowed",
+      "suggested_url": null
+    },
+    {
+      "slug": "verdi",
+      "name": "Cines Verdi",
+      "type": "cinema",
+      "url": "https://barcelona.cines-verdi.com/",
+      "status": 200,
+      "final_url": "https://barcelona.cines-verdi.com/",
+      "bytes": 138020,
+      "jsonld_events": 15,
+      "sample": [
+        {
+          "name": "Digger",
+          "startDate": "2026-10-12T22:30:00+02:00",
+          "type": "ScreeningEvent"
+        },
+        {
+          "name": "El precio de la red",
+          "startDate": "2026-10-12T20:20:00+02:00",
+          "type": "ScreeningEvent"
+        },
+        {
+          "name": "El precio de la red",
+          "startDate": "2026-10-12T22:50:00+02:00",
+          "type": "ScreeningEvent"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:39+00:00",
+      "tried": [
+        "https://barcelona.cines-verdi.com/"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": null
+    },
+    {
+      "slug": "phenomena",
+      "name": "Phenomena Experience",
+      "type": "cinema",
+      "url": "https://www.phenomena-experience.com/",
+      "status": 200,
+      "final_url": "https://phenomena-experience.com/",
+      "bytes": 139434,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:40+00:00",
+      "tried": [
+        "https://www.phenomena-experience.com/",
+        "https://www.phenomena-experience.com/index?pag=cartelera",
+        "https://www.phenomena-experience.com/index?pag=programacion-dias",
+        "https://www.phenomena-experience.com/index?pag=phantasma",
+        "https://www.phenomena-experience.com/index?pag=ciclo&lst_sel=840d9db0e1129722b70c2c35"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "cccb",
+      "name": "CCCB (ya cubierto por conector propio)",
+      "type": "culture",
+      "url": "https://www.cccb.org/es/calendario",
+      "status": 200,
+      "final_url": "https://www.cccb.org/es/calendario",
+      "bytes": 537411,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [
+        "https://www.cccb.org/en/calendar"
+      ],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:49+00:00",
+      "tried": [
+        "https://www.cccb.org/es/calendario"
+      ],
+      "verdict": "ical",
+      "suggested_url": null
+    },
+    {
+      "slug": "caixaforum",
+      "name": "CaixaForum Barcelona",
+      "type": "culture",
+      "url": "https://caixaforum.org/es/barcelona/actividades",
+      "status": 200,
+      "final_url": "https://caixaforum.org/es/barcelona/actividades",
+      "bytes": 206585,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:49+00:00",
+      "tried": [
+        "https://caixaforum.org/es/barcelona/actividades",
+        "https://caixaforum.org/",
+        "https://caixaforum.org/es/barcelona/p/orquesta-barroca-de-sevilla.-vivaldi-concerti-da-camera-barcelona",
+        "https://caixaforum.org/ca/barcelona/activitats",
+        "https://caixaforum.org/es/barcelona/p/temporada-musical-barcelona"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "fundacio_miro",
+      "name": "Fundació Joan Miró",
+      "type": "culture",
+      "url": "https://www.fmirobcn.org/es/actividades/",
+      "status": 200,
+      "final_url": "https://www.fmirobcn.org/es/actividades/",
+      "bytes": 47507,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:50+00:00",
+      "tried": [
+        "https://www.fmirobcn.org/es/actividades/",
+        "https://www.fmirobcn.org/",
+        "https://www.fmirobcn.org/ca/totes-les-activitats/programacio-cultural",
+        "https://www.fmirobcn.org/ca/activitats/",
+        "https://www.fmirobcn.org/ca/activitats/families/",
+        "https://www.fmirobcn.org/ca/totes-les-activitats"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "mnac",
+      "name": "MNAC",
+      "type": "culture",
+      "url": "https://www.museunacional.cat/es/actividades",
+      "status": 200,
+      "final_url": "https://www.museunacional.cat/es/actividades",
+      "bytes": 119888,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:17:54+00:00",
+      "tried": [
+        "https://www.museunacional.cat/es/actividades",
+        "https://www.museunacional.cat/",
+        "https://www.museunacional.cat/ca/agenda/activitats?field_activity_audience_value_i18n%255B%255D=young",
+        "https://www.museunacional.cat/ca/agenda/activitats?field_activity_audience_value_i18n%255B%255D=adult",
+        "https://www.museunacional.cat/ca/agenda/activitats?field_activity_type_value_i18n%255B%255D=family%7C",
+        "https://www.museunacional.cat/ca/agenda/activitats?field_activity_audience_value_i18n%255B%255D=infantile"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "fabra_i_coats",
+      "name": "Fabra i Coats",
+      "type": "culture",
+      "url": "http://ajuntament.barcelona.cat/calendarifestius/ca/",
+      "status": 200,
+      "final_url": "https://ajuntament.barcelona.cat/calendarifestius/ca/",
+      "bytes": 9309,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [
+        "https://ajuntament.barcelona.cat/calendarifestius/files/calendarifestius_ca.ics"
+      ],
+      "rss": [],
+      "checked_at": "2026-10-12T18:18:06+00:00",
+      "tried": [
+        "https://ajuntament.barcelona.cat/fabraicoats/",
+        "https://ajuntament.barcelona.cat/",
+        "https://ajuntament.barcelona.cat/agenda2030/ca",
+        "http://ajuntament.barcelona.cat/calendarifestius/ca/"
+      ],
+      "verdict": "ical",
+      "suggested_url": "https://ajuntament.barcelona.cat/calendarifestius/ca/"
+    },
+    {
+      "slug": "entradas_com",
+      "name": "Entradas.com",
+      "type": "ticketing",
+      "url": "https://www.entradas.com/city/barcelona-397/",
+      "status": 0,
+      "final_url": "https://www.entradas.com/city/barcelona-397/",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:18:34+00:00",
+      "error": "TimeoutError: [Errno 60] Operation timed out",
+      "tried": [
+        "https://www.entradas.com/city/barcelona-397/",
+        "https://www.entradas.com/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "ticketmaster_es",
+      "name": "Ticketmaster España",
+      "type": "ticketing",
+      "url": "https://www.ticketmaster.es/artist/elyella-entradas/999404?int_cmp_name=ELYELLA&int_cmp_id=ES-Home-501&int_cmp_creative=Home-popular_events-3&tm_link=tm_ccp_Home_popular_events_ELYELLA",
+      "status": 200,
+      "final_url": "https://www.ticketmaster.es/artist/elyella-entradas/999404?int_cmp_name=ELYELLA&int_cmp_id=ES-Home-501&int_cmp_creative=Home-popular_events-3&tm_link=tm_ccp_Home_popular_events_ELYELLA",
+      "bytes": 551039,
+      "jsonld_events": 4,
+      "sample": [
+        {
+          "name": "ELYELLA - Lo más importante - Valencia",
+          "startDate": "2026-10-24",
+          "type": "MusicEvent"
+        },
+        {
+          "name": "ELYELLA - Lo más importante - Barcelona",
+          "startDate": "2026-11-14",
+          "type": "MusicEvent"
+        },
+        {
+          "name": "ELYELLA - Madrid - La Riviera",
+          "startDate": "2026-11-21",
+          "type": "MusicEvent"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:01+00:00",
+      "tried": [
+        "https://www.ticketmaster.es/city/barcelona/197",
+        "https://www.ticketmaster.es/",
+        "https://www.ticketmaster.es/artist/elyella-entradas/999404?int_cmp_name=ELYELLA&int_cmp_id=ES-Home-501&int_cmp_creative=Home-popular_events-3&tm_link=tm_ccp_Home_popular_events_ELYELLA"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": "https://www.ticketmaster.es/artist/elyella-entradas/999404?int_cmp_name=ELYELLA&int_cmp_id=ES-Home-501&int_cmp_creative=Home-popular_events-3&tm_link=tm_ccp_Home_popular_events_ELYELLA"
+    },
+    {
+      "slug": "fever",
+      "name": "Fever",
+      "type": "ticketing",
+      "url": "https://feverup.com/es/barcelona",
+      "status": 200,
+      "final_url": "https://feverup.com/es/barcelona",
+      "bytes": 3055614,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:02+00:00",
+      "tried": [
+        "https://feverup.com/es/barcelona",
+        "https://feverup.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "dice",
+      "name": "DICE",
+      "type": "ticketing",
+      "url": "https://dice.fm/browse/barcelona",
+      "status": 200,
+      "final_url": "https://dice.fm/browse/barcelona-5d8cefe1e3e6e374e99e8cbe?canonicalLng=x-default&lng=en",
+      "bytes": 416115,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:04+00:00",
+      "tried": [
+        "https://dice.fm/browse/barcelona",
+        "https://dice.fm/",
+        "https://dice.fm/browse",
+        "https://dice.fm/partners"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "wegow",
+      "name": "Wegow",
+      "type": "ticketing",
+      "url": "https://www.wegow.com/es/conciertos/crazy-horse-concert-a-paris-crazy-horse-791",
+      "status": 200,
+      "final_url": "https://www.wegow.com/es/conciertos/crazy-horse-concert-a-paris-crazy-horse-791",
+      "bytes": 448032,
+      "jsonld_events": 1,
+      "sample": [
+        {
+          "name": "Concierto de Crazy Horse en París",
+          "startDate": "2030-01-01T00:00:00+01:00",
+          "type": "Event"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:09+00:00",
+      "tried": [
+        "https://www.wegow.com/es/conciertos/barcelona",
+        "https://www.wegow.com/",
+        "https://www.wegow.com/es/conciertos/crazy-horse-concert-a-paris-crazy-horse-791"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": "https://www.wegow.com/es/conciertos/crazy-horse-concert-a-paris-crazy-horse-791"
+    },
+    {
+      "slug": "atrapalo",
+      "name": "Atrápalo",
+      "type": "ticketing",
+      "url": "https://www.atrapalo.com/entradas/barcelona/",
+      "status": 200,
+      "final_url": "https://www.atrapalo.com/entradas/barcelona/",
+      "bytes": 3036,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:09+00:00",
+      "tried": [
+        "https://www.atrapalo.com/entradas/barcelona/",
+        "https://www.atrapalo.com/",
+        "https://www.atrapalo.com/vuelos/calendario/",
+        "https://www.atrapalo.com/actividades/",
+        "https://www.atrapalo.com/actividades/cursos/",
+        "https://www.atrapalo.com/actividades/belleza/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "entradium",
+      "name": "Entradium",
+      "type": "ticketing",
+      "url": "https://entradium.com/es/events?city=Barcelona",
+      "status": 200,
+      "final_url": "https://entradium.com/es/events?city=Barcelona",
+      "bytes": 3330,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:10+00:00",
+      "tried": [
+        "https://entradium.com/es/events?city=Barcelona",
+        "https://entradium.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "taquilla_com",
+      "name": "Taquilla.com",
+      "type": "ticketing",
+      "url": "https://www.taquilla.com/entradas/barcelona",
+      "status": 200,
+      "final_url": "https://www.taquilla.com/entradas/fc-barcelona",
+      "bytes": 147011,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:11+00:00",
+      "tried": [
+        "https://www.taquilla.com/entradas/barcelona",
+        "https://www.taquilla.com/",
+        "https://www.taquilla.com/conciertos",
+        "https://www.taquilla.com/actividades",
+        "https://www.taquilla.com/espectaculos",
+        "https://www.taquilla.com/espectaculos/danza"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "tomaticket",
+      "name": "Tomaticket",
+      "type": "ticketing",
+      "url": "https://www.tomaticket.es/entradas-barcelona",
+      "status": 404,
+      "final_url": "https://www.tomaticket.es/entradas-barcelona",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:12+00:00",
+      "error": "",
+      "tried": [
+        "https://www.tomaticket.es/entradas-barcelona",
+        "https://www.tomaticket.es/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "eventbrite",
+      "name": "Eventbrite",
+      "type": "ticketing",
+      "url": "https://www.eventbrite.es/d/spain--barcelona/events/",
+      "status": 200,
+      "final_url": "https://www.eventbrite.es/d/spain--barcelona/events/",
+      "bytes": 905975,
+      "jsonld_events": 68,
+      "sample": [
+        {
+          "name": "Oldskool R&B at Ocaña: 90s & 2000s R&B Bar Night | Plaça Reial Barcelona",
+          "startDate": "2026-10-17",
+          "type": "Event"
+        },
+        {
+          "name": "Ivy Knights: Live at the Lighthouse",
+          "startDate": "2026-10-18",
+          "type": "Event"
+        },
+        {
+          "name": "AZAN Restaurante Efímero",
+          "startDate": "2026-11-14",
+          "type": "Event"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:15+00:00",
+      "tried": [
+        "https://www.eventbrite.es/d/spain--barcelona/events/"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": null
+    },
+    {
+      "slug": "koobin",
+      "name": "Koobin (taquillas de teatros)",
+      "type": "ticketing",
+      "url": "https://www.koobin.com/",
+      "status": 200,
+      "final_url": "https://www.koobin.com/",
+      "bytes": 105499,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:16+00:00",
+      "tried": [
+        "https://www.koobin.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "codetickets",
+      "name": "Codetickets",
+      "type": "ticketing",
+      "url": "https://www.codetickets.com/",
+      "status": 200,
+      "final_url": "https://www.codetickets.com/",
+      "bytes": 1434,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:16+00:00",
+      "tried": [
+        "https://www.codetickets.com/"
+      ],
+      "verdict": "html_only",
+      "suggested_url": null
+    },
+    {
+      "slug": "bandsintown",
+      "name": "Bandsintown",
+      "type": "aggregator",
+      "url": "https://www.bandsintown.com/c/barcelona-spain",
+      "status": 403,
+      "final_url": "https://www.bandsintown.com/c/barcelona-spain",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:16+00:00",
+      "error": "",
+      "tried": [
+        "https://www.bandsintown.com/c/barcelona-spain",
+        "https://www.bandsintown.com/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    },
+    {
+      "slug": "songkick",
+      "name": "Songkick",
+      "type": "aggregator",
+      "url": "https://www.songkick.com/metro-areas/28714-spain-barcelona",
+      "status": 200,
+      "final_url": "https://www.songkick.com/metro-areas/28714-spain-barcelona",
+      "bytes": 278488,
+      "jsonld_events": 50,
+      "sample": [
+        {
+          "name": "VIDA RECORDS & FRIENDS 2026 @ La [2] de Apolo",
+          "startDate": "2026-10-08",
+          "type": "MusicEvent"
+        },
+        {
+          "name": "Strawberry Guy @ Sala Upload",
+          "startDate": "2026-10-12T19:30:00",
+          "type": "MusicEvent"
+        },
+        {
+          "name": "El Tri @ Razzmatazz",
+          "startDate": "2026-10-12T20:00:00",
+          "type": "MusicEvent"
+        }
+      ],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:17+00:00",
+      "tried": [
+        "https://www.songkick.com/metro-areas/28714-spain-barcelona"
+      ],
+      "verdict": "jsonld",
+      "suggested_url": null
+    },
+    {
+      "slug": "resident_advisor",
+      "name": "Resident Advisor",
+      "type": "aggregator",
+      "url": "https://ra.co/events/es/barcelona",
+      "status": 403,
+      "final_url": "https://ra.co/events/es/barcelona",
+      "bytes": 0,
+      "jsonld_events": 0,
+      "sample": [],
+      "ical": [],
+      "rss": [],
+      "checked_at": "2026-10-12T18:19:17+00:00",
+      "error": "",
+      "tried": [
+        "https://ra.co/events/es/barcelona",
+        "https://ra.co/"
+      ],
+      "verdict": "unreachable",
+      "suggested_url": null
+    }
+  ]
+}

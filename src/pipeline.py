@@ -75,9 +75,48 @@ def geo_meters(a,b):
     return 6371000*2*math.atan2(math.sqrt(z),math.sqrt(max(0,1-z)))
 
 
+WEEKDAYS=r'(?:dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)'
+
+
+def strip_duration(text):
+    """Drop trailing duration/notes clauses ('Durada aproximada: 90 minuts (sense pausa)')."""
+    source=' '.join(str(text or '').split())
+    source=re.split(r'\s*(?:\(|Durada|Duraci[oó]n?|Duración)\b',source,maxsplit=1,flags=re.I)[0]
+    return source.strip(' .;,')
+
+
+def dated_times(text, start, end):
+    """Per-day start times stated as '<weekday> 23: 19 h <weekday> 24: 16 h i 17.15 h'.
+
+    Every day number must map to exactly one date inside [start, end] and every
+    segment must be nothing but times; otherwise nothing is returned.
+    """
+    source=strip_duration(text); s,e=day(start),day(end)
+    if not source or s is None or e is None or e<s or (e-s).days>27:return []
+    segments=re.split(r'(?:^|\s)(?:'+WEEKDAYS+r'\s+)?(\d{1,2})\s*:\s*',source,flags=re.I)
+    if len(segments)<3 or segments[0].strip():return []
+    dates={}
+    cursor=s
+    while cursor<=e:
+        dates.setdefault(cursor.day,[]).append(cursor); cursor+=dt.timedelta(days=1)
+    out=[]
+    for number,times in zip(segments[1::2],segments[2::2]):
+        candidates=dates.get(int(number),[])
+        if len(candidates)!=1:return []
+        parts=[p for p in re.split(r'\s*(?:,|\bi\b|\by\b|/)\s*',times.strip(' .,;')) if p]
+        hits=[]
+        for part in parts:
+            m=re.fullmatch(r'(?:(?:a les|a las|a la)\s+)?(\d{1,2})(?:[.:](\d{2}))?\s*h(?:ores)?',part.strip(),flags=re.I)
+            if not m or int(m.group(1))>23 or int(m.group(2) or 0)>59:return []
+            hits.append(f'{int(m.group(1)):02d}:{int(m.group(2) or 0):02d}')
+        if not hits:return []
+        out.extend((candidates[0].isoformat(),t) for t in sorted(set(hits)))
+    return sorted(set(out))
+
+
 def simple_times(s):
     """ONLY unambiguous standalone event start times, not opening hours or duration."""
-    source=' '.join(str(s or '').split()).strip(' .')
+    source=strip_duration(s)
     if not source:return []
     p=r'(\d{1,2})(?:[.:](\d{2}))?\s*h(?:ores)?\b'
     # Whole text must be nothing other than a punctual start or a function pair.
@@ -101,7 +140,8 @@ def event_kind(title,cat,span,freq,source):
         return 'service','exclude'
     if (t.startswith('curs d escacs') or ('estas on' in t or 'estason' in t) and (span or 0)>60 and f=='setmanal') and source=='diba_bibliotecas':
         return 'course','exclude'
-    if source=='guiabcn':return ('course','exclude') if c=='course' else (cat,'review')
+    if source=='guiabcn' and c=='course':return 'course','review'
+    if 'curs' in t or 'curso' in t:return 'course','review'
     if 'exposic' in t or 'exposicions' in c or 'exposiciones' in c:return 'exhibition','review'
     if 'festivals' in c or 'cicles' in c or 'festival' in t or ('cicle' in t and (span or 0)>1):return 'program','review'
     if f=='setmanal' or f=='mensual' or (span is not None and span>2):return 'program','review'
@@ -158,10 +198,24 @@ def build_records(data):
 def candidate_sessions(r):
     """Conservative syntactic candidates; always unverified. No recurrence expansion."""
     if r['eligibility']=='exclude' or r['source']=='guiabcn' or r['kind']!='single':return []
+    # Connectors that already resolved explicit, source-stated sessions (iCal
+    # entries of the Open Data BCN agenda) hand them over verbatim.
+    if r.get('occurrences') is not None and r['source']=='opendatabcn_agenda':
+        return list(r['occurrences'])
     s=day(r['start']); e=day(r['end']); span=delta(r['start'],r['end'])
-    if s is None or e is None or not (START<=s<END):return []
+    if r['source'].startswith(('web_','venue_')) and r['source']!='web_conciertos_club':
+        # First-party agenda pages that print an exact start time next to a
+        # single dated act (CCCB listing, L'Auditori event timestamp).
+        if s is not None and span==0 and re.fullmatch(r'\d{2}:\d{2}',str(r['time_text'])):
+            return [{'local_date':str(s),'local_time':str(r['time_text']),'time_zone':'Europe/Madrid','type':'first_party_listing_time_candidate','evidence_field':r.get('time_evidence_field','listing_time'),'end_time':None}]
+        return []
+    # The laboratory snapshot froze a window; live connectors must not. Only a
+    # dated start is required (candidates stay unverified either way).
+    if s is None or e is None:return []
     if r['source']=='generalitat':
-        if span!=0 or len(r['venues'])!=1:return []
+        if len(r['venues'])!=1:return []
+        if span!=0:
+            return [{'local_date':d,'local_time':t,'time_zone':'Europe/Madrid','type':'unverified_dated_time_candidate','evidence_field':'horari','end_time':None} for d,t in dated_times(r['time_text'],r['start'],r['end'])]
         times=simple_times(r['time_text'])
         return [{'local_date':str(s),'local_time':t,'time_zone':'Europe/Madrid','type':'unverified_time_candidate','evidence_field':'horari','end_time':None} for t in times]
     if r['source']=='diba_bibliotecas':
@@ -169,6 +223,9 @@ def candidate_sessions(r):
         if span not in (0,1) or not re.fullmatch(r'\d\d:\d\d',t) or t=='00:00' or r['frequency'] in ('Setmanal','Mensual'):
             return []
         return [{'local_date':str(s),'local_time':t,'time_zone':'Europe/Madrid','type':'unverified_start_timestamp_candidate','evidence_field':'data_inici','end_time':None}]
+    if r['source']=='web_conciertos_club':
+        times=[r['time_text']] if re.fullmatch(r'\d{2}:\d{2}',str(r['time_text'])) else []
+        return [{'local_date':str(s),'local_time':t,'time_zone':'Europe/Madrid','type':'third_party_listing_time_candidate','evidence_field':'schema_startDate','end_time':None} for t in times]
     return []
 
 

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Loagendo · Administración</title><link rel="stylesheet" href="/admin/app.css"></head>
+<body><header class="topbar"><div class="brand"><span class="brand-icon">✳</span><div><strong>loagendo</strong><small>laboratorio privado · Barcelona</small></div></div><div class="top-actions"><span class="privacy">● Solo en este Mac</span><button id="viewExplore" class="nav active" type="button">Explorar</button><button id="viewReview" class="nav" type="button">Revisión</button><button id="viewMetrics" class="nav" type="button">Indicadores</button></div></header>
+<main><section class="stats" id="quickStats" aria-label="Resumen"></section>
+<div class="shell"><aside class="filters"><div class="filter-header"><h2>Refinar resultados</h2><button id="clear" class="linkbutton" type="button">Limpiar</button></div>
+<label for="search">Buscar actividad o espacio</label><input id="search" placeholder="Conciertos, exposiciones, biblioteca…" autocomplete="off"/>
+<label for="date">Fecha de interés</label><input id="date" type="date"/>
+<label for="category">Categoría provisional</label><select id="category"><option value="">Todas las categorías</option></select>
+<label for="district">Distrito identificado</label><select id="district"><option value="">Todos (también sin identificar)</option></select><p class="aside-note">No se infiere el barrio a partir de coordenadas.</p>
+<label for="source">Fuente</label><select id="source"><option value="">Todas las fuentes</option></select>
+<label for="kind">Tipo de ficha</label><select id="kind"><option value="">Todos</option></select>
+<label for="status">Estado editorial</label><select id="status"><option value="">Todos</option></select>
+<label class="check"><input type="checkbox" id="onlySessions"/> Solo horas candidatas</label>
+<div class="tip"><strong>Cómo interpretar los resultados</strong><p>«Coincide por intervalo» no garantiza función ese día. «Hora candidata» sigue pendiente de verificación.</p></div></aside>
+<section class="content" id="explore"><div class="section-bar"><div><h2 id="sectionTitle">Todas las actividades</h2><p id="sectionDesc">Explora la agenda completa con sus datos de origen.</p></div><div class="counter" id="totalCount" aria-live="polite"></div></div>
+<div class="notice" id="notice">Los contenidos pertenecen a una instantánea de octubre de 2026. Las fechas, horarios y condiciones pueden haber cambiado.</div>
+<div class="cards" id="cards" aria-live="polite"></div><div class="pagination" id="pages"></div>
+<div id="metrics" class="metrics hidden"></div></section></div>
+</main>
+<div id="overlay" class="overlay hidden" role="presentation"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="panel-top"><span class="eyebrow">FICHA Y EVIDENCIAS</span><button id="closePanel" class="iconbutton" type="button" aria-label="Cerrar ficha">✕</button></div><div id="detail"></div></div></div>
+<footer>LOAGENDO / MVP privado · Datos con procedencia y atribución · La disponibilidad debe confirmarse en la fuente original</footer><script defer src="/admin/app.js"></script></body></html>
