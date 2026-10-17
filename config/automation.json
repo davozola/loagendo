@@ -19,6 +19,6 @@
     {"name": "mantenimiento-medios", "kind": "media_maintenance", "every_minutes": 1440, "enabled": true},
     {"name": "fotos-equipamientos", "kind": "places", "every_minutes": 360, "limit": 60, "timeout_seconds": 20, "enabled": true, "note": "Una foto por equipamiento municipal (og:image de su página en barcelona.cat) como imagen de respaldo de las fichas sin imagen propia"},
     {"name": "duplicados-entre-fuentes", "kind": "dedupe", "every_minutes": 180, "enabled": true, "note": "Recalcula los pares candidatos a duplicado; sin esto las fichas nuevas de dos fuentes no se fusionan en público"},
-    {"name": "publicar-web", "kind": "publish", "every_minutes": 180, "out_dir": "dist", "deploy_command": "npx --yes wrangler pages deploy dist --project-name loagendo --branch main --commit-dirty=true", "site_url": "", "enabled": true}
+    {"name": "publicar-web", "kind": "publish", "every_minutes": 180, "out_dir": "dist", "deploy_command": "npx --yes wrangler pages deploy dist --project-name brollant --branch main --commit-dirty=true", "site_url": "", "enabled": true}
   ]
 }
