@@ -14,7 +14,7 @@ from pathlib import Path
 
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -118,6 +118,9 @@ def execute(conn, job, media_root):
     if kind == "places":
         from src.place_images import fetch_place_images
         return fetch_place_images(conn, media_root, limit=job.get("limit", 60), timeout=job.get("timeout_seconds", 20))
+    if kind == "eventbrite":
+        from src.eventbrite_api import enrich_eventbrite
+        return enrich_eventbrite(conn, job.get("limit", 300), timeout=job.get("timeout_seconds", 20))
     if kind == "dedupe":
         from src.dedupe import refresh_match_candidates
         result = refresh_match_candidates(conn)

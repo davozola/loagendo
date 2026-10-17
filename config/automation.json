@@ -15,6 +15,7 @@
     {"name": "web-conciertos-club", "kind": "web", "source": "web_conciertos_club", "every_minutes": 180, "enabled": true, "note": "Directorio privado: en público enlaza a la sala (public_presentation=venue_link_only)"},
     {"name": "recintos-schema-org", "kind": "venues", "source": "", "every_minutes": 360, "timeout_seconds": 25, "enabled": true},
     {"name": "enriquecer-fichas", "kind": "enrich", "every_minutes": 60, "limit": 500, "enabled": true},
+    {"name": "eventbrite-api", "kind": "eventbrite", "every_minutes": 360, "limit": 300, "timeout_seconds": 20, "enabled": true, "note": "Hora y precio de cada evento de Eventbrite ya importado (GET /v3/events/{id}/); token EVENTBRITE_TOKEN en .env"},
     {"name": "previsualizaciones-locales", "kind": "media", "every_minutes": 60, "limit": 600, "enabled": true},
     {"name": "mantenimiento-medios", "kind": "media_maintenance", "every_minutes": 1440, "enabled": true},
     {"name": "fotos-equipamientos", "kind": "places", "every_minutes": 360, "limit": 60, "timeout_seconds": 20, "enabled": true, "note": "Una foto por equipamiento municipal (og:image de su página en barcelona.cat) como imagen de respaldo de las fichas sin imagen propia"},
