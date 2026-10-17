@@ -28,11 +28,12 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "venue_eventbrite"
 API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availability"
-PARSER_VERSION = 1
+PARSER_VERSION = 2  # 2: ids de URLs «-registration-»; reconsulta los 55 que fallaron
 RECHECK_DAYS = 3
 TZ = "Europe/Madrid"
 USER_AGENT = "Brollant/1.3 (+https://brollant.com) eventbrite-api"
-EVENT_ID = re.compile(r"(?:tickets-|/e/)(\d{9,})(?:[/?#]|$)")
+# El id es el número final de la ruta /e/…: «…-tickets-123», «…-registration-123» o «/e/123».
+EVENT_ID = re.compile(r"/e/(?:[^/?#]*-)?(\d{9,})/?(?:[?#]|$)")
 
 
 class AccessDenied(RuntimeError):

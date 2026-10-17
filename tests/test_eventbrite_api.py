@@ -40,6 +40,14 @@ class FactsTests(unittest.TestCase):
         self.assertEqual(f['time'], '17:00')
 
 
+    def test_event_id_from_every_url_shape(self):
+        from src.eventbrite_api import event_id
+        self.assertEqual(event_id('https://www.eventbrite.es/e/taller-tickets-2002113526453'), '2002113526453')
+        self.assertEqual(event_id('https://www.eventbrite.com/e/dental-ce-event-oct-17-2026-registration-1999621721397'), '1999621721397')
+        self.assertEqual(event_id('https://www.eventbrite.com/e/1986216550169?aff=ebdssbdestsearch'), '1986216550169')
+        self.assertEqual(event_id('https://www.eventbrite.es/d/spain--barcelona/events/'), '')
+
+
 class JobTests(unittest.TestCase):
     def test_job_fills_time_and_price_without_touching_the_imported_record(self):
         from mvp import catalog
