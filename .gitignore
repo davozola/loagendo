@@ -22,3 +22,12 @@ data/media/
 *.key
 *.log
 tmp/
+
+# Generados en cada ejecución (se regeneran; no van al historial)
+dist/
+.wrangler/
+data/cache/
+
+# Copias de seguridad y pruebas locales (se conservan en disco, fuera de git)
+reports/*.bak-*
+reports/*.tgz
