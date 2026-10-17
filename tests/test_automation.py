@@ -87,8 +87,10 @@ class DedupeJobTests(unittest.TestCase):
         self.assertLess(names.index('duplicados-entre-fuentes'), names.index('publicar-web'))
         with tempfile.TemporaryDirectory() as folder:
             conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn)
+            import datetime as _dt
+            day = (_dt.date.today() + _dt.timedelta(days=30)).isoformat()  # relativa a hoy: el job solo mira actos futuros
             for source, id in (('venue_songkick', 'a'), ('web_conciertos_club', 'b')):
-                conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', (source, id, 'The Lemon Twigs', '2026-10-15', '2026-10-15', 'single', 'review', 'x', 'https://x.test/' + id, 'h', '{}'))
+                conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', (source, id, 'The Lemon Twigs', day, day, 'single', 'review', 'x', 'https://x.test/' + id, 'h', '{}'))
                 conn.execute('INSERT INTO source_venues VALUES (?,?,?,?,?,?,?)', (source, id, 0, 'Paral·lel 62', '', None, None))
             conn.commit()
             out = execute(conn, {'name': 'duplicados-entre-fuentes', 'kind': 'dedupe'}, Path(folder))
