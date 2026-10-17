@@ -31,3 +31,6 @@ data/cache/
 # Copias de seguridad y pruebas locales (se conservan en disco, fuera de git)
 reports/*.bak-*
 reports/*.tgz
+
+# Ficheros apartados para que David los borre a mano
+_para_borrar/
