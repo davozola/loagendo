@@ -71,7 +71,7 @@ function rangeWindow() {
 }
 
 let state = {
-  day: params.get('day') || today, cat: params.get('cat') || '', format: params.get('format') || '', district: params.get('district') || '',
+  day: params.get('day') || today, cat: params.get('cat') || '', format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
@@ -553,7 +553,13 @@ function venueView(items) {
 function renderAgenda() {
   const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
   const model = state.model = buildModel(items, win);
-  const lbl = $('includeStarted')?.parentElement?.querySelector('span'); if (lbl) lbl.textContent = L('Incluir talleres y cursos ya empezados', 'Inclou tallers i cursos ja començats');
+  // El filtro «Formato» se solapa con los botones de tipo: se retira y su apartado queda solo para los talleres ya empezados.
+  const fmt = $('formatFilter'), group = fmt?.closest('fieldset');
+  if (group && !group.dataset.v3) {
+    group.dataset.v3 = '1'; fmt.hidden = true; fmt.value = '';
+    const legend = group.querySelector('legend'); if (legend) legend.textContent = L('Talleres y cursos', 'Tallers i cursos');
+    const lbl = $('includeStarted')?.parentElement?.querySelector('span'); if (lbl) lbl.textContent = L('Incluir los ya empezados', 'Inclou els ja començats');
+  }
   if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
   else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
