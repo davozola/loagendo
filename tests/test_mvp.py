@@ -68,7 +68,7 @@ class TestCatalogAndApi(unittest.TestCase):
             code,res=self.request('GET','/api/readiness')
         self.assertEqual(code,200)
         self.assertEqual(res['events_next_days'],3)
-        self.assertIn('visible_image_coverage_percent',res); self.assertLessEqual(res['with_local_image']*0,res['with_visible_image'])
+        self.assertIn('visible_image_coverage_percent',res); self.assertEqual(res['with_visible_image'],0)  # el ejemplo no tiene imágenes
         self.assertIn(res['release_status'],('not_ready','ready_for_manual_release'))
 
     def test_detail_does_not_validate_time(self):
