@@ -388,14 +388,14 @@ function status(a, now) {
 const CHIPS = [
   {k: 'fixed', label: () => L('Empiezan a una hora', 'Comencen a una hora'), desc: () => L('Conciertos, funciones, charlas', 'Concerts, funcions, xerrades'), mark: 'dot'},
   {k: 'wide', label: () => L('Horario amplio', 'Horari ampli'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais'), mark: 'bar'},
-  {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar'), desc: () => L('Hoy, pero la fuente no da la hora', 'Avui, però la font no en dona l\'hora'), mark: 'dash'},
   {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`), mark: ''},
+  {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar'), desc: () => '', mark: 'dash'},
 ];
 state.show = {fixed: true, wide: false, tbc: true, soon: false};
 try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
 function chipsHtml(counts) {
-  return `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span><span class="ag-chip-desc">${esc(c.desc())}</span></button>`).join('')}</div>`;
+  return `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
 }
 
 /* ---------- modelo ---------- */

@@ -300,3 +300,4 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
   .ev .save{width:36px;height:36px;flex-basis:36px}
   .ag-chip{min-height:56px;padding:8px 11px}.ag-chip-top{font-size:13px}.ag-chip-desc{font-size:11px}
 }
+.ag-chip.c-tbc{justify-content:center}
