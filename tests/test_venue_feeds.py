@@ -197,3 +197,32 @@ class WpFullCalendarTests(unittest.TestCase):
             self.assertIn('20:30', json.dumps(raw))
             self.assertEqual(conn.execute("SELECT count(*) FROM media_assets WHERE source='venue_helio'").fetchone()[0], 1)
             catalog.invalidate_cache(); conn.close()
+
+
+class OnlineEventTests(unittest.TestCase):
+    def test_online_detection(self):
+        from src.venue_feeds import is_online_event
+        self.assertTrue(is_online_event({'eventAttendanceMode': 'https://schema.org/OnlineEventAttendanceMode'}))
+        self.assertTrue(is_online_event({'location': {'@type': 'VirtualLocation', 'url': 'https://zoom.us/x'}}))
+        self.assertFalse(is_online_event({'eventAttendanceMode': 'https://schema.org/MixedEventAttendanceMode', 'location': [{'@type': 'Place'}, {'@type': 'VirtualLocation'}]}))
+        self.assertFalse(is_online_event({'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode', 'location': {'@type': 'Place'}}))
+        self.assertFalse(is_online_event(None))
+
+    def test_archived_online_events_are_excluded_with_a_reason_and_never_deleted(self):
+        import json, tempfile
+        from pathlib import Path
+        from src.pipeline import connect
+        from mvp import catalog
+        from src.venue_feeds import exclude_online_events, ONLINE_REASON
+        with tempfile.TemporaryDirectory() as folder:
+            conn = connect(Path(folder) / 'o.sqlite3'); catalog.initialize(conn)
+            rows = [('on', 'https://schema.org/OnlineEventAttendanceMode'), ('off', 'https://schema.org/OfflineEventAttendanceMode'), ('kept', 'https://schema.org/OnlineEventAttendanceMode')]
+            for rid, mode in rows:
+                conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('venue_eventbrite', rid, rid, '2026-11-01', '2026-11-01', 'single', 'review', 'x', '', 'h', json.dumps({'item': {'eventAttendanceMode': mode}})))
+            conn.execute("INSERT INTO publication_decisions(source,id,status,decided_at) VALUES ('venue_eventbrite','kept','published','2026-10-17')")
+            conn.commit()
+            self.assertEqual(exclude_online_events(conn), {'newly_excluded': 1, 'flagged': 1})
+            self.assertEqual(exclude_online_events(conn), {'newly_excluded': 0, 'flagged': 0})  # idempotente
+            states = dict(conn.execute("SELECT id,eligibility FROM source_records"))
+            self.assertEqual(states, {'on': 'exclude', 'off': 'review', 'kept': 'review'})
+            self.assertEqual(conn.execute("SELECT issue FROM review_flags WHERE id='on'").fetchone()[0], ONLINE_REASON)

@@ -310,6 +310,8 @@ def record_from_jsonld(venue, node, page_url):
     alerts = ["VENUE_SCHEMA_ORG_EVENT", "SCHEDULE_FROM_STRUCTURED_DATA"] + (["THIRD_PARTY_TICKETING_LISTING"] if venue.get("type") in ("ticketing", "aggregator") else [])
     if "Cancelled" in status or "Postponed" in status:
         eligibility = "exclude"; alerts.append("EVENT_STATUS_" + status.split("/")[-1].upper())
+    if is_online_event(node):
+        eligibility = "exclude"; alerts.append(ONLINE_REASON)
     if not price_text: alerts.append("NO_PRICE_TEXT")
     description = _text(node.get("description"))
     types = node.get("@type"); types = [str(t).split("/")[-1] for t in (types if isinstance(types, list) else [types]) if t]
@@ -473,6 +475,38 @@ def migrate_record_ids(conn, venues=None):
     return {"renamed": renamed, "excluded_duplicates": excluded, "retitled": retitled}
 
 
+ONLINE_REASON = "ONLINE_EVENT_NOT_IN_BARCELONA"
+
+
+def is_online_event(node):
+    """Evento solo en línea según sus datos schema.org: eventAttendanceMode Online
+    o lugar VirtualLocation. Los mixtos (MixedEventAttendanceMode) no se excluyen."""
+    if not isinstance(node, dict): return False
+    mode = str(node.get("eventAttendanceMode") or "")
+    locations = node.get("location"); locations = locations if isinstance(locations, list) else [locations]
+    types = {str(l.get("@type") or "") for l in locations if isinstance(l, dict)}
+    return mode.endswith("OnlineEventAttendanceMode") or (bool(types) and types <= {"VirtualLocation"})
+
+
+def exclude_online_events(conn):
+    """Marca como excluidos (sin borrar nada) los registros venue_* ya archivados
+    que son eventos solo en línea, y anota el motivo en review_flags. Idempotente;
+    no toca registros que un editor haya publicado expresamente."""
+    changed = flagged = 0
+    with conn:
+        for source, record_id, raw_text, eligibility in conn.execute("SELECT source,id,raw_json,eligibility FROM source_records WHERE source LIKE 'venue_%'").fetchall():
+            try: node = (json.loads(raw_text) or {}).get("item")
+            except (TypeError, ValueError): continue
+            if not is_online_event(node): continue
+            if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='publication_decisions'").fetchone() and \
+               (conn.execute("SELECT status FROM publication_decisions WHERE source=? AND id=?", (source, record_id)).fetchone() or ("",))[0] == "published":
+                continue
+            flagged += conn.execute("INSERT OR IGNORE INTO review_flags VALUES (?,?,?)", (source, record_id, ONLINE_REASON)).rowcount
+            if eligibility != "exclude":
+                conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source=? AND id=?", (source, record_id)); changed += 1
+    return {"newly_excluded": changed, "flagged": flagged}
+
+
 def sync_enabled(conn, venues=None, fetcher=fetch, timeout=25, census_path=CENSUS_PATH):
     venues = venues if venues is not None else load_venues()
     # The census may have found the real programme page; use it unless the
@@ -483,4 +517,5 @@ def sync_enabled(conn, venues=None, fetcher=fetch, timeout=25, census_path=CENSU
     migration = migrate_record_ids(conn, venues)
     results = [sync_venue(conn, venue, fetcher, timeout) for venue in venues if venue.get("enabled")]
     status = "completed" if all(r["status"] == "completed" for r in results) else "failed"
-    return {"status": status, "venues": results, "rows_received": sum(r["rows_received"] for r in results), "rows_mutated": sum(r["rows_mutated"] for r in results), "id_migration": migration}
+    online = exclude_online_events(conn)
+    return {"status": status, "venues": results, "rows_received": sum(r["rows_received"] for r in results), "rows_mutated": sum(r["rows_mutated"] for r in results), "id_migration": migration, "online_excluded": online}

@@ -112,7 +112,7 @@ def records_due(conn, today=None, limit=300):
     recheck = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=RECHECK_DAYS)).isoformat(timespec="seconds")
     return conn.execute("""SELECT r.id, r.source_url, r.start_date FROM source_records r
       LEFT JOIN source_enrichments e ON e.source=r.source AND e.id=r.id
-      WHERE r.source=? AND r.end_date>=? AND r.source_url LIKE '%eventbrite.%'
+      WHERE r.source=? AND r.end_date>=? AND r.source_url LIKE '%eventbrite.%' AND r.eligibility<>'exclude'
         AND (e.id IS NULL OR COALESCE(e.schedule_parser_version,0)<? OR COALESCE(e.schedule_checked_at,'')<?)
       ORDER BY r.start_date, r.id LIMIT ?""", (SOURCE, today, PARSER_VERSION, recheck, limit)).fetchall()
 
@@ -120,6 +120,8 @@ def records_due(conn, today=None, limit=300):
 def enrich_eventbrite(conn, limit=300, *, token=None, fetcher=None, today=None, delay_seconds=0.3, timeout=20):
     from src.guia_detail import initialize as init_enrichments
     init_enrichments(conn)
+    from src.venue_feeds import exclude_online_events
+    online = exclude_online_events(conn)  # barato e idempotente: los eventos en línea no se consultan ni se publican
     token = token if token is not None else load_token()
     if not token: return {"status": "skipped", "reason": "Falta EVENTBRITE_TOKEN en .env"}
     fetch = fetcher or (lambda eid: fetch_event(eid, token, timeout))
@@ -150,5 +152,5 @@ def enrich_eventbrite(conn, limit=300, *, token=None, fetcher=None, today=None, 
               (SOURCE, record_id, now, json.dumps(stored, ensure_ascii=False)))
         if body: done += 1
         timed += bool(facts["time"]); priced += bool(facts["price_text"]); mismatched += facts.get("date_matches") is False
-    return {"status": "completed", "attempted": done + failed, "enriched": done, "failed": failed, "with_time": timed,
+    return {"status": "completed", "online_excluded": online, "attempted": done + failed, "enriched": done, "failed": failed, "with_time": timed,
             "with_price": priced, "date_mismatch_no_time": mismatched, "errors": errors}
