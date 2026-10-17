@@ -447,7 +447,7 @@ function whenCell(e) {
   if (a.kind === 'timed') {
     const more = (st.rest || []).length, n = a.times.length;
     let note = '';
-    if (st.state === 'soon') note = st.in <= 1 ? L('empieza ahora', 'comença ara') : `${L('en', 'd\'aquí a')} ${st.in} min`;
+    if (st.state === 'soon') note = st.in <= 1 ? L('ahora', 'ara') : `${L('en', 'd\'aquí a')} ${st.in} min`;
     else if (st.state === 'started') note = `${L('empezó hace', 'va començar fa')} ${st.ago} min`;
     else if (st.state === 'past') note = L('ya empezó', 'ja ha començat');
     const also = n > 1 && more ? `<span class="w-also">${L('después', 'després')} ${st.rest.slice(0, 2).map(clock).join(' · ')}${more > 2 ? '…' : ''}</span>` : '';
