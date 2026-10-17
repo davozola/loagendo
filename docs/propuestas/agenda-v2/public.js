@@ -451,7 +451,7 @@ function whenCell(e) {
   if (a.kind === 'timed') {
     const multi = a.times.length > 1 || a.season;
     let note = '', cls = '';
-    if (a.season) { note = L('temporada · confirma el pase de hoy', 'temporada · confirma el passi d\'avui'); cls = 'hint' }
+    if (a.season) { note = L('temporada · confirma el pase', 'temporada · confirma el passi'); cls = 'hint' }
     else if (st.state === 'soon') { note = st.in <= 1 ? L('ahora', 'ara') : `${L('en', 'd\'aquí a')} ${st.in} min`; cls = 'urgent' }
     else if (st.state === 'started') { note = `${L('empezó hace', 'va començar fa')} ${st.ago} min`; cls = 'urgent' }
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia'); cls = 'hint' }
@@ -571,8 +571,27 @@ function renderAgenda() {
     : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans')}</b> · ${esc(win.label)}`;
   const extra = [t(state.cat), t(state.sub), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
   $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
-  stick();
+  stick(); mountFilterUi();
 }
+// Móvil: pie fijo en el panel de filtros («Ver N planes» cierra y deja claro que ya están aplicados)
+// y botón flotante «Filtros» al alcance del pulgar mientras se recorre la agenda.
+function mountFilterUi() {
+  if (!$('filtersFoot')) {
+    const foot = document.createElement('div'); foot.id = 'filtersFoot'; foot.className = 'filters-foot';
+    foot.innerHTML = `<button id="filtersClear" class="filters-clear" type="button">${L('Limpiar', 'Esborra')}</button><button id="filtersApply" class="filters-apply" type="button"></button>`;
+    $('filters').append(foot);
+    const fab = document.createElement('button'); fab.id = 'fabFilters'; fab.className = 'fab-filters'; fab.type = 'button'; fab.hidden = true;
+    fab.innerHTML = `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>${L('Filtros', 'Filtres')}</span><b hidden></b>`;
+    document.body.append(fab);
+    if ('IntersectionObserver' in window) new IntersectionObserver(([en]) => { fab.dataset.inAgenda = en.isIntersecting ? '1' : ''; syncFab() }, {rootMargin: '-120px 0px -40% 0px'}).observe($('agenda'));
+    document.addEventListener('scroll', syncFab, {passive: true});
+  }
+  const n = state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
+  $('filtersApply').textContent = `${L('Ver', 'Mostra')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans')}`;
+  const active = activeFilterList().length, b = $('fabFilters').querySelector('b'); b.hidden = !active; b.textContent = active;
+  syncFab();
+}
+function syncFab() { const fab = $('fabFilters'); if (!fab) return; const toggle = $('openFilters').getBoundingClientRect(); fab.hidden = !(fab.dataset.inAgenda && toggle.bottom < 0 && !$('filters').classList.contains('open')) }
 function stick() { const h = document.querySelector('.site-header'); if (h) document.documentElement.style.setProperty('--stick', h.getBoundingClientRect().height + 'px') }
 function stableRender() {
   const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
@@ -730,7 +749,9 @@ document.addEventListener('click', e => {
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
-  if (button.id === 'openFilters') { openDrawer(true); return }
+  if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
+  if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
+  if (button.id === 'filtersClear') { ['query','cat','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
   if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','format','free','hours','district'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { clearFilter(button.dataset.clear); refresh(); return }
