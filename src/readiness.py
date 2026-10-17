@@ -52,11 +52,21 @@ def report(conn, *, today=None, horizon_days=30):
     media=set()
     if _table(conn,'media_assets'):
         media={(s,i) for s,i in conn.execute("SELECT DISTINCT source,id FROM media_assets WHERE local_path IS NOT NULL")}
-    point=scheduled=images=0
+    # «Imagen visible» = lo que publica la web: imagen propia autorizada y en disco,
+    # o la foto del recinto como respaldo. with_local_image se mantiene igual.
+    authorized=set()
+    if _table(conn,'media_assets'):
+        authorized={(s,i) for s,i in conn.execute("SELECT DISTINCT source,id FROM media_assets WHERE local_path IS NOT NULL AND rights_status='authorized'")}
+    from src.place_images import local_place_images, place_of
+    venue_photos=local_place_images(conn)
+    point=scheduled=images=visible=0
     for source,record_id,_,start,end in rows:
         item=by_source[source]
         if (source,record_id) in media:
             images+=1; item['images']+=1
+        place=place_of(raw_by_key.get((source,record_id),{}),source)
+        if (source,record_id) in authorized or (place and place[0] in venue_photos):
+            visible+=1; item['visible_images']=item.get('visible_images',0)+1
         if start==end: point+=1
     schedule_keys=set(candidate)
     if _table(conn,'source_enrichments'):
@@ -86,6 +96,7 @@ def report(conn, *, today=None, horizon_days=30):
         'events_next_days':total,'excluded_from_public':excluded,'duplicate_candidate_pairs_in_window':duplicates, 'window':{'from':today.isoformat(),'to':until.isoformat(),'days':horizon_days},
         'with_description':description, 'description_coverage_percent':coverage(description,total),
         'with_local_image':images, 'local_image_coverage_percent':coverage(images,total),
+        'with_visible_image':visible, 'visible_image_coverage_percent':coverage(visible,total),
         'point_events':point, 'point_events_with_time':scheduled,
         'point_time_coverage_percent':coverage(scheduled,point),
         'by_source':dict(sorted(by_source.items())), 'unhealthy_sources':health,
