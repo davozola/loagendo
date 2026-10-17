@@ -14,7 +14,16 @@ from src.network import tls_context
 
 # Also versions the description selection. GuiaBCN exposes a metadata-only
 # meta description ("Quan / On") alongside the actual body copy.
-SCHEDULE_PARSER_VERSION = 4
+SCHEDULE_PARSER_VERSION = 5  # 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
+
+NAVIGATION_TEXT = re.compile(r"^\s*(?:per districte|por distrito|by district)\b|selecciona el districte|selecciona el distrito", re.I)
+
+
+def usable_description(text):
+    """False for page chrome captured as if it were prose (district menu of
+    GuiaBCN pages). Archived rows are kept as they are; readers use this."""
+    return bool(text and text.strip()) and not NAVIGATION_TEXT.search(text)
+
 
 class MetaParser(HTMLParser):
     def __init__(self):
@@ -60,9 +69,12 @@ class MetaParser(HTMLParser):
         # GuiaBCN puts date, venue and telephone fields in the HTML meta tag.
         # That is useful provenance but not a readable event description;
         # favour the first substantive body paragraph instead.
-        if re.match(r'^\s*Quan\s*:',meta,re.I):
-            return (self._content_paragraphs or self._paragraphs or [''])[0]
-        return meta or (self._content_paragraphs or self._paragraphs or [''])[0]
+        # Fuera de `.cos` solo hay navegación y filtros (p. ej. «Per districte
+        # Selecciona el districte…»): sin bloque de contenido no hay descripción.
+        body=next((p for p in self._content_paragraphs if usable_description(p)),'')
+        if re.match(r'^\s*Quan\s*:',meta,re.I) or not usable_description(meta):
+            return body
+        return meta or body
 
     @property
     def schedule(self):

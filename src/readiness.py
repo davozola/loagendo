@@ -16,6 +16,9 @@ def _table(conn, name):
     return bool(conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone())
 
 
+from src.guia_detail import usable_description
+
+
 def report(conn, *, today=None, horizon_days=30):
     today=today or dt.date.today()
     until=today + dt.timedelta(days=horizon_days)
@@ -41,7 +44,7 @@ def report(conn, *, today=None, horizon_days=30):
             item=by_source[source]
             # An official page description upgrades coverage only if the API
             # did not already supply one.
-            if text and len(text.strip()) >= 40:
+            if text and len(text.strip()) >= 40 and usable_description(text):
                 raw=raw_by_key.get((source,record_id),{})
                 if not source_description(raw,source).strip(): description+=1; item['descriptions']+=1
             if schedule and item['point_events']:

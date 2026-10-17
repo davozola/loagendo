@@ -559,11 +559,14 @@ class Prefetch:
             for s,i,desc,st,stx,links in conn.execute(f'SELECT source,id,description,{schedules}links_json FROM source_enrichments'):
                 try: parsed=json.loads(links)
                 except (TypeError,json.JSONDecodeError): parsed=[]
-                self.enrichment[(s,i)]=(desc or '',st or '',stx or '',parsed if isinstance(parsed,list) else [])
+                self.enrichment[(s,i)]=(desc if usable_description(desc) else '',st or '',stx or '',parsed if isinstance(parsed,list) else [])
         if 'source_detail_facts' in tables:
             for s,i,facts in conn.execute('SELECT source,id,facts_json FROM source_detail_facts'):
                 try: self.facts[(s,i)]=json.loads(facts) or {}
                 except (TypeError,json.JSONDecodeError): self.facts[(s,i)]={}
+
+
+from src.guia_detail import usable_description  # noqa: E402
 
 
 def enrichment(conn, source, record_id, prefetch=None):
@@ -577,7 +580,7 @@ def enrichment(conn, source, record_id, prefetch=None):
     # permits opening a pre-migration database safely.
     try: links=json.loads(row[-1])
     except (TypeError,json.JSONDecodeError): links=[]
-    return (row[0] or '',row[1] or '',row[2] or '',links if isinstance(links,list) else [])
+    return (row[0] if usable_description(row[0]) else '',row[1] or '',row[2] or '',links if isinstance(links,list) else [])
 
 
 def detail_facts(conn, source, record_id, prefetch=None):
