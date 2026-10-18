@@ -182,18 +182,34 @@
           ]
         },
         {
-          "label": "Música, danza y teatro",
+          "label": "Baile",
           "match": [
-            "Cursos i tallers >> Música, dansa, teatre, circ",
-            "Agenda >> Cursos i tallers >> Cant, música, dansa i balls",
-            "Agenda >> Cursos i tallers >> Teatre i mim",
-            "Especialitats AG >> Música",
+            "Cursos i tallers >> Música, dansa, teatre, circ >> Balls i danses",
             "Especialitats AG >> Dansa, ballet i balls de saló",
-            "Especialitats AG >> Cultura i arts >> Teatre",
-            "Especialitats AG >> Cultura i arts >> Circ",
-            "Especialitats AG >> Cultura i arts >> Expressió corporal",
-            "Especialitats AG >> Esports >> Balls esportius"
+            "Especialitats AG >> Esports >> Balls esportius",
+            "Especialitats AG >> Cultura i arts >> Expressió corporal"
           ]
+        },
+        {
+          "label": "Teatro y circo",
+          "match": [
+            "Cursos i tallers >> Música, dansa, teatre, circ >> Teatre i mim",
+            "Cursos i tallers >> Música, dansa, teatre, circ >> Circ",
+            "Agenda >> Cursos i tallers >> Teatre i mim",
+            "Especialitats AG >> Cultura i arts >> Teatre",
+            "Especialitats AG >> Cultura i arts >> Circ"
+          ]
+        },
+        {
+          "label": "Música",
+          "match": [
+            "Cursos i tallers >> Música, dansa, teatre, circ >> Música",
+            "Cursos i tallers >> Música, dansa, teatre, circ >> Cant",
+            "Especialitats AG >> Música",
+            "Agenda >> Cursos i tallers >> Cant, música, dansa i balls",
+            "Cursos i tallers >> Música, dansa, teatre, circ"
+          ],
+          "note": "Las dos últimas rutas mezclan música, danza y teatro: solo deciden si la ficha no trae una ruta más precisa (Baile y Teatro y circo se miran antes)."
         },
         {
           "label": "Cuerpo y salud",
@@ -248,5 +264,8 @@
         }
       ]
     }
-  }
+  },
+  "changes": [
+    "18-10-2026: «Música, danza y teatro» de Talleres se separa en Baile, Teatro y circo y Música, a partir de las rutas oficiales hijas."
+  ]
 }

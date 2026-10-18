@@ -294,7 +294,9 @@ def record_from_jsonld(venue, node, page_url):
     if isinstance(offers, dict):
         price = offers.get("price"); currency = offers.get("priceCurrency") or ""
         if price not in (None, ""): price_text = f"{price} {currency}".strip()
-        if str(offers.get("lowPrice") or "") and str(offers.get("highPrice") or ""): price_text = f"{offers['lowPrice']}–{offers['highPrice']} {currency}".strip()
+        if str(offers.get("lowPrice") or "") and str(offers.get("highPrice") or ""):
+            low, high = str(offers["lowPrice"]), str(offers["highPrice"])
+            price_text = (f"{low} {currency}" if low == high else f"{low}–{high} {currency}").strip()
     tickets_url = urljoin(page_url, str(offers.get("url"))) if isinstance(offers, dict) and offers.get("url") else ""
     image = node.get("image")
     if isinstance(image, list): image = image[0] if image else ""
@@ -515,7 +517,11 @@ def sync_enabled(conn, venues=None, fetcher=fetch, timeout=25, census_path=CENSU
     except (OSError, json.JSONDecodeError, TypeError): suggested = {}
     venues = [{**v, "agenda_url": v.get("agenda_url") or suggested.get(v["slug"]) or v["url"]} for v in venues]
     migration = migrate_record_ids(conn, venues)
-    results = [sync_venue(conn, venue, fetcher, timeout) for venue in venues if venue.get("enabled")]
+    # Una ticketera con API propia configurada (clave en .env) ya no se lee
+    # por su JSON-LD: lo hace su conector (p. ej. src/ticketmaster_api.py).
+    from src.ticketmaster_api import load_key as ticketmaster_key
+    api_ready = {"ticketmaster": bool(ticketmaster_key())}
+    results = [sync_venue(conn, venue, fetcher, timeout) for venue in venues if venue.get("enabled") and not api_ready.get(venue.get("api", ""), False)]
     status = "completed" if all(r["status"] == "completed" for r in results) else "failed"
     online = exclude_online_events(conn)
     return {"status": status, "venues": results, "rows_received": sum(r["rows_received"] for r in results), "rows_mutated": sum(r["rows_mutated"] for r in results), "id_migration": migration, "online_excluded": online}

@@ -502,8 +502,18 @@
       "slug": "ticketmaster_es",
       "name": "Ticketmaster España",
       "type": "ticketing",
+      "api": "ticketmaster",
       "url": "https://www.ticketmaster.es/city/barcelona/197",
       "enabled": true
+    },
+    {
+      "slug": "xceed",
+      "name": "Xceed",
+      "type": "ticketing",
+      "url": "https://xceed.me/es/barcelona/events",
+      "api": "xceed",
+      "enabled": false,
+      "note": "Se lee con src/xceed_api.py (trabajo api-xceed), no por JSON-LD"
     },
     {
       "slug": "fever",
@@ -517,7 +527,9 @@
       "name": "DICE",
       "type": "ticketing",
       "url": "https://dice.fm/browse/barcelona",
-      "enabled": false
+      "api": "dice_sitemap",
+      "enabled": false,
+      "note": "Se lee con src/dice_sitemap.py (trabajo web-dice): la página de ciudad no lleva JSON-LD, las fichas de evento sí"
     },
     {
       "slug": "wegow",

@@ -274,7 +274,8 @@ class FestivalTests(unittest.TestCase):
             conn.commit(); catalog.invalidate_cache()
             out = catalog.query_events(conn, day='2026-11-07', public=True)
             mira = next(e for e in out['items'] if e['id'] == '1')
-            self.assertEqual((mira['time'], mira['time_source'], mira['time_label']), ('17:30', 'source_schedule_text', '17:30'))
+            # Horario oficial del día (18-10-2026): empieza a las 17:30 y la etiqueta dice también el cierre.
+            self.assertEqual((mira['time'], mira['time_source'], mira['time_label']), ('17:30', 'official_schedule_by_day', '17:30–05:30'))
             self.assertTrue(catalog.is_festival(mira)); self.assertGreater(catalog.featured_score(mira, '2026-11-06')[0], catalog.featured_score(next(e for e in out['items'] if e['id'] == '2'), '2026-11-06')[0] + 30)
             both = catalog.query_events(conn, day='2026-11-06', public=True)
             self.assertEqual([e['id'] for e in both['items']], ['1', '3', '2'])  # timed acts by time, the long cycle last

@@ -1,0 +1,333 @@
+"""Horario oficial de GuiaBCN, fila a fila y día a día.
+
+La API de listado de GuiaBCN solo trae fechas. El horario está en el detalle
+(`pg=detall`), en `timetable.horari`: una fila por tramo, con `dies`, `hores`,
+`preu`, `observacions` y a veces `periode`. Cada fila se interpreta por
+separado y solo se asigna una hora a un día cuando días y horas se leen sin
+ambigüedad; lo que no se entiende se deja sin hora (nunca se rellena).
+"""
+from __future__ import annotations
+import datetime as dt
+import html
+import re
+
+# El orden de los parámetros importa: con id_doc al final el servidor responde
+# 406 (comprobado el 18-10-2026; la primera pasada del motor cayó entera a la
+# página web por esto).
+DETAIL_API = 'https://apinasia.bcn.cat/services/asia/retroapiguiabcn/?pg=detall&id_doc={id}&xout=json&idma=ca'
+ROW_FIELDS = ('dies', 'hores', 'preu', 'observacions', 'periode')
+
+MONTHS = {'gener': 1, 'enero': 1, 'febrer': 2, 'febrero': 2, 'març': 3, 'marzo': 3, 'abril': 4, 'maig': 5, 'mayo': 5,
+          'juny': 6, 'junio': 6, 'juliol': 7, 'julio': 7, 'agost': 8, 'agosto': 8, 'setembre': 9, 'septiembre': 9,
+          'octubre': 10, 'novembre': 11, 'noviembre': 11, 'desembre': 12, 'diciembre': 12}
+WEEKDAYS = {'dilluns': 0, 'lunes': 0, 'dimarts': 1, 'martes': 1, 'dimecres': 2, 'miércoles': 2, 'miercoles': 2,
+            'dijous': 3, 'jueves': 3, 'divendres': 4, 'viernes': 4, 'dissabte': 5, 'sábado': 5, 'sabado': 5,
+            'diumenge': 6, 'domingo': 6}
+_MONTH = '(' + '|'.join(sorted(MONTHS, key=len, reverse=True)) + ')'
+_WEEKDAY = '(' + '|'.join(sorted(WEEKDAYS, key=len, reverse=True)) + r')s?'
+_OF = r"(?:\s+(?:de\s+|d['’]\s*)|\s+)"
+# Palabras de enlace que pueden quedar entre días u horas sin cambiar su sentido.
+_DAY_GLUE = re.compile(r"\b(?:i|y|and|de|del|d['’]|dies|dia|els|les|los|las|el|la|al|a|cada|tots|todos)\b|[,;.:/\-–]", re.I)
+_HOUR_GLUE = re.compile(r"\b(?:i|y|and|a|de|les|las|la|hores|horas|h)\b|[,;.:\-–()]", re.I)
+
+
+def plain(markup):
+    """Texto de una celda de la API (HTML pequeño) en una línea."""
+    text = re.sub(r'<br\s*/?>|</p>|</li>', ' ', str(markup or ''), flags=re.I)
+    return ' '.join(html.unescape(re.sub(r'<[^>]+>', ' ', text)).replace('\xa0', ' ').split())
+
+
+def notes(markup):
+    """Precio u observaciones: cada párrafo es una indicación distinta
+    («Cal inscripció prèvia», «Places limitades»), se separan con «·»."""
+    parts = re.split(r'<br\s*/?>|</p>|</li>|</div>', str(markup or ''), flags=re.I)
+    return ' · '.join(dict.fromkeys(p for p in (plain(x) for x in parts) if p))
+
+
+def api_rows(detail):
+    """Filas `timetable.horari` de una respuesta `pg=detall`, como texto plano.
+
+    Devuelve None si la respuesta no es un detalle reconocible (para que quien
+    llama recurra a la página web) y [] si es un detalle sin horario."""
+    try:
+        item = detail['page']['central']['detall']
+    except (TypeError, KeyError):
+        return None
+    item = item.get('item', item) if isinstance(item, dict) else None
+    if not isinstance(item, dict):
+        return None
+    horari = (item.get('timetable') or {}).get('horari') if isinstance(item.get('timetable'), dict) else None
+    if isinstance(horari, dict):
+        horari = [horari]
+    rows = []
+    for raw in horari or []:
+        if not isinstance(raw, dict):
+            continue
+        row = {key: (notes(raw.get(key)) if key in ('preu', 'observacions') else plain(raw.get(key))) for key in ROW_FIELDS}
+        row = {key: value for key, value in row.items() if value}
+        if row:
+            rows.append(row)
+    return rows
+
+
+LINK_LABELS = {'web': 'Web del evento', 'web inscripcions': 'Inscripciones', "web venda d'entrades": 'Entradas'}
+
+
+def api_links(detail):
+    """Enlaces que la ficha oficial declara (`interestinfo`: web del evento,
+    inscripciones, entradas). Son los únicos enlaces útiles: el resto de la
+    página es menú del Ajuntament."""
+    try: item = detail['page']['central']['detall']
+    except (TypeError, KeyError): return []
+    item = item.get('item', item) if isinstance(item, dict) else {}
+    info = (item.get('interestinfo') or {}).get('item') if isinstance(item.get('interestinfo'), dict) else None
+    out = []
+    for entry in (info if isinstance(info, list) else [info] if info else []):
+        url = str((entry or {}).get('interinfo') or '').strip()
+        if url.startswith(('https://', 'http://')):
+            label = str(entry.get('label') or '').strip()
+            out.append({'label': LINK_LABELS.get(label.casefold(), label or 'Web del evento'), 'url': url})
+    return out
+
+
+def _clock(hour, minute):
+    hour, minute = int(hour), int(minute or 0)
+    return f'{hour:02d}:{minute:02d}' if hour <= 23 and minute <= 59 else None
+
+
+def parse_hours(text):
+    """'de 09.00 h a 18.00 h' → {'ranges': [('09:00','18:00')], 'sessions': []}.
+
+    'a les 17.30 h i a les 20.30 h' → sesiones 17:30 y 20:30. Si queda texto que
+    no es hora ni enlace («portes», «aprox.», «matí»…), devuelve None."""
+    source = str(text or '').casefold()
+    if not source.strip():
+        return None
+    source = re.sub(r'\([^)]*\)', ' ', source)  # «a les 10.30 h (anglès)»
+    ranges, sessions = [], []
+    range_re = re.compile(r"(?:\bdes\s+de\s+les\s+|\bde\s+(?:les\s+)?|\bd['’]\s*)(\d{1,2})(?:[.:](\d{2}))?\s*(h\b)?\s*(?:a|fins\s+a)\s+(?:les\s+)?(\d{1,2})(?:[.:](\d{2}))?\s*(h\b)?")
+    def take_range(match):
+        if not (match.group(2) or match.group(5) or match.group(3) or match.group(6)):
+            return match.group(0)  # «de 10 a 14» sin minutos ni «h»: podría no ser hora
+        start, end = _clock(match.group(1), match.group(2)), _clock(match.group(4), match.group(5))
+        if not start or not end:
+            return match.group(0)
+        ranges.append((start, end)); return ' '
+    rest = range_re.sub(take_range, source)
+    def take_session(match):
+        value = _clock(match.group(1) or match.group(3), match.group(2) or match.group(4))
+        if not value:
+            return match.group(0)
+        if value not in sessions: sessions.append(value)
+        return ' '
+    rest = re.sub(r'\b(\d{1,2})[.:](\d{2})\s*h?\b|\b(\d{1,2})()\s*h\b', take_session, rest)
+    if (not ranges and not sessions) or _HOUR_GLUE.sub(' ', rest).strip():
+        return None
+    return {'ranges': ranges, 'sessions': sessions}
+
+
+def hours_label(parsed):
+    """Etiqueta pública: '09:00–18:00', '17:30 · 20:30' o ambas cosas."""
+    bits = [f'{a}–{b}' for a, b in parsed['ranges']] + list(parsed['sessions'])
+    return ' · '.join(bits)
+
+
+def _span(start, end):
+    day = start
+    while day <= end:
+        yield day
+        day += dt.timedelta(days=1)
+
+
+def _dated(day, month, start, end):
+    """El año lo da el propio evento: solo vale una fecha dentro de su rango."""
+    for year in sorted({start.year, end.year}):
+        try:
+            value = dt.date(year, month, day)
+        except ValueError:
+            continue
+        if start <= value <= end:
+            return value
+    return None
+
+
+def parse_days(text, start, end):
+    """Días del evento a los que se refiere una fila, o None si no está claro.
+
+    Entiende fechas sueltas o en lista («17 octubre, 18 octubre i 19 octubre»,
+    «12 i 19 de desembre»), rangos («del 3 al 7 de novembre»), fechas
+    numéricas (17/10/2026), días de la semana («Dissabte», «Dilluns i dimecres»,
+    «De dilluns a divendres») y «cada dia». Cualquier palabra de más
+    (festius, excepte, vigílies…) hace que la fila no se asigne."""
+    source = str(text or '').casefold().strip()
+    if not source or start is None or end is None or end < start:
+        return None
+    # «Dilluns excepte 12 octubre»: las fechas exceptuadas se restan; si la
+    # excepción no son fechas concretas (festius, vacances…), no se asigna.
+    base, _, excluded = source.partition('excepte')
+    if excluded:
+        removed = parse_days(excluded, start, end) if not re.search(r'[a-z]', re.sub(_MONTH + '|' + _DAY_GLUE.pattern, ' ', excluded)) else None
+        included = parse_days(base, start, end)
+        return None if removed is None or included is None else included - removed
+    rest, dates, weekdays = source, set(), set()
+    # «Dissabte 24 d'octubre»: ese día de la semana solo confirma la fecha.
+    confirming = {WEEKDAYS[m.group(1)] for m in re.finditer(r'\b' + _WEEKDAY + r',?\s+(?=\d)', rest)}
+    rest = re.sub(r'\b' + _WEEKDAY + r',?\s+(?=\d)', ' ', rest)
+    if re.fullmatch(r"(?:cada\s+dia|tots\s+els?\s+dies|todos\s+los\s+d[ií]as|diari(?:ament)?)\.?", source):
+        return set(_span(start, end))
+    def numeric(match):
+        year = int(match.group(3)) if match.group(3) else None
+        if year is not None and year < 100: year += 2000
+        if year:
+            try: value = dt.date(year, int(match.group(2)), int(match.group(1)))
+            except ValueError: return match.group(0)
+            if not start <= value <= end: raise _Unclear
+        else:
+            value = _dated(int(match.group(1)), int(match.group(2)), start, end)
+            if not value: raise _Unclear
+        dates.add(value); return ' '
+    def date_range(match):
+        first_month = MONTHS[match.group(2)] if match.group(2) else MONTHS[match.group(4)]
+        a, b = _dated(int(match.group(1)), first_month, start, end), _dated(int(match.group(3)), MONTHS[match.group(4)], start, end)
+        if not a or not b or b < a: raise _Unclear
+        dates.update(_span(a, b)); return ' '
+    def weekday_range(match):
+        a, b = WEEKDAYS[match.group(1)], WEEKDAYS[match.group(2)]
+        weekdays.update(range(a, b + 1) if a <= b else [*range(a, 7), *range(0, b + 1)]); return ' '
+    try:
+        rest = re.sub(r'\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b', numeric, rest)
+        rest = re.sub(r"\b(?:del?\s+|de\s+l['’]\s*)(\d{1,2})(?:" + _OF + _MONTH + r")?\s+(?:al?|a\s+l['’])\s*(\d{1,2})" + _OF + _MONTH + r'\b', date_range, rest)
+        rest = re.sub(r"\b(?:de|del|des\s+de)\s+" + _WEEKDAY + r"\s+(?:a|al|fins\s+a)\s+" + _WEEKDAY + r'\b', weekday_range, rest)
+        # Listas: «12 i 19 de desembre» toma el mes del siguiente que se nombra.
+        pending = []
+        for match in re.finditer(r'\b(\d{1,2})\b(?:' + _OF + _MONTH + r'\b)?', rest):
+            pending.append(int(match.group(1)))
+            if match.group(2):
+                for day in pending:
+                    value = _dated(day, MONTHS[match.group(2)], start, end)
+                    if not value: raise _Unclear
+                    dates.add(value)
+                pending = []
+        if pending: return None
+        rest = re.sub(r'\b(\d{1,2})\b(?:' + _OF + _MONTH + r'\b)?', ' ', rest)
+    except _Unclear:
+        return None
+    named = {WEEKDAYS[m.group(1)] for m in re.finditer(r'\b' + _WEEKDAY + r'\b', rest)}
+    rest = re.sub(r'\b' + _WEEKDAY + r'\b', ' ', rest)
+    if _DAY_GLUE.sub(' ', rest).strip():
+        return None
+    if confirming and any(d.weekday() not in confirming for d in dates):
+        return None
+    weekdays |= named
+    if not dates and not weekdays:
+        return None
+    # «Dijous i divendres i 31 octubre»: los días de la semana y las fechas se suman.
+    return dates | {d for d in _span(start, end) if d.weekday() in weekdays}
+
+
+class _Unclear(Exception):
+    pass
+
+
+CLOSED = re.compile(r"^\s*(?:tancat|tancada|cerrado|cerrada|closed)\b", re.I)
+
+
+def period_days(row, start, end):
+    """Días que abarca el periodo propio de una fila («Del 14 octubre a l'11
+    novembre»), o None si no es una fecha concreta («Curs escolar»)."""
+    return parse_days(row.get('periode'), start, end) if row.get('periode') else None
+
+
+def schedule_by_day(rows, start, end):
+    """{fecha ISO: etiqueta} con los días en que hay actividad.
+
+    La etiqueta es la hora del día; queda vacía ('') si ese día hay actividad
+    pero la hora no se puede afirmar (fila sin horas, o dos filas que dicen
+    horas distintas para el mismo día; las sesiones sí se suman). Un periodo
+    propio de la fila restringe sus días. Las excepciones vagas de las
+    observaciones («Excepte vacances») no se aplican: la nota se enseña en la
+    ficha."""
+    start, end = _date(start), _date(end)
+    out, origin, conflicts = {}, {}, set()
+    single_day = start is not None and start == end
+    previous_days, previous_index = None, None
+    unclear, closed = set(), set()
+    for index, row in enumerate(rows):
+        if row.get('dies'):
+            days = parse_days(row.get('dies'), start, end); group = index
+            within = period_days(row, start, end)
+            if days is not None and within is not None: days = days & within
+        else:
+            # Sin días: continúa la fila anterior (otro grupo u otra sesión el mismo día).
+            days, group = previous_days, previous_index
+        previous_days, previous_index = days, group
+        if CLOSED.match(row.get('hores') or ''):
+            closed.update(d.isoformat() for d in days or ())  # «Tots els dies: Tancat» en agosto
+            continue
+        parsed = parse_hours(row.get('hores'))
+        if days is None and single_day and not any(r.get('dies') for r in rows[1:]):
+            days = {start}  # un solo día: no hay a qué otro día atribuir la hora
+        if not parsed:
+            unclear.update(d.isoformat() for d in days or ())
+            continue
+        for day in days or ():
+            key = day.isoformat()
+            if key in conflicts: continue
+            if key not in out:
+                out[key], origin[key] = parsed, group; continue
+            previous = out[key]
+            if origin[key] != group and (previous['ranges'] or parsed['ranges']) and previous != parsed:
+                # Dos filas distintas dicen horarios distintos para el mismo día.
+                conflicts.add(key); del out[key]; continue
+            out[key] = {'ranges': sorted(set(previous['ranges']) | set(parsed['ranges'])),
+                        'sessions': sorted(set(previous['sessions']) | set(parsed['sessions']))}
+    labels = {key: hours_label(value) for key, value in out.items()}
+    labels.update({key: '' for key in (unclear | conflicts) if key not in labels})
+    return dict(sorted((k, v) for k, v in labels.items() if k not in closed))
+
+
+def _date(value):
+    if isinstance(value, dt.date): return value
+    try: return dt.date.fromisoformat(str(value)[:10])
+    except ValueError: return None
+
+
+def summary(rows, start, end):
+    """Lo que se guarda y se enseña a partir de las filas.
+
+    - ``by_day``: hora por día (lo que usan listado y ficha).
+    - ``schedule_time``: etiqueta común si todos los días comparten horario, o
+      la de la única fila; vacía si el horario cambia según el día.
+    - ``schedule_text``: el horario tal como lo publica la fuente, una parte
+      por fila («17 octubre, 18 octubre i 19 octubre: de 09.00 h a 18.00 h · …»).
+    """
+    by_day = schedule_by_day(rows, start, end)
+    labels = set(by_day.values()) - {''}
+    parsed_rows = [parse_hours(r.get('hores')) for r in rows]
+    if len(labels) == 1 and '' not in by_day.values() and (len(rows) == 1 or len({hours_label(p) for p in parsed_rows if p}) == 1):
+        schedule_time = labels.pop()
+    elif not by_day and len(rows) == 1 and parsed_rows[0]:
+        schedule_time = hours_label(parsed_rows[0])
+    else:
+        schedule_time = ''
+    if len(rows) == 1 and not rows[0].get('periode'):
+        schedule_text = rows[0].get('hores', '')
+    else:
+        # Agrupado por periodo: «Del 4 juny al 2 agost: De dimarts a dissabte d'11:00 h a 18:00 h; Diumenge …»
+        groups = []
+        for r in rows:
+            line = ' '.join(x for x in (r.get('dies', ''), r.get('hores', '')) if x) if r.get('periode') else ': '.join(x for x in (r.get('dies', ''), r.get('hores', '')) if x)
+            if groups and groups[-1][0] == r.get('periode', ''): groups[-1][1].append(line)
+            else: groups.append((r.get('periode', ''), [line]))
+        schedule_text = ' · '.join((f"{p}: " if p else '') + ('; ' if p else ' · ').join(lines) for p, lines in groups)
+    facts = {}
+    if rows:
+        if len(rows) == 1 and rows[0].get('dies'): facts['schedule_days'] = rows[0]['dies']
+        facts['schedule_hours'] = schedule_text
+        prices = list(dict.fromkeys(r['preu'] for r in rows if r.get('preu')))
+        if prices: facts['price_text'] = ' · '.join(prices)
+        # El periodo ya va dentro del horario; aquí solo las observaciones.
+        notes = list(dict.fromkeys(r['observacions'] for r in rows if r.get('observacions')))
+        if not any(r.get('periode') for r in rows[1:]) and rows[0].get('periode') and len(rows) == 1: notes.insert(0, rows[0]['periode'])
+        if notes: facts['schedule_note'] = ' · '.join(notes)
+    return {'by_day': by_day, 'schedule_time': schedule_time, 'schedule_text': schedule_text, 'facts': facts}

@@ -198,10 +198,35 @@ def source_description(raw,source):
     return value.strip() if isinstance(value,str) else ''
 
 
+def _opendata_schedule(raw, start=None, end=None):
+    from src.opendata_bcn import schedule_for
+    return schedule_for(raw or {}, start, end)
+
+
+def lineup_of(raw):
+    """Cartel declarado por la fuente: artistas (schema.org performer de salas y
+    ticketeras, cartel completo de DICE, attractions de Ticketmaster, lineup de
+    Xceed) y, si la fuente lo publica, la hora de cada uno. Nunca se deduce del título."""
+    meta=(raw or {}).get('loagendo') or {}
+    names=list(meta.get('performers') or [])
+    names+=list((meta.get('xceed') or {}).get('lineup') or [])
+    names+=[a.get('name','') for a in (meta.get('ticketmaster') or {}).get('attractions') or [] if isinstance(a,dict)]
+    times=[t for t in (meta.get('dice') or {}).get('lineup_times') or [] if isinstance(t,dict) and t.get('name') and t.get('time')]
+    seen=set(); out=[]
+    for name in names+[t['name'] for t in times]:
+        name=' '.join(str(name or '').split())
+        if name and clean(name) not in seen: seen.add(clean(name)); out.append(name)
+    return out[:80], times[:80]
+
+
 def source_time(raw,source):
     if source=='generalitat':return str((raw.get('localizaciones') or [{}])[0].get('horari') or '')
     if source=='guiabcn':return ''
-    if source=='opendatabcn_agenda':return str(opendata_normalized(raw).get('schedule_hours') or '')
+    if source=='opendatabcn_agenda':
+        # Se rehace desde la tabla archivada (filas emparejadas); el campo
+        # guardado en la sincronización puede ser del formato anterior.
+        if (raw or {}).get('timetable'): return _opendata_schedule(raw)['schedule_text']
+        return str(opendata_normalized(raw).get('schedule_hours') or '')
     if source.startswith(('web_','venue_')):return str((raw.get('normalized') or {}).get('time_text') or '')
     return str(raw.get('observacions_horari') or '')
 
@@ -314,7 +339,24 @@ def public_category(category, source='', title=''):
         and not any(token in title_text for token in ('taller','exposicio','exposicion','sessio informativa'))
     ):
         return 'Conciertos'
+    if category=='Música y vida nocturna':
+        return music_route(title_text)
     return PUBLIC_CATEGORY_MAP.get(category,'Barrio')
+
+
+# «Música y vida nocturna» de las fuentes municipales mezcla de todo (18-10-2026:
+# musicales, castanyades, talleres, contacontes…). Cada ficha va donde dice su
+# título; lo que no encaja queda en Conciertos, con su subtipo musical.
+MUSIC_ROUTES=(
+    ('Talleres', re.compile(r'\b(?:taller|tallers|curs|cursos|curso|apren|aprende|classe|clase|masterclass|workshop)\b')),
+    ('Teatro', re.compile(r'^(?:espectacle|espectaculo|musical|opera|sarsuela|zarzuela)\b|\bel musical\b|\bcabaret\b|\bteatre musical\b|\bteatro musical\b')),
+    ('Barrio', re.compile(r'\b(?:castanyada|calaveritas|ball|balls|ballada|sarau|festa|fiesta|revetlla|cercavila|sardanes|sardana|aplec|contacontes|cuentacuentos|tarda ludica|mostra solidaria)\b')),)
+
+
+def music_route(title_text):
+    for public, pattern in MUSIC_ROUTES:
+        if pattern.search(title_text): return public
+    return 'Conciertos'
 
 
 def effective_kind(source, raw, stored_kind, title, start, end):
@@ -426,7 +468,12 @@ def is_free(price, free_label):
 def public_fields(event, projection, requested_day='', schedule_time=''):
     source=event['source']
     requested=[o['time'] for o in event['occurrences'] if (not requested_day or o['date']==requested_day) and o['time']]
+    # Horario oficial por día (GuiaBCN): vale para el día pedido o, en un acto
+    # de un solo día, para ese día. Si varía según el día y no se pide ninguno,
+    # no se elige uno: la ficha muestra todas las filas.
+    day_hours=(event.get('hours_by_day') or {}).get(requested_day or (event['start'] if event['start']==event['end'] else ''))
     if requested: time,time_source=requested[0],'candidate_occurrence'
+    elif day_hours: time,time_source=first_clock_time(day_hours),'official_schedule_by_day'
     elif schedule_time: time,time_source=schedule_time,'official_detail_page'
     elif event['start']==event['end'] and projection.get('schedule_text_time'): time,time_source=projection['schedule_text_time'],'source_schedule_text'
     # A festival or short programme (up to SHORT_SPAN_DAYS) that prints its
@@ -439,6 +486,7 @@ def public_fields(event, projection, requested_day='', schedule_time=''):
     # source prints them, otherwise the kind of interval it is.
     conflict=(event.get('time_conflicts') or {}).get(requested_day or event['start'])
     if conflict: time_label=' / '.join(conflict)
+    elif day_hours and time_source=='official_schedule_by_day': time_label=day_hours  # «09:00–18:00»: abre y cierra
     elif time: time_label=time
     elif projection.get('hours_label'): time_label=projection['hours_label']
     elif event['start']!=event['end'] and event['kind']=='exhibition': time_label='Exposición'
@@ -610,7 +658,11 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=7  # 7: place_id por nombre para diba_bibliotecas (17-10-2026)
+PROJECTION_VERSION=11  # 11: cartel (lineup) para buscar por artista (18-10-2026)
+# 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
+# 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
+# 8: horario de Open Data BCN por filas y por día (18-10-2026)
+# 7: place_id por nombre para diba_bibliotecas (17-10-2026)
 
 
 def project_raw(source, id, title, start, end, kind, url, raw):
@@ -621,9 +673,15 @@ def project_raw(source, id, title, start, end, kind, url, raw):
     price,free_label=source_price(raw,source)
     links=source_links(raw,source,url)
     description=source_description(raw,source)
-    return {'v':PROJECTION_VERSION,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
+    hours_by_day={}; schedule_time=first_clock_time(source_time(raw,source)); hours_label=hours_range(source_time(raw,source))
+    if source=='opendatabcn_agenda' and (raw or {}).get('timetable'):
+        hours_by_day=_opendata_schedule(raw,start,end)['by_day']
+        # Si el horario cambia según el día, no hay una hora que valga para todos.
+        if len(set(hours_by_day.values()))>1: schedule_time=hours_label=None
+    lineup,lineup_times=lineup_of(raw)
+    return {'v':PROJECTION_VERSION,'hours_by_day':hours_by_day,'lineup':lineup,'lineup_times':lineup_times,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
             'family_audience':family_audience(raw,source,title),'price_label':price or None,'is_free':is_free(price,free_label),
-            'schedule_text_time':first_clock_time(source_time(raw,source)),'hours_label':hours_range(source_time(raw,source)),'url':links[0]['url'] if links else None,
+            'schedule_text_time':schedule_time,'hours_label':hours_label,'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
             'source_label':(raw.get('loagendo') or {}).get('source_label') if source.startswith('venue_') else None,
             'classification_paths':classification_paths(raw,source),
@@ -720,6 +778,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             venue_photo=local_place_images(conn).get(projection['place_id'])
             if venue_photo: media=[place_media_item(venue_photo)]
     archived_description,schedule_time,_,_=enrichment(conn,source,id,prefetch)
+    hours_by_day=(detail_facts(conn,source,id,prefetch) or {}).get('hours_by_day') or projection.get('hours_by_day') or {}
     # GuiaBCN's listing never carries prose: its description lives in the
     # archived official page, so the listing must look there too.
     has_description=projection['has_description'] or len((archived_description or '').strip())>=40
@@ -761,6 +820,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         # Data feed is superseded by it in public listings (same event, same
         # municipal id); the archived row and its history stay untouched.
         'time_conflicts':time_conflicts,
+        'hours_by_day':hours_by_day if isinstance(hours_by_day,dict) else {},
+        'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),
         'superseded_by':(twin if source=='guiabcn' else None) or collapsed_into,
         'also_in':([twin] if source=='opendatabcn_agenda' and twin else [])+[m for m in collapsed_members if m!=twin],
     }
@@ -782,16 +843,21 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         price,free=source_price(raw,source)
         archived_description,schedule_time,schedule_text,archived_links=enrichment(conn,source,id,prefetch)
         archived_facts=detail_facts(conn,source,id,prefetch)
+        opendata_facts=(_opendata_schedule(raw)['facts'] if raw.get('timetable') else opendata_normalized(raw)) if source=='opendatabcn_agenda' else {}
         links=source_links(raw,source,url)
+        if source=='guiabcn':  # menú del Ajuntament archivado antes del 18-10-2026
+            archived_links=[l for l in archived_links if not (isinstance(l,str) and __import__('urllib.parse',fromlist=['urlsplit']).urlsplit(l).netloc.endswith('barcelona.cat'))]
         for link in archived_links:
             if isinstance(link,str): links.append({'label':'Enlace detectado en la fuente','url':link,'verified':False})
+            elif isinstance(link,dict) and str(link.get('url','')).startswith(('https://','http://')):
+                links.append({'label':str(link.get('label') or 'Web del evento'),'url':link['url'],'verified':False})
         seen=set(); links=[link for link in links if not (link['url'] in seen or seen.add(link['url']))]
         events.update({
             'description':source_description(raw,source) or archived_description,
-            'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=archived_facts.get('schedule_days') or (opendata_normalized(raw).get('schedule_days') if source=='opendatabcn_agenda' else ''),registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),
+            'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=archived_facts.get('schedule_days') or (opendata_facts.get('schedule_days','') if source=='opendatabcn_agenda' else ''),registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),
             'time_text':schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
-            'schedule_days':archived_facts.get('schedule_days') or (opendata_normalized(raw).get('schedule_days','') if source=='opendatabcn_agenda' else ''),
-            'schedule_note':archived_facts.get('schedule_note') or (opendata_normalized(raw).get('schedule_note','') if source=='opendatabcn_agenda' else ''),
+            'schedule_days':archived_facts.get('schedule_days') or (opendata_facts.get('schedule_days','') if source=='opendatabcn_agenda' else ''),
+            'schedule_note':archived_facts.get('schedule_note') or (opendata_facts.get('schedule_note','') if source=='opendatabcn_agenda' else ''),
             'registration_required':bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False)),
             'price_text':price or archived_facts.get('price_text',''),'source_free_label':free,
             'price_status':'unknown' if not (price or archived_facts.get('price_text') or free) else 'source_claim_unverified',
@@ -908,6 +974,7 @@ def build_events(conn):
             projection=project_raw(source,id,title,start,end,kind,url,raw)
             fresh.append((source,id,raw_sha or '',json.dumps(projection,ensure_ascii=False)))
         events.append(row_to_event(conn,(source,id,title,start,end,kind,eligibility,evidence_level,url,None,status,note,updated),prefetch=prefetch,projection=projection))
+    merge_lineups(events)
     if fresh:
         # Persist in small batches so a concurrent engine run only delays, never
         # blocks, the write; what cannot be written is recomputed next time.
@@ -919,6 +986,18 @@ def build_events(conn):
         except sqlite3.OperationalError as err:
             print('Aviso: proyecciones del listado no guardadas (base ocupada):',err)
     return events
+
+
+def merge_lineups(events):
+    """El cartel de una ficha agrupada reúne el de todas las fuentes del mismo
+    acto (p. ej. el festival en GuiaBCN + DICE): se busca y se enseña en la canónica."""
+    index={e['key']:e for e in events}
+    for e in events:
+        target=index.get(e.get('superseded_by') or '')
+        if not target or target is e or not (e.get('lineup') or e.get('lineup_times')): continue
+        known={clean(n) for n in target.get('lineup') or []}
+        target['lineup']=list(target.get('lineup') or [])+[n for n in e.get('lineup') or [] if clean(n) not in known]
+        if e.get('lineup_times') and not target.get('lineup_times'): target['lineup_times']=list(e['lineup_times'])
 
 
 def _database_path(conn):
@@ -1088,7 +1167,9 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     if date:
         for event in events:
             times=[o['time'] for o in event['occurrences'] if o['date']==date and o['time']]
-            event['time']=times[0] if times else event.get('time')
+            day_hours=(event.get('hours_by_day') or {}).get(date)
+            event['time']=times[0] if times else (first_clock_time(day_hours) if day_hours else event.get('time'))
+            if not times and day_hours: event['time_label']=day_hours; event['time_source']='official_schedule_by_day'
     elif window:
         for event in events:
             inside=[o for o in event['occurrences'] if window[0]<=o['date']<=window[1]]
@@ -1100,8 +1181,11 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     latest_hour=23 if hour_to is None else hour_to
     has_hour_filter=hour_from is not None or hour_to is not None
     for e in events:
-        if term and term not in clean(e['title']+' '+' '.join(e['venue_names'])):continue
+        if term and term not in clean(e['title']+' '+' '.join(e['venue_names'])+' '+' '.join(e.get('lineup') or [])):continue
         if date and not (e['start']<=date<=e['end']):continue
+        # Con horario por día (GuiaBCN, Open Data), un programa solo sale los días
+        # en que hay actividad: «Dimecres» no aparece el jueves.
+        if date and e['start']!=e['end'] and e.get('hours_by_day') and date not in e['hours_by_day']:continue
         if window and not (e['start']<=window[1] and e['end']>=window[0]):continue
         if category and e['category']!=category:continue
         if public and not is_public(e):continue

@@ -117,15 +117,56 @@ def kind_for(item, span):
     return "single"
 
 
-def timetable_facts(item):
+def timetable_rows(item):
+    """Filas de la tabla de horario del dataset: {dies, hores, preu, observacions}.
+
+    Mismo formato que las filas de la API de detalle de GuiaBCN. Una celda de
+    días que ocupa varias filas deja vacías las siguientes (continúan la
+    anterior: otro grupo el mismo día); una celda de horas que ocupa varias
+    filas se repite en ellas. Precio y observaciones se quedan en su fila."""
+    from src.guia_schedule import notes, plain as cell_text
     table = (item.get("timetable") or {}).get("html") or ""
-    rows = re.findall(r"<tr>(.*?)</tr>", table, re.S | re.I)
-    facts = {"schedule_days": [], "schedule_hours": [], "price_text": [], "schedule_note": []}
-    for row in rows:
-        cells = {m.group(1): plain(m.group(2)) for m in re.finditer(r'<td class="timetable-(day|hour|price|description)"[^>]*>(.*?)</td>', row, re.S | re.I)}
-        for key, target in (("day", "schedule_days"), ("hour", "schedule_hours"), ("price", "price_text"), ("description", "schedule_note")):
-            if cells.get(key) and cells[key] not in facts[target]: facts[target].append(cells[key])
-    return {key: " · ".join(value) for key, value in facts.items() if value}
+    rows, carry, carry_left, period, period_left = [], "", 0, "", 0
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", table, re.S | re.I):
+        cells = {}
+        for m in re.finditer(r'<td class="timetable-(period|day|hour|price|description)[^"]*"([^>]*)>(.*?)</td>', tr, re.S | re.I):
+            span = re.search(r"rowspan=[\"']?(\d+)", m.group(2))
+            text = notes(m.group(3)) if m.group(1) in ("price", "description") else cell_text(m.group(3))
+            cells[m.group(1)] = (text, int(span.group(1)) if span else 1)
+        if not cells:
+            continue  # cabecera
+        row = {}
+        # El periodo («Del 4 juny al 2 agost») abarca varias filas: se repite en cada una.
+        if "period" in cells:
+            period, period_left = cells["period"][0], cells["period"][1] - 1
+        elif period_left > 0:
+            period_left -= 1
+        else:
+            period = ""
+        if period: row["periode"] = period
+        if cells.get("day", ("", 1))[0]: row["dies"] = cells["day"][0]
+        if "hour" in cells:
+            carry, carry_left = cells["hour"][0], cells["hour"][1] - 1
+            if carry: row["hores"] = carry
+        elif carry_left > 0:
+            carry_left -= 1
+            if carry: row["hores"] = carry
+        for key, field in (("price", "preu"), ("description", "observacions")):
+            if cells.get(key, ("", 1))[0]: row[field] = cells[key][0]
+        if row.get("dies") or row.get("hores"): rows.append(row)
+    return rows
+
+
+def schedule_for(item, start=None, end=None):
+    """Horario por filas y por día (ver src/guia_schedule.summary)."""
+    from src.guia_schedule import summary
+    return summary(timetable_rows(item), start, end)
+
+
+def timetable_facts(item):
+    """Días, horas, precio y notas para la ficha, emparejados fila a fila
+    («Dissabte: de 18.00 h a 21.00 h · Diumenge: d'11.00 h a 14.00 h»)."""
+    return schedule_for(item)["facts"]
 
 
 def timetable_hours(hours_text):

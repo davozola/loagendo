@@ -1,0 +1,38 @@
+{
+  "_comment": "Filtro de Xceed (18-10-2026). Solo entran eventos de recintos de esta lista; un recinto nuevo no entra hasta que David lo añade (el resultado de cada pasada lista los recintos descartados). Además se descartan los títulos que casen con deny_title_patterns.",
+  "allowed_venues": {
+    "jamboree-jazz-club": "Jamboree Jazz Club",
+    "jamboree-dance-club": "Jamboree Dance Club",
+    "moog": "Moog",
+    "razzmatazz": "Razzmatazz",
+    "input-high-fidelity-dance-club": "INPUT High Fidelity Dance Club",
+    "bikini-club": "Bikini Club",
+    "city-hall": "City Hall",
+    "slow-club": "Slow Club",
+    "la-paloma": "La Paloma",
+    "parc-del-forum": "Parc del Fòrum",
+    "poble-espanyol-barcelona": "Poble Espanyol",
+    "les-tres-xemeneies": "Les Tres Xemeneies",
+    "la-terrrazza": "La Terrrazza",
+    "seaseaclub": "SeaSea Club"
+  },
+  "excluded_venues_reviewed": {
+    "sauvage-swinger-club-1": "club swinger",
+    "imperial-meeting-point": "fiestas fetish",
+    "ice-bar-barcelona": "paquetes turísticos de noche",
+    "red-garter": "pub crawl turístico",
+    "w-barcelona-noxe": "listas de invitados de hotel",
+    "mirablau": "discoteca comercial sin programación",
+    "opium-barcelona": "discoteca comercial",
+    "cdlc-carpe-diem": "discoteca comercial",
+    "vraba-terraza": "terraza de hotel",
+    "opposite": "cenas espectáculo",
+    "secret-location-barcelona": "sin recinto",
+    "discoteca-nix": "discoteca comercial",
+    "negrorojo": "discoteca comercial",
+    "cohete-g-spot-disco-bar": "discoteca comercial",
+    "boris-club": "discoteca comercial",
+    "la-gata-del-born": "bar"
+  },
+  "deny_title_patterns": ["swinger", "kinky", "fetish", "guest ?list", "lista de invitados", "night out", "pub ?crawl", "bar ?crawl", "boat party", "bottle", "botella", "open bar", "barra libre"]
+}

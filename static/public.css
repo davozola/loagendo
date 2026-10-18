@@ -322,3 +322,6 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 }
 @media(max-width:960px){#clearAll{display:none}}
 .sub-chips .filter-chip.sub-season{border-style:dashed}
+
+/* Resultado encontrado por el cartel («Con Fennesz»), 18-10-2026 */
+.ev-hit{display:block;font-size:.82em;color:var(--accentText);margin:2px 0 1px}

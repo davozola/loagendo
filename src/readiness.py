@@ -74,6 +74,11 @@ def report(conn, *, today=None, horizon_days=30):
     schedule_keys=set(candidate)
     if _table(conn,'source_enrichments'):
         schedule_keys.update((s,i) for s,i in conn.execute("SELECT source,id FROM source_enrichments WHERE COALESCE(schedule_time,'')<>''"))
+    # Horario oficial publicado día a día (GuiaBCN, API de detalle).
+    by_day_keys=set()
+    if _table(conn,'source_detail_facts'):
+        by_day_keys={(s,i) for s,i in conn.execute("SELECT source,id FROM source_detail_facts WHERE facts_json LIKE '%hours_by_day%'")}
+        schedule_keys|=by_day_keys
     for source,record_id,_,start,end in rows:
         if start==end and (source,record_id) in schedule_keys:
             scheduled+=1; by_source[source]['scheduled_point_events']+=1
@@ -102,6 +107,7 @@ def report(conn, *, today=None, horizon_days=30):
         'with_visible_image':visible, 'visible_image_coverage_percent':coverage(visible,total),
         'point_events':point, 'point_events_with_time':scheduled,
         'point_time_coverage_percent':coverage(scheduled,point),
+        'events_with_hours_by_day':sum(1 for s,i,_,_,_ in rows if (s,i) in by_day_keys),
         'by_source':dict(sorted(by_source.items())), 'unhealthy_sources':health,
     }
     blockers=[]

@@ -2,14 +2,19 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeurl = s => { try { const u = new URL(s); return ['http:','https:'].includes(u.protocol) ? u.href : null } catch (_) { return null } };
-// Filtro «Qué te apetece»: Conciertos agrupa las categorías internas Conciertos y Música
-// (los datos no cambian; solo cómo se agrupan y se llaman en pantalla).
-const PUBLIC = ['Conciertos','Teatro','Cine','Exposiciones','Barrio','Talleres','Familia','Deporte'];
+// Filtro «Qué te apetece» (18-10-2026): selección múltiple; se suman los tipos
+// marcados. «Con niños» no es un tipo sino un público: es una casilla aparte que
+// se combina con lo elegido («Conciertos» + «Con niños» = conciertos para ir con niños).
+// Conciertos agrupa las categorías internas Conciertos y Música.
+const PUBLIC = ['Conciertos','Teatro','Cine','Exposiciones','Barrio','Talleres','Deporte'];
 const CAT_LABEL = {Música: 'Conciertos', Teatro: 'Teatro y danza', Barrio: 'Charlas, visitas y barrio', Talleres: 'Talleres y cursos', Familia: 'Con niños'};
 const CAT_GROUP = {Conciertos: ['Conciertos', 'Música']};
 const SEASON_SUB = 'Temporadas y ciclos';
 const catName = c => t(CAT_LABEL[c] || c);
-const catMatch = (e, cat) => !cat || (cat === 'Familia' ? Boolean(e.family_audience) : (CAT_GROUP[cat] || [cat]).includes(e.public_category));
+// «Familia» como categoría interna es una actividad de barrio para familias: cuenta como Barrio.
+const catOf = e => e.public_category === 'Familia' ? 'Barrio' : e.public_category;
+const catMatch = (e, cats) => { cats = Array.isArray(cats) ? cats : (cats ? [cats] : []); return !cats.length || cats.some(c => (CAT_GROUP[c] || [c]).includes(catOf(e))) };
+const kidsMatch = (e, kids) => !kids || Boolean(e.family_audience);
 const isSeasonLike = e => e.start !== e.end && !['workshop', 'course'].includes(e.format) && e.kind !== 'course';
 const subMatch = (e, subs) => !subs || !subs.length || subs.some(s => s === SEASON_SUB ? isSeasonLike(e) : e.subtype === s);
 const FORMATS = {one_shot:'Actos y funciones',workshop:'Talleres',course:'Cursos',program:'Ciclos y programas',festival:'Festivales',exhibition:'Exposiciones',ongoing:'Actividades continuadas'};
@@ -24,7 +29,7 @@ const params = new URLSearchParams(location.search);
 function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
 const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca'].includes(q) ? q : ['es','ca'].includes(saved) ? saved : 'es' })();
 const CA = {
-  'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Temporadas y ciclos':'Temporades i cicles',
+  'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Cartel':'Cartell','Con':'Amb','Público y precio':'Públic i preu','Solo planes para ir con niños':'Només plans per anar amb canalla','Baile':'Ball','Teatro y circo':'Teatre i circ','Temporadas y ciclos':'Temporades i cicles',
   'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
   'Arquitectura y diseño':'Arquitectura i disseny','Arte contemporáneo':'Art contemporani','Arte y manualidades':'Art i manualitats','Ciencia y naturaleza':'Ciència i natura','Clásica y ópera':'Clàssica i òpera','Cocina':'Cuina','Coral y tradicional':'Coral i tradicional','Cuerpo y salud':'Cos i salut','Electrónica':'Electrònica','Flamenco y músicas del mundo':'Flamenc i músiques del món','Fotografía':'Fotografia','Historia y patrimonio':'Història i patrimoni','Humanidades y ciencia':'Humanitats i ciència','Idiomas':'Idiomes','Jazz y blues':'Jazz i blues','Música, danza y teatro':'Música, dansa i teatre','Pintura y dibujo':'Pintura i dibuix','Pop y rock':'Pop i rock','Tecnología':'Tecnologia','Sin clasificar':'Sense classificar','Varios distritos':'Diversos districtes',
   'Hoy':'Avui','Fecha':'Data','planes':'plans','guardados':'desats','Todos los días':'Tots els dies','Próximos 7 días':'Propers 7 dies','Próximos 30 días':'Propers 30 dies','Próximos 3 meses':'Propers 3 mesos','Próximos 6 meses':'Propers 6 mesos','Próximos':'Propers','días':'dies',
@@ -33,7 +38,7 @@ const CA = {
   'Nada con estos filtros este día. Prueba otro día o quita algún filtro.':'Res amb aquests filtres aquest dia. Prova un altre dia o treu algun filtre.',
   'No se pudo cargar la agenda.':'No s\'ha pogut carregar l\'agenda.','No se pudo cargar la selección.':'No s\'ha pogut carregar la selecció.','Aún no hay actividades destacadas para estas fechas.':'Encara no hi ha activitats destacades per a aquestes dates.',
   'No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.':'No hi ha ubicacions geogràfiques per a aquests filtres. Prova un altre dia o consulta la llista.','Mapa de actividades geolocalizadas':'Mapa d\'activitats geolocalitzades','lugares con ubicación · pulsa un punto para abrir la ficha':'llocs amb ubicació · prem un punt per obrir la fitxa','Sin recinto identificado':'Sense recinte identificat',
-  'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
+  'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
   'Horario':'Horari','Horas publicadas':'Hores publicades','las fuentes no coinciden; confirma en la sala':'les fonts no coincideixen; confirma-ho a la sala','Requiere inscripción':'Cal inscripció','Texto de':'Text de','Imagen del equipamiento':'Imatge de l\'equipament','Imagen de la fuente':'Imatge de la font','Más imágenes':'Més imatges','Ubicación':'Ubicació','Mapa de':'Mapa de','la ubicación':'la ubicació','Próximamente en':'Properament a','esta sala':'aquesta sala',
   'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
   'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
@@ -58,6 +63,15 @@ function translatePage() {
 // Búsqueda bilingüe: una palabra encuentra también su equivalente en el otro
 // idioma (y sus derivados, por prefijo), sin tocar el texto de las fichas.
 const SYN = [['exposicion','exposicio','mostra','muestra'],['taller','tallers'],['nino','nen','infantil','familiar','familia'],['teatro','teatre'],['concierto','concert'],['cine','cinema'],['danza','dansa','baile','ball'],['charla','xerrada','conferencia'],['museo','museu'],['mercado','mercat'],['fiesta','festa'],['barrio','barri'],['gratis','gratuit'],['noche','nit'],['cuento','conte'],['titere','titella'],['circo','circ'],['poesia','poesia'],['libro','llibre'],['fotografia','foto'],['jardin','jardi'],['paseo','passeig','passejada'],['cocina','cuina'],['canto','cant'],['coro','cor '],['mujeres','dones'],['jovenes','joves'],['mayores','gent gran'],['espectaculo','espectacle'],['feria','fira'],['navidad','nadal'],['verano','estiu'],['invierno','hivern'],['primavera','primavera'],['otono','tardor'],['lectura','lectura','club'],['historia','historia'],['ciencia','ciencia'],['pintura','pintura'],['escuela','escola'],['biblioteca','biblioteca'],['centro civico','centre civic'],['visita','visita'],['ruta','ruta','itinerari','itinerario'],['musica','musica'],['opera','opera'],['flamenco','flamenc'],['electronica','electronica'],['juego','joc'],['magia','magia'],['humor','humor','monolog'],['cuentacuentos','contacontes']];
+// El buscador mira título, recinto y cartel: un artista encuentra el festival en que toca.
+const searchText = e => fold(e.title + ' ' + (e.venue_names || []).join(' ') + ' ' + (e.lineup || []).join(' '));
+// Artista del cartel que explica el resultado cuando el título no lo dice.
+function lineupHit(e) {
+  if (!state.query || !e.lineup?.length) return '';
+  const q = fold(state.query);
+  if (queryMatches(fold(e.title + ' ' + (e.venue_names || []).join(' ')), q)) return '';
+  return e.lineup.find(n => queryMatches(fold(n), q)) || '';
+}
 function queryMatches(text, query) {
   return query.split(' ').every(word => {
     const alts = new Set([word]);
@@ -80,7 +94,8 @@ function rangeWindow() {
 }
 
 let state = {
-  day: params.get('day') || today, cat: params.get('cat') === 'Música' ? 'Conciertos' : (params.get('cat') || ''), format: '', district: params.get('district') || '',
+  day: params.get('day') || today, cats: [...new Set(params.getAll('cat').map(c => c === 'Música' ? 'Conciertos' : c).filter(c => PUBLIC.includes(c)))],
+  kids: params.get('kids') === '1' || params.getAll('cat').includes('Familia'), format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
@@ -107,7 +122,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, subtype: c.st || null, time: c.tm || null, time_label: c.tl, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, subtype: c.st || null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, lineup: c.lu || [], media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -124,15 +139,32 @@ async function shardFor(k) {
   store.shards[name] ||= fetchJson(`/data/detail/${name}.json`).catch(err => { delete store.shards[name]; throw err });
   return store.shards[name];
 }
+// La hora de un día concreto: la sesión fechada si la hay; si no, el horario
+// oficial de ese día cuando la fuente lo publica por días (GuiaBCN).
+// El horario por día: {fecha: etiqueta} desde la API local, o empaquetado
+// {etiqueta: [días desde el inicio]} en la web estática.
+function hoursByDay(e) {
+  const packed = e.hours_by_day; if (!packed || e._hours) return e._hours || null;
+  if (Object.values(packed).every(v => typeof v === 'string')) return (e._hours = packed);
+  const out = {}, base = new Date(e.start + 'T12:00:00');
+  for (const [label, offsets] of Object.entries(packed)) for (const n of offsets) { const d = new Date(base); d.setDate(d.getDate() + n); out[d.toISOString().slice(0, 10)] = label }
+  return (e._hours = out);
+}
+function atDay(e, day) {
+  const t = e.occurrences?.find(o => o.date === day && o.time);
+  if (t) return {...e, time: t.time};
+  const h = hoursByDay(e)?.[day];
+  return h ? {...e, time: (h.match(/\b\d{2}:\d{2}\b/) || [h])[0], time_label: h} : e;
+}
 const shortSpan = e => { const d = (new Date(e.end + 'T12:00:00') - new Date(e.start + 'T12:00:00')) / 86400000; return d > 0 && d < 4 };
 const hoursOf = v => (String(v || '').match(/\b(?:[01]\d|2[0-3]):[0-5]\d\b/g) || []).map(x => Number(x.slice(0, 2)));
 async function staticEvents(p) {
   const day = p.get('day') || '', from = p.get('date_from') || '', to = p.get('date_to') || '';
   const page = Number(p.get('page') || 1), size = Number(p.get('page_size') || PAGE);
   if (p.get('featured') === '1') { const d = await dayFile(day || today); return {items: d.featured.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: d.featured.length} }
-  const filters = {cat: p.get('public_category') || '', subs: p.getAll('subtype').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
+  const filters = {cat: p.getAll('public_category').filter(Boolean), kids: p.get('kids') === '1', subs: p.getAll('subtype').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
     hourFrom: p.get('hour_from') ? Number(p.get('hour_from')) : null, hourTo: p.get('hour_to') ? Number(p.get('hour_to')) : null, started: p.get('started') !== '0'};
-  const plain = !filters.cat && !filters.subs.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
+  const plain = !filters.cat.length && !filters.kids && !filters.subs.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
   const startedCutoff = addDays(today, -7);
   if (day && plain && page === 1 && size <= PAGE) { try { const d = await dayFile(day); return {items: d.items.map(expand), total: d.total, page: 1} } catch (_) {} }
   const all = await loadCatalog(), out = [];
@@ -140,15 +172,18 @@ async function staticEvents(p) {
     let e = base;
     if (day) {
       if (!(e.start <= day && day <= e.end)) continue;
-      const t = e.occurrences.find(o => o.date === day && o.time); e = {...e, time: t ? t.time : e.time};
+      // Con horario por día, un programa solo sale los días en que hay actividad.
+      const byDay = e.start !== e.end ? hoursByDay(e) : null;
+      if (byDay && Object.keys(byDay).length && !(day in byDay)) continue;
+      e = atDay(e, day);
     } else if (from) {
       if (!(e.start <= to && e.end >= from)) continue;
       const inside = e.occurrences.filter(o => from <= o.date && o.date <= to);
       e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
     }
     if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff) continue;
-    if (filters.query && !queryMatches(fold(e.title + ' ' + e.venue_names.join(' ')), filters.query)) continue;
-    if (!catMatch(e, filters.cat) || !subMatch(e, filters.subs)) continue;
+    if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
+    if (!catMatch(e, filters.cat) || !kidsMatch(e, filters.kids) || !subMatch(e, filters.subs)) continue;
     if (filters.format && e.format !== filters.format) continue;
     if (filters.free && !e.is_free) continue;
     if (filters.district && e.district !== filters.district) continue;
@@ -176,8 +211,7 @@ async function staticDistricts(day) {
 async function staticDetail(source, id, day) {
   const k = `${source}:${id}`, shard = await shardFor(k), e = shard[k];
   if (!e) throw Error('No encontrado');
-  if (day) { const t = e.occurrences?.find(o => o.date === day && o.time); if (t) return {...e, time: t.time} }
-  return e;
+  return day ? atDay(e, day) : e;
 }
 const get = async path => {
   if (!STATIC) return fetchJson(path, {cache: 'no-store'});
@@ -209,7 +243,7 @@ function catLabel(e) {
 function syncUrl(push) {
   const p = new URLSearchParams();
   if (state.day !== today) p.set('day', state.day);
-  if (state.cat) p.set('cat', state.cat); state.subs.forEach(x => p.append('sub', x)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
+  state.cats.forEach(c => p.append('cat', c)); if (state.kids) p.set('kids', '1'); state.subs.forEach(x => p.append('sub', x)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
   if (state.free) p.set('free', '1'); if (state.query) p.set('q', state.query);
   if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
   if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
@@ -224,7 +258,8 @@ function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringi
 function activeFilterList() {
   const out = [];
   if (state.query) out.push({k: 'query', label: `“${state.query}”`});
-  if (state.cat) out.push({k: 'cat', label: catName(state.cat)});
+  if (state.cats.length) out.push({k: 'cat', label: state.cats.map(catName).join(' + ')});
+  if (state.kids) out.push({k: 'kids', label: t('Con niños')});
   if (state.subs.length) out.push({k: 'sub', label: state.subs.map(t).join(' + ')});
   if (state.format) out.push({k: 'format', label: t(FORMATS[state.format] || state.format)});
   if (state.free) out.push({k: 'free', label: t('Gratis')});
@@ -237,7 +272,7 @@ function activeFilterList() {
 function clearFilter(k) {
   if (k === 'range') state.range = '';
   if (k === 'query') { state.query = ''; $('searchInput').value = '' }
-  if (k === 'cat') { state.cat = ''; state.subs = [] } if (k === 'sub') state.subs = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
+  if (k === 'cat') { state.cats = []; state.subs = [] } if (k === 'kids') state.kids = false; if (k === 'sub') state.subs = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
   if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
   if (k === 'started') { state.started = false; $('includeStarted').checked = false }
 }
@@ -248,21 +283,23 @@ function renderActive() {
   $('openFilters').classList.toggle('has-filters', n > 0);
 }
 // Subfiltros de varias selecciones (se suman). En Conciertos se añade «Temporadas y ciclos».
-function subtypesFor(cat) {
+// Los subtipos solo se ofrecen con un único tipo marcado, para no llenar el panel.
+function subtypesFor(cats) {
+  const cat = cats.length === 1 ? cats[0] : '';
   const base = cat === 'Conciertos' ? [...new Set((CAT_GROUP.Conciertos).flatMap(c => SUBTYPES[c] || []))] : (SUBTYPES[cat] || []);
   if (cat !== 'Conciertos' || !base.length) return base;
   const i = base.indexOf('Sin clasificar');
   return i < 0 ? [...base, SEASON_SUB] : [...base.slice(0, i), SEASON_SUB, ...base.slice(i)];
 }
 function chips() {
-  $('categories').innerHTML = [`<button class="filter-chip ${state.cat ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cat}">${t('Todo')}</button>`]
-    .concat(PUBLIC.map(c => `<button class="filter-chip ${state.cat === c ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cat === c}">${esc(catName(c))}</button>`)).join('');
-  const subs = subtypesFor(state.cat);
+  $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
+    .concat(PUBLIC.map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
+  const subs = subtypesFor(state.cats);
   state.subs = state.subs.filter(x => subs.includes(x));
   $('subtypes').hidden = !subs.length;
   $('subtypes').innerHTML = subs.length ? [`<button class="filter-chip ${state.subs.length ? '' : 'active'}" type="button" data-subtype="" aria-pressed="${!state.subs.length}">${t('Todos')}</button>`]
     .concat(subs.map(c => `<button class="filter-chip ${state.subs.includes(c) ? 'active' : ''}${c === SEASON_SUB ? ' sub-season' : ''}" type="button" data-subtype="${esc(c)}" aria-pressed="${state.subs.includes(c)}">${esc(t(c))}</button>`)).join('') : '';
-  $('formatFilter').value = state.format; $('freeOnly').checked = state.free; $('searchInput').value = state.query;
+  $('formatFilter').value = state.format; $('freeOnly').checked = state.free; $('kidsOnly').checked = state.kids; $('searchInput').value = state.query;
   ['List','Map','Venue'].forEach(v => $('view' + v).setAttribute('aria-pressed', String(state.view === v.toLowerCase())));
 }
 function hourLabel(h) { return String(h).padStart(2, '0') + ':00' }
@@ -492,7 +529,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body"><h3 class="ev-title">${esc(e.title)}</h3><span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body"><h3 class="ev-title">${esc(e.title)}</h3>${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -584,7 +621,7 @@ function renderAgenda() {
   const s = model.sections, n = (model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc)).toLocaleString('es-ES');
   const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui')}</b> ${L('desde las', 'des de les')} ${clock(model.now.min)}`
     : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans')}</b> · ${esc(win.label)}`;
-  const extra = [state.cat ? catName(state.cat) : '', state.subs.map(t).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
+  const extra = [state.cats.map(catName).join(' + '), state.kids ? t('Con niños') : '', state.subs.map(t).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
   $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
   stick(); mountFilterUi();
 }
@@ -621,15 +658,15 @@ setInterval(() => {
 }, 20000);
 
 function collectStatic(all, win, p) {
-  const filters = {cat: p.cat, subs: p.subs, format: p.format, district: p.district, free: p.free, query: fold(p.query || ''), hourFrom: p.hourFrom, hourTo: p.hourTo};
+  const filters = {cat: p.cats, kids: p.kids, subs: p.subs, format: p.format, district: p.district, free: p.free, query: fold(p.query || ''), hourFrom: p.hourFrom, hourTo: p.hourTo};
   const from = win ? win.from : state.day, to = win ? win.to : state.day, ahead = addDays(from, COURSE_AHEAD);
   const out = [];
   for (const base of all) {
     const active = base.start <= to && base.end >= from;
     const upcomingCourse = !active && isPeriodic(base) && !isOpenFormat(base) && base.start > to && base.start <= ahead && daysBetween(base.start, base.end) > SHORT_DAYS;
     if (!active && !upcomingCourse) continue;
-    if (filters.query && !queryMatches(fold(base.title + ' ' + base.venue_names.join(' ')), filters.query)) continue;
-    if (!catMatch(base, filters.cat) || !subMatch(base, filters.subs)) continue;
+    if (filters.query && !queryMatches(searchText(base), filters.query)) continue;
+    if (!catMatch(base, filters.cat) || !kidsMatch(base, filters.kids) || !subMatch(base, filters.subs)) continue;
     if (filters.format && base.format !== filters.format) continue;
     if (filters.free && !base.is_free) continue;
     if (filters.district && base.district !== filters.district) continue;
@@ -658,10 +695,10 @@ async function agenda(append = false) {
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
       } else {
-        const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: CAT_GROUP[state.cat] ? '' : state.cat, format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
+        const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 && !CAT_GROUP[state.cats[0]] ? state.cats[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
         const d = await get('/api/events?' + p);
         if (request !== agendaRequest) return;
-        state.items = d.items.filter(e => catMatch(e, state.cat) && subMatch(e, state.subs)).map(e => ({...e, base_time: e.time}));
+        state.items = d.items.filter(e => catMatch(e, state.cats) && kidsMatch(e, state.kids) && subMatch(e, state.subs)).map(e => ({...e, base_time: e.time}));
       }
       state.total = state.items.length;
     }
@@ -701,7 +738,10 @@ async function loadDistricts() {
 function detailWhen(e) {
   const day = e.start === e.end ? e.start : state.day;
   const when = e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`;
-  const t = e.time ? e.time : (e.time_label && !/^(Hora no indicada|Varios días|Exposición)$/.test(e.time_label) ? e.time_label : '');
+  // Horario oficial del día («09:00–18:00»); si cambia según el día, se dice de qué día es.
+  const byDay = hoursByDay(e) || {}, dayHours = e.occurrence_date ? null : byDay[day];
+  const t = dayHours || (e.time ? e.time : (e.time_label && !/^(Hora no indicada|Varios días|Exposición)$/.test(e.time_label) ? e.time_label : ''));
+  if (e.start !== e.end && dayHours && new Set(Object.values(byDay)).size > 1) return `${when} · ${labelDay(day)} ${dayHours}`;
   if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + t : ''}`;
   return t ? `${when} · ${t}` : when;
 }
@@ -718,16 +758,29 @@ async function openDetail(k, focus, opts = {}) {
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     const scheduleBits = [conflict ? `${t('Horas publicadas')}: ${conflict.join(LANG === 'ca' ? ' i ' : ' y ')} (${t('las fuentes no coinciden; confirma en la sala')})` : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
+    // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
+    const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));
+    const names = e.lineup || [];
+    const lineup = timed.length ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${timed.map(x => `${esc(x.time)} ${esc(x.name)}`).join(' · ')}${names.length > timed.length ? ` · ${esc(names.filter(n => !timed.some(x => x.name === n)).join(' · '))}` : ''}</p>`
+      : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
     const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Brollant · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
     const osm = e.coordinates ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(e.coordinates.lat)}&mlon=${encodeURIComponent(e.coordinates.lon)}#map=17/${encodeURIComponent(e.coordinates.lat)}/${encodeURIComponent(e.coordinates.lon)}` : '';
     const map = e.coordinates ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venues?.[0]?.name || e.venue_names?.[0] || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div><span>${t('Cómo llegar')} ↗</span></a></section>` : '';
     const upcoming = (e.venue_upcoming || []).length ? `<section class="sheet-venue"><h3>${t('Próximamente en')} ${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('esta sala'))}</h3><div class="venue-list">${e.venue_upcoming.map(u => `<button class="venue-item" type="button" data-open="${esc(u.key)}"><span class="venue-when"><b>${esc(labelDate(u.date))}</b>${u.time ? `<small>${esc(u.time)}</small>` : ''}</span><span class="venue-what"><b>${esc(u.title)}</b><small>${esc(catName(u.public_category))}${u.subtype && u.subtype !== 'Sin clasificar' ? ' · ' + esc(t(u.subtype)) : ''}${u.is_free ? ' · ' + t('Gratis') : ''}</small></span><span class="venue-go" aria-hidden="true">›</span></button>`).join('')}</div></section>` : '';
-    const links = (e.links || []).filter(l => safeurl(l.url) && l.label !== 'Página de la fuente').slice(0, 4).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(l.label)} ↗</a>`).join('');
-    $('sheet').innerHTML = `<div class="sheet-top"><span>${esc(catName(e.public_category || e.category))}${e.subtype && e.subtype !== 'Sin clasificar' ? ' · ' + esc(t(e.subtype)) : ''}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2><div class="sheet-cta">${safeurl(e.url) ? `<a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(t(e.link_label || 'Ver en la fuente oficial'))} ↗</a>` : ''}${e.coordinates ? `<a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a>` : ''}</div>${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div><div><small>${t('Organiza')}</small><b>${esc(e.organizers?.join(' · ') || t('Consultar fuente'))}</b></div><div><small>${t('Precio')}</small><b>${e.is_free ? t('Gratis') : esc(e.price_text || e.price_label || t('Consultar en la fuente'))}</b></div>${e.confirmations > 1 ? `<div><small>${t('Contraste')}</small><b>${t('Fecha coincidente en')} ${e.confirmations} ${t('fuentes')}</b></div>` : ''}</div>${map}${schedule}${description}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button></div><p class="sheet-note">${e.presentation === 'venue_link_only' ? t('Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.') : `${t('Fuente')}: ${esc(e.source_label)}. ${t('Información recogida automáticamente')}`}; ${t('confirma horario y precio antes de ir.')}</p>`;
+    const links = (e.links || []).filter(l => safeurl(l.url) && l.label !== 'Página de la fuente' && !(l.label === 'Web del evento' && !e.organizers?.length)).slice(0, 4).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(l.label)} ↗</a>`).join('');
+    $('sheet').innerHTML = `<div class="sheet-top"><span>${esc(catName(e.public_category || e.category))}${e.subtype && e.subtype !== 'Sin clasificar' ? ' · ' + esc(t(e.subtype)) : ''}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2><div class="sheet-cta">${safeurl(e.url) ? `<a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(t(e.link_label || 'Ver en la fuente oficial'))} ↗</a>` : ''}${e.coordinates ? `<a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a>` : ''}</div>${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}<div><small>${t('Precio')}</small><b>${e.is_free ? t('Gratis') : esc(e.price_text || e.price_label || t('Consultar en la fuente'))}</b></div>${e.confirmations > 1 ? `<div><small>${t('Contraste')}</small><b>${t('Fecha coincidente en')} ${e.confirmations} ${t('fuentes')}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button></div><p class="sheet-note">${e.presentation === 'venue_link_only' ? t('Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.') : `${t('Fuente')}: ${esc(e.source_label)}. ${t('Información recogida automáticamente')}`}; ${t('confirma horario y precio antes de ir.')}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);
   } catch (_) {}
+}
+// Sin organizador declarado pero con la web oficial que publica la ficha (en
+// GuiaBCN suele ser la de quien lo organiza): se muestra «Web» con su dominio.
+function organizerBox(e) {
+  if (e.organizers?.length) return `<div><small>${t('Organiza')}</small><b>${esc(e.organizers.join(' · '))}</b></div>`;
+  const web = (e.links || []).find(l => l.label === 'Web del evento' && safeurl(l.url));
+  if (web) { const host = new URL(safeurl(web.url)).hostname.replace(/^www\./, ''); return `<div><small>${t('Web')}</small><b><a href="${esc(safeurl(web.url))}" target="_blank" rel="noopener noreferrer">${esc(host)} ↗</a></b></div>` }
+  return `<div><small>${t('Organiza')}</small><b>${esc(t('Consultar fuente'))}</b></div>`;
 }
 let sheetMap = null;
 function mountSheetMap(e) {
@@ -767,7 +820,7 @@ document.addEventListener('click', e => {
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
   if (button.id === 'filtersClear') { ['query','cat','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
-  if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','format','free','hours','district'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','kids','format','free','hours','district'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { clearFilter(button.dataset.clear); refresh(); return }
   if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
@@ -779,7 +832,11 @@ document.addEventListener('click', e => {
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
   if (button.dataset.day) { state.day = button.dataset.day; state.range = ''; refresh(); return }
   if (button.dataset.period !== undefined) { if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
-  if (button.dataset.category !== undefined) { state.cat = button.dataset.category; state.subs = []; refresh(); return }
+  if (button.dataset.category !== undefined) {
+    const c = button.dataset.category;
+    state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
+    state.subs = []; refresh(); return
+  }
   if (button.dataset.subtype !== undefined) { const v = button.dataset.subtype; state.subs = !v ? [] : state.subs.includes(v) ? state.subs.filter(x => x !== v) : [...state.subs, v]; refresh(); return }
   if (button.dataset.district) { state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
   if (button.dataset.save) { toggleSave(button.dataset.save); return }
@@ -794,6 +851,7 @@ $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
 $('formatFilter').addEventListener('change', e => { state.format = e.target.value; refresh() });
 $('districtFilter').addEventListener('change', e => { state.district = e.target.value; refresh() });
 $('freeOnly').addEventListener('change', e => { state.free = e.target.checked; refresh() });
+$('kidsOnly').addEventListener('change', e => { state.kids = e.target.checked; refresh() });
 $('dayPicker').addEventListener('change', e => { if (!e.target.value) return; state.day = e.target.value; state.range = ''; refresh() });
 $('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
 $('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });

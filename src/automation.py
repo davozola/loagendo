@@ -14,7 +14,8 @@ from pathlib import Path
 
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite"}
+STALE_LOCK_MINUTES = 120
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -118,6 +119,15 @@ def execute(conn, job, media_root):
     if kind == "places":
         from src.place_images import fetch_place_images
         return fetch_place_images(conn, media_root, limit=job.get("limit", 60), timeout=job.get("timeout_seconds", 20))
+    if kind == "ticketmaster":
+        from src.ticketmaster_api import sync as sync_ticketmaster
+        return sync_ticketmaster(conn)
+    if kind == "xceed":
+        from src.xceed_api import sync as sync_xceed
+        return sync_xceed(conn)
+    if kind == "dice":
+        from src.dice_sitemap import sync as sync_dice
+        return sync_dice(conn, limit=job.get("limit", 200))
     if kind == "eventbrite":
         from src.eventbrite_api import enrich_eventbrite
         return enrich_eventbrite(conn, job.get("limit", 300), timeout=job.get("timeout_seconds", 20))
@@ -153,7 +163,9 @@ def volume_check(conn, source, result):
 
 
 def _health(conn, source, status, error=""):
-    if not source: return
+    # «skipped»: el trabajo no se ha podido intentar (p. ej. falta la clave de
+    # la API); no dice nada de la salud de la fuente.
+    if not source or status == "skipped": return
     now = now_utc()
     previous = conn.execute("SELECT consecutive_failures FROM source_health WHERE source=?", (source,)).fetchone()
     failures = 0 if status == "completed" else (previous[0] if previous else 0) + 1
@@ -167,7 +179,10 @@ def _health(conn, source, status, error=""):
 def run_due(conn, config, media_root, *, force=False, now=None):
     initialize(conn)
     now = now or dt.datetime.now(dt.timezone.utc)
-    stale_before = (now - dt.timedelta(minutes=30)).isoformat(timespec="seconds")
+    # Un candado más viejo que esto se da por abandonado. 30 minutos se quedaba
+    # corto: una publicación que recalcula todo el catálogo puede pasar de 30
+    # minutos y otra pasada la daba por muerta (18-10-2026).
+    stale_before = (now - dt.timedelta(minutes=STALE_LOCK_MINUTES)).isoformat(timespec="seconds")
     with conn:
         conn.execute("DELETE FROM automation_locks WHERE name='engine' AND held_at<?", (stale_before,))
         acquired = conn.execute("INSERT OR IGNORE INTO automation_locks(name,held_at) VALUES ('engine',?)", (now_utc(),)).rowcount

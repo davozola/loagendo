@@ -6,15 +6,18 @@ import sqlite3
 import re
 import time
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import quote, urljoin, urlsplit
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from src.media import is_event_image, register
 from src.network import tls_context
+from src import guia_schedule
 
 # Also versions the description selection. GuiaBCN exposes a metadata-only
 # meta description ("Quan / On") alongside the actual body copy.
-SCHEDULE_PARSER_VERSION = 5  # 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
+SCHEDULE_PARSER_VERSION = 7  # 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
+# 6: 6 (18-10-2026): horario de GuiaBCN desde la API de detalle, fila a fila y por día.
+# 5: 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
 
 NAVIGATION_TEXT = re.compile(r"^\s*(?:per districte|por distrito|by district)\b|selecciona el districte|selecciona el distrito", re.I)
 
@@ -119,6 +122,50 @@ def _fetch_html(request, timeout):
             time.sleep(2 ** attempt)
 
 
+def html_schedule_rows(content):
+    """Respaldo si la API de detalle falla: días y horas de cada fila de la
+    tabla «Horaris» de la página. Solo las dos primeras celdas, que son
+    siempre días y horas; el precio ocupa varias filas y desplaza el resto."""
+    table=re.search(r'<div\s+id=["\']horari["\'][^>]*>(.*?)</table>',content or '',re.I|re.S)
+    rows=[]
+    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>',table.group(1) if table else '',re.I|re.S):
+        cells=[_plain(x) for x in re.findall(r'<td[^>]*class=["\'][^"\']*content-info[^"\']*["\'][^>]*>(.*?)</td>',tr,re.I|re.S)]
+        if len(cells)>=2 and (cells[0] or cells[1]):
+            row={k:v for k,v in (('dies',cells[0]),('hores',cells[1])) if v}
+            # El precio solo está en la primera fila (ocupa varias); en las
+            # demás filas una tercera celda no se puede atribuir con seguridad.
+            if not rows and len(cells)>=3 and cells[2]: row['preu']=cells[2]
+            if not rows and len(cells)>=4 and cells[3]: row['observacions']=cells[3]
+            rows.append(row)
+    return rows
+
+
+def guia_schedule_facts(record_id, content, start, end, fetch, timeout):
+    """Horario de un registro de GuiaBCN: API de detalle y, si falla, la página.
+
+    Devuelve (schedule_time, schedule_text, facts). Las filas se guardan tal
+    como vienen (sin HTML) junto con la URL y el hash de la respuesta."""
+    import hashlib,json
+    api_url=guia_schedule.DETAIL_API.format(id=quote(str(record_id),safe=''))
+    rows=None; evidence={}
+    try:
+        body=fetch(api_url,timeout)
+        detail=json.loads(body)
+        rows=guia_schedule.api_rows(detail)
+        if rows is not None:
+            evidence={'schedule_source':'guiabcn_api_detall','schedule_api_url':api_url,'schedule_api_sha256':hashlib.sha256(body.encode()).hexdigest()}
+            links=guia_schedule.api_links(detail)
+            if links: evidence['official_links']=links
+    except Exception as error:  # la página sigue siendo una fuente válida
+        evidence={'schedule_api_error':type(error).__name__+(': %s'%getattr(error,'code','') if getattr(error,'code',None) else ''),'schedule_api_url':api_url}
+    if rows is None:
+        rows=html_schedule_rows(content); evidence['schedule_source']='guiabcn_detail_page'
+    result=guia_schedule.summary(rows,start,end)
+    facts={**result['facts'],**evidence,'schedule_rows':rows}
+    if result['by_day']: facts['hours_by_day']=result['by_day']
+    return result['schedule_time'],result['schedule_text'],facts
+
+
 def relevant_links(page_url, links):
     """Keep useful links from a detail page, not its navigation chrome."""
     page=urlsplit(page_url)
@@ -188,7 +235,13 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
       ))
     )"""
     missing_params=() if refresh else (SCHEDULE_PARSER_VERSION,retry_before)
-    rows=conn.execute(f"""SELECT id,source,source_url FROM source_records
+    # Un registro de GuiaBCN que también está en Open Data BCN no se publica
+    # (gana Open Data, que ya trae su horario): no se pide su detalle salvo
+    # que se pida explícitamente (refresh, --enrich-event).
+    if not refresh:
+        missing+=""" AND NOT (source_records.source='guiabcn' AND EXISTS (
+          SELECT 1 FROM source_records twin WHERE twin.source='opendatabcn_agenda' AND twin.id=source_records.id))"""
+    rows=conn.execute(f"""SELECT id,source,source_url,start_date,end_date FROM source_records
       WHERE source IN ({marks}) AND source_url<>'' {id_filter} {missing}
       ORDER BY CASE
                  WHEN source='guiabcn' AND start_date=end_date AND start_date>=? AND start_date<=? THEN 0
@@ -198,7 +251,7 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
                start_date, id LIMIT ?""",(*sources,*record_ids,*missing_params,today.isoformat(),priority_until,today.isoformat(),today.isoformat(),limit)).fetchall(); done=failed=media=resolved=0
     import hashlib,json
     errors={}
-    for record_id,source,url in rows:
+    for record_id,source,url,start_date,end_date in rows:
         try:
             # GuiaBCN is a public service, not a bulk-download endpoint. A
             # small, deterministic pause avoids the burst that previously
@@ -208,10 +261,35 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
             req=Request(url,headers={'Accept':'text/html','User-Agent':'Brollant/1.3 (+https://brollant.com) enrichment'})
             if fetcher: content=fetcher(url,timeout)
             else: content=_fetch_html(req,timeout)
-            parser=MetaParser();parser.feed(content);description=parser.description; schedule_time,schedule_text=parser.schedule; facts=detail_facts(content); now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
-            resolved+=bool(schedule_time)
+            parser=MetaParser();parser.feed(content);description=parser.description; schedule_time,schedule_text=parser.schedule; facts=detail_facts(content)
+            if source=='guiabcn':
+                # El horario sale de la API de detalle (filas con días y horas
+                # separados); la página solo aporta descripción, enlaces e imagen.
+                def fetch_api(api_url,api_timeout):
+                    if fetcher: return fetcher(api_url,api_timeout)
+                    time.sleep(delay_seconds)
+                    # Mismas cabeceras que el listado de esta API, que sí responde
+                    # desde el motor; con otras, el detalle devolvía 406.
+                    headers={'Accept':'*/*','User-Agent':'Brollant/1.3 (+https://brollant.com) sync'}
+                    try:
+                        return _fetch_html(Request(api_url,headers=headers),api_timeout)
+                    except HTTPError as error:
+                        if error.code!=406: raise
+                        # Variante sin idioma ni formato al final, por si el servidor negocia distinto.
+                        return _fetch_html(Request(api_url.replace('&xout=json&idma=ca','&idma=ca&xout=json'),headers=headers),api_timeout)
+                for key in ('schedule_days','schedule_hours','price_text','schedule_note','registration_required'): facts.pop(key,None)
+                schedule_time,schedule_text,schedule_facts=guia_schedule_facts(record_id,content,start_date,end_date,fetch_api,timeout)
+                facts.update(schedule_facts)
+                text=' '.join((facts.get('schedule_note',''),facts.get('price_text','')))
+                if re.search(r'inscripci',text,re.I) and not re.search(r'\bno\s+cal\s+inscripci',text,re.I): facts['registration_required']=True
+            now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+            resolved+=bool(schedule_time or facts.get('hours_by_day'))
             with conn:
                 links=relevant_links(url,parser.links)
+                if source=='guiabcn':
+                    # Solo los enlaces que declara la ficha (web del evento,
+                    # inscripciones, entradas); los de la página son menú del Ajuntament.
+                    links=facts.get('official_links') or [l for l in links if not urlsplit(l).netloc.endswith('barcelona.cat')]
                 conn.execute('''INSERT INTO source_detail_facts(source,id,fetched_at,facts_json) VALUES(?,?,?,?)
                   ON CONFLICT(source,id) DO UPDATE SET fetched_at=excluded.fetched_at,facts_json=excluded.facts_json''',(source,record_id,now,json.dumps(facts,ensure_ascii=False,sort_keys=True)))
                 conn.execute('''INSERT INTO source_enrichments(source,id,fetched_at,source_url,description,links_json,raw_html_sha256,schedule_time,schedule_text,schedule_checked_at,schedule_parser_version)

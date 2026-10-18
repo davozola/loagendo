@@ -40,7 +40,7 @@ STATIC_FILES = ('public.css', 'public.js', 'vendor/leaflet.css', 'vendor/leaflet
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'subtype', 'venue_upcoming', 'description_credit')
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'lineup', 'lineup_times', 'subtype', 'venue_upcoming', 'description_credit')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -148,6 +148,20 @@ def default_thumbnailer():
     return resize
 
 
+def packed_hours(event):
+    """Horario por día en poco espacio: {etiqueta: [días desde el inicio]}.
+
+    Un curso semanal de nueve meses tiene decenas de días con la misma hora;
+    repetir cada fecha haría crecer el catálogo sin aportar nada."""
+    hours = event.get('hours_by_day') or {}
+    if not hours: return None
+    start = dt.date.fromisoformat(event['start'])
+    out = {}
+    for day, label in sorted(hours.items()):
+        out.setdefault(label, []).append((dt.date.fromisoformat(day) - start).days)
+    return out
+
+
 def compact(event, images, full=True):
     """The listing record the browser needs, with short keys to keep files small.
 
@@ -160,6 +174,8 @@ def compact(event, images, full=True):
         'v': [v for v in event['venue_names'][:2]], 'g': [round(event['coordinates']['lat'], 5), round(event['coordinates']['lon'], 5)] if event.get('coordinates') else None,
         'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'st': event.get('subtype') or '', 'tm': event.get('time') or '', 'tl': event['time_label'],
     }
+    if event.get('hours_by_day'): out['hb'] = packed_hours(event)
+    if event.get('lineup'): out['lu'] = event['lineup'][:40]  # para buscar por artista
     if not full: return out
     media = []
     for item in event.get('media', [])[:MAX_IMAGES_PER_EVENT]:
@@ -171,6 +187,7 @@ def compact(event, images, full=True):
 
 def public_detail(detail, images):
     out = {k: detail.get(k) for k in PUBLIC_DETAIL_FIELDS}
+    out['hours_by_day'] = packed_hours(detail)
     media = []
     for item in detail.get('media', [])[:MAX_IMAGES_PER_EVENT]:
         exported = images.item(item)
@@ -259,6 +276,9 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for e in events:
         detail = catalog.event_detail(conn, e['source'], e['id'])
         if detail is None: continue
+        # El cartel ya agrupado de todas las fuentes del mismo acto.
+        detail['lineup'] = e.get('lineup') or detail.get('lineup') or []
+        detail['lineup_times'] = e.get('lineup_times') or detail.get('lineup_times') or []
         shards.setdefault(shard_of(e['key']), {})[e['key']] = public_detail(detail, images)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
