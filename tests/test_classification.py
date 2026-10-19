@@ -45,12 +45,29 @@ class ClassifyTests(unittest.TestCase):
         self.assertEqual(out['category'], 'escena')
 
     def test_no_signal_or_services_stay_pending_never_others(self):
-        for title in ('Grabada, escrita, pronunciada', 'Singles Night'):
+        for title in ('Grabada, escrita, pronunciada', 'Las piezas hablan'):
             out = self.cat(title, source='web_cccb')
             self.assertEqual((out['category'], out['status'], out['method']), ('pendiente', 'pendiente', 'sin_senal'))
-        out = self.cat('Patis escolars oberts: Escola Mireia')
-        self.assertEqual((out['category'], out['method']), ('pendiente', 'servicio_o_convocatoria'))
         self.assertNotIn('otros', taxonomy.CATEGORIES)
+
+    def test_editorial_rules_of_20_october(self):
+        # Patios escolares abiertos: Talleres y experiencias, canal En familia.
+        patis = ev('Patis escolars oberts: Escola Mireia')
+        out = taxonomy.classify(patis)
+        self.assertEqual((out['category'], out['method']), ('talleres', 'regla_editorial'))
+        self.assertIn('familia', taxonomy.channels(patis, out['category']))
+        # Servicios y ocio social: fuera de la agenda (no a la cola de pendientes).
+        for title, source in (('Campanya de donació de sang', 'guiabcn'), ("Servei Punt TIC", 'guiabcn'),
+                              ('Singles Night - Cocktails & Chemistry', 'venue_eventbrite'), ('Barcelona Pub Crawl: 3 Hosted Bars', 'venue_eventbrite'),
+                              ('Barcelona Tech Job Fair 2027', 'venue_eventbrite')):
+            self.assertEqual(self.cat(title, source=source)['category'], 'excluida', title)
+        # Un género cultural explícito manda sobre la palabra suelta.
+        self.assertEqual(self.cat("Concert 'Campanya de Nadal'")['category'], 'musica')
+        # Comunidad y cuidados: Talleres + Vida de barrio.
+        group = ev("'El barri proposa': Grup de dones autogestionat", venue_names=['Casal de Barri Comunitari'])
+        out = taxonomy.classify(group)
+        self.assertEqual((out['category'], out['method']), ('talleres', 'comunidad_y_cuidados'))
+        self.assertIn('barrio', taxonomy.channels(group, 'talleres'))
 
     def test_conflicting_signals_are_flagged_ambiguous_but_published(self):
         out = self.cat("Taller 'Galetes de Nadal'", category='Fiestas y tradiciones')

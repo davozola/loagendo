@@ -1411,8 +1411,9 @@ def is_public(event):
     not collapsed into a canonical twin, and not from a retired source."""
     # Una agenda de Barcelona: lo que solo pasa en línea («On-line») no se publica.
     online=bool(event.get('venue_names')) and all(ONLINE_VENUE.match(v or '') for v in event['venue_names'])
-    # Sin categoría fiable (taxonomía de 8) el registro espera revisión editorial: no se publica.
-    pending=event.get('public_category')=='pendiente'
+    # Sin categoría fiable (taxonomía de 8) el registro espera revisión editorial; los excluidos por
+    # regla editorial (servicios, ocio social) tampoco salen. Ninguno se borra.
+    pending=event.get('public_category') in ('pendiente','excluida')  # pendiente de revisión o fuera de la agenda
     return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES)
 
 

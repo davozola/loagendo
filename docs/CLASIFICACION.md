@@ -48,3 +48,15 @@ recurrentes, cambios tras sincronizar y correcciones.
 ## Compatibilidad
 `?cat=Conciertos`, `?cat=Familia`, `?kids=1` y `public_category=Familia` en la API siguen funcionando
 (se traducen a `musica` / canal `familia`). La categoría anterior queda en `legacy_category` (subtipos internos).
+
+## Decisiones editoriales del 20-10-2026
+- «Patis escolars oberts» → Talleres y experiencias, canal En familia (`regla_editorial`).
+- Servicios, campañas y convocatorias (Punt TIC, donación de sangre, cambio de hora, premios…) → `excluida`.
+- Ocio social y profesional (citas, intercambio de idiomas, pub crawls, networking, empleo, congresos,
+  pub quiz) → `excluida`, salvo que el título empiece por un género cultural o lo nombre.
+- Comunidad y cuidados («El barri proposa», «Ens cuidem», grupos comunitarios o de apoyo) → Talleres y
+  experiencias, canal Vida de barrio (`comunidad_y_cuidados`).
+- Gastronomía, ciencia y literatura: sin categoría ni canal propio por ahora; siguen en su categoría.
+
+`excluida` no se publica ni entra en la cola de pendientes; el registro se conserva y una corrección
+editorial lo devuelve a una categoría. El panel lista las excluidas con su motivo.

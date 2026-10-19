@@ -39,6 +39,9 @@ CHANNELS = {
     'festivales': ('Festivales', 'Festivals'),
 }
 PENDING = 'pendiente'
+# Fuera de la agenda cultural por decisión editorial (20-10-2026): no se publica ni va a la cola
+# de revisión; el registro se conserva y una corrección editorial puede devolverlo.
+EXCLUDED = 'excluida'
 # Enlaces y parámetros antiguos (cat=Conciertos, kids=1…) siguen funcionando.
 LEGACY_CATEGORY = {'Conciertos': 'musica', 'Música': 'musica', 'Teatro': 'escena', 'Cine': 'cine', 'Exposiciones': 'arte',
                    'Talleres': 'talleres', 'Deporte': 'deporte'}
@@ -98,7 +101,18 @@ EVENTBRITE_CATEGORY = {'music': 'musica', 'film & media': 'cine', 'film, media &
 SOURCE_DEFAULT = {'venue_xceed': 'musica', 'venue_songkick': 'musica', 'web_conciertos_club': 'musica', 'venue_dice': 'musica'}
 VENUE_GENRE = [('escena', re.compile(r"^(?:teatre|teatro)\b|\b(?:sala beckett|mercat de les flors|tnc|teatre nacional|gran teatre del liceu)\b")),
                ('cine', re.compile(r"\b(?:filmoteca|cinemes|cines|cinema (?!a la fresca))"))]
-SERVICE = re.compile(r"\b(?:patis escolars oberts|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
+# Decisiones editoriales del 20-10-2026 (David):
+#  - «Patis escolars oberts»: patios abiertos para jugar → Talleres y experiencias, canal En familia.
+#  - Servicios y convocatorias: fuera de la agenda.
+#  - Ocio social de ticketera (citas, intercambios, pub crawls, networking, empleo, congresos): fuera.
+#  - Comunidad y cuidados (grupos de barrio, «El barri proposa», «Ens cuidem»): Talleres + Vida de barrio.
+PATIS = re.compile(r"\bpatis? escolars? oberts?\b")
+SOCIAL = re.compile(r"\b(?:singles|single (?:night|party)|dating|citas|first dates|speed ?dating|language exchange|intercambio de idiomas|intercanvi d'idiomes|pub crawl|party tour|boat party|bar crawl|"
+                    r"networking|meet people|new friends|nuevos amigos|afterwork|job fair|feria de empleo|employer|hackathon|womenhack|summit|congress|congres (?:mundial|internacional)|congreso (?:mundial|internacional)|"
+                    r"conference|forum event|venture capital|real estate|inversion inmobiliaria|investment|pub quiz|trivia|casino barcelona|expansion playbook|evento anual)\b")
+COMMUNITY = re.compile(r"(?:\bel barri proposa\b|\bens cuidem\b|\bgrup (?:comunitari|de suport|virtual de suport|de dones|de teixidores|de cura|d'insomni)|"
+                       r"\bactivitat comunitaria\b|\bcura comunitaria\b|\bespai de (?:participacio|pausa|cura|acompanyament)\b|\btrobada 'repara)")
+SERVICE = re.compile(r"\b(?:campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
 
 SOURCE_CATEGORY = {
     'Música y vida nocturna': 'musica', 'Artes escénicas': 'escena', 'Cine y audiovisual': 'cine',
@@ -175,9 +189,19 @@ def classify(ev, override=None):
     inner = inner_categories(title)
     if len(inner) == 1:
         signals.append((inner[0], 'palabra_titulo', 'El título menciona el género'))
-    if SERVICE.search(norm(title)) and not (lead and lead in ('talleres', 'charlas', 'musica', 'escena', 'cine')):
-        return {'category': PENDING, 'status': 'pendiente', 'method': 'servicio_o_convocatoria',
-                'evidence': 'Parece un servicio, espacio abierto o convocatoria, no una actividad programada', 'ambiguous': False}
+    t = norm(title)
+    if PATIS.search(t):
+        return {'category': 'talleres', 'status': 'confirmada', 'method': 'regla_editorial',
+                'evidence': 'Patio escolar abierto para jugar en familia (decisión editorial 20-10-2026)', 'ambiguous': False}
+    if not lead and not inner_categories(title) and SOCIAL.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'ocio_social_o_profesional',
+                'evidence': 'Ocio social, networking, empleo o congreso: fuera de la agenda cultural (decisión editorial 20-10-2026)', 'ambiguous': False}
+    if SERVICE.search(t) and not (lead and lead in ('talleres', 'charlas', 'musica', 'escena', 'cine')):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
+                'evidence': 'Servicio, campaña o convocatoria, no una actividad programada (decisión editorial 20-10-2026)', 'ambiguous': False}
+    if not lead and COMMUNITY.search(t):
+        return {'category': 'talleres', 'status': 'probable', 'method': 'comunidad_y_cuidados',
+                'evidence': 'Grupo o espacio comunitario del barrio (decisión editorial 20-10-2026)', 'ambiguous': False}
     if not signals:
         return {'category': PENDING, 'status': 'pendiente', 'method': 'sin_senal',
                 'evidence': 'Ni formato, ni género en el título, ni categoría de la fuente', 'ambiguous': False}
@@ -211,13 +235,17 @@ def channels(ev, category, override=None):
     paths = [norm(p) for p in ev.get('classification_paths') or []]
     if ev.get('family_audience'):
         out['familia'] = 'La fuente la marca para público familiar o infantil'
+    elif PATIS.search(title):
+        out['familia'] = 'Patio escolar abierto para jugar en familia'
     # Vida de barrio: lo que programa el tejido de proximidad, no las clases de cada semana
     # (el taller de pilates de un centre cívic es un curso, no vida de barrio).
     import datetime as _dt
     try: span = (_dt.date.fromisoformat(str(ev.get('end'))[:10]) - _dt.date.fromisoformat(str(ev.get('start'))[:10])).days
     except ValueError: span = 0
     recurring = category == 'talleres' and (span > 7 or ev.get('format') == 'course')
-    if not recurring and BARRIO_TITLE.search(title):
+    if COMMUNITY.search(title):
+        out['barrio'] = 'Grupo o espacio comunitario del barrio'
+    elif not recurring and BARRIO_TITLE.search(title):
         out['barrio'] = 'Fiesta o actividad vecinal según el título'
     elif not recurring and BARRIO_VENUE.search(venue):
         out['barrio'] = f'Equipamiento de proximidad: {(ev.get("venue_names") or [""])[0]}'
@@ -347,8 +375,9 @@ def report(conn, events, today, examples=8, queue_limit=300):
     from collections import Counter, defaultdict
     initialize(conn)
     base = [e for e in events if eligible(e, today)]
-    pub = [e for e in base if e['public_category'] != PENDING]
+    pub = [e for e in base if e['public_category'] not in (PENDING, EXCLUDED)]
     pending = [e for e in base if e['public_category'] == PENDING]
+    excluded = [e for e in base if e['public_category'] == EXCLUDED]
     amb = [e for e in pub if e.get('category_ambiguous')]
     weak = [e for e in pub if e.get('category_status') == 'probable']
     brief = lambda e: {'source': e['source'], 'id': e['id'], 'title': e['title'], 'start': e['start'], 'end': e['end'], 'category': e['public_category'],
@@ -357,10 +386,10 @@ def report(conn, events, today, examples=8, queue_limit=300):
     by_source = defaultdict(Counter)
     for e in base:
         c = by_source[e['source']]; c['total'] += 1
-        c['pendiente' if e['public_category'] == PENDING else 'clasificadas'] += 1
+        c[{PENDING: 'pendiente', EXCLUDED: 'excluidas'}.get(e['public_category'], 'clasificadas')] += 1
         if e.get('category_status') == 'confirmada' or e.get('category_status') == 'editorial': c['confirmadas'] += 1
         if e.get('category_ambiguous'): c['ambiguas'] += 1
-    coverage = sorted(({'source': s, **dict(c), 'pct': round(100 * c['clasificadas'] / c['total'], 1)} for s, c in by_source.items()), key=lambda r: -r['total'])
+    coverage = sorted(({'source': s, **dict(c), 'pct': round(100 * c['clasificadas'] / max(1, c['total'] - c['excluidas']), 1)} for s, c in by_source.items()), key=lambda r: -r['total'])
     recurring = Counter(_head(e['title']) for e in pending + amb)
     changes = [dict(zip(('source', 'id', 'old_category', 'new_category', 'old_channels', 'new_channels', 'changed_at'), r)) for r in
                conn.execute("SELECT source,id,old_category,new_category,old_channels,new_channels,changed_at FROM classification_changes ORDER BY changed_at DESC, rowid DESC LIMIT 100")]
@@ -368,7 +397,9 @@ def report(conn, events, today, examples=8, queue_limit=300):
           conn.execute("SELECT source,id,category,channels_add,channels_remove,note,updated_at FROM classification_overrides ORDER BY updated_at DESC")]
     for o in ov: o['channels_add'] = json.loads(o['channels_add']); o['channels_remove'] = json.loads(o['channels_remove'])
     return {
-        'today': today, 'eligible': len(base), 'published': len(pub), 'pending': len(pending),
+        'today': today, 'eligible': len(base), 'published': len(pub), 'pending': len(pending), 'excluded': len(excluded),
+        'excluded_reasons': dict(Counter(e.get('category_method') for e in excluded).most_common()),
+        'excluded_examples': [brief(e) for e in excluded[:examples]],
         'categories': {k: {'label': v[0], 'count': sum(1 for e in pub if e['public_category'] == k)} for k, v in CATEGORIES.items()},
         'channels': {k: {'label': v[0], 'count': sum(1 for e in pub if k in (e.get('channels') or []))} for k, v in CHANNELS.items()},
         'status': dict(Counter(e.get('category_status') for e in base)),

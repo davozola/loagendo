@@ -82,3 +82,12 @@ Motivos de las 417 pendientes: sin señal 318 · servicio o convocatoria 99 (82 
 - Tests: 232 en verde (18 nuevos en `tests/test_classification.py`: reglas, canales, pendientes no públicas, corrección que sobrevive a una reimportación, idempotencia del registro, informe, contrato de la interfaz).
 - Navegador (Chromium, export de prueba con datos del 19-10), escritorio 1360 px y móvil 390 px: 394 planes el lunes 19; «En familia» 17; + «Teatro y danza» 8; + Gratis 3; chips activos y «Limpiar todo» devuelven 394; URL antigua `?cat=Conciertos&kids=1` se traduce; «Arte y exposiciones» + «Arte y galerías» 131; 7 días de música 301; catalán correcto; ficha abierta muestra categoría y canales; sin desbordamiento horizontal; sin errores JS.
 - No hay 100 % de cobertura: 417 fichas pendientes de revisión, 515 ambiguas y 1.833 solo probables.
+
+## Actualización 20-10-2026: decisiones de la sección D aplicadas
+- Patis escolars oberts (82) → Talleres y experiencias + En familia.
+- Servicios y convocatorias (28) y ocio social/profesional (38) → excluidas (no publicadas, conservadas, reversibles).
+- Comunidad y cuidados (33) → Talleres y experiencias + Vida de barrio.
+- Gastronomía, ciencia, literatura: sin cambios.
+
+Resultado sobre las mismas 9.544 elegibles: **9.231 publicadas (96,7 %)**, 247 pendientes (CCCB 82, Eventbrite 64, centres cívics 47, GuiaBCN 36…), 66 excluidas.
+Canales: Vida de barrio 2.238, En familia 930, Arte y galerías 275, Festivales 221, Al aire libre 199.

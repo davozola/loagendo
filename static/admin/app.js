@@ -65,13 +65,14 @@ const pubLink=e=>`<a href="/e/${encodeURIComponent(e.source)}/${encodeURICompone
 function fixer(e){return `<span class="fix" data-s="${esc(e.source)}" data-i="${esc(e.id)}"><select aria-label="Categoría para ${esc(e.title)}"><option value="">— elegir —</option>${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${e.category===k?'selected':''}>${esc(v)}</option>`).join('')}</select><button type="button" class="linkbutton">Guardar</button></span>`}
 function renderClass(r){
  const cats=Object.entries(r.categories).map(([k,v])=>[esc(v.label),v.count]),chans=Object.entries(r.channels).map(([k,v])=>[esc(v.label),v.count]);
- const cov=r.coverage.map(c=>[esc(c.source),c.total,c.clasificadas||0,c.pendiente||0,c.ambiguas||0,c.pct+' %']);
+ const cov=r.coverage.map(c=>[esc(c.source),c.total,c.clasificadas||0,c.pendiente||0,c.excluidas||0,c.ambiguas||0,c.pct+' %']);
  const ex=list=>list.map(e=>[pubLink(e),esc(CATS[e.category]||e.category),esc(e.method),`<small>${esc(e.evidence)}</small>`,fixer(e)]);
- $('classif').innerHTML=`<h3>${r.eligible} fichas vigentes elegibles · ${r.published} publicadas con categoría · ${r.pending} pendientes de revisión (no se publican)</h3>
+ $('classif').innerHTML=`<h3>${r.eligible} fichas vigentes elegibles · ${r.published} publicadas con categoría · ${r.pending} pendientes de revisión · ${r.excluded} fuera de la agenda por regla editorial (ninguna se publica)</h3>
  <p class="msg">Las pendientes no tienen señal suficiente para una categoría; no hay «Otros». Una corrección editorial se guarda aparte y sobrevive a cualquier sincronización.</p>
  <div class="metrics-grid"><div><h3>Por categoría</h3>${table(cats)}</div><div><h3>Por canal</h3>${table(chans)}</div><div><h3>Estado</h3>${table(Object.entries(r.status).map(([k,v])=>[esc(k),v]))}</div><div><h3>Método</h3>${table(Object.entries(r.methods).map(([k,v])=>[esc(k),v]))}</div></div>
- <h3>Cobertura por fuente</h3>${table(cov,['Fuente','Elegibles','Con categoría','Pendientes','Ambiguas','Cobertura'])}
+ <h3>Cobertura por fuente</h3>${table(cov,['Fuente','Elegibles','Con categoría','Pendientes','Excluidas','Ambiguas','Cobertura'])}
  <h3>Pendientes por motivo</h3>${table(Object.entries(r.pending_reasons).map(([k,v])=>[esc(k),v]))}
+ <h3>Fuera de la agenda por regla editorial (${r.excluded})</h3>${table(Object.entries(r.excluded_reasons).map(([k,v])=>[esc(k),v]))}${table(r.excluded_examples.map(e=>[pubLink(e),esc(e.source),`<small>${esc(e.evidence)}</small>`,fixer(e)]),['Ficha','Fuente','Motivo','Devolver a una categoría'])}
  <h3>Casos recurrentes (pendientes y ambiguos, por inicio de título)</h3>${table(r.recurring.map(x=>[esc(x.pattern),x.count]))}
  <h3>Cola de revisión (${r.pending})</h3>${table(r.queue.map(e=>[esc(e.start),pubLink(e),esc(e.source),esc(e.venue),`<small>${esc(e.evidence)}</small>`,fixer(e)]),['Inicio','Ficha','Fuente','Sala','Motivo','Corregir'])}
  <h3>Posiblemente mal clasificadas: señales en conflicto (${r.ambiguous.count})</h3>${table(ex(r.ambiguous.examples),['Ficha','Categoría','Método','Evidencia','Corregir'])}
