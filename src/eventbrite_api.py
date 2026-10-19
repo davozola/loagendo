@@ -4,10 +4,11 @@ La búsqueda pública de la API se retiró en febrero de 2020, así que el
 descubrimiento sigue siendo el listado público (venue_feeds, venue_eventbrite).
 Aquí solo se completa cada evento ya archivado con GET /v3/events/{id}/.
 
-Reglas: no se modifica el registro importado; la hora va a source_enrichments
-(como la página oficial de GuiaBCN) y el precio a source_detail_facts, con la
-URL consultada, la fecha y el hash de la respuesta. Si la fecha de la API no
-coincide con la de la ficha, no se pone hora. El precio solo sale de campos
+Reglas: no se modifica el registro importado (queda como historial); lo que dice
+la API va a source_enrichments y source_detail_facts, con la URL consultada, la
+fecha y el hash de la respuesta, y al publicar manda la API: fecha, hora, nombre,
+resumen, estado (cancelado) y lugar. Si la API da otra fecha que el listado, el
+evento se publica en la fecha de la API. El precio solo sale de campos
 estructurados (is_free, ticket_availability); nunca de la descripción.
 """
 from __future__ import annotations
@@ -27,8 +28,8 @@ from src.network import tls_context
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "venue_eventbrite"
-API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availability"
-PARSER_VERSION = 2  # 2: ids de URLs «-registration-»; reconsulta los 55 que fallaron
+API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availability,venue"
+PARSER_VERSION = 3  # 3: la API manda en fecha, hora, nombre, resumen, estado y lugar (19-10-2026); 2: ids «-registration-»
 RECHECK_DAYS = 3
 TZ = "Europe/Madrid"
 USER_AGENT = "Brollant/1.3 (+https://brollant.com) eventbrite-api"
@@ -92,8 +93,18 @@ def facts_from_event(event, expected_date):
     start_date, start_time = _local(event.get("start"))
     end_date, end_time = _local(event.get("end"))
     out = {"time": "", "time_text": "", "price_text": "", "price_basis": "", "date_matches": start_date == expected_date,
-           "api_start_date": start_date, "event_status": event.get("status") or "", "timezone": (event.get("start") or {}).get("timezone") or ""}
-    if out["date_matches"] and start_time:
+           "api_start_date": start_date, "api_end_date": end_date or start_date, "event_status": event.get("status") or "",
+           "timezone": (event.get("start") or {}).get("timezone") or "",
+           "api_name": ((event.get("name") or {}).get("text") or "").strip(), "api_summary": (event.get("summary") or "").strip(),
+           "online_event": bool(event.get("online_event"))}
+    venue = event.get("venue") or {}
+    if isinstance(venue, dict) and venue.get("name"):
+        address = venue.get("address") or {}
+        out["api_venue"] = {"name": venue.get("name", ""), "address": address.get("localized_address_display") or address.get("address_1") or "",
+                            "city": address.get("city") or "", "lat": address.get("latitude") or venue.get("latitude") or "",
+                            "lon": address.get("longitude") or venue.get("longitude") or ""}
+    # La API manda: hora aunque la fecha del listado no coincida (el evento se publica en la fecha de la API).
+    if start_time:
         out["time"] = start_time
         out["time_text"] = f"{start_time}–{end_time}" if end_time and end_date == start_date and end_time != start_time else start_time
     if event.get("is_free") is True:

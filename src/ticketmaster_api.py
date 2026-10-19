@@ -51,7 +51,7 @@ GENRE_TYPE = {"KnvZfZ7vAe1": "ComedyEvent", "KnvZfZ7v7nI": "DanceEvent", "Comedy
               "Children's Theatre": "ChildrensEvent", "Teatro infantil": "ChildrensEvent", "Family": "ChildrensEvent", "Familia": "ChildrensEvent",
               "Fine Art": "VisualArtsEvent", "Bellas Artes": "VisualArtsEvent", "Literary": "LiteraryEvent"}
 # Productos que no son un evento: mejoras de entrada, aparcamiento, paquetes.
-NOT_AN_EVENT = re.compile(r"^\s*upgrade\b|meet\s*(?:&|and|y)\s*greet|\bparking\b|aparcamiento|vip\s+package|paquete\s+vip|hospitality", re.I)
+NOT_AN_EVENT = re.compile(r"^\s*test\s+\d{5,}\b|^\s*upgrade\b|meet\s*(?:&|and|y)\s*greet|\bparking\b|aparcamiento|vip\s+package|paquete\s+vip|hospitality", re.I)
 STATUS_TYPE = {"cancelled": "https://schema.org/EventCancelled", "canceled": "https://schema.org/EventCancelled",
                "postponed": "https://schema.org/EventPostponed", "rescheduled": "https://schema.org/EventRescheduled"}
 
@@ -230,6 +230,16 @@ def record_from_event(event, venue):
         record["raw"]["loagendo"]["ticketmaster"]["collapsed_slots"] = event["loagendo_collapsed_slots"]
     record["evidence_level"] = "ticketing_api_unverified"
     record["time_evidence_field"] = "dates.start.localTime"
+    # Sin hora de inicio («timeTBA») pero con apertura de puertas: se da como tal, nunca como inicio.
+    doors = ((event.get("dates") or {}).get("access") or {}).get("startDateTime")
+    if not record.get("time_text") and doors:
+        from zoneinfo import ZoneInfo
+        try: local = dt.datetime.fromisoformat(str(doors).replace("Z", "+00:00")).astimezone(ZoneInfo("Europe/Madrid"))
+        except ValueError: local = None
+        if local and local.date().isoformat() == record["start"]:
+            label = f"{local:%H:%M} (apertura de puertas)"
+            record["time_text"] = label; record["raw"].setdefault("normalized", {})["time_text"] = label
+            record["time_evidence_field"] = "dates.access.startDateTime"
     return record
 
 

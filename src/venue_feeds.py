@@ -243,7 +243,8 @@ def _date(value):
 
 
 def _time(value):
-    match = re.match(r"\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})", str(value or ""))
+    # «2026-10-22T19:30», y también «2026-10-22 CEST 19:30» o «2026-10-22 19:30» (Sala Apolo).
+    match = re.match(r"\d{4}-\d{2}-\d{2}(?:T|\s+(?:[A-Z]{3,5}\s+)?)(\d{2}):(\d{2})", str(value or ""))
     return f"{match.group(1)}:{match.group(2)}" if match else ""
 
 
@@ -272,6 +273,13 @@ def record_from_jsonld(venue, node, page_url):
     title = _text(node.get("name"))
     start, end = _date(node.get("startDate")), _date(node.get("endDate")) or _date(node.get("startDate"))
     if not title or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", start): return None
+    # Una sesión nocturna que acaba de madrugada («22:00 → 03:00 del día siguiente») es de un solo día.
+    end_time = _time(node.get("endDate"))
+    if end and end != start and end_time and end_time < "08:00":
+        try:
+            import datetime as _dt
+            if (_dt.date.fromisoformat(end) - _dt.date.fromisoformat(start)).days == 1: end = start
+        except ValueError: pass
     url = str(node.get("url") or page_url)
     url = urljoin(page_url, url)
     location = node.get("location") or {}
@@ -431,11 +439,29 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if fetcher is fetch and not robots_allows(link): continue
                     status, final_url, detail = fetcher(link, timeout); fetched += 1
                     if status == 200: nodes.extend((final_url or link, node) for node in jsonld_events(detail))
+        # Listados que dan solo la fecha (Eventbrite): la página del evento trae la hora y, a veces,
+        # una fecha corregida. Solo si la sala lo pide en config («time_details»: máximo de páginas).
+        budget_time = int(venue.get("time_details", 0)); moved = []
+        for n, (page_url, node) in enumerate(nodes):
+            if budget_time <= 0: break
+            event_url = str(node.get("url") or "")
+            if len(str(node.get("startDate") or "")) != 10 or not event_url.startswith("http"): continue
+            if fetcher is fetch and not robots_allows(event_url): continue
+            detailed = _page_extras(dict(node), event_url, fetcher, timeout); fetched += 1; budget_time -= 1
+            if str(detailed.get("startDate") or "")[:10] != str(node.get("startDate")):
+                moved.append((event_url, str(node.get("startDate"))))   # la página dice otra fecha: manda la página
+            nodes[n] = (page_url, detailed)
         if not nodes: raise RuntimeError("Ni la página ni sus enlaces de evento contienen JSON-LD schema.org/Event; revisa la URL con --venue-census" if pages else "El feed no devolvió eventos")
         records = [r for r in (record_from_jsonld(venue, node, page_url) for page_url, node in nodes) if r]
         seen = set(); records = [r for r in records if not (r["id"] in seen or seen.add(r["id"]))]
         mutated = 0
         with conn:
+            # Evento trasladado según su propia página: la ficha con la fecha vieja del listado no se
+            # borra (historial), pero deja de publicarse.
+            for event_url, old_start in moved:
+                old_id = record_id(venue["slug"], event_url.split("?", 1)[0], old_start, "")
+                if old_id not in seen:
+                    conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source=? AND id=?", (source, old_id))
             for record in records:
                 mutated += int(_upsert_record(conn, run_id, record)[0])
                 if record["raw"]["image"].startswith(("https://", "http://")):

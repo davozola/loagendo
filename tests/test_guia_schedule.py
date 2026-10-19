@@ -138,6 +138,133 @@ class PublicTimeTests(unittest.TestCase):
         self.assertIsNone(public_fields(self.event(), projection)['time'])
 
 
+class WeeklyTextTests(unittest.TestCase):
+    def test_generalitat_weekly_text_gives_hours_per_day(self):
+        from src.guia_schedule import weekly_rows, schedule_by_day
+        text = 'Dimarts: 20.30 h Dimecres i dijous: 20 h Divendres i dissabtes: 17 h i 21 h Diumenges: 16.30 h Durada aproximada: 180 minuts'
+        by_day = schedule_by_day(weekly_rows(text), '2026-10-19', '2026-10-25')
+        self.assertNotIn('2026-10-19', by_day)                       # dilluns: no hi ha funció
+        self.assertEqual(by_day['2026-10-20'], '20:30')
+        self.assertEqual(by_day['2026-10-23'], '17:00 · 21:00')
+        self.assertEqual(by_day['2026-10-25'], '16:30')
+
+    def test_unclear_hours_are_not_asserted(self):
+        from src.guia_schedule import weekly_rows, schedule_by_day
+        by_day = schedule_by_day(weekly_rows('Dissabtes: 17 h Diumenges: 12 h o 17 h'), '2026-10-19', '2026-10-25')
+        self.assertEqual(by_day, {'2026-10-24': '17:00', '2026-10-25': '12:00 · 17:00'})   # «o»: dos pases
+        self.assertEqual(weekly_rows('Abans de res: dimarts 20 h'), [])
+
+    def test_seasons(self):
+        from src.guia_schedule import weekly_rows, schedule_by_day
+        inline = "Dilluns: d'11 a 19.30 h (del 25 de setembre al 24 de juny) i de 10 a 20 h (del 25 de juny al 24 de setembre)"
+        self.assertEqual(schedule_by_day(weekly_rows(inline), '2026-06-15', '2026-06-30'), {'2026-06-15': '11:00–19:30', '2026-06-22': '11:00–19:30', '2026-06-29': '10:00–20:00'})
+        blocks = "Horari d'hivern (de l'1 de novembre al 31 de març): De dimarts a diumenges: de 10 a 18 h Horari d'estiu (de l'1 d'abril al 31 d'octubre): De dimarts a diumenges: de 10 a 20 h"
+        by_day = schedule_by_day(weekly_rows(blocks), '2026-10-30', '2026-11-03')
+        self.assertEqual(by_day, {'2026-10-30': '10:00–20:00', '2026-10-31': '10:00–20:00', '2026-11-01': '10:00–18:00', '2026-11-03': '10:00–18:00'})
+        months = 'D’octubre a febrer: De dimarts a dissabtes: de 10 a 19 h De març a setembre: De dimarts a dissabtes: de 10 a 20 h'
+        self.assertEqual(schedule_by_day(weekly_rows(months), '2027-02-26', '2027-03-02'), {'2027-02-26': '10:00–19:00', '2027-02-27': '10:00–19:00', '2027-03-02': '10:00–20:00'})
+
+    def test_weekend_and_holidays(self):
+        from src.guia_schedule import schedule_by_day, weekly_rows
+        rows = [{'dies': 'Dissabte, diumenge i festius', 'hores': 'A les 10:30h (en castellà)'}, {'hores': 'A les 12:00 h (en català)'}]
+        self.assertEqual(schedule_by_day(rows, '2026-10-19', '2026-10-25'), {'2026-10-24': '10:30 · 12:00', '2026-10-25': '10:30 · 12:00'})
+        self.assertEqual(weekly_rows('De dimarts a dissabtes: de 10 a 19 h Dilluns tancat')[-1], {'dies': 'Dilluns', 'hores': 'tancat'})
+
+
+class RowNotesTests(unittest.TestCase):
+    def test_each_day_keeps_its_own_activity(self):
+        # 99400789129 (10è aniversari de Sinèrgics): cada día una actividad y una hora.
+        from src.guia_schedule import summary
+        rows = [{'dies': 'Dilluns', 'hores': 'de 17.00 h a 18.00 h', 'preu': 'Entrada Gratuïta', 'observacions': 'Passacarrers amb xaranga'},
+                {'dies': 'Dimarts', 'hores': 'de 16.00 h a 18.00 h', 'observacions': 'Fira a Sinèrgics'},
+                {'dies': 'Dijous', 'hores': 'de 12.00 h a 14.00 h', 'observacions': 'Vermut comunitari'}]
+        out = summary(rows, '2026-10-19', '2026-10-23')
+        self.assertEqual(out['by_day'], {'2026-10-19': '17:00–18:00', '2026-10-20': '16:00–18:00', '2026-10-22': '12:00–14:00'})
+        self.assertTrue(out['schedule_text'].startswith('Dilluns: de 17.00 h a 18.00 h (Passacarrers amb xaranga) · Dimarts'))
+        self.assertNotIn('schedule_note', out['facts'])
+        self.assertNotIn('schedule_days', out['facts'])
+        from src.guia_schedule import notes_by_day
+        self.assertEqual(notes_by_day(rows, '2026-10-19', '2026-10-23'), {'2026-10-19': 'Passacarrers amb xaranga', '2026-10-20': 'Fira a Sinèrgics', '2026-10-22': 'Vermut comunitari'})
+        self.assertEqual(notes_by_day([{'dies': 'Dilluns', 'hores': '17 h', 'observacions': 'Cal inscripció'}], '2026-10-19', '2026-10-23'), {})
+
+
+class CentresCivicsTests(unittest.TestCase):
+    def test_sessions_from_the_activity_page(self):
+        from src.web_agendas import centres_sessions
+        from mvp.catalog import project_raw, listed_dates
+        page = ('<p>&nbsp;<br><a href="x">Julia Rodríguez</a><br><span style="color:#696969;">30/10 – 19.30 h</span><br>Amb <em>Hacia la vida</em>…</p>'
+                '<p>&nbsp;<br><a href="y">Marc Vilajuana</a><br><span>06/11 – 19.30 h</span><br>Després de…</p><h2>Activitats relacionades</h2><p>Altres</p><p>01/12 – 18 h</p>')
+        sessions = centres_sessions(page)
+        self.assertEqual([(x['day'], x['month'], x['time'], x['title']) for x in sessions], [(30, 10, '19:30', 'Julia Rodríguez'), (6, 11, '19:30', 'Marc Vilajuana')])
+        raw = {'item': {'when': '30/10, 06, 13, 20 i 27/11/2026', 'sessions': sessions}, 'normalized': {}}
+        out = project_raw('web_centres_civics', 'a', 'Cinc concerts', '2026-10-30', '2026-11-27', 'program', '', raw)
+        self.assertEqual(out['hours_by_day'], {'2026-10-30': '19:30', '2026-11-06': '19:30', '2026-11-13': '', '2026-11-20': '', '2026-11-27': ''})
+        self.assertEqual(out['notes_by_day'], {'2026-10-30': 'Julia Rodríguez', '2026-11-06': 'Marc Vilajuana'})
+        self.assertEqual(listed_dates('20/12, 10 i 17/01/2027'), ['2026-12-20', '2027-01-10', '2027-01-17'])
+        self.assertEqual(listed_dates('Del 14/10/2026 al 25/02/2027'), [])
+
+
+class DetailOutsideListingTests(unittest.TestCase):
+    def test_dated_sessions_outside_the_listing_period(self):
+        # 99400765397 «Cicle de titelles migratòries»: listado 17–23 oct.; detalle 16, 17, 23 y 24.
+        from src.guia_schedule import dated_outside
+        rows = [{'dies': '16 octubre i 24 octubre', 'hores': 'a les 17.30 h'}, {'dies': '17 octubre i 23 octubre', 'hores': 'a les 19.00 h'}]
+        self.assertEqual(dated_outside(rows, '2026-10-17', '2026-10-23'), {'2026-10-16': '17:30', '2026-10-24': '17:30'})
+        self.assertEqual(dated_outside([{'dies': 'Dissabte', 'hores': 'a les 12 h'}], '2026-10-17', '2026-10-23'), {})
+
+
+class SampleReviewRulesTests(unittest.TestCase):
+    """Reglas de la revisión de 20 fichas (19-10-2026)."""
+    def test_first_weekend_of_the_month(self):
+        from src.guia_schedule import schedule_by_day
+        self.assertEqual(sorted(schedule_by_day([{'dies': '1r dissabte i diumenge del mes', 'hores': 'Per determinar'}], '2026-11-01', '2026-11-30')), ['2026-11-07', '2026-11-08'])
+
+    def test_overnight_session_is_one_day(self):
+        from src.venue_feeds import record_from_jsonld
+        node = {'@type': 'MusicEvent', 'name': 'MUV: Anti-Mondays Jam', 'startDate': '2026-11-02T22:00:00+01:00', 'endDate': '2026-11-03T03:00:00+01:00',
+                'url': 'https://dice.fm/event/x', 'location': {'@type': 'Place', 'name': 'Marula Café'}}
+        record = record_from_jsonld({'slug': 'dice', 'name': 'DICE', 'type': 'ticketing'}, node, 'https://dice.fm/event/x')
+        self.assertEqual((record['start'], record['end']), ('2026-11-02', '2026-11-02'))
+
+    def test_online_and_policy_text(self):
+        from mvp.catalog import ONLINE_VENUE, BOILER_POLICY, source_description
+        self.assertTrue(ONLINE_VENUE.match('On-line')); self.assertFalse(ONLINE_VENUE.match('Online Club Barcelona'))
+        self.assertTrue(BOILER_POLICY.match('Aplica una cuota de servicio de 2€ por transacción.'))
+        self.assertEqual(source_description({'loagendo': {'description': '**MUV** en Marula \\+ DJ'}}, 'venue_dice'), 'MUV en Marula + DJ')
+
+
+class SampleReview2Tests(unittest.TestCase):
+    def test_price_parts_and_links(self):
+        from mvp.catalog import split_price, readable_links
+        self.assertEqual(split_price('Entrada general: 87.48 € · Reducció dels imports als cursos, · informeu-vos al centre · \ufeff Cal inscripció prèvia.'),
+                         ('Entrada general: 87.48 € · Reducció dels imports als cursos, informeu-vos al centre', ['Cal inscripció prèvia.']))
+        links = readable_links([{'label': 'Enlace detectado en la fuente · GuiaBCN', 'url': 'http://www.instagram.com/x/'},
+                                {'label': 'Enlace detectado en la fuente', 'url': 'https://www.instagram.com/x'},
+                                {'label': 'Enlace detectado en la fuente', 'url': 'http://www.cotxeres-casinet.org'}])
+        self.assertEqual([l['label'] for l in links], ['Instagram', 'Web: cotxeres-casinet.org'])
+
+
+class LastWeekdayTests(unittest.TestCase):
+    def test_last_friday_without_accent(self):
+        # 99400783039 «Verdaguer y Gaudí»: «Ultim divendres del mes» (sin acento en la fuente).
+        from src.guia_schedule import schedule_by_day
+        self.assertEqual(sorted(schedule_by_day([{'dies': 'Ultim divendres del mes', 'hores': 'de 10.30 h a 12.00 h'}], '2026-07-31', '2026-11-27')),
+                         ['2026-07-31', '2026-08-28', '2026-09-25', '2026-10-30', '2026-11-27'])
+        self.assertEqual(sorted(schedule_by_day([{'dies': 'último viernes de cada mes', 'hores': 'a las 19 h'}], '2026-10-01', '2026-11-30')), ['2026-10-30', '2026-11-27'])
+
+
+class ShareCardTests(unittest.TestCase):
+    def test_card_for_whatsapp_preview(self):
+        import datetime as dt
+        from src.publish_static import share_card
+        card = share_card({'title': 'Bambi', 'start': '2026-10-23', 'end': '2026-10-23', 'time_label': '23:59', 'time': '23:59',
+                           'venue_names': ['Moog'], 'summary': 'Sesión ' + 'muy larga ' * 30, 'media': [{'url': '/img/a.jpg'}], 'is_free': False}, dt.date(2026, 10, 19))
+        self.assertEqual((card['t'], card['w'], card['v'], card['i']), ('Bambi', 'vie 23 oct · medianoche', 'Moog', '/img/a.jpg'))
+        self.assertTrue(card['d'].endswith('…') and len(card['d']) <= 151)
+        long = share_card({'title': 'Expo', 'start': '2026-09-01', 'end': '2026-11-08', 'time_label': 'Exposición', 'venue_names': ['MACBA']}, dt.date(2026, 10, 19))
+        self.assertEqual(long['w'], 'Hasta el 8 nov')
+
+
 if __name__ == '__main__': unittest.main()
 
 
@@ -160,9 +287,21 @@ class RealRowsTests(unittest.TestCase):
         rows = [{'dies': 'Dissabte', 'hores': 'a les 10.30 h (anglès)'}, {'hores': 'a les 12.00 h (castellà)'}]
         self.assertEqual(summary(rows, '2026-10-24', '2026-10-24')['by_day'], {'2026-10-24': '10:30 · 12:00'})
 
-    def test_row_without_hours_gives_no_hours(self):
+    def test_row_without_hours_takes_the_hours_above(self):
+        # En la web de GuiaBCN la celda de horas vacía es un rowspan de la fila anterior
+        # (comprobado en 99400787152: «Dissabte / Diumenge: a les 10.30 h», 19-10-2026).
         rows = [{'dies': 'Divendres', 'hores': 'a les 21.00 h'}, {'dies': 'Dissabte', 'observacions': 'Entrades exhaurides'}]
-        self.assertEqual(summary(rows, '2026-10-23', '2026-10-24')['by_day'], {'2026-10-23': '21:00', '2026-10-24': ''})
+        self.assertEqual(summary(rows, '2026-10-23', '2026-10-24')['by_day'], {'2026-10-23': '21:00', '2026-10-24': '21:00'})
+        rows = [{'dies': 'Dijous', 'hores': 'a les 18.30 h'}, {'dies': 'Dissabte', 'hores': 'a les 10.30 h'}, {'dies': 'Diumenge', 'hores': ''}]
+        self.assertEqual(summary(rows, '2026-10-22', '2026-10-25')['by_day'], {'2026-10-22': '18:30', '2026-10-24': '10:30', '2026-10-25': '10:30'})
+
+    def test_more_day_formats(self):
+        from src.guia_schedule import weekly_rows, schedule_by_day, parse_hours
+        self.assertEqual(schedule_by_day(weekly_rows('Dimarts 20: 19 h Dimarts 27: 19 h'), '2026-10-20', '2026-10-27'), {'2026-10-20': '19:00', '2026-10-27': '19:00'})
+        self.assertEqual(schedule_by_day(weekly_rows('els tercers dimecres de mes a les 20 h'), '2026-10-21', '2026-12-31'), {'2026-10-21': '20:00', '2026-11-18': '20:00', '2026-12-16': '20:00'})
+        self.assertEqual(schedule_by_day([{'dies': '1r i 3r divendres del mes', 'hores': 'a les 11.00 h'}], '2026-10-01', '2026-10-31'), {'2026-10-02': '11:00', '2026-10-16': '11:00'})
+        self.assertEqual(schedule_by_day([{'dies': 'Dijous excepte festius', 'hores': 'a les 16.30 h'}], '2026-10-19', '2026-10-25'), {'2026-10-22': '16:30'})
+        self.assertEqual(parse_hours('A partir de les 10h i fins exhaurir existències')['sessions'], ['10:00'])
 
 
 class StaticExportTests(unittest.TestCase):

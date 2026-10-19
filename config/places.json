@@ -1,0 +1,105 @@
+{
+  "_note": "Lugares que algunas fuentes publican solo con su nombre. Dirección de la ficha del lugar en la fuente (conciertos.club) o de OpenStreetMap; coordenadas de OpenStreetMap (Nominatim), comprobadas el 19-10-2026. Se usan solo si la ficha no trae coordenadas propias. «same_as»: otro nombre del mismo lugar, que toma las coordenadas que publican nuestras fuentes para ese nombre.",
+  "places": [
+    {
+      "name": "Basílica de la Mercè",
+      "aliases": [
+        "Basílica de la Merced"
+      ],
+      "address": "Plaça de la Mercè, 1, 08002 Barcelona",
+      "lat": 41.3796261,
+      "lon": 2.1796813,
+      "evidence": "OpenStreetMap: Basílica de la Mercè (place_of_worship)"
+    },
+    {
+      "name": "Reial Cercle Artístic de Barcelona",
+      "aliases": [
+        "Real Círculo Artístico de Barcelona",
+        "Real Círculo Artístico"
+      ],
+      "address": "Carrer dels Arcs, 5, 08002 Barcelona",
+      "lat": 41.3845322,
+      "lon": 2.1745111,
+      "evidence": "OpenStreetMap: Reial Cercle Artístic de Barcelona (arts_centre)"
+    },
+    {
+      "name": "Casa Museu Núria Pla",
+      "aliases": [
+        "Casa Museo Nuria Pla"
+      ],
+      "address": "Av. de la Mare de Déu de Montserrat, 114, 08024 Barcelona",
+      "lat": 41.4159405,
+      "lon": 2.1704689,
+      "evidence": "OpenStreetMap: Casa Museu Núria Pla (museum)"
+    },
+    {
+      "name": "Iglesia del Sagrado Corazón (Poblenou)",
+      "aliases": [
+        "Iglesia del Sagrado Corazón"
+      ],
+      "address": "Carrer de Pere IV, 398, 08019 Barcelona",
+      "lat": 41.4105444,
+      "lon": 2.2037431,
+      "evidence": "Dirección: ficha del lugar en conciertos.club; coordenadas del portal en OpenStreetMap"
+    },
+    {
+      "name": "Parròquia de Sant Francesc de Sales",
+      "aliases": [
+        "Parroquia de San Francisco de Sales"
+      ],
+      "address": "Passeig de Sant Joan, 90, 08009 Barcelona",
+      "lat": 41.3984584,
+      "lon": 2.1718029,
+      "evidence": "OpenStreetMap: Sant Francesc de Sales (place_of_worship)"
+    },
+    {
+      "name": "Fira Barcelona Gran Via",
+      "aliases": [
+        "Fira Gran Via",
+        "Fira Barcelona - Recinte Gran Via"
+      ],
+      "address": "Av. Joan Carles I, 64, 08908 L'Hospitalet de Llobregat",
+      "lat": 41.3546222,
+      "lon": 2.1280404,
+      "evidence": "OpenStreetMap: Fira Gran Vía (conference_centre)"
+    },
+    {
+      "name": "Safari Disco Club",
+      "aliases": [],
+      "address": "Carrer de Tarragona, 141-157, 08014 Barcelona",
+      "lat": 41.3783395,
+      "lon": 2.1448682,
+      "evidence": "OpenStreetMap: Safari Disco Club (nightclub)"
+    },
+    {
+      "aliases": [
+        "Montjuïc. Sala Fabià Puigserver"
+      ],
+      "same_as": "Teatre Lliure - Sala Fabià Puigserver",
+      "evidence": "Teatre Lliure publica sus salas así; GuiaBCN: Pg Santa Madrona 40-46"
+    },
+    {
+      "aliases": [
+        "Montjuïc. Espai Lliure"
+      ],
+      "same_as": "Teatre Lliure - Sala Espai Lliure",
+      "evidence": "Teatre Lliure; GuiaBCN: Pl Margarida Xirgu 1"
+    },
+    {
+      "aliases": [
+        "Sala de Teclats – Museu de la Música",
+        "Sala de Teclats - Museu de la Música"
+      ],
+      "same_as": "Museu de la Música - L'Auditori",
+      "evidence": "L'Auditori: la Sala de Teclats es del Museu de la Música (Lepant 150)"
+    },
+    {
+      "aliases": [
+        "CC La Casa Elizalde",
+        "Casa Elizalde"
+      ],
+      "same_as": "Centre Cultural La Casa Elizalde",
+      "evidence": "Centres cívics: mismo equipamiento (València 302)"
+    }
+  ]
+}

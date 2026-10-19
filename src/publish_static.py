@@ -40,7 +40,7 @@ STATIC_FILES = ('public.css', 'public.js', 'vendor/leaflet.css', 'vendor/leaflet
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'lineup', 'lineup_times', 'subtype', 'venue_upcoming', 'description_credit')
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'subtype', 'venue_upcoming', 'description_credit')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -148,12 +148,12 @@ def default_thumbnailer():
     return resize
 
 
-def packed_hours(event):
+def packed_hours(event, field='hours_by_day'):
     """Horario por día en poco espacio: {etiqueta: [días desde el inicio]}.
 
     Un curso semanal de nueve meses tiene decenas de días con la misma hora;
     repetir cada fecha haría crecer el catálogo sin aportar nada."""
-    hours = event.get('hours_by_day') or {}
+    hours = event.get(field) or {}
     if not hours: return None
     start = dt.date.fromisoformat(event['start'])
     out = {}
@@ -175,7 +175,9 @@ def compact(event, images, full=True):
         'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'st': event.get('subtype') or '', 'tm': event.get('time') or '', 'tl': event['time_label'],
     }
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)
-    if event.get('lineup'): out['lu'] = event['lineup'][:40]  # para buscar por artista
+    if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
+    if event.get('lineup'): out['lu'] = event['lineup'][:40]
+    if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
     if not full: return out
     media = []
     for item in event.get('media', [])[:MAX_IMAGES_PER_EVENT]:
@@ -188,6 +190,7 @@ def compact(event, images, full=True):
 def public_detail(detail, images):
     out = {k: detail.get(k) for k in PUBLIC_DETAIL_FIELDS}
     out['hours_by_day'] = packed_hours(detail)
+    out['notes_by_day'] = packed_hours(detail, 'notes_by_day')
     media = []
     for item in detail.get('media', [])[:MAX_IMAGES_PER_EVENT]:
         exported = images.item(item)
@@ -195,6 +198,37 @@ def public_detail(detail, images):
     out['media'] = media
     out['links'] = [{'label': l['label'], 'url': l['url']} for l in detail.get('links', []) if str(l.get('url', '')).startswith('https://')]
     return out
+
+
+MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+DAYS_ES = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
+GENERIC_TIME = {'Varios días', 'Exposición', 'Hora no indicada', ''}
+
+
+def share_card(detail, today):
+    """Lo que se ve al compartir el enlace (WhatsApp, Telegram, redes): título, cuándo, dónde,
+    una frase de la descripción y la imagen. Solo datos que ya publica la ficha."""
+    def day(d):
+        x = dt.date.fromisoformat(d); return f"{DAYS_ES[x.weekday()]} {x.day} {MONTHS_ES[x.month - 1]}"
+    start, end = detail.get('start') or '', detail.get('end') or ''
+    label = detail.get('time_label') or ''
+    hours = '' if label in GENERIC_TIME else str(label).replace('23:59', 'medianoche')
+    if start and start == end: when = day(start) + (f' · {hours}' if hours else '')
+    elif start and end:
+        x = dt.date.fromisoformat(end)
+        span = f"Hasta el {x.day} {MONTHS_ES[x.month - 1]}" if start <= today.isoformat() else f"Del {day(start)} al {day(end)}"
+        when = span + (f' · {hours}' if hours else '')
+    else: when = ''
+    venue = (detail.get('venue_names') or [''])[0] or ''
+    text = ' '.join(str(detail.get('summary') or detail.get('description') or detail.get('editorial_summary') or '').split())
+    if len(text) > 150:
+        cut = text[:150]; text = (cut[:cut.rfind(' ')] if ' ' in cut else cut).rstrip(' ,.;:') + '…'
+    price = 'Gratis' if detail.get('is_free') else ''
+    media = detail.get('media') or []
+    return {'t': detail.get('title') or '', 'w': when, 'v': venue, 'd': text, 'p': price,
+            'i': media[0]['url'] if media else '', 'a': start, 'b': end, 'tm': detail.get('time') or '',
+            'g': [detail['coordinates']['lat'], detail['coordinates']['lon']] if detail.get('coordinates') else None,
+            'ad': ((detail.get('venues') or [{}])[0] or {}).get('address') or ''}
 
 
 def shard_of(key):
@@ -268,19 +302,24 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         day = (today + dt.timedelta(days=offset)).isoformat()
         page = catalog.query_events(conn, day=day, public=True, page_size=PAGE_SIZE, include_started=False)
         featured = catalog.query_events(conn, day=day, featured=True, public=True, page_size=30)
+        # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images) for e in page['items']],
                      'featured': [compact(e, images) for e in picks], 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
-    shards = {}
+    shards, cards = {}, {}
     for e in events:
         detail = catalog.event_detail(conn, e['source'], e['id'])
         if detail is None: continue
         # El cartel ya agrupado de todas las fuentes del mismo acto.
         detail['lineup'] = e.get('lineup') or detail.get('lineup') or []
         detail['lineup_times'] = e.get('lineup_times') or detail.get('lineup_times') or []
-        shards.setdefault(shard_of(e['key']), {})[e['key']] = public_detail(detail, images)
+        public = public_detail(detail, images)
+        shards.setdefault(shard_of(e['key']), {})[e['key']] = public
+        cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media']}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
+    # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
+    for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards)}
     sources = {s: {'label': catalog.SOURCES.get(s, s), 'attribution': registry_entry(registry, s).get('attribution', ''), 'license_url': registry_entry(registry, s).get('license_url', '')} for s in sorted({e['source'] for e in events}) if registry_entry(registry, s).get('public_credit') is not False}
@@ -300,7 +339,9 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts), encoding='utf-8')
     (out / '_headers').write_text(headers_file(), encoding='utf-8')
     # Every record has its own address (/e/<source>/<id>); the static host serves the app for it.
-    (out / '_redirects').write_text('/e/* /index.html 200\n', encoding='utf-8')
+    # /e/* lo sirve la función functions/e/[[path]].js: la app con la vista previa para compartir
+    # (título, foto, cuándo y dónde). Una regla de _redirects aquí le quitaría la ruta.
+    (out / '_redirects').write_text('', encoding='utf-8')
     (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
     base = site_url.rstrip('/') if site_url else ''
     soon_sitemap = (today + dt.timedelta(days=45)).isoformat()

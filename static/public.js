@@ -122,7 +122,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, subtype: c.st || null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, lineup: c.lu || [], media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, subtype: c.st || null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -143,13 +143,16 @@ async function shardFor(k) {
 // oficial de ese día cuando la fuente lo publica por días (GuiaBCN).
 // El horario por día: {fecha: etiqueta} desde la API local, o empaquetado
 // {etiqueta: [días desde el inicio]} en la web estática.
-function hoursByDay(e) {
-  const packed = e.hours_by_day; if (!packed || e._hours) return e._hours || null;
-  if (Object.values(packed).every(v => typeof v === 'string')) return (e._hours = packed);
+function unpackByDay(e, packed) {
+  if (!packed) return null;
+  if (Object.values(packed).every(v => typeof v === 'string')) return packed;
   const out = {}, base = new Date(e.start + 'T12:00:00');
   for (const [label, offsets] of Object.entries(packed)) for (const n of offsets) { const d = new Date(base); d.setDate(d.getDate() + n); out[d.toISOString().slice(0, 10)] = label }
-  return (e._hours = out);
+  return out;
 }
+function hoursByDay(e) { return e._hours || (e._hours = unpackByDay(e, e.hours_by_day)) }
+// Actividad de cada día cuando la fuente la da por filas («Dijous: vermut comunitari»).
+function noteOfDay(e, day) { return (e._notes || (e._notes = unpackByDay(e, e.notes_by_day) || {}))[day] || '' }
 function atDay(e, day) {
   const t = e.occurrences?.find(o => o.date === day && o.time);
   if (t) return {...e, time: t.time};
@@ -340,7 +343,7 @@ function days() {
 
 /* ---------- selection ---------- */
 function pick(e, i) {
-  const d = new Date(e.start + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
+  const d = new Date((e.featured_date || e.start) + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
   const meta = esc(catLabel(e));
   const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
   return `<button class="${i ? 'pick-small' : 'pick-large'}" type="button" data-open="${esc(key(e))}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
@@ -381,11 +384,13 @@ function madridNow() {
 const clock = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 const minutesOf = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null };
 function timesIn(s) { return [...new Set((String(s || '').match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\b/g) || []).map(x => x.padStart(5, '0')))].sort() }
+// Todos los tramos del día («10:00–13:00 · 16:00–19:00»): abre con el primero, cierra con el último,
+// y entre medias está cerrado (ranges).
 function rangeIn(s) {
-  const m = /\b([01]?\d|2[0-3]):([0-5]\d)\s*[–-]\s*([01]?\d|2[0-3]):([0-5]\d)\b/.exec(String(s || ''));
-  if (!m) return null;
-  const open = Number(m[1]) * 60 + Number(m[2]), close = Number(m[3]) * 60 + Number(m[4]);
-  return close > open ? {open, close} : null;
+  const ranges = [...String(s || '').matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\s*[–-]\s*([01]?\d|2[0-3]):([0-5]\d)\b/g)]
+    .map(m => ({open: Number(m[1]) * 60 + Number(m[2]), close: Number(m[3]) * 60 + Number(m[4])})).filter(r => r.close > r.open);
+  if (!ranges.length) return null;
+  return {open: ranges[0].open, close: ranges[ranges.length - 1].close, ranges};
 }
 const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
 const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format === 'course';
@@ -395,11 +400,15 @@ const PERIODIC_CATS = new Set(['Barrio', 'Talleres', 'Deporte']);
 const isPeriodic = e => isCourse(e) || (e.format === 'program' && PERIODIC_CATS.has(e.public_category));
 const collator = new Intl.Collator('es', {sensitivity: 'base'}), byTitle = (a, b) => collator.compare(a.title, b.title);
 
+// Parte del día sin hora («Matinal», «Tarda»).
+const PARTS = {mañana: () => L('Por la mañana', 'Al matí'), tarde: () => L('Por la tarde', 'A la tarda'), noche: () => L('Por la noche', 'A la nit'), programa: () => L('Varias sesiones', 'Diverses sessions')};
 function availability(e, day) {
   const occ = (e.occurrences || []).filter(o => o.date === day);
   const occTimes = [...new Set(occ.map(o => o.time).filter(Boolean).map(x => String(x).padStart(5, '0')))].sort();
   const label = e.time_label || '', raw = e.base_time ?? e.time ?? '';
   if (occTimes.length) return {kind: 'timed', times: occTimes};
+  const part = hoursByDay(e)?.[day];
+  if (PARTS[part]) return {kind: 'tbc', part, until: e.end};
   if (e.start === e.end) {
     const range = rangeIn(label) || rangeIn(raw);
     if (range) return range.close - range.open >= WIDE_MIN ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
@@ -407,7 +416,18 @@ function availability(e, day) {
     return times.length ? {kind: 'timed', times} : {kind: 'tbc'};
   }
   if (occ.length) return {kind: 'tbc'};
-  const span = daysBetween(e.start, e.end), range = rangeIn(label), times = timesIn(raw);
+  const span = daysBetween(e.start, e.end);
+  // Horario oficial de ese día (tabla por días de la fuente): manda sobre la etiqueta general.
+  const dayHours = hoursByDay(e)?.[day];
+  if (dayHours && !(isPeriodic(e) && !isOpenFormat(e) && span > SHORT_DAYS)) {
+    const r = rangeIn(dayHours), ts = timesIn(dayHours);
+    // Una exposición o un espacio con horario de apertura es «horario amplio», aunque cada tramo sea corto.
+    if (r) return (r.close - r.open >= WIDE_MIN || isOpenFormat(e)) ? {kind: 'wide', ...r, until: e.end} : {kind: 'timed', times: [clock(r.open)], endsAt: r.close};
+    if (ts.length) return {kind: 'timed', times: ts};
+  }
+  const range = rangeIn(label), times = timesIn(raw);
+  // La fuente confirma actividad ese día pero no da la hora.
+  const dayKnown = hoursByDay(e)?.[day] === '';
   if (isPeriodic(e) && !isOpenFormat(e)) {
     if (span > SHORT_DAYS) return {kind: day <= e.start ? 'soon' : 'started', until: e.end, ...(range || {})};
     if (times.length || range) return {kind: 'timed', times: times.length ? times : [clock(range.open)], confirmDay: true, until: e.end, endsAt: range?.close};
@@ -416,6 +436,9 @@ function availability(e, day) {
   if (isOpenFormat(e) || (range && range.close - range.open >= WIDE_MIN)) return {kind: 'wide', until: e.end, ...(range || {noHours: true})};
   if (range) return {kind: 'timed', times: [clock(range.open)], season: true, until: e.end, endsAt: range.close};
   if (times.length) return {kind: 'timed', times, season: true, until: e.end};
+  // Ciclos, temporadas y programas de semanas sin fechas ni hora de sus sesiones: no se sabe si hay
+  // algo ese día, así que no salen en la agenda; solo al buscarlos por nombre.
+  if (span > SHORT_DAYS && !dayKnown) return {kind: 'run', until: e.end};
   return {kind: 'tbc', run: true, until: e.end};
 }
 function status(a, now) {
@@ -430,7 +453,11 @@ function status(a, now) {
   if (a.kind === 'wide' && !a.noHours) {
     if (now === null) return {state: 'scheduled', sort: a.open};
     if (now < a.open) return {state: a.open - now <= SOON ? 'soon' : 'later', sort: a.open, in: a.open - now};
-    if (now < a.close) return {state: 'open', sort: now - 2, closesIn: a.close - now};
+    const parts = a.ranges || [{open: a.open, close: a.close}];
+    const current = parts.find(r => r.open <= now && now < r.close);
+    if (current) return {state: 'open', sort: now - 2, closesIn: current.close - now, closesAt: current.close};
+    const next = parts.find(r => r.open > now);
+    if (next) return {state: next.open - now <= SOON ? 'soon' : 'later', sort: next.open, in: next.open - now, opensAt: next.open, reopens: true};
     return {state: 'past', sort: a.close};
   }
   return {state: 'none', sort: 1e4};
@@ -455,7 +482,7 @@ function bucketOf(e) { const k = e._a.kind; return k === 'timed' ? 'fixed' : k }
 function buildModel(items, win) {
   const now = madridNow();
   const decorate = (e, day, nowMin) => { const a = availability(e, day); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
-  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], soon: [], started: [], past: [], other: []};
+  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
   const place = e => {
     const k = e._a.kind;
     if ((k === 'timed' || k === 'wide') && e._st.state === 'past') s.past.push(e);
@@ -467,7 +494,7 @@ function buildModel(items, win) {
     const day = state.day, live = day === now.day, nowMin = live ? now.min : null;
     for (const e of items) { decorate(e, day, nowMin); place(e) }
     const tl = (a, b) => a._st.sort - b._st.sort || byTitle(a, b);
-    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.tbc.sort(byTitle); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
+    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
     s.soon.sort((a, b) => a.start.localeCompare(b.start) || byTitle(a, b)); s.started.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.other.sort(byTitle);
     return {mode: 'day', day, live, now, sections: s, total: items.length};
   }
@@ -483,10 +510,10 @@ function buildModel(items, win) {
     if (!buckets.has(day)) buckets.set(day, []);
     buckets.get(day).push(e);
   }
-  const rank = e => ({timed: 0, wide: 1, tbc: 2}[e._a.kind] ?? 3);
+  const rank = e => ({timed: 0, wide: 1, tbc: 2, run: 3}[e._a.kind] ?? 4);
   for (const list of buckets.values()) list.sort((a, b) => rank(a) - rank(b) || a._st.sort - b._st.sort || byTitle(a, b));
   s.past.sort((a, b) => a._st.sort - b._st.sort || byTitle(a, b)); s.soon.sort((a, b) => a.start.localeCompare(b.start)); s.started.sort((a, b) => a.end.localeCompare(b.end));
-  const counts = {fixed: 0, wide: 0, tbc: 0};
+  const counts = {fixed: 0, wide: 0, tbc: 0, run: 0};
   for (const list of buckets.values()) for (const e of list) { const b = bucketOf(e); if (counts[b] !== undefined) counts[b]++; else s.other.push(e) }
   return {mode: 'range', win, now, buckets: [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0])), sections: s, counts, total: items.length};
 }
@@ -496,7 +523,7 @@ const untilText = (e, d) => { const n = daysBetween(e._day || today, d); return 
 function bar(a, st) {
   const from = 8 * 60, span = 16 * 60, pct = m => Math.max(0, Math.min(100, (m - from) / span * 100)).toFixed(1);
   const nowTick = st.state !== 'scheduled' ? `<i class="w-tick" style="left:${pct(madridNow().min)}%"></i>` : '';
-  return `<span class="w-bar" aria-hidden="true"><i class="w-fill" style="left:${pct(a.open)}%;width:${(Math.min(a.close, from + span) - Math.max(a.open, from)) / span * 100}%"></i>${nowTick}</span>`;
+  return `<span class="w-bar" aria-hidden="true">${(a.ranges || [a]).map(r => `<i class="w-fill" style="left:${pct(r.open)}%;width:${Math.max(0, Math.min(r.close, from + span) - Math.max(r.open, from)) / span * 100}%"></i>`).join('')}${nowTick}</span>`;
 }
 function whenCell(e) {
   const a = e._a, st = e._st || {state: 'none'};
@@ -509,27 +536,29 @@ function whenCell(e) {
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia'); cls = 'hint' }
     else if (a.endsAt) note = `${L('hasta las', 'fins a les')} ${clock(a.endsAt)}`;
     else if ((st.rest || []).length) note = `${L('después', 'després')} ${st.rest.slice(0, 2).map(clock).join(' · ')}${st.rest.length > 2 ? '…' : ''}`;
-    return `<div class="when w-timed"><span class="w-line"><i class="${multi ? 'm-dots' : 'm-dot'}" aria-hidden="true"></i><time class="w-big">${clock(st.next ?? minutesOf(a.times[0]))}</time></span>${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
+    return `<div class="when w-timed"><span class="w-line"><i class="${multi ? 'm-dots' : 'm-dot'}" aria-hidden="true"></i><time class="w-big">${(m => m === 1439 ? L('Medianoche', 'Mitjanit') : clock(m))(st.next ?? minutesOf(a.times[0]))}</time></span>${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
   }
   if (a.kind === 'wide') {
     const last = daysBetween(e._day || today, a.until) <= 1;
     if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? L('Exposición', 'Exposició') : L('Todo el día', 'Tot el dia')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
     let main, note = '', cls = '';
-    if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les')} ${clock(a.close)}` }
-    else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${L('Abre', 'Obre')} ${clock(a.open)}</span>`; note = `${L('hasta las', 'fins a les')} ${clock(a.close)}` }
+    if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les')} ${clock(st.closesAt ?? a.close)}` }
+    else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${st.reopens ? L('Reabre', 'Reobre') : L('Abre', 'Obre')} ${clock(st.opensAt ?? a.open)}</span>`; note = (a.ranges || []).length > 1 ? a.ranges.map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ') : `${L('hasta las', 'fins a les')} ${clock(a.close)}` }
     else if (st.state === 'past') { main = `<span class="w-mid w-dim">${L('Cerrado ya', 'Ja tancat')}</span>`; note = `${clock(a.open)}–${clock(a.close)}` }
-    else { main = `<span class="w-mid">${clock(a.open)}–${clock(a.close)}</span>` }
+    else { main = `<span class="w-mid">${(a.ranges || [a]).map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ')}</span>` }
     if (e.start !== e.end && last && !cls) { note = [note, untilText(e, a.until)].filter(Boolean).join(' · '); cls = 'urgent' }
     return `<div class="when w-wide">${bar(a, st)}${main}${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
   }
   if (a.kind === 'soon') return `<div class="when w-course"><span class="w-kind">${L('Empieza', 'Comença')}</span><span class="w-mid">${esc(e.start === (e._day || today) ? L('hoy', 'avui') : labelDate(e.start))}</span>${a.open !== undefined ? `<span class="w-note">${clock(a.open)}–${clock(a.close)}</span>` : ''}</div>`;
   if (a.kind === 'started') return `<div class="when w-course"><span class="w-kind">${L('En marcha', 'En marxa')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
+  if (a.kind === 'run') return `<div class="when w-course"><span class="w-kind">${L('En programación', 'En programació')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
+  if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa') : L('hora por confirmar', 'hora per confirmar')}</span></div>`;
   return `<div class="when w-tbc"><span class="w-mid">${L('Hora por confirmar', 'Hora per confirmar')}</span><span class="w-note">${a.run ? esc(`${L('en cartel', 'en cartell')} ${untilText(e, a.until)}`) : L('confírmala antes de ir', 'confirma-la abans d\'anar-hi')}</span></div>`;
 }
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body"><h3 class="ev-title">${esc(e.title)}</h3>${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body"><h3 class="ev-title">${esc(e.title)}</h3>${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -566,6 +595,7 @@ function renderDay(m) {
   if (current !== null) groups += '</div>';
   if (show.wide && s.wideNoHours.length) groups += `<div class="ag-group">${groupHead(L('Horario amplio sin horas indicadas', 'Horari ampli sense hores indicades'))}${rows(s.wideNoHours, 'wideNoHours')}</div>`;
   if (show.tbc && s.tbc.length) groups += `<div class="ag-group" id="ag-tbc">${groupHead(L('Hora por confirmar', 'Hora per confirmar'), ' is-tbc')}${rows(s.tbc, 'tbc')}</div>`;
+  if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió'))}${rows(s.run, 'run')}</div>`;
   if (show.soon && s.soon.length) groups += `<div class="ag-group" id="ag-soon">${groupHead(L(`Talleres y cursos que empiezan en ${COURSE_AHEAD} días`, `Tallers i cursos que comencen en ${COURSE_AHEAD} dies`))}${rows(s.soon, 'soon')}</div>`;
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada de lo que estás viendo. Activa otro tipo arriba o mira mañana.', 'Per avui ja no queda res del que estàs mirant. Activa un altre tipus a dalt o mira demà.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
@@ -581,7 +611,7 @@ function dayHeading(d) {
 }
 function renderRange(m) {
   const show = state.show, s = m.sections;
-  const visible = e => ({timed: show.fixed, wide: show.wide, tbc: show.tbc}[e._a.kind] ?? true);
+  const visible = e => ({timed: show.fixed, wide: show.wide, tbc: show.tbc, run: Boolean(state.query)}[e._a.kind] ?? true);
   const counts = {...m.counts, soon: s.soon.length};
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(visible)]).filter(([, l]) => l.length);
   const days = buckets.slice(0, state.shown).map(([d, list]) => {
@@ -735,15 +765,17 @@ async function loadDistricts() {
 }
 
 /* ---------- detail ---------- */
+// «23:59» es como Xceed escribe «medianoche».
+const showTime = v => String(v || '').replace(/\b23:59\b/g, L('medianoche', 'mitjanit'));
 function detailWhen(e) {
   const day = e.start === e.end ? e.start : state.day;
   const when = e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`;
   // Horario oficial del día («09:00–18:00»); si cambia según el día, se dice de qué día es.
-  const byDay = hoursByDay(e) || {}, dayHours = e.occurrence_date ? null : byDay[day];
+  const byDay = hoursByDay(e) || {}, rawDay = e.occurrence_date ? null : byDay[day], dayHours = PARTS[rawDay] ? PARTS[rawDay]().toLowerCase() : rawDay;
   const t = dayHours || (e.time ? e.time : (e.time_label && !/^(Hora no indicada|Varios días|Exposición)$/.test(e.time_label) ? e.time_label : ''));
   if (e.start !== e.end && dayHours && new Set(Object.values(byDay)).size > 1) return `${when} · ${labelDay(day)} ${dayHours}`;
-  if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + t : ''}`;
-  return t ? `${when} · ${t}` : when;
+  if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + showTime(t) : ''}`;
+  return t ? `${when} · ${showTime(t)}` : when;
 }
 async function openDetail(k, focus, opts = {}) {
   const [source, ...rest] = k.split(':'), id = rest.join(':');
@@ -765,7 +797,8 @@ async function openDetail(k, focus, opts = {}) {
       : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
     const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Brollant · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
-    const osm = e.coordinates ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(e.coordinates.lat)}&mlon=${encodeURIComponent(e.coordinates.lon)}#map=17/${encodeURIComponent(e.coordinates.lat)}/${encodeURIComponent(e.coordinates.lon)}` : '';
+    // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
+    const osm = e.coordinates ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
     const map = e.coordinates ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venues?.[0]?.name || e.venue_names?.[0] || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div><span>${t('Cómo llegar')} ↗</span></a></section>` : '';
     const upcoming = (e.venue_upcoming || []).length ? `<section class="sheet-venue"><h3>${t('Próximamente en')} ${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('esta sala'))}</h3><div class="venue-list">${e.venue_upcoming.map(u => `<button class="venue-item" type="button" data-open="${esc(u.key)}"><span class="venue-when"><b>${esc(labelDate(u.date))}</b>${u.time ? `<small>${esc(u.time)}</small>` : ''}</span><span class="venue-what"><b>${esc(u.title)}</b><small>${esc(catName(u.public_category))}${u.subtype && u.subtype !== 'Sin clasificar' ? ' · ' + esc(t(u.subtype)) : ''}${u.is_free ? ' · ' + t('Gratis') : ''}</small></span><span class="venue-go" aria-hidden="true">›</span></button>`).join('')}</div></section>` : '';
     const links = (e.links || []).filter(l => safeurl(l.url) && l.label !== 'Página de la fuente' && !(l.label === 'Web del evento' && !e.organizers?.length)).slice(0, 4).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(l.label)} ↗</a>`).join('');
@@ -794,7 +827,10 @@ function mountSheetMap(e) {
 }
 async function shareEvent(k) {
   const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Brollant';
-  try { if (navigator.share) { await navigator.share({title, url}); return } } catch (_) { return }
+  // En WhatsApp el enlace ya trae foto, título, cuándo y dónde (vista previa); el texto lo resume por si no carga.
+  const when = document.querySelector('.facts > div:first-child b')?.textContent || '', where = document.querySelector('.facts > div:nth-child(2) b')?.textContent || '';
+  const text = [title, [when, where].filter(Boolean).join(' · ')].filter(Boolean).join('\n');
+  try { if (navigator.share) { await navigator.share({title, text, url}); return } } catch (_) { return }
   try { await navigator.clipboard.writeText(url); const b = document.querySelector('[data-share]'); if (b) { b.textContent = '✓ ' + t('Enlace copiado'); setTimeout(() => { b.textContent = '⇪ ' + t('Compartir') }, 1800) } } catch (_) { prompt(t('Enlace de la ficha'), url) }
 }
 function hideSheet() { if ($('overlay').hidden) return false; $('overlay').hidden = true; document.body.style.overflow = ''; state.detail = null; if (sheetMap) { try { sheetMap.remove() } catch (_) {} sheetMap = null } returnFocus?.focus(); return true }

@@ -342,6 +342,8 @@ def sync(conn: sqlite3.Connection, *, url=RESOURCE_URL, file: Path | None = None
         with conn:
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=1,rows_received=?,rows_rejected=?,rows_mutated=?,warning_json=? WHERE id=?",
                          (now_utc(), received, rejected, mutated, json.dumps(["NO_DELETION_INFERRED"]), run_id))
+        try: write_code_paths(conn)
+        except Exception: pass
         return {"id": run_id, "source": SOURCE, "status": "completed", "rows_received": received, "rows_rejected": rejected, "rows_mutated": mutated,
                 "rows_excluded": excluded, "candidate_occurrences": occurrences, "image_references": images, "snapshot_sha256": sha, "snapshot_bytes": size}
     except Exception as error:
@@ -360,3 +362,23 @@ def _flush(conn, run_id, batch, mutated, excluded, occurrences, images):
             for image in record["images"]:
                 register(conn, SOURCE, record["id"], image["url"], alt=image["alt"], credit="Ajuntament de Barcelona — Agenda cultural (Open Data BCN)", rights_status="unknown"); images += 1
     return mutated, excluded, occurrences, images
+
+
+CODE_PATHS = Path(__file__).resolve().parents[1] / "data" / "asia_code_paths.json"
+
+
+def write_code_paths(conn, path=CODE_PATHS):
+    """Tabla código ASIA → ruta oficial («0011702002013» → «Especialitats AG >> Cultura i arts >>
+    Fotografia») sacada de las propias fichas de Open Data. GuiaBCN publica los mismos códigos
+    (code_prop) sin la ruta: con esta tabla sus fichas se clasifican con el árbol oficial."""
+    import json as _json
+    paths = {}
+    for (raw,) in conn.execute("SELECT raw_json FROM source_records WHERE source=?", (SOURCE,)):
+        try: data = _json.loads(raw)
+        except ValueError: continue
+        for item in list(data.get("classifications_data") or []) + list(data.get("secondary_filters_data") or []):
+            if isinstance(item, dict) and item.get("asia_id") and item.get("full_path"):
+                paths[str(item["asia_id"])] = item["full_path"]
+    if paths:
+        Path(path).write_text(_json.dumps(paths, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+    return len(paths)

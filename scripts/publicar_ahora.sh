@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pasada forzada con las fuentes nuevas del 18-10-2026 y publicación inmediata.
+# Pasada forzada: resincroniza las fuentes con conectores cambiados y publica (actualizado 19-10-2026).
 # Uso: bash scripts/publicar_ahora.sh   (desde la carpeta del proyecto; tarda ~30-40 min)
 cd "$(dirname "$0")/.." || exit 1
 
@@ -16,16 +16,15 @@ job() {  # ejecuta un trabajo; si el motor automático está ocupado, espera y r
   echo "   sigue ocupado tras 20 minutos; lo dejo para el motor automático"
 }
 
-echo "0/5 · Ticketmaster otra vez (corrige la categoría de la primera pasada)"
+echo "1/6 · Salas con schema.org (Sala Apolo con hora, Ticketmaster aparte)"
+job recintos-schema-org
+echo "2/6 · Ticketmaster (apertura de puertas, sin eventos de prueba)"
 job api-ticketmaster
-echo "1/5 · DICE: fichas de Barcelona desde su sitemap (primera tanda de 200, ~6 min)"
-job web-dice
-echo "2/5 · GuiaBCN: horarios por día desde la API de detalle (500 fichas, ~12 min)"
-job enriquecer-fichas
-echo "3/5 · Imágenes de las fuentes nuevas"
-job previsualizaciones-locales
-echo "4/5 · Duplicados entre fuentes (agrupa ticketeras con salas)"
+echo "3/6 · CCCB, MACBA y centres cívics (periodos de exposición, horas y sesiones; ~3 min)"
+job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club
+echo "4/6 · Eventbrite: hora y traslados desde su API"
+job eventbrite-api
+echo "5/6 · Duplicados entre fuentes"
 job duplicados-entre-fuentes
-echo "5/5 · Publicar la web (~20 min)"
+echo "6/6 · Publicar la web (~25-30 min: se recalculan todas las fichas)"
 python3 run.py --publish | grep -E '"(status|events|deployed|url|error)"' | tr -s ' \n' ' '; echo
-echo "Hecho: $(date '+%H:%M')"

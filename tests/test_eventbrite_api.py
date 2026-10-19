@@ -24,10 +24,12 @@ class FactsTests(unittest.TestCase):
         self.assertEqual(facts_from_event(api_event(is_free=True, low=None), '2026-10-30')['price_text'], 'Gratis')
         self.assertEqual(facts_from_event(api_event(low=None), '2026-10-30')['price_text'], '')  # sin dato estructurado: nada
 
-    def test_no_time_when_the_api_date_differs_from_the_record(self):
+    def test_the_api_date_and_time_rule_when_the_listing_differs(self):
+        # Desde el 19-10-2026 manda la API: el evento se publica el día y a la hora que ella dice.
         from src.eventbrite_api import facts_from_event
         f = facts_from_event(api_event(start_local='2026-11-06T20:00:00', end_local='2026-11-06T23:00:00'), '2026-10-30')
-        self.assertEqual(f['time'], ''); self.assertFalse(f['date_matches'])
+        self.assertFalse(f['date_matches'])
+        self.assertEqual((f['api_start_date'], f['time'], f['time_text']), ('2026-11-06', '20:00', '20:00–23:00'))
 
     def test_after_midnight_end_is_not_a_same_day_range(self):
         from src.eventbrite_api import facts_from_event

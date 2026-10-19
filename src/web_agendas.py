@@ -11,6 +11,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import time
 import re
 import ssl
 import subprocess
@@ -124,7 +125,13 @@ def parse_cccb(page):
             if not link or not title: continue
             image=re.search(r'<img[^>]+src="([^"]+)"',item)
             name=html.unescape(re.sub('<[^>]+>',' ',title.group(1))).strip()
-            result.append(_record(source,name,date,date,html.unescape(link.group(1)),cfg['venue'],cfg['address'],{'page_title':html.unescape(link.group(2))},html.unescape(time.group(1)).strip() if time else '',html.unescape(image.group(1)) if image else ''))
+            when=html.unescape(time.group(1)).strip() if time else ''; start=end=date
+            # Exposiciones: en el lugar de la hora el CCCB pone su periodo («23 octubre - 1 diciembre 2026»).
+            span=re.match(r'(\d{1,2})\s+([a-zà-ÿ]+)\s*[-–]\s*(\d{1,2})\s+([a-zà-ÿ]+)\s+(20\d\d)$',when.casefold())
+            if span and span.group(2) in MONTHS and span.group(4) in MONTHS:
+                m1,m2,y2=MONTHS[span.group(2)],MONTHS[span.group(4)],int(span.group(5))
+                start=f'{(y2 if m1<=m2 else y2-1):04d}-{m1:02d}-{int(span.group(1)):02d}'; end=f'{y2:04d}-{m2:02d}-{int(span.group(3)):02d}'; when=''
+            result.append(_record(source,name,start,end,html.unescape(link.group(1)),cfg['venue'],cfg['address'],{'page_title':html.unescape(link.group(2))},when,html.unescape(image.group(1)) if image else ''))
     return result
 
 def parse_teatre_lliure(page):
@@ -193,7 +200,8 @@ def parse_conciertos_club(page):
 
     It remains a discovery listing.  Its artwork is retained only as an
     auditable *local preview reference* (with unknown rights); no prose or
-    ticket affiliate URL is copied and it must not be promoted for publishing.
+    ticket affiliate URL is copied (the ticket link is unwrapped to the vendor's own page) and it
+    must not be promoted for publishing.
     """
     source='web_conciertos_club'; result=[]
     for block in re.split(r'<div\s+itemscope\s+itemprop="item"\s+itemtype="http://schema\.org/MusicEvent">',page,flags=re.I)[1:]:
@@ -212,12 +220,58 @@ def parse_conciertos_club(page):
         if not re.fullmatch(r'\d{4}-\d{2}-\d{2}',date):continue
         title=html.unescape(event_name.group(1)).strip().rstrip('.').strip(); url=html.unescape(urls[0])
         image_url=html.unescape(image.group(1)).strip() if image else ''
-        record=_record(source,title,date,date,url,html.unescape(location.group(1)),html.unescape(locality.group(1)),{'parser_version':'conciertos-club-v3','schema_startDate':stamp,'schema_endDate':end.group(1) if end else '', 'schema_url':url, 'displayed_session_date':date},time,image_url)
+        # Precio («Precio entrada desde 20€») y entradas: la ticketera de verdad, sin el enlace de
+        # afiliado del directorio (fever.pxf.io/…?u=https://feverup.com/m/…) ni su tienda propia.
+        price=re.search(r'class="precio"\s+title="Precio entrada (desde\s+)?([\d.,]+)\s*(?:€|&euro;|&#8364;)"',block,re.I)
+        buy=re.search(r'class="comprarentradas"\s+href="([^"]+)"',block,re.I); ticket=''
+        if buy:
+            target=html.unescape(buy.group(1)); q=parse_qs(urlparse(target).query).get('u',[''])[0]
+            ticket=q if q.startswith('https://') else (target if 'conciertos.club' not in urlparse(target).netloc and 'pxf.io' not in urlparse(target).netloc else '')
+        record=_record(source,title,date,date,url,html.unescape(location.group(1)),html.unescape(locality.group(1)),{'parser_version':'conciertos-club-v4','schema_startDate':stamp,'schema_endDate':end.group(1) if end else '', 'schema_url':url, 'displayed_session_date':date,'ticket_url':ticket},time,image_url)
+        if price: record['price_text']=('Desde ' if price.group(1) else '')+price.group(2)+' €'
         record['evidence_level']='third_party_listing_unverified'; record['alerts']=['THIRD_PARTY_DISCOVERY_LISTING','SCHEDULE_UNVERIFIED','LOCAL_MEDIA_RIGHTS_UNVERIFIED','NO_COPIED_DESCRIPTION']
         result.append(record)
     return result
 
 PARSERS={'web_macba':parse_macba,'web_cccb':parse_cccb,'web_teatre_lliure':parse_teatre_lliure,'web_auditori':parse_auditori,'web_centres_civics':parse_centres_civics,'web_conciertos_club':parse_conciertos_club}
+
+SESSION_LINE = re.compile(r'^(\d{1,2})/(\d{1,2})(?:/(\d{4}))?\s*(?:[–-]|,|a\s+les)\s*(\d{1,2})(?:[.:](\d{2}))?\s*h\b')
+
+
+def centres_sessions(page):
+    """Sesiones de la página de una actividad de centres cívics: «30/10 – 19.30 h» bajo el
+    nombre de cada artista o película. Solo lo que la página escribe así; nada se deduce."""
+    body = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', page)
+    body = re.split(r'(?i)activitats\s+relacionades', body)[0]
+    lines = [' '.join(html.unescape(re.sub(r'<[^>]+>', ' ', x)).split()) for x in re.split(r'(?i)<br\s*/?>|</p>|</h\d>|</div>|</li>', body)]
+    lines = [x for x in lines if x]
+    out = []
+    for n, line in enumerate(lines):
+        m = SESSION_LINE.match(line)
+        if not m: continue
+        title = lines[n - 1] if n and len(lines[n - 1]) <= 90 and not SESSION_LINE.match(lines[n - 1]) else ''
+        out.append({'day': int(m.group(1)), 'month': int(m.group(2)), 'year': int(m.group(3)) if m.group(3) else None,
+                    'time': f'{int(m.group(4)):02d}:{m.group(5) or "00"}', 'title': title})
+    return out
+
+
+def _add_centres_sessions(conn, records, fetcher, timeout, budget=60):
+    """Lee la página de cada actividad vigente (máx. ``budget`` por pasada; se reaprovecha
+    lo leído en los últimos 3 días) para tener la hora y el nombre de cada sesión."""
+    today = dt.date.today(); fresh = (today - dt.timedelta(days=3)).isoformat()
+    for record in records:
+        if record['end'] < today.isoformat(): continue
+        prev = conn.execute('SELECT raw_json FROM source_records WHERE source=? AND id=?', (record['source'], record['id'])).fetchone()
+        item = (json.loads(prev[0]).get('item') or {}) if prev else {}
+        if item.get('sessions_checked', '') >= fresh:
+            record['raw']['item'].update({k: item[k] for k in ('sessions', 'sessions_checked') if k in item}); continue
+        if budget <= 0: continue
+        try: page = fetcher(record['url'], timeout)
+        except Exception: continue
+        budget -= 1
+        record['raw']['item'].update({'sessions': centres_sessions(page), 'sessions_checked': today.isoformat()})
+        if fetcher is fetch: time.sleep(1)
+
 
 def sync(conn, source, fetcher=fetch, timeout=30):
     if source not in SOURCES: raise ValueError('Fuente web no permitida')
@@ -228,6 +282,7 @@ def sync(conn, source, fetcher=fetch, timeout=30):
         cfg=SOURCES[source]; pages=fetch_pages(cfg,fetcher,timeout); urls=[u for u,_ in pages]
         page='\n'.join(body for _,body in pages); records=PARSERS[source](page); mutated=0
         seen=set(); records=[r for r in records if not (r['id'] in seen or seen.add(r['id']))]
+        if source=='web_centres_civics': _add_centres_sessions(conn,records,fetcher,timeout)
         with conn:
             for record in records:
                 mutated+=int(_upsert_record(conn,run_id,record)[0])

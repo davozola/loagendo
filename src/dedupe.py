@@ -258,6 +258,10 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     for a, b, score, reason in conn.execute("SELECT a,b,score,reason FROM match_candidates"):
         if _collapsible(score or 0, (reason or "").split(";")):
             parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
+    # Un festival es una sola ficha: sus fichas en otras fuentes y los
+    # conciertos sueltos de artistas de su cartel se agrupan en él.
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn):
+        parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
         groups.setdefault(find(key), []).append(key)
@@ -269,3 +273,223 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
         for member in members:
             if member != canonical: out[member] = canonical
     return out
+
+
+# --- Festivales (19-10-2026) -------------------------------------------------
+FESTIVAL_WORDS = ("festival", "fest", "biennal", "bienal", "mostra", "muestra")
+CORE_STOP = {"festival", "fest", "barcelona", "bcn", "edicio", "edicion", "edition", "de", "del", "la", "el", "les", "los", "i", "y", "and", "the", "a", "en"}
+SINGLE_ACT_SOURCES = ("venue_songkick", "web_conciertos_club", "venue_dice", "venue_ticketmaster_es", "venue_xceed")
+FESTIVAL_MAX_DAYS = 10
+NEAR_KM = 1.5
+
+
+def _clean(text):
+    import unicodedata
+    text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode().lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
+
+
+def _core(title):
+    """Nombre del festival sin año, edición ni palabras genéricas («MIRA Festival 2026» → {mira})."""
+    return {t for t in _clean(title).split() if t not in CORE_STOP and not t.isdigit() and not re.fullmatch(r"\d+(?:a|e|o|th|st|nd|rd)", t)}
+
+
+def _km(a, b):
+    import math
+    if None in (a[0], a[1], b[0], b[1]): return None
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 6371 * 2 * math.asin(math.sqrt(h))
+
+
+PLACE_STOP = {"sala", "espai", "parc", "placa", "plaza", "carrer", "calle", "barcelona", "bcn", "centre", "centro", "teatre", "teatro", "club", "auditori", "museu", "the", "festival"}
+
+
+def _same_place(a, b):
+    # Las coordenadas de las fuentes de venta a veces son aproximadas (Songkick sitúa
+    # «Fira Montjuic» a 2 km del recinto): basta con que coincida el nombre del recinto.
+    va, vb = set(_clean(a["venue"]).split()) - CORE_STOP - PLACE_STOP, set(_clean(b["venue"]).split()) - CORE_STOP - PLACE_STOP
+    if va & vb: return True
+    d = _km((a["lat"], a["lon"]), (b["lat"], b["lon"]))
+    return d is not None and d <= NEAR_KM
+
+
+def festival_pairs(conn):
+    """Parejas (miembro, festival) que deben ser una sola ficha.
+
+    - Fichas del mismo festival en varias fuentes: mismo nombre esencial
+      («MIRA Festival 2026» = «MIRA 2026»), fechas que se solapan y mismo sitio.
+    - Conciertos sueltos de un artista del cartel (Songkick, DICE…) dentro de las
+      fechas del festival y en su recinto: forman parte del festival.
+    Solo se usa el cartel que declaran las fuentes; nada se deduce del título.
+    """
+    import datetime as dt
+    from mvp.catalog import lineup_of
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, r.start_date, r.end_date, v.venue, v.lat, v.lon,
+              CASE WHEN r.source IN (%s) THEN r.raw_json ELSE NULL END
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude'""" % ",".join("?" * len(SINGLE_ACT_SOURCES)), (*SINGLE_ACT_SOURCES, today)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    def date(v):
+        try: return dt.date.fromisoformat(str(v)[:10])
+        except ValueError: return None
+    records = []
+    for source, rid, title, start, end, venue, lat, lon, raw_text in rows:
+        a, b = date(start), date(end)
+        if not a or not b: continue
+        lineup = []
+        if raw_text:
+            try: lineup = lineup_of(json.loads(raw_text))[0]
+            except (ValueError, TypeError): lineup = []
+        records.append({"key": f"{source}:{rid}", "source": source, "title": title or "", "start": a, "end": b, "venue": venue or "",
+                        "lat": lat, "lon": lon, "lineup": lineup, "clean": _clean(title)})
+    festivals = [r for r in records if 0 <= (r["end"] - r["start"]).days <= FESTIVAL_MAX_DAYS
+                 and (any(w in r["clean"].split() for w in FESTIVAL_WORDS) or len(r["lineup"]) >= 8) and _core(r["title"])
+                 # «Festival X: Espectacle Y» es una función del festival con su hora y su entrada: no se absorbe.
+                 and not re.search(r"\S:\s+\S", r["title"])
+                 # Fiestas con entrada propia dentro de un festival («X [Balla Festival]», «Fury pres. …», «CLOSA w/ MRAK»).
+                 and not re.search(r"\[|\bw/|\bpres\.|\bpresenta\b|presentaci[oó]", r["title"], re.I)
+                 # Songkick anuncia festivales con el nombre del cabeza de cartel («Anthony Rother» con
+                 # todo el cartel de MIRA): eso es un concierto suelto a absorber, no un festival.
+                 and r["clean"] not in {_clean(n) for n in r["lineup"]}]
+    pairs = []
+    # 1) El mismo festival en varias fuentes.
+    for i, f in enumerate(festivals):
+        for g in festivals[i + 1:]:
+            if f["start"] > g["end"] or g["start"] > f["end"]: continue
+            cf, cg = _core(f["title"]), _core(g["title"])
+            if (cf <= cg or cg <= cf) and len(cf ^ cg) <= 2 and _same_place(f, g): pairs.append((f["key"], g["key"]))
+    # 2) Conciertos sueltos de artistas del cartel, dentro del festival.
+    for f in festivals:
+        names = {_clean(n) for g in festivals if g is f or (g["key"], f["key"]) in pairs or (f["key"], g["key"]) in pairs for n in g["lineup"]}
+        if len(names) < 2: continue
+        for r in records:
+            if r is f or r["source"] not in SINGLE_ACT_SOURCES or r in festivals: continue
+            if not (f["start"] <= r["start"] and r["end"] <= f["end"]): continue
+            artists = {_clean(n) for n in r["lineup"]} | {r["clean"]}
+            if artists & names and _same_place(r, f): pairs.append((r["key"], f["key"]))
+    return pairs
+
+
+def act_pairs(conn):
+    """Parejas (anuncio de artista, concierto) del mismo día y sala.
+
+    Songkick, DICE o las ticketeras anuncian a menudo solo el nombre del artista
+    («Melendi», «Perico Sambeat») de un concierto que otra fuente publica con su título
+    completo («Concert "Melendi"», «Albert Vila Quartet feat Perico Sambeat») y, muchas
+    veces, con la hora. Mismo día, mismo recinto y el nombre del artista entero dentro del
+    otro título: es el mismo concierto. Nombres que son el de la sala («Jamboree Jazz») no cuentan."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, r.start_date, r.end_date, v.venue, v.lat, v.lon
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10)) BETWEEN 0 AND 3
+                AND r.eligibility<>'exclude'""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    # Anuncios de un solo día frente a conciertos de hasta 4 días seguidos («Melendi» 1 y 2 de noviembre en una ficha).
+    by_day = {}
+    for source, rid, title, start, end, venue, lat, lon in rows:
+        a, b = dt.date.fromisoformat(str(start)[:10]), dt.date.fromisoformat(str(end)[:10])
+        item = {"key": f"{source}:{rid}", "source": source, "clean": _clean(title), "venue": venue or "", "lat": lat, "lon": lon, "single": a == b}
+        for n in range((b - a).days + 1):
+            by_day.setdefault((a + dt.timedelta(days=n)).isoformat(), []).append(item)
+    pairs = []
+    for day, items in by_day.items():
+        for r in items:
+            if r["source"] not in SINGLE_ACT_SOURCES or not r["single"] or len(r["clean"]) < 4: continue
+            words = set(r["clean"].split())
+            if words <= set(_clean(r["venue"]).split()) | CORE_STOP | PLACE_STOP:
+                # «Jamboree Jazz» en el Jamboree Jazz Club: Songkick anuncia la sala, no un concierto.
+                # Si otra fuente publica lo que hay esa noche en la sala, el anuncio se une a su primer concierto.
+                same = sorted((g for g in items if g is not r and g["source"] not in SINGLE_ACT_SOURCES and g["single"] and _same_place(r, g)), key=lambda g: g["key"])
+                if same: pairs.append((r["key"], same[0]["key"]))
+                continue
+            pattern = re.compile(r"(?:^| )" + re.escape(r["clean"]) + r"(?: |$)")
+            for g in items:
+                if g is r or g["source"] == r["source"] or g["clean"] == r["clean"]: continue
+                if pattern.search(g["clean"]) and _same_place(r, g): pairs.append((r["key"], g["key"]))
+    return list(dict.fromkeys(pairs))
+
+
+TITLE_PREFIX = re.compile(r"^(?:concert|concierto|espectacle|espectaculo|teatre|teatro|exposicio|exposicion|musical|"
+                          r"activitat familiar|activitat|visita guiada|visita|obra de teatre|cinema|projeccio|recital|xerrada|conferencia)\s+", re.I)
+
+
+def _title_key(title):
+    t = _clean(title)
+    for _ in range(2): t = TITLE_PREFIX.sub("", t)
+    return t
+
+
+def title_pairs(conn):
+    """Parejas con el mismo título (quitando «Concert», «Espectacle», comillas…), las mismas
+    fechas y el mismo sitio: «Espectacle "El Mago Pop"» (GuiaBCN) y «El Mago Pop» (Generalitat)
+    en el Victòria; «Exposició Jardí interior» en «Casa Elizalde» y en «Centre Cultural La Casa
+    Elizalde»; o dos ticketeras con la misma fiesta. Mismo título en otro centro no es el mismo
+    evento (cada centre cívic tiene su «Taller de ioga»)."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    groups = {}
+    for source, rid, title, start, end, venue, lat, lon in rows:
+        key = _title_key(title)
+        if len(key) < 6 or len(key.split()) < 1: continue
+        groups.setdefault((start, end, key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
+                                                         "route": bool(ROUTE.match(_clean(title)))})
+    pairs = []
+    times = {}
+    def first_time(item):
+        k = item["key"]
+        if k not in times:
+            row = conn.execute("SELECT MIN(local_time) FROM candidate_occurrences WHERE source=? AND id=? AND local_time IS NOT NULL", (item["source"], item["id"])).fetchone()
+            t = row[0] if row else None
+            if not t:
+                try: row = conn.execute("SELECT schedule_time FROM source_enrichments WHERE source=? AND id=?", (item["source"], item["id"])).fetchone()
+                except sqlite3.DatabaseError: row = None
+                t = (re.search(r"\d{1,2}:\d{2}", row[0] or "") or [None])[0] if row and row[0] else None
+            times[k] = t
+        return times[k]
+    for items in groups.values():
+        if len(items) < 2: continue
+        for i, a in enumerate(items):
+            for b in items[i + 1:]:
+                if _same_site(a, b) or _generic_site(a) or _generic_site(b):
+                    pairs.append((a["key"], b["key"]))
+                # Itinerarios y visitas: el «lugar» es el centro que lo organiza; misma salida a la misma hora = mismo itinerario.
+                elif a["route"] and b["route"] and first_time(a) and first_time(a) == first_time(b):
+                    pairs.append((a["key"], b["key"]))
+    return pairs
+
+
+ROUTE = re.compile(r"^(?:itinerari|itinerario|ruta|visita|passejada|paseo|recorregut|excursio|sortida)\b")
+GENERIC_SITE = re.compile(r"^(?:diversos|diverses|diferents|varios|varias|barcelona|barcelona mar|tota la ciutat|la ciutat|online)\b", re.I)
+
+
+def _generic_site(item):
+    """«Diversos carrers del districte», «Barcelona»: no es un sitio con el que comparar."""
+    return bool(GENERIC_SITE.match(_clean(item["venue"]))) or not item["venue"]
+
+
+SITE_GENERIC = {"centre", "centro", "civic", "cultural", "casal", "barri", "comunitari", "gent", "gran", "biblioteca", "ateneu",
+                "espai", "auditori", "museu", "museo", "teatre", "teatro", "sala", "parc", "placa", "mercat", "escola", "institut",
+                "cc", "casa", "can", "club", "jardins", "jardi", "districte", "seu", "exposicions", "exposicio", "fundacio",
+                "barcelona", "bcn", "de", "del", "la", "el", "les", "els", "i", "d", "l"}
+
+
+def _same_site(a, b, km=0.4):
+    """Mismo lugar para dos fichas con el mismo título: con coordenadas, a menos de 400 m; sin ellas,
+    un nombre que comparte algo propio («Elizalde», «Razzmatazz»), no «Centre Cívic» ni «Casal de Barri»."""
+    d = _km((a["lat"], a["lon"]), (b["lat"], b["lon"]))
+    if d is not None: return d <= km
+    va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
+    return bool(va & vb)
