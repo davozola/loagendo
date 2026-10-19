@@ -126,7 +126,7 @@ SERIES = [("patis-escolars-oberts", PATIS)]
 def series_of(title):
     t = norm(title)
     return next((key for key, rx in SERIES if rx.search(t)), '')
-SERVICE = re.compile(r"\b(?:campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
+SERVICE = re.compile(r"\b(?:activitats laborals|busques feina|kit emprenedor|acces a l'habitatge|estudis a l'estranger|botiga solidaria|cibernarium|campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
 
 SOURCE_CATEGORY = {
     'Música y vida nocturna': 'musica', 'Artes escénicas': 'escena', 'Cine y audiovisual': 'cine',
@@ -182,6 +182,9 @@ def classify(ev, override=None):
     """→ dict(category, status, method, evidence, ambiguous).
 
     status: 'editorial' | 'confirmada' | 'probable' | 'pendiente'."""
+    if override and override.get('category') == EXCLUDED:
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'correccion_editorial',
+                'evidence': override.get('note') or 'Excluida por corrección editorial', 'ambiguous': False}
     if override and override.get('category') in CATEGORIES:
         return {'category': override['category'], 'status': 'editorial', 'method': 'correccion_editorial',
                 'evidence': override.get('note') or 'Corrección editorial', 'ambiguous': False}
@@ -221,7 +224,8 @@ def classify(ev, override=None):
     if TICKET_PRODUCT.search(t):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'producto_de_ticketera',
                 'evidence': 'Mejora de entrada o producto de la ticketera, no un acto', 'ambiguous': False}
-    if not signals and ev.get('source') == 'web_centres_civics' and UMBRELLA_VENUE.search(norm(' '.join(ev.get('venue_names') or []))):
+    # La web de centres cívics mezcla noticias con actividades: sin género ni fecha propia es una noticia.
+    if not signals and (ev.get('source') == 'web_centres_civics' or UMBRELLA_VENUE.search(norm(' '.join(ev.get('venue_names') or [])))):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'resumen_de_programa',
                 'evidence': 'Noticia o resumen de programación de la red de centres cívics, no una actividad', 'ambiguous': False}
     if PATIS.search(t):
@@ -360,7 +364,7 @@ def set_override(conn, source, record_id, category=None, channels_add=(), channe
     """Corrección editorial: sobrevive a cualquier sincronización (tabla aparte del registro importado)."""
     import json, datetime as dt
     initialize(conn)
-    if category is not None and category not in CATEGORIES: raise ValueError('Categoría no válida')
+    if category is not None and category not in CATEGORIES and category != EXCLUDED: raise ValueError('Categoría no válida')
     if any(ch not in CHANNELS for ch in list(channels_add) + list(channels_remove)): raise ValueError('Canal no válido')
     now = now or dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     old = conn.execute("SELECT category,channels_add,channels_remove,note FROM classification_overrides WHERE source=? AND id=?", (source, record_id)).fetchone()

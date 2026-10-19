@@ -93,6 +93,13 @@ class ClassifyTests(unittest.TestCase):
         out = taxonomy.classify(ev('Grabada, escrita, pronunciada'), {'category': 'charlas', 'note': 'Ciclo de lecturas del CCCB'})
         self.assertEqual((out['category'], out['status'], out['method'], out['evidence']), ('charlas', 'editorial', 'correccion_editorial', 'Ciclo de lecturas del CCCB'))
 
+    def test_override_can_exclude_and_services_and_news_are_excluded(self):
+        out = taxonomy.classify(ev('Concert X'), {'category': 'excluida', 'note': 'No es en Barcelona'})
+        self.assertEqual((out['category'], out['method']), ('excluida', 'correccion_editorial'))
+        self.assertEqual(self.cat("Activitats Laborals Joves de Barcelona: Activa't per treballar!")['category'], 'excluida')
+        self.assertEqual(self.cat('Cinc itineraris sorprenents amb el CC Urgell', source='web_centres_civics')['category'], 'excluida')
+        self.assertEqual(self.cat("Concert 'Sons d'Horta'", source='web_centres_civics')['category'], 'musica')
+
     def test_legacy_filters_map_to_new_keys(self):
         self.assertEqual(taxonomy.legacy_filter('Conciertos'), ('musica', ''))
         self.assertEqual(taxonomy.legacy_filter('Familia'), ('', 'familia'))

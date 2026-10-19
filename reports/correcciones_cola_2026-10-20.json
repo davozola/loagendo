@@ -1,0 +1,236 @@
+{
+ "what": "Correcciones editoriales aplicadas al revisar la cola de pendientes (20-10-2026). Viven en la tabla classification_overrides; validar o deshacer desde /admin → Clasificación.",
+ "items": [
+  {
+   "source": "diba_bibliotecas",
+   "id": "agendabiblioteques461111995",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «EstasON. Les científiques canvien el món!»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_bibliotecas",
+   "id": "agendabiblioteques461112229",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «EstasON. Experimentem amb l’aerodinàmica»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_bibliotecas",
+   "id": "agendabiblioteques461112274",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «EstasON. Descobrim les propietats dels materials»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_bibliotecas",
+   "id": "agendabiblioteques461275088",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Com la gasela vas. Lleona recita Arderiu»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_turismo",
+   "id": "agendaturisme460611748",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Utopies, aquí i ara»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_turismo",
+   "id": "agendaturisme460612105",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «El turisme, un dret social?»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "diba_turismo",
+   "id": "agendaturisme461257796",
+   "category": "arte",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Colita: Mon gitano 1962-1963»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400334385",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Activitat 'Descobrim el món: terra, mar i cel'»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400722312",
+   "category": "fiestas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «XII Aniversari de l'obertura del Castell de Torre Baró»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400762283",
+   "category": "deporte",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Activitat 'Marxa nòrdica'»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765207",
+   "category": "fiestas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «25è Festival de Creació Contemporània \"Escena Poblenou\": Bal»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765632",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Espai sensorial 'Els peixos del bosc inundat'»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400767542",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Sessions d'escolta col·lectiva, amb Ikram Bouloum»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400770083",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Activitat per a gent gran 'Memòria'»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400772749",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Espai d’aprenentatge 'Restes i rastres'»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400783860",
+   "category": "arte",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Persianes que fan barri»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400783882",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Grup d'havaneres»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785700",
+   "category": "talleres",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «OXIGENA'T: Riureterapia»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400789115",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Sessions d'escolta col·lectiva, amb Chica Acosta»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400513075",
+   "category": "fiestas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Balls per a gent gran a Sants - Montjuïc (octubre - desembre»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400744337",
+   "category": "fiestas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Ballada de sardanes»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "0c8923544242ce50e1a3620a",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «AMAFEST (African Music and Arts Festival) 2026»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "5de2f609f0a826270c068789",
+   "category": "escena",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Antonio Lorente Sells himself short»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "6f2053273a8b5ff3306c0522",
+   "category": "escena",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «The Spotlight  • Fri & Sat»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "99962be68e4c8872a8e50b14",
+   "category": "escena",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Roast Battle Barcelona»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "a9035b9b2d8b0b4674f9dcec",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Okvsho + Experience Live In Barcelona November 6»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "bde585a0a1b7f45660caee58",
+   "category": "musica",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Little Barrie»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_cccb",
+   "id": "84aebf18bdeef0062f02a2ba",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): ««MANIAC», de Benjamin Labatut»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_cccb",
+   "id": "9a4b2898bb838d6c55d64744",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «Dubái, el sueño del siglo XXI»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_cccb",
+   "id": "d9b404e4af2f0de364c05da1",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): ««Imaginar el fin», de Eudald Espluga»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_cccb",
+   "id": "e5a8d1ba28e20b6115d62051",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): ««El informe. Trabajo intelectual y tristeza burocrática», de»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_macba",
+   "id": "36b1e7fbf26d632988281217",
+   "category": "arte",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «MURMULLOS XI: Lolo &amp; Sosaku, Perros Chaos (y otras histo»",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  },
+  {
+   "source": "web_macba",
+   "id": "f91342d20c69262f4f7f0372",
+   "category": "charlas",
+   "note": "Revisión de la cola 20-10-2026 (Claude, pendiente de validar): «UNDERGROUND MATTERS. Arquitecturas invisibles Una actividad »",
+   "updated_at": "2026-10-19T22:58:56+00:00"
+  }
+ ]
+}
