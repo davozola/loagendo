@@ -64,7 +64,7 @@ const table=(rows,head)=>`<table class="metric-table">${head?`<tr>${head.map(h=>
 const pubLink=e=>`<a href="/e/${encodeURIComponent(e.source)}/${encodeURIComponent(e.id)}" target="_blank" rel="noopener">${esc(e.title)}</a>`;
 function fixer(e){return `<span class="fix" data-s="${esc(e.source)}" data-i="${esc(e.id)}"><select aria-label="Categoría para ${esc(e.title)}"><option value="">— elegir —</option>${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${e.category===k?'selected':''}>${esc(v)}</option>`).join('')}</select><button type="button" class="linkbutton">Guardar</button></span>`}
 function renderClass(r){
- const cats=Object.entries(r.categories).map(([k,v])=>[esc(v.label),v.count]),chans=Object.entries(r.channels).map(([k,v])=>[esc(v.label),v.count]);
+ const cats=Object.entries(r.categories).map(([k,v])=>[esc(v.label),v.count,`<small>${v.recurrentes} cursos/periódicas · ${v.count-v.recurrentes} puntuales</small>`]),chans=Object.entries(r.channels).map(([k,v])=>[esc(v.label),v.count]);
  const cov=r.coverage.map(c=>[esc(c.source),c.total,c.clasificadas||0,c.pendiente||0,c.excluidas||0,c.ambiguas||0,c.pct+' %']);
  const ex=list=>list.map(e=>[pubLink(e),esc(CATS[e.category]||e.category),esc(e.method),`<small>${esc(e.evidence)}</small>`,fixer(e)]);
  $('classif').innerHTML=`<h3>${r.eligible} fichas vigentes elegibles · ${r.published} publicadas con categoría · ${r.pending} pendientes de revisión · ${r.excluded} fuera de la agenda por regla editorial (ninguna se publica)</h3>

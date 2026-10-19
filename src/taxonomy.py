@@ -393,6 +393,13 @@ def _head(title):
     return ' '.join(words[:2]) if words else '(sin título)'
 
 
+def _recurring(e):
+    import datetime as _dt
+    try: span = (_dt.date.fromisoformat(e['end'][:10]) - _dt.date.fromisoformat(e['start'][:10])).days
+    except (ValueError, TypeError, KeyError): span = 0
+    return e.get('kind') == 'course' or (span > 7 and e.get('format') in ('course', 'workshop', 'program') and e.get('kind') != 'exhibition')
+
+
 def report(conn, events, today, examples=8, queue_limit=300):
     """Recuentos y colas de la clasificación pública. ``events``: catalog.all_events(conn)."""
     import json
@@ -424,7 +431,10 @@ def report(conn, events, today, examples=8, queue_limit=300):
         'today': today, 'eligible': len(base), 'published': len(pub), 'pending': len(pending), 'excluded': len(excluded),
         'excluded_reasons': dict(Counter(e.get('category_method') for e in excluded).most_common()),
         'excluded_examples': [brief(e) for e in excluded[:examples]],
-        'categories': {k: {'label': v[0], 'count': sum(1 for e in pub if e['public_category'] == k)} for k, v in CATEGORIES.items()},
+        # «recurrentes»: cursos y programas de más de una semana; la web los muestra aparte (botón «Talleres y cursos»)
+        # y oculta los ya empezados, así que no compiten con los planes puntuales del día.
+        'categories': {k: {'label': v[0], 'count': sum(1 for e in pub if e['public_category'] == k),
+                           'recurrentes': sum(1 for e in pub if e['public_category'] == k and _recurring(e))} for k, v in CATEGORIES.items()},
         'channels': {k: {'label': v[0], 'count': sum(1 for e in pub if k in (e.get('channels') or []))} for k, v in CHANNELS.items()},
         'status': dict(Counter(e.get('category_status') for e in base)),
         'methods': dict(Counter(e.get('category_method') for e in base).most_common()),
