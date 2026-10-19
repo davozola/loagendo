@@ -1,0 +1,196 @@
+===== tbc 94 [('venue_songkick', 32), ('guiabcn', 10), ('venue_eventbrite', 9), ('web_cccb', 8), ('web_centres_civics', 8), ('venue_sala_apolo', 7), ('generalitat', 6), ('diba_bibliotecas', 6), ('opendatabcn_agenda', 4), ('diba_turismo', 2), ('venue_ticketmaster_es', 2)]
+diba_bibliot 2026-10-22..2026-10-23 festival | Festival Munt de mots - Tocats de l’ala       | 
+diba_bibliot 2026-10-28..2026-10-29 program  | Primeres lectures                             | Mensual
+diba_bibliot 2026-10-29..2026-10-30 program  | EstasON. Descobrim la taula periòdica         | Setmanal
+diba_bibliot 2026-11-02..2026-11-03 program  | EstasON. Pintant la història amb ciència      | Setmanal
+diba_bibliot 2026-11-12..2026-11-13 program  | EstasON. STEAM fantàstic                      | Setmanal
+diba_bibliot 2026-11-16..2026-11-17 program  | EstasON. Desafiant la física                  | Setmanal
+diba_turismo 2026-10-22..2026-10-22 one_shot | Utopies, aquí i ara                           | 
+diba_turismo 2026-10-23..2026-10-23 one_shot | El turisme, un dret social?                   | 
+generalitat  2026-11-16..2026-11-16 one_shot | Celebració de l'Any Gaudí a la Casa Vicens    | 
+generalitat  2026-11-04..2026-11-08 festival | Festival 42                                   | 
+generalitat  2026-11-01..2026-11-01 one_shot | Concert de carilló al Palau de la Generalitat | 
+generalitat  2026-11-10..2026-11-15 program  | Barcelona Calling l’Orient Mitjà              | 
+generalitat  2026-10-22..2026-10-25 festival | Festival Escena Poblenou 2026                 | 
+generalitat  2026-10-24..2026-10-25 festival | Festival 48h Open House BCN                   | 
+guiabcn      2026-11-04..2026-11-08 festival | 42 Festival de Gèneres Fantàstics de Barcelon | (sin filas) guiabcn_api_detall
+guiabcn      2026-11-03..2026-11-08 festival | Barcelona, Capital Mundial de l’Arquitectura  | (sin filas) guiabcn_api_detall
+guiabcn      2026-10-30..2026-10-30 one_shot | Túnel de terror al Casal de Barri Verdun      | (sin filas) sin ficha
+guiabcn      2026-11-09..2026-11-15 program  | Setmana dels restaurants, hotels i locals de  | Consulteu els espais i les promocions al web https://foodieblackweek.com/barcelona/: 
+guiabcn      2026-10-14..2026-11-25 program  | Activitat familiar Espai moviment             | Del 14 octubre a l'11 novembre: Dimecres | Del 28 octubre al 25 novembre: Grans (4 a 8 anys) Cal inscripció prèvia
+guiabcn      2026-11-04..2026-11-04 one_shot | Futbol 'C.E. Europa Femení - R.C. Deportivo d | Dimarts, dimecres o dijous (per determinar): Per determinar
+guiabcn      2026-10-30..2026-10-30 one_shot | Tots Sants 2026: Castanyada & Halloween al co | Divendres: En horari comercial
+guiabcn      2026-10-30..2026-10-30 one_shot | Tots Sants 2026: Ha ha Halloween              | Divendres: Horari per determinar
+guiabcn      2026-10-30..2026-10-30 one_shot | Tots Sants 2026: Castanyada a Can Portabella  | Divendres: Per determinar
+guiabcn      2026-11-06..2026-11-08 festival | Festival 'Territori en Dansa Urbana (TDU)'    | Divendres: Per determinar | Dissabte:  | Diumenge: 
+opendatabcn_ 2026-10-21..2026-10-22 program  | Fira 'Bizbarcelona'                           | 
+opendatabcn_ 2026-11-17..2026-11-19 program  | LOOP Fair                                     | 
+opendatabcn_ 2026-11-06..2026-11-08 festival | "Raval(s) " Festival de Cultura del Raval 202 | 
+opendatabcn_ 2026-10-15..2026-10-21 course   | Activitats a Fabra i Coats: Fàbrica de Creaci | Consulteu dates i horaris de les activitats al web mixturbcn.com: Consulteu dates i horaris de les activitats al web mixturbcn.com
+venue_eventb 2026-10-28..2026-10-28 one_shot | Barcelona Tech Job Fair Autumn 2026           | 
+venue_eventb 2026-11-06..2026-11-06 one_shot | Inversión - Real estate in Barcelona - compra | 
+venue_eventb 2026-11-06..2026-11-06 one_shot | Investment - Real estate in Barcelona - to bu | 
+venue_eventb 2026-10-19..2026-10-19 one_shot | Bubble tea experience                         | 
+venue_eventb 2026-10-31..2026-10-31 one_shot | El Asesinato en la Mesa: Cena Gastronómica &  | 
+venue_eventb 2026-10-23..2026-10-23 one_shot | Barcelona El Born and Gothic Quarter          | 
+venue_eventb 2026-10-23..2026-10-23 one_shot | Language exchange and make new friends in Bar | 
+venue_eventb 2026-10-23..2026-10-23 one_shot | Barcelona: Oh My Gaudi Walking Tour           | 
+venue_eventb 2026-10-23..2026-10-23 one_shot | Barcelona Sip & Paint with Unlimited Sangria  | 
+venue_sala_a 2026-10-22..2026-10-22 program  | Ciclo AFERS con Lins EFX & Your Boy Posca en  | 
+venue_sala_a 2026-10-22..2026-10-22 program  | Cicle AFERS amb Lins EFX & Your Boy Posca a l | 
+venue_sala_a 2026-10-24..2026-10-24 one_shot | Apologia X Ma House: Charlins + MARA BRAVO +  | 
+venue_sala_a 2026-10-31..2026-10-31 one_shot | Apologia X DNBABES BCN: WomandBass Crew, KUAK | 
+venue_sala_a 2026-11-11..2026-11-11 one_shot | Concierto de Michelle David and The True-tone | 
+venue_sala_a 2026-11-14..2026-11-14 one_shot | Apologia X A·BUNDAH: Dj Maboku + Pxmp + Djane | 
+venue_sala_a 2026-11-07..2026-11-07 one_shot | Apologia X Haus Of Beat: RubenHit + Norea del | 
+venue_songki 2026-10-19..2026-10-19 one_shot | Marc Ayza                                     | 
+venue_songki 2026-10-22..2026-10-22 one_shot | Gloory Hole                                   | 
+venue_songki 2026-10-22..2026-10-22 one_shot | Jason Joshua                                  | 
+venue_songki 2026-10-25..2026-10-25 one_shot | Myrath                                        | 
+venue_songki 2026-10-26..2026-10-26 one_shot | Marc Ayza                                     | 
+venue_songki 2026-10-27..2026-10-27 one_shot | Hal9000                                       | 
+venue_songki 2026-10-31..2026-10-31 one_shot | Hal9000                                       | 
+venue_songki 2026-10-31..2026-10-31 one_shot | CASTANYADA ROCK 2026                          | 
+venue_songki 2026-11-05..2026-11-05 one_shot | Servando & Florentino                         | 
+venue_songki 2026-11-05..2026-11-05 one_shot | ALI A.K.A MIND                                | 
+venue_songki 2026-11-07..2026-11-07 one_shot | Repion                                        | 
+venue_songki 2026-11-07..2026-11-07 one_shot | Marta Soto                                    | 
+venue_songki 2026-11-08..2026-11-08 one_shot | Jonathan Stout                                | 
+venue_songki 2026-11-09..2026-11-09 one_shot | NAPA                                          | 
+venue_songki 2026-11-10..2026-11-10 one_shot | The Pretty Reckless                           | 
+venue_songki 2026-11-10..2026-11-10 one_shot | Trio Grande                                   | 
+venue_songki 2026-11-10..2026-11-10 one_shot | Steve Blanco                                  | 
+venue_songki 2026-11-11..2026-11-11 one_shot | Beast In Black                                | 
+venue_songki 2026-11-12..2026-11-12 one_shot | New Jazz Underground                          | 
+venue_songki 2026-11-13..2026-11-13 one_shot | Sports                                        | 
+venue_songki 2026-11-13..2026-11-13 one_shot | Zeballos                                      | 
+venue_songki 2026-11-13..2026-11-14 festival | Festival Feroe 2026                           | 
+venue_songki 2026-11-14..2026-11-14 one_shot | Fulminacci                                    | 
+venue_songki 2026-11-14..2026-11-14 one_shot | All In                                        | 
+venue_songki 2026-11-14..2026-11-14 one_shot | Say It Loud! Vol.17 2026                      | 
+venue_songki 2026-11-17..2026-11-17 one_shot | Homer El Mero Mero                            | 
+venue_songki 2026-10-24..2026-10-24 one_shot | Pablo Sanchez                                 | 
+venue_songki 2026-11-03..2026-11-03 one_shot | Hal9000                                       | 
+venue_songki 2026-11-10..2026-11-10 one_shot | Hal9000                                       | 
+venue_songki 2026-11-15..2026-11-15 one_shot | Hal9000                                       | 
+venue_songki 2026-11-17..2026-11-17 one_shot | Hal9000                                       | 
+venue_songki 2026-10-31..2026-10-31 one_shot | Hal9000                                       | 
+venue_ticket 2026-10-31..2026-10-31 festival | Nocturna Festival 2026                        | 
+venue_ticket 2026-11-10..2026-11-10 one_shot | Test 11068686 case                            | 
+web_cccb     2026-10-21..2026-10-21 festival | Serielizados Fest 2026                        | 
+web_cccb     2026-10-22..2026-10-22 festival | Serielizados Fest 2026                        | 
+web_cccb     2026-10-23..2026-10-23 festival | Serielizados Fest 2026                        | 
+web_cccb     2026-10-23..2026-10-23 one_shot | Miniput 2026                                  | 
+web_cccb     2026-10-24..2026-10-24 festival | Serielizados Fest 2026                        | 
+web_cccb     2026-10-25..2026-10-25 festival | Serielizados Fest 2026                        | 
+web_cccb     2026-10-23..2026-10-23 one_shot | Una sombra improbable                         | 23 octubre  -  1 diciembre 2026
+web_cccb     2026-11-06..2026-11-06 one_shot | World Press Photo 2026                        | 6 noviembre  -  13 diciembre 2026
+web_centres_ 2026-11-11..2026-11-11 one_shot | Oberta la convocatòria Temporals 2027-2028 pe | 
+web_centres_ 2026-10-25..2026-10-25 one_shot | 48h Open House Barcelona, la vida sense arqui | 
+web_centres_ 2026-10-24..2026-12-12 program  | El Cinexic continua amb tres noves propostes  | 
+web_centres_ 2026-10-09..2026-11-27 one_shot | Sons d’Horta, tres noves propostes musicals   | 
+web_centres_ 2026-10-29..2026-10-29 one_shot | Documental del mes: Les culpables             | 
+web_centres_ 2026-10-22..2026-10-22 one_shot | Cinestèsies, cinema i pensament: Norma Jeane, | 
+web_centres_ 2026-09-30..2026-12-18 one_shot | La tardor musical del Fort Pienc              | 
+web_centres_ 2026-10-30..2026-11-27 one_shot | Cinc concerts per descobrir les noves veus de | 
+===== run 100 [('generalitat', 38), ('opendatabcn_agenda', 27), ('guiabcn', 25), ('diba_bibliotecas', 5), ('diba_turismo', 2), ('venue_songkick', 2), ('venue_la_nau_bostik', 1)]
+diba_bibliot 2025-10-22..2026-10-22 program  | Lletra petita. Llibres a escena. Posa’t el me | 
+diba_bibliot 2026-05-21..2026-10-21 program  | Lletra petita. Contes a la mà: 'Llibres-joc,  | 
+diba_bibliot 2026-10-29..2026-12-02 one_shot | Lletra petita: El racó dels pares. Sessió de  | 
+diba_bibliot 2026-02-04..2026-11-04 program  | Contes a la mà                                | Mensual
+diba_bibliot 2026-11-17..2026-11-25 program  | Lectures compartides                          | Mensual
+diba_turismo 2026-10-16..2026-10-31 program  | La Zona, on habiten els teus pitjors malsons  | 
+diba_turismo 2026-10-17..2026-11-01 program  | Creepy Halloween Family                       | 
+generalitat  2026-02-13..2026-11-14 program  | Festival Empremtes                            | 
+generalitat  2026-10-01..2026-10-31 program  | Balandrau, vent salvatge                      | 
+generalitat  2026-10-09..2026-11-01 program  | XXI Festival Internacional de Putxinel·lis    | 
+generalitat  2026-10-16..2026-10-25 festival | Festival Dansat                               | 
+generalitat  2026-09-20..2027-04-10 program  | Cicle Remenuts                                | 
+generalitat  2026-10-03..2026-12-08 program  | Temporada Alta                                | 
+generalitat  2026-10-29..2026-11-08 festival | 24è Festival In-Edit Barcelona                | 
+generalitat  2026-10-22..2026-11-01 festival | Asian Film Festival Barcelona                 | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Harlem Jazz Club                   | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Casino l'Aliança                   | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Marula Café                        | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Palau Sant Jordi                   | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Almo2bar                    | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Apolo                       | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la sala City Hall Barcelona         | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a La Deskomunal                       | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Club de Jazz Jamboree              | 
+generalitat  2026-09-22..2026-11-08 program  | Cicle #Pontaeri 2026                          | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a La Nau                              | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Laut                        | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Luz de Gas                  | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la sala Moog                        | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Paral·lel 62                | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Razzmatazz                  | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Club Sauvage                       | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Upload                      | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala VOL                         | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Wolf                        | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a la Sala Slow Barcelona              | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Centre Artesà Tradicionàrius (C.A. | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre al Conservatori Liceu                 | 
+generalitat  2026-10-22..2026-11-24 program  | Festival ECOSS                                | 
+generalitat  2026-11-12..2026-11-22 program  | L'Alternativa                                 | 
+generalitat  2026-10-01..2026-10-31 program  | Octubre a l'Heliogàbal                        | 
+generalitat  2026-09-15..2026-12-10 program  | Mostra Internacional de Films de Dones de Bar | 
+generalitat  2026-11-04..2026-11-14 festival | 4t Lens Dans Festival                         | 
+generalitat  2026-10-08..2026-12-12 program  | Festival de Jazz i Música Creativa de Ciutat  | 
+generalitat  2026-10-14..2026-11-03 program  | Sâlmon                                        | 
+guiabcn      2026-10-13..2026-10-28 program  | Cicle "Festival de Cinema Jueu de Barcelona 2 | (sin filas) guiabcn_api_detall
+guiabcn      2026-09-19..2027-06-27 program  | Temporada Teatre Nacional de Catalunya 2026 - | (sin filas) guiabcn_api_detall
+guiabcn      2026-10-08..2026-10-22 program  | 34a Mostra Internacional de Films de Dones de | (sin filas) guiabcn_api_detall
+guiabcn      2026-10-01..2026-11-11 program  | 34a Mostra Internacional de Films de Dones de | (sin filas) guiabcn_api_detall
+guiabcn      2026-02-03..2026-12-17 program  | Cinegran a Sant Martí                         | (sin filas) guiabcn_api_detall
+guiabcn      2026-11-05..2026-11-15 festival | 20a Mostra de Cinema Àrab i Mediterrani de Ca | (sin filas) guiabcn_api_detall
+guiabcn      2026-10-16..2026-10-29 program  | Festival "Flaix de tardor - BCN"              | (sin filas) guiabcn_api_detall
+guiabcn      2026-03-26..2027-05-03 program  | VII Centenari del Monestir de Pedralbes (1326 | (sin filas) guiabcn_api_detall
+guiabcn      2026-11-09..2027-05-18 program  | Programació de teatre per a escoles i institu | (sin filas) guiabcn_api_detall
+guiabcn      2026-11-04..2026-11-25 one_shot | Espectacle "Juguem a nines?", de Claudia Barg | 4 octubre i 25 novembre: a les 19.30 h | 12 octubre i 19 novembre: a les 20.00 h
+guiabcn      2026-02-08..2026-11-15 program  | L'aventura de conèixer - La Claqueta: Cicle d | Consulteu dates, horaris i espais al web ajuntament.barcelona.cat/biblioteques/ca/activitats/cicles-tematics/verdi-kids Accés lliure fins a exhaurir places (cabuda limita
+guiabcn      2026-02-27..2026-12-30 program  | Cicle "Les golfes | 2026"                     | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-15..2026-11-15 program  | Cicle "Keisuke Kinoshita"                     | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-22..2026-10-30 program  | Cicle "Filmoteca John Berger"                 | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-06..2026-10-20 program  | Cicle "Àlex Brendemühl | Els passos dobles"   | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-14..2026-12-30 program  | Cicle "Afins: Nasty Women"                    | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-01..2026-11-06 program  | Cicle "Paul Thomas Anderson"                  | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-02-01..2026-12-31 program  | Cicle "De bell nou. La restauració del mes"   | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-06..2026-10-20 program  | Cicle "Setmana del Cineclubisme Català | 2026 | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-13..2026-10-28 program  | Festival de Cinema Jueu: Cicle "Simone Bitton | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2023-02-21..2026-12-30 program  | Cicle "Història permanent del cinema català"  | Consulteu dies a l' enllaç de la progrmació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-01..2027-06-15 program  | Cicle "Programa per a centres educatius 2026- | Consulteu dies a l' enllaç de la progrmació.: Consulteu l'horari a l' enllaç de la programació.
+guiabcn      2026-10-22..2026-11-01 festival | 14è Asian Film Festival Barcelona             | Consulteu dies al programa del festlival: Consulteu horaris al programa del festival
+guiabcn      2026-10-06..2026-10-31 program  | "Aparadors Artístics" Projecte per potenciar  | Dies d'obertura dels comerços: En horari comercial
+guiabcn      2026-10-14..2026-11-03 program  | 14è Festival d'arts vives de Barcelona "Sâlmo | Pels dies de les activitats podeu consultar el programa en aquest enllaç: Per horaris de les activitats podeu consultar el programa en aquest enllaç
+opendatabcn_ 2026-10-17..2027-01-22 program  | Suite Festival 2026-2027                      | 
+opendatabcn_ 2026-02-28..2026-11-28 program  | Festival 'Íntims'                             | 
+opendatabcn_ 2026-04-09..2026-12-30 program  | 27è Festival Mil·lenni                        | 
+opendatabcn_ 2026-04-09..2026-12-16 program  | Festival Empremtes 2026                       | 
+opendatabcn_ 2026-11-06..2026-11-30 program  | "(In)Fusión Flamenca" 24è Cicle de Flamenc al | 
+opendatabcn_ 2026-04-18..2026-12-23 program  | 58è Festival Internacional de Jazz de Barcelo | 
+opendatabcn_ 2026-09-15..2026-12-10 program  | 34a Mostra Internacional de Films de Dones de | 
+opendatabcn_ 2026-10-08..2026-12-17 program  | 8è Festival d'Arts Contemporànies i Pensament | 
+opendatabcn_ 2026-10-29..2026-11-15 program  | Art Llobet 2026 Festival de les Arts i la Gui | 
+opendatabcn_ 2026-09-23..2027-07-29 program  | Temporada Gran Teatre del Liceu 2025 -2026    | 
+opendatabcn_ 2026-10-01..2026-11-24 program  | Cicle 'Conegudes i reconegudes'               | 
+opendatabcn_ 2026-03-14..2026-12-31 program  | Programa d'activitats 'Drassanes Reials: pedr | 
+opendatabcn_ 2026-09-18..2026-10-30 program  | Cicle 'Directes Estrella Damm 150'            | 
+opendatabcn_ 2026-10-02..2026-11-28 program  | Cicle de concerts 'XXVII Clàssica a Horta - G | 
+opendatabcn_ 2026-01-08..2026-12-18 program  | Festival "Guitar Bcn 2026"                    | 
+opendatabcn_ 2026-10-24..2026-12-12 program  | De cajón! Festival de Flamenc de Barcelona 20 | 
+opendatabcn_ 2026-10-04..2026-11-26 one_shot | XXV Mostra de Teatre d'Horta - Guinardó 2026  | 
+opendatabcn_ 2026-11-12..2026-11-22 program  | Dates de festa major                          | 
+opendatabcn_ 2026-10-16..2026-10-25 festival | 33a Edició del Festival Ciutat Flamenco       | 
+opendatabcn_ 2026-11-10..2026-11-21 program  | Festival de Videoart "LOOP 2026"              | 
+opendatabcn_ 2026-10-22..2027-05-26 program  | 43a Temporada Ibercamera                      | Consultar programa al web: Consultar programa al web
+opendatabcn_ 2026-10-08..2026-12-12 program  | Festival de Jazz i Música Creativa de Ciutat  | Consultar programació: Consultar programació
+opendatabcn_ 2026-10-21..2026-10-31 festival | 31è Festival Internacional de Música Experime | Consulteu dates al web del Festival LEM: Consulteu horaris al web del Festival LEM
+opendatabcn_ 2026-10-05..2026-11-30 program  | Cicle ARTEC 'Cinefòrum sobre l’habitatge'     | Consulteu dies a l' enllaç de la programació.: Consulteu l'horari a l' enllaç de la programació.
+opendatabcn_ 2026-10-08..2026-12-19 program  | Barcelona Districte Cultural - Cicle 'Escena' | Consulteu programació: Consulteu programació
+opendatabcn_ 2026-10-12..2027-05-18 program  | Cicle de concerts "BCN Clàssics". Temporada 2 | Diferents dies: Consultar programació
+opendatabcn_ 2026-10-01..2026-10-31 one_shot | Concerts Octubre 2026 al Harlem Jazz Club     | Segons programació: Segons programació
+venue_la_nau 2025-11-13..2026-11-13 program  | Lens Dans #3 Festival                         | 17:00
+venue_songki 2026-10-08..2026-12-31 program  | VIDA RECORDS & FRIENDS 2026                   | 
+venue_songki 2026-10-12..2026-10-31 program  | LEM Festival 2026                             | 

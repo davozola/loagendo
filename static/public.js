@@ -2,21 +2,23 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeurl = s => { try { const u = new URL(s); return ['http:','https:'].includes(u.protocol) ? u.href : null } catch (_) { return null } };
-// Filtro «Qué te apetece» (18-10-2026): selección múltiple; se suman los tipos
-// marcados. «Con niños» no es un tipo sino un público: es una casilla aparte que
-// se combina con lo elegido («Conciertos» + «Con niños» = conciertos para ir con niños).
-// Conciertos agrupa las categorías internas Conciertos y Música.
-const PUBLIC = ['Conciertos','Teatro','Cine','Exposiciones','Barrio','Talleres','Deporte'];
-const CAT_LABEL = {Música: 'Conciertos', Teatro: 'Teatro y danza', Barrio: 'Charlas, visitas y barrio', Talleres: 'Talleres y cursos', Familia: 'Con niños'};
-const CAT_GROUP = {Conciertos: ['Conciertos', 'Música']};
-const SEASON_SUB = 'Temporadas y ciclos';
-const catName = c => t(CAT_LABEL[c] || c);
-// «Familia» como categoría interna es una actividad de barrio para familias: cuenta como Barrio.
-const catOf = e => e.public_category === 'Familia' ? 'Barrio' : e.public_category;
-const catMatch = (e, cats) => { cats = Array.isArray(cats) ? cats : (cats ? [cats] : []); return !cats.length || cats.some(c => (CAT_GROUP[c] || [c]).includes(catOf(e))) };
-const kidsMatch = (e, kids) => !kids || Boolean(e.family_audience);
-const isSeasonLike = e => e.start !== e.end && !['workshop', 'course'].includes(e.format) && e.kind !== 'course';
-const subMatch = (e, subs) => !subs || !subs.length || subs.some(s => s === SEASON_SUB ? isSeasonLike(e) : e.subtype === s);
+// Clasificación pública (19-10-2026, src/taxonomy.py): 8 categorías —cada ficha tiene una sola,
+// según su naturaleza— y 5 canales de descubrimiento —colecciones transversales; una ficha puede
+// estar en varios—. Se combinan: categorías marcadas (se suman) × canales marcados (se suman).
+// Sin tercer nivel: los subtipos y el «Con niños» antiguos pasan a ser el canal «En familia».
+const CATS = {musica: ['Música y conciertos', 'Música i concerts'], escena: ['Teatro y danza', 'Teatre i dansa'], cine: ['Cine', 'Cinema'],
+  arte: ['Arte y exposiciones', 'Art i exposicions'], charlas: ['Charlas y visitas', 'Xerrades i visites'], talleres: ['Talleres y experiencias', 'Tallers i experiències'],
+  fiestas: ['Fiestas y mercados', 'Festes i mercats'], deporte: ['Deporte', 'Esport']};
+const CHANS = {familia: ['En familia', 'En família'], barrio: ['Vida de barrio', 'Vida de barri'], aire: ['Al aire libre', "A l'aire lliure"],
+  galerias: ['Arte y galerías', 'Art i galeries'], festivales: ['Festivales', 'Festivals']};
+// Enlaces antiguos (?cat=Conciertos, ?kids=1) siguen funcionando.
+const LEGACY_CAT = {Conciertos: 'musica', 'Música': 'musica', Teatro: 'escena', Cine: 'cine', Exposiciones: 'arte', Talleres: 'talleres', Deporte: 'deporte'};
+const LEGACY_CHAN = {Familia: 'familia', Barrio: 'barrio'};
+const byLang = pair => pair[LANG === 'ca' ? 1 : 0];
+const catName = c => CATS[c] ? byLang(CATS[c]) : CATS[LEGACY_CAT[c]] ? byLang(CATS[LEGACY_CAT[c]]) : t(c || '');
+const chanName = c => CHANS[c] ? byLang(CHANS[c]) : c;
+const catMatch = (e, cats) => !cats || !cats.length || cats.includes(e.public_category);
+const chanMatch = (e, chans) => !chans || !chans.length || chans.some(c => (e.channels || []).includes(c));
 const FORMATS = {one_shot:'Actos y funciones',workshop:'Talleres',course:'Cursos',program:'Ciclos y programas',festival:'Festivales',exhibition:'Exposiciones',ongoing:'Actividades continuadas'};
 const PAGE = 50;
 const params = new URLSearchParams(location.search);
@@ -38,7 +40,7 @@ const CA = {
   'Nada con estos filtros este día. Prueba otro día o quita algún filtro.':'Res amb aquests filtres aquest dia. Prova un altre dia o treu algun filtre.',
   'No se pudo cargar la agenda.':'No s\'ha pogut carregar l\'agenda.','No se pudo cargar la selección.':'No s\'ha pogut carregar la selecció.','Aún no hay actividades destacadas para estas fechas.':'Encara no hi ha activitats destacades per a aquestes dates.',
   'No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.':'No hi ha ubicacions geogràfiques per a aquests filtres. Prova un altre dia o consulta la llista.','Mapa de actividades geolocalizadas':'Mapa d\'activitats geolocalitzades','lugares con ubicación · pulsa un punto para abrir la ficha':'llocs amb ubicació · prem un punt per obrir la fitxa','Sin recinto identificado':'Sense recinte identificat',
-  'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
+  'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Descubre':'Descobreix','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
   'Horario':'Horari','Horas publicadas':'Hores publicades','las fuentes no coinciden; confirma en la sala':'les fonts no coincideixen; confirma-ho a la sala','Requiere inscripción':'Cal inscripció','Texto de':'Text de','Imagen del equipamiento':'Imatge de l\'equipament','Imagen de la fuente':'Imatge de la font','Más imágenes':'Més imatges','Ubicación':'Ubicació','Mapa de':'Mapa de','la ubicación':'la ubicació','Próximamente en':'Properament a','esta sala':'aquesta sala',
   'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
   'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
@@ -94,18 +96,17 @@ function rangeWindow() {
 }
 
 let state = {
-  day: params.get('day') || today, cats: [...new Set(params.getAll('cat').map(c => c === 'Música' ? 'Conciertos' : c).filter(c => PUBLIC.includes(c)))],
-  kids: params.get('kids') === '1' || params.getAll('cat').includes('Familia'), format: '', district: params.get('district') || '',
+  day: params.get('day') || today, cats: [...new Set(params.getAll('cat').map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
+  chans: [...new Set([...params.getAll('ch'), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
   range: params.get('range') || '',
   started: params.get('started') === '1',
-  subs: params.getAll('sub').filter(Boolean),
   savedOnly: false, saved: [], detail: null, page: 1, items: [], total: 0,
 };
 try { state.saved = JSON.parse(pref('saved') || '[]') } catch (_) { state.saved = [] }
-let returnFocus = null, agendaRequest = 0, SUBTYPES = {};
+let returnFocus = null, agendaRequest = 0;
 
 const fetchJson = async (path, opts) => { const r = await fetch(path, opts); const d = await r.json(); if (!r.ok) throw Error(d.error || 'Error'); return d };
 
@@ -122,7 +123,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, subtype: c.st || null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -165,9 +166,9 @@ async function staticEvents(p) {
   const day = p.get('day') || '', from = p.get('date_from') || '', to = p.get('date_to') || '';
   const page = Number(p.get('page') || 1), size = Number(p.get('page_size') || PAGE);
   if (p.get('featured') === '1') { const d = await dayFile(day || today); return {items: d.featured.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: d.featured.length} }
-  const filters = {cat: p.getAll('public_category').filter(Boolean), kids: p.get('kids') === '1', subs: p.getAll('subtype').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
+  const filters = {cat: p.getAll('public_category').filter(Boolean), chans: p.getAll('channel').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
     hourFrom: p.get('hour_from') ? Number(p.get('hour_from')) : null, hourTo: p.get('hour_to') ? Number(p.get('hour_to')) : null, started: p.get('started') !== '0'};
-  const plain = !filters.cat.length && !filters.kids && !filters.subs.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
+  const plain = !filters.cat.length && !filters.chans.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
   const startedCutoff = addDays(today, -7);
   if (day && plain && page === 1 && size <= PAGE) { try { const d = await dayFile(day); return {items: d.items.map(expand), total: d.total, page: 1} } catch (_) {} }
   const all = await loadCatalog(), out = [];
@@ -186,7 +187,7 @@ async function staticEvents(p) {
     }
     if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff) continue;
     if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
-    if (!catMatch(e, filters.cat) || !kidsMatch(e, filters.kids) || !subMatch(e, filters.subs)) continue;
+    if (!catMatch(e, filters.cat) || !chanMatch(e, filters.chans)) continue;
     if (filters.format && e.format !== filters.format) continue;
     if (filters.free && !e.is_free) continue;
     if (filters.district && e.district !== filters.district) continue;
@@ -231,12 +232,11 @@ function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate
 function labelDay(v) { if (v === today) return t('Hoy'); const d = new Date(v + 'T12:00:00'); return `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` }
 function timeLabel(e) { return t(e.time_label) || e.time || (e.start !== e.end ? t('Varios días') : t('Hora no indicada')) }
 function venue(e) { return [e.venue_names?.[0] || e.venues?.[0]?.name, t(e.district)].filter(Boolean).join(' · ') || 'Barcelona' }
-// One label per record: the category, then the subtype when it says something,
-// else the format when it is not a plain one-off act ("Música · Jazz", "Talleres · Cursos").
+// One label per record: the category, then the format when it is not a plain one-off act ("Talleres y experiencias · Cursos").
 function catLabel(e) {
   const cat = catName(e.public_category || e.category || '');
-  if (e.subtype && e.subtype !== 'Sin clasificar') return `${cat} · ${t(e.subtype)}`;
-  if (e.format_label && e.format_label !== (e.public_category || e.category) && e.format !== 'one_shot' && e.format_label !== 'Actos y funciones') return `${cat} · ${t(e.format_label)}`;
+  // Sin repetir lo que ya dice la categoría («Talleres y experiencias · Talleres»).
+  if (e.format_label && e.format !== 'one_shot' && e.format_label !== 'Actos y funciones' && !fold(cat).includes(fold(t(e.format_label)))) return `${cat} · ${t(e.format_label)}`;
   return cat;
 }
 
@@ -246,7 +246,7 @@ function catLabel(e) {
 function syncUrl(push) {
   const p = new URLSearchParams();
   if (state.day !== today) p.set('day', state.day);
-  state.cats.forEach(c => p.append('cat', c)); if (state.kids) p.set('kids', '1'); state.subs.forEach(x => p.append('sub', x)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
+  state.cats.forEach(c => p.append('cat', c)); state.chans.forEach(c => p.append('ch', c)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
   if (state.free) p.set('free', '1'); if (state.query) p.set('q', state.query);
   if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
   if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
@@ -262,8 +262,7 @@ function activeFilterList() {
   const out = [];
   if (state.query) out.push({k: 'query', label: `“${state.query}”`});
   if (state.cats.length) out.push({k: 'cat', label: state.cats.map(catName).join(' + ')});
-  if (state.kids) out.push({k: 'kids', label: t('Con niños')});
-  if (state.subs.length) out.push({k: 'sub', label: state.subs.map(t).join(' + ')});
+  if (state.chans.length) out.push({k: 'ch', label: state.chans.map(chanName).join(' + ')});
   if (state.format) out.push({k: 'format', label: t(FORMATS[state.format] || state.format)});
   if (state.free) out.push({k: 'free', label: t('Gratis')});
   if (state.hourFrom !== null || state.hourTo !== null) out.push({k: 'hours', label: `${hourLabel(state.hourFrom ?? 0)}–${hourLabel(state.hourTo ?? 23)}`});
@@ -275,7 +274,7 @@ function activeFilterList() {
 function clearFilter(k) {
   if (k === 'range') state.range = '';
   if (k === 'query') { state.query = ''; $('searchInput').value = '' }
-  if (k === 'cat') { state.cats = []; state.subs = [] } if (k === 'kids') state.kids = false; if (k === 'sub') state.subs = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
+  if (k === 'cat') state.cats = []; if (k === 'ch') state.chans = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
   if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
   if (k === 'started') { state.started = false; $('includeStarted').checked = false }
 }
@@ -285,24 +284,11 @@ function renderActive() {
   const n = list.length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
 }
-// Subfiltros de varias selecciones (se suman). En Conciertos se añade «Temporadas y ciclos».
-// Los subtipos solo se ofrecen con un único tipo marcado, para no llenar el panel.
-function subtypesFor(cats) {
-  const cat = cats.length === 1 ? cats[0] : '';
-  const base = cat === 'Conciertos' ? [...new Set((CAT_GROUP.Conciertos).flatMap(c => SUBTYPES[c] || []))] : (SUBTYPES[cat] || []);
-  if (cat !== 'Conciertos' || !base.length) return base;
-  const i = base.indexOf('Sin clasificar');
-  return i < 0 ? [...base, SEASON_SUB] : [...base.slice(0, i), SEASON_SUB, ...base.slice(i)];
-}
 function chips() {
   $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
-    .concat(PUBLIC.map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
-  const subs = subtypesFor(state.cats);
-  state.subs = state.subs.filter(x => subs.includes(x));
-  $('subtypes').hidden = !subs.length;
-  $('subtypes').innerHTML = subs.length ? [`<button class="filter-chip ${state.subs.length ? '' : 'active'}" type="button" data-subtype="" aria-pressed="${!state.subs.length}">${t('Todos')}</button>`]
-    .concat(subs.map(c => `<button class="filter-chip ${state.subs.includes(c) ? 'active' : ''}${c === SEASON_SUB ? ' sub-season' : ''}" type="button" data-subtype="${esc(c)}" aria-pressed="${state.subs.includes(c)}">${esc(t(c))}</button>`)).join('') : '';
-  $('formatFilter').value = state.format; $('freeOnly').checked = state.free; $('kidsOnly').checked = state.kids; $('searchInput').value = state.query;
+    .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
+  $('channels').innerHTML = Object.keys(CHANS).map(c => `<button class="channel-chip ch-${c} ${state.chans.includes(c) ? 'active' : ''}" type="button" data-channel="${esc(c)}" aria-pressed="${state.chans.includes(c)}">${esc(chanName(c))}</button>`).join('');
+  $('formatFilter').value = state.format; $('freeOnly').checked = state.free; $('searchInput').value = state.query;
   ['List','Map','Venue'].forEach(v => $('view' + v).setAttribute('aria-pressed', String(state.view === v.toLowerCase())));
 }
 function hourLabel(h) { return String(h).padStart(2, '0') + ':00' }
@@ -396,7 +382,7 @@ const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a
 const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format === 'course';
 const isOpenFormat = e => e.kind === 'exhibition' || e.format === 'exhibition' || e.format === 'ongoing';
 // Programas de barrio, talleres o deporte que duran semanas: actividad periódica (como un taller), no una obra en cartel.
-const PERIODIC_CATS = new Set(['Barrio', 'Talleres', 'Deporte']);
+const PERIODIC_CATS = new Set(['charlas', 'talleres', 'deporte']);
 const isPeriodic = e => isCourse(e) || (e.format === 'program' && PERIODIC_CATS.has(e.public_category));
 const collator = new Intl.Collator('es', {sensitivity: 'base'}), byTitle = (a, b) => collator.compare(a.title, b.title);
 
@@ -651,7 +637,7 @@ function renderAgenda() {
   const s = model.sections, n = (model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc)).toLocaleString('es-ES');
   const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui')}</b> ${L('desde las', 'des de les')} ${clock(model.now.min)}`
     : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans')}</b> · ${esc(win.label)}`;
-  const extra = [state.cats.map(catName).join(' + '), state.kids ? t('Con niños') : '', state.subs.map(t).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
+  const extra = [state.cats.map(catName).join(' + '), state.chans.map(chanName).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
   $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
   stick(); mountFilterUi();
 }
@@ -688,7 +674,7 @@ setInterval(() => {
 }, 20000);
 
 function collectStatic(all, win, p) {
-  const filters = {cat: p.cats, kids: p.kids, subs: p.subs, format: p.format, district: p.district, free: p.free, query: fold(p.query || ''), hourFrom: p.hourFrom, hourTo: p.hourTo};
+  const filters = {cat: p.cats, chans: p.chans, format: p.format, district: p.district, free: p.free, query: fold(p.query || ''), hourFrom: p.hourFrom, hourTo: p.hourTo};
   const from = win ? win.from : state.day, to = win ? win.to : state.day, ahead = addDays(from, COURSE_AHEAD);
   const out = [];
   for (const base of all) {
@@ -696,7 +682,7 @@ function collectStatic(all, win, p) {
     const upcomingCourse = !active && isPeriodic(base) && !isOpenFormat(base) && base.start > to && base.start <= ahead && daysBetween(base.start, base.end) > SHORT_DAYS;
     if (!active && !upcomingCourse) continue;
     if (filters.query && !queryMatches(searchText(base), filters.query)) continue;
-    if (!catMatch(base, filters.cat) || !kidsMatch(base, filters.kids) || !subMatch(base, filters.subs)) continue;
+    if (!catMatch(base, filters.cat) || !chanMatch(base, filters.chans)) continue;
     if (filters.format && base.format !== filters.format) continue;
     if (filters.free && !base.is_free) continue;
     if (filters.district && base.district !== filters.district) continue;
@@ -725,10 +711,10 @@ async function agenda(append = false) {
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
       } else {
-        const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 && !CAT_GROUP[state.cats[0]] ? state.cats[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
+        const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
         const d = await get('/api/events?' + p);
         if (request !== agendaRequest) return;
-        state.items = d.items.filter(e => catMatch(e, state.cats) && kidsMatch(e, state.kids) && subMatch(e, state.subs)).map(e => ({...e, base_time: e.time}));
+        state.items = d.items.filter(e => catMatch(e, state.cats) && chanMatch(e, state.chans)).map(e => ({...e, base_time: e.time}));
       }
       state.total = state.items.length;
     }
@@ -800,9 +786,9 @@ async function openDetail(k, focus, opts = {}) {
     // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
     const osm = e.coordinates ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
     const map = e.coordinates ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venues?.[0]?.name || e.venue_names?.[0] || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div><span>${t('Cómo llegar')} ↗</span></a></section>` : '';
-    const upcoming = (e.venue_upcoming || []).length ? `<section class="sheet-venue"><h3>${t('Próximamente en')} ${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('esta sala'))}</h3><div class="venue-list">${e.venue_upcoming.map(u => `<button class="venue-item" type="button" data-open="${esc(u.key)}"><span class="venue-when"><b>${esc(labelDate(u.date))}</b>${u.time ? `<small>${esc(u.time)}</small>` : ''}</span><span class="venue-what"><b>${esc(u.title)}</b><small>${esc(catName(u.public_category))}${u.subtype && u.subtype !== 'Sin clasificar' ? ' · ' + esc(t(u.subtype)) : ''}${u.is_free ? ' · ' + t('Gratis') : ''}</small></span><span class="venue-go" aria-hidden="true">›</span></button>`).join('')}</div></section>` : '';
+    const upcoming = (e.venue_upcoming || []).length ? `<section class="sheet-venue"><h3>${t('Próximamente en')} ${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('esta sala'))}</h3><div class="venue-list">${e.venue_upcoming.map(u => `<button class="venue-item" type="button" data-open="${esc(u.key)}"><span class="venue-when"><b>${esc(labelDate(u.date))}</b>${u.time ? `<small>${esc(u.time)}</small>` : ''}</span><span class="venue-what"><b>${esc(u.title)}</b><small>${esc(catName(u.public_category))}${u.is_free ? ' · ' + t('Gratis') : ''}</small></span><span class="venue-go" aria-hidden="true">›</span></button>`).join('')}</div></section>` : '';
     const links = (e.links || []).filter(l => safeurl(l.url) && l.label !== 'Página de la fuente' && !(l.label === 'Web del evento' && !e.organizers?.length)).slice(0, 4).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(l.label)} ↗</a>`).join('');
-    $('sheet').innerHTML = `<div class="sheet-top"><span>${esc(catName(e.public_category || e.category))}${e.subtype && e.subtype !== 'Sin clasificar' ? ' · ' + esc(t(e.subtype)) : ''}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2><div class="sheet-cta">${safeurl(e.url) ? `<a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(t(e.link_label || 'Ver en la fuente oficial'))} ↗</a>` : ''}${e.coordinates ? `<a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a>` : ''}</div>${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}<div><small>${t('Precio')}</small><b>${e.is_free ? t('Gratis') : esc(e.price_text || e.price_label || t('Consultar en la fuente'))}</b></div>${e.confirmations > 1 ? `<div><small>${t('Contraste')}</small><b>${t('Fecha coincidente en')} ${e.confirmations} ${t('fuentes')}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button></div><p class="sheet-note">${e.presentation === 'venue_link_only' ? t('Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.') : `${t('Fuente')}: ${esc(e.source_label)}. ${t('Información recogida automáticamente')}`}; ${t('confirma horario y precio antes de ir.')}</p>`;
+    $('sheet').innerHTML = `<div class="sheet-top"><span>${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2><div class="sheet-cta">${safeurl(e.url) ? `<a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(t(e.link_label || 'Ver en la fuente oficial'))} ↗</a>` : ''}${e.coordinates ? `<a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a>` : ''}</div>${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}<div><small>${t('Precio')}</small><b>${e.is_free ? t('Gratis') : esc(e.price_text || e.price_label || t('Consultar en la fuente'))}</b></div>${e.confirmations > 1 ? `<div><small>${t('Contraste')}</small><b>${t('Fecha coincidente en')} ${e.confirmations} ${t('fuentes')}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button></div><p class="sheet-note">${e.presentation === 'venue_link_only' ? t('Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.') : `${t('Fuente')}: ${esc(e.source_label)}. ${t('Información recogida automáticamente')}`}; ${t('confirma horario y precio antes de ir.')}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);
   } catch (_) {}
@@ -854,9 +840,9 @@ document.addEventListener('click', e => {
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
-  if (button.id === 'filtersClear') { ['query','cat','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'filtersClear') { ['query','cat','ch','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
-  if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','kids','format','free','hours','district'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','ch','format','free','hours','district'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { clearFilter(button.dataset.clear); refresh(); return }
   if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
@@ -871,9 +857,9 @@ document.addEventListener('click', e => {
   if (button.dataset.category !== undefined) {
     const c = button.dataset.category;
     state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
-    state.subs = []; refresh(); return
+    refresh(); return
   }
-  if (button.dataset.subtype !== undefined) { const v = button.dataset.subtype; state.subs = !v ? [] : state.subs.includes(v) ? state.subs.filter(x => x !== v) : [...state.subs, v]; refresh(); return }
+  if (button.dataset.channel) { const c = button.dataset.channel; state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; refresh(); return }
   if (button.dataset.district) { state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
   if (button.dataset.save) { toggleSave(button.dataset.save); return }
   if (button.dataset.share) { shareEvent(button.dataset.share); return }
@@ -887,7 +873,6 @@ $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
 $('formatFilter').addEventListener('change', e => { state.format = e.target.value; refresh() });
 $('districtFilter').addEventListener('change', e => { state.district = e.target.value; refresh() });
 $('freeOnly').addEventListener('change', e => { state.free = e.target.checked; refresh() });
-$('kidsOnly').addEventListener('change', e => { state.kids = e.target.checked; refresh() });
 $('dayPicker').addEventListener('change', e => { if (!e.target.value) return; state.day = e.target.value; state.range = ''; refresh() });
 $('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
 $('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });
@@ -930,7 +915,6 @@ function typeHero() {
 (async () => {
   let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
-  try { SUBTYPES = await fetchJson(STATIC ? '/data/subtypes.json' : '/api/subtypes') } catch (_) { SUBTYPES = {} }
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();
   if (initial) { state.detail = null; syncUrl(); openDetail(initial) }  // list entry first, then the sheet: Back shows the agenda

@@ -325,3 +325,14 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Resultado encontrado por el cartel («Con Fennesz»), 18-10-2026 */
 .ev-hit{display:block;font-size:.82em;color:var(--accentText);margin:2px 0 1px}
+
+/* Canales de descubrimiento (19-10-2026): fila propia sobre la agenda, desplazable en móvil */
+.discover{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.discover h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,inherit);opacity:.75;white-space:nowrap}
+.channel-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 0}
+.channel-row::-webkit-scrollbar{display:none}
+.channel-chip{flex:0 0 auto;min-height:36px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);padding:0 14px;font-size:13px;font-weight:600;white-space:nowrap;color:inherit;cursor:pointer}
+.channel-chip:hover{background:var(--hover)}
+.channel-chip.active{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+@media(max-width:620px){.discover{flex-direction:column;align-items:stretch;gap:6px}.discover h3{font-size:11px}
+.cat-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cat-chips .filter-chip{justify-content:center;min-height:36px;padding:0 8px;white-space:normal;line-height:1.15;text-align:center}.cat-chips .filter-chip:first-child{grid-column:span 2}}
