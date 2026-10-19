@@ -242,7 +242,9 @@ def classify(ev, override=None):
 
 # ---------- canales ----------
 BARRIO_VENUE = re.compile(r"\b(?:centre civic|centro civico|casal de barri|casal de gent gran|casal|ateneu|biblioteca|espai veinal|associacio de veins|asociacion de vecinos|casa de la barceloneta|centre cultural|cc )\b")
-BARRIO_TITLE = re.compile(r"\b(?:festa major|festes de|fiesta mayor|barri|barrio|veinal|veinat|vecinal|comunitari|comunitaria|districte cultural|patis oberts)\b")
+NEIGHBOUR_VENUE = re.compile(r"\b(?:casal de barri|casal comunitari|ateneu popular|ateneu (?:de|del) barri|associacio de veins|associacio veinal|asociacion de vecinos|espai veinal|centre social|casal popular)\b")
+BARRIO_TITLE = re.compile(r"\b(?:festa major|festes majors|fiesta mayor|fiestas mayores|festa de barri|festes de barri|festes del barri|festes de (?:tardor|primavera|nadal) d[e']|patis oberts)\b")
+VECINAL_TITLE = re.compile(r"\b(?:veinal|veinat|vecinal|comunitari|comunitaria|del barri|al barri|de barri)\b")
 OUTDOOR_VENUE = re.compile(r"^(?:placa|plaza|parc|parque|jardi|jardins|jardines|platja|playa|passeig|paseo|rambla|carrer|calle|avinguda|av |muntanya|turo|park|mirador|moll|port vell|parc del forum|poble espanyol)\b|\b(?:a l'aire lliure|al aire libre|open air|exterior de|terrassa|terraza|rooftop|azotea)\b")
 OUTDOOR_TITLE = re.compile(r"\b(?:a l'aire lliure|al aire libre|open air|correfoc|cercavila|cavalcada|castellers|bicicletada|cursa|carrera popular|caminada|cinema a la fresca|cine a la fresca|mercat al carrer|al carrer)\b")
 ART_VENUE = re.compile(r"\b(?:galeria|galerie|gallery|macba|museu d'art|museo de arte|fundacio (?:joan )?miro|fundacio tapies|museu tapies|la virreina|fabra i coats|hangar|santa monica|caixaforum|kbr|la capella|cccb|meam|museu picasso|museu nacional d'art|mnac|fundacio vila casas|espai 13|bombon|etherton|chiquita room|ana mas|projecte sd|nogueras blanchard|joan prats|senda|marlborough|pigment gallery|parking gallery|la plataforma)\b")
@@ -261,20 +263,25 @@ def channels(ev, category, override=None):
         out['familia'] = 'La fuente la marca para público familiar o infantil'
     elif PATIS.search(title):
         out['familia'] = 'Patio escolar abierto para jugar en familia'
-    # Vida de barrio: lo que programa el tejido de proximidad, no las clases de cada semana
-    # (el taller de pilates de un centre cívic es un curso, no vida de barrio).
+    # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
+    # equipamiento municipal. Entra: fiestas mayores y de barrio, actividad vecinal o comunitaria,
+    # fiestas y mercados en la calle o en equipamientos de proximidad, y actividades puntuales de
+    # casals de barri, ateneus populares y asociaciones de vecinos. No entran los cursos ni las
+    # programaciones de varias semanas, ni lo de centres cívics y bibliotecas sin rasgo vecinal.
     import datetime as _dt
     try: span = (_dt.date.fromisoformat(str(ev.get('end'))[:10]) - _dt.date.fromisoformat(str(ev.get('start'))[:10])).days
     except ValueError: span = 0
-    recurring = category == 'talleres' and (span > 7 or ev.get('format') == 'course')
+    recurring = ev.get('kind') == 'course' or ev.get('format') == 'course' or (span > 7 and ev.get('kind') != 'single')
     if COMMUNITY.search(title):
         out['barrio'] = 'Grupo o espacio comunitario del barrio'
-    elif not recurring and BARRIO_TITLE.search(title):
-        out['barrio'] = 'Fiesta o actividad vecinal según el título'
-    elif not recurring and BARRIO_VENUE.search(venue):
-        out['barrio'] = f'Equipamiento de proximidad: {(ev.get("venue_names") or [""])[0]}'
-    elif not recurring and any('centres civics' in p or 'festes de barri' in p for p in paths):
-        out['barrio'] = 'Programación de los centres cívics según la fuente'
+    elif BARRIO_TITLE.search(title):
+        out['barrio'] = 'Fiesta mayor o de barrio según el título'
+    elif not recurring and VECINAL_TITLE.search(title):
+        out['barrio'] = 'Actividad vecinal o comunitaria según el título'
+    elif not recurring and category == 'fiestas' and (BARRIO_VENUE.search(venue) or OUTDOOR_VENUE.search(venue)):
+        out['barrio'] = 'Fiesta o mercado en la calle o en un equipamiento de proximidad'
+    elif not recurring and NEIGHBOUR_VENUE.search(venue):
+        out['barrio'] = f'Actividad puntual de una entidad vecinal: {(ev.get("venue_names") or [""])[0]}'
     if OUTDOOR_TITLE.search(title):
         out['aire'] = 'La actividad es en la calle o al aire libre'
     elif OUTDOOR_VENUE.search(venue):

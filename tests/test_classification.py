@@ -106,8 +106,12 @@ class ChannelTests(unittest.TestCase):
     def test_weekly_courses_at_civic_centres_are_not_neighbourhood_life(self):
         course = ev("Taller 'Pilates'", venue_names=['Centre Cívic Navas'], start='2026-10-01', end='2026-12-20', format='course')
         self.assertNotIn('barrio', taxonomy.channels(course, 'talleres'))
-        talk = ev("Xerrada 'Història del barri'", venue_names=['Centre Cívic Navas'])
-        self.assertIn('barrio', taxonomy.channels(talk, 'charlas'))
+        # Endurecido 20-10: un centre cívic por sí solo no es vida de barrio; una entidad vecinal o el título sí.
+        self.assertNotIn('barrio', taxonomy.channels(ev("Xerrada 'Gestió del temps'", venue_names=['Centre Cívic Navas']), 'charlas'))
+        self.assertIn('barrio', taxonomy.channels(ev("Xerrada 'Gestió del temps'", venue_names=['Casal de Barri Comunitari Espai 210']), 'charlas'))
+        self.assertIn('barrio', taxonomy.channels(ev("Cicle 'Fet al barri': Concert"), 'musica'))
+        self.assertIn('barrio', taxonomy.channels(ev('Castanyada', venue_names=['Plaça del Diamant']), 'fiestas'))
+        self.assertNotIn('barrio', taxonomy.channels(ev('Concert de jazz', venue_names=['Biblioteca Jaume Fuster']), 'musica'))
 
     def test_galleries_take_art_not_science_or_history_exhibitions(self):
         art = ev("Exposició 'Paisatges'", kind='exhibition', venue_names=['Galeria Joan Prats'])
