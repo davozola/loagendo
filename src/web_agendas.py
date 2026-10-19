@@ -125,13 +125,17 @@ def parse_cccb(page):
             if not link or not title: continue
             image=re.search(r'<img[^>]+src="([^"]+)"',item)
             name=html.unescape(re.sub('<[^>]+>',' ',title.group(1))).strip()
+            # Disciplina que el CCCB pone sobre el título («Audiovisuales», «Debates», «Escena»…).
+            pretitle=re.search(r'agenda-card-pretitle[^"]*">\s*<span>([^<]*)</span>\s*([^<]*)',item)
+            discipline=html.unescape(pretitle.group(1)).strip() if pretitle else ''
+            series=html.unescape(pretitle.group(2)).strip() if pretitle else ''
             when=html.unescape(time.group(1)).strip() if time else ''; start=end=date
             # Exposiciones: en el lugar de la hora el CCCB pone su periodo («23 octubre - 1 diciembre 2026»).
             span=re.match(r'(\d{1,2})\s+([a-zà-ÿ]+)\s*[-–]\s*(\d{1,2})\s+([a-zà-ÿ]+)\s+(20\d\d)$',when.casefold())
             if span and span.group(2) in MONTHS and span.group(4) in MONTHS:
                 m1,m2,y2=MONTHS[span.group(2)],MONTHS[span.group(4)],int(span.group(5))
                 start=f'{(y2 if m1<=m2 else y2-1):04d}-{m1:02d}-{int(span.group(1)):02d}'; end=f'{y2:04d}-{m2:02d}-{int(span.group(3)):02d}'; when=''
-            result.append(_record(source,name,start,end,html.unescape(link.group(1)),cfg['venue'],cfg['address'],{'page_title':html.unescape(link.group(2))},when,html.unescape(image.group(1)) if image else ''))
+            result.append(_record(source,name,start,end,html.unescape(link.group(1)),cfg['venue'],cfg['address'],{'page_title':html.unescape(link.group(2)),'discipline':discipline,'series':series},when,html.unescape(image.group(1)) if image else ''))
     return result
 
 def parse_teatre_lliure(page):

@@ -86,14 +86,15 @@ class PublicListingTests(unittest.TestCase):
         public = catalog.query_events(self.conn, day='2026-10-20', public=True)
         self.assertEqual((everything['total'], public['total']), (4, 1))
         self.assertEqual(public['items'][0]['id'], 'ok')
-        self.assertEqual(public['items'][0]['public_category'], 'Conciertos')
+        self.assertEqual(public['items'][0]['public_category'], 'musica')
 
     def test_familia_filter_uses_audience_not_category(self):
         self.conn.execute("DELETE FROM editorial_reviews"); self.conn.commit(); catalog.invalidate_cache()
         out = catalog.query_events(self.conn, day='2026-10-20', public_category='Familia', public=True)
         self.assertEqual([e['id'] for e in out['items']], ['kids'])
-        self.assertEqual(out['items'][0]['public_category'], 'Familia')
+        self.assertIn('familia', out['items'][0]['channels'])
         self.assertTrue(out['items'][0]['family_audience'])
+        self.assertEqual([e['id'] for e in catalog.query_events(self.conn, day='2026-10-20', channel='familia', public=True)['items']], ['kids'])
 
     def test_listing_cache_refreshes_after_a_commit_and_never_leaks_request_state(self):
         first = catalog.query_events(self.conn, day='2026-10-20', featured=True)
@@ -230,7 +231,7 @@ class SubtypeTests(unittest.TestCase):
             conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('web_conciertos_club', '4', 'Banda', '2026-10-20', '2026-10-20', 'single', 'review', 'x', 'https://conciertos.club/x', 'h', '{}'))
             conn.commit(); catalog.invalidate_cache()
             items = {e['id']: e for e in catalog.query_events(conn, day='2026-10-20', public=True)['items']}
-            self.assertEqual((items['1']['public_category'], items['1']['subtype']), ('Conciertos', 'Jazz y blues'))
+            self.assertEqual((items['1']['public_category'], items['1']['legacy_category'], items['1']['subtype']), ('musica', 'Conciertos', 'Jazz y blues'))
             self.assertEqual(items['2']['subtype'], 'Sin clasificar'); self.assertEqual(items['4']['subtype'], 'Sin clasificar')
             self.assertEqual(items['3']['subtype'], 'Fotografía')
             jazz = catalog.query_events(conn, day='2026-10-20', public=True, public_category='Conciertos', subtype='Jazz y blues')

@@ -40,7 +40,7 @@ class PlaceImageTests(unittest.TestCase):
             rel = [{'entity_core_type': 'place', 'entity_id': 92086000555, 'entity_name': 'Centre Cívic Navas', 'entity_canonical_url': 'https://www.barcelona.cat/ca/la-ciutat/punts-interes/centre-civic-navas-92086000555'}]
             for id, title in (('1', 'Taller de dibuix'), ('2', 'Curs de ioga')):
                 conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', id, title, '2026-10-20', '2026-12-20', 'course', 'review', 'x', '', 'h', json.dumps({'name': title, 'from_relationships': rel, 'addresses': [], 'loagendo': {}})))
-            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '3', 'Amb foto pròpia', '2026-10-20', '2026-10-20', 'single', 'review', 'x', '', 'h', json.dumps({'name': 'Amb foto pròpia', 'from_relationships': rel, 'addresses': [], 'loagendo': {}})))
+            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '3', 'Concert amb foto pròpia', '2026-10-20', '2026-10-20', 'single', 'review', 'x', '', 'h', json.dumps({'name': 'Concert amb foto pròpia', 'from_relationships': rel, 'addresses': [], 'loagendo': {}})))
             from src import media as media_module
             media_module.register(conn, 'opendatabcn_agenda', '3', 'https://img.test/own.jpg', rights_status='authorized'); conn.commit()
             wanted = places_needing_images(conn, today=__import__('datetime').date(2026, 10, 13))

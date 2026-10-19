@@ -69,7 +69,7 @@ class VenueFeedTests(unittest.TestCase):
             out = catalog.query_events(conn, day='2026-11-05', public=True)
             self.assertEqual(len(out['items']), 1)
             item = out['items'][0]
-            self.assertEqual((item['time'], item['public_category'], item['category'], item['source_label']), ('21:00', 'Conciertos', 'Música y vida nocturna', 'Demo Hall · agenda del recinto'))
+            self.assertEqual((item['time'], item['public_category'], item['category'], item['source_label']), ('21:00', 'musica', 'Música y vida nocturna', 'Demo Hall · agenda del recinto'))
             self.assertEqual(catalog.query_events(conn, day='2026-11-06', public=True)['total'], 0)  # cancelled stays archived but hidden
             detail = catalog.event_detail(conn, 'venue_demo_hall', item['id'])
             self.assertEqual(detail['description'], 'Pop de dormitori des de Liverpool.')

@@ -112,7 +112,7 @@ def make_handler(db):
             if url.path=='/admin/app.css':return self._file('admin/app.css','text/css; charset=utf-8')
             if url.path=='/admin/app.js':return self._file('admin/app.js','application/javascript; charset=utf-8')
             if url.path.startswith('/media/'):return self._media(url.path.removeprefix('/media/'))
-            if url.path not in ('/api/stats','/api/events','/api/event','/api/health','/api/options','/api/districts','/api/readiness','/api/subtypes'):
+            if url.path not in ('/api/stats','/api/events','/api/event','/api/health','/api/options','/api/districts','/api/readiness','/api/subtypes','/api/classification'):
                 return self._json({'error':'No encontrado'},404)
             args={k:v[0] for k,v in parse_qs(url.query,keep_blank_values=True).items()}
             started=time.monotonic()
@@ -123,6 +123,9 @@ def make_handler(db):
                         from src.readiness import report
                         out=report(conn)
                     elif url.path=='/api/subtypes':out=catalog.subtype_groups()
+                    elif url.path=='/api/classification':
+                        from src import taxonomy
+                        out=taxonomy.report(conn,catalog.all_events(conn),catalog.today().isoformat())
                     elif url.path=='/api/options':out={'categories':catalog.CATEGORIES,'districts':catalog.DISTRICTS,'sources':catalog.SOURCES,'kinds':catalog.KINDS,'formats':catalog.FORMATS,'statuses':catalog.STATUS}
                     elif url.path=='/api/stats':out=catalog.stats(conn)
                     elif url.path=='/api/districts':out=catalog.districts(conn,args.get('day',''))
@@ -131,7 +134,7 @@ def make_handler(db):
                         if out is None:return self._json({'error':'No encontrado'},404)
                     else:
                         hour_from=args.get('hour_from',''); hour_to=args.get('hour_to','')
-                        out=catalog.query_events(conn,query=args.get('query',''),date=args.get('date',''),day=args.get('day',''),date_from=args.get('date_from',''),date_to=args.get('date_to',''),category=args.get('category',''),public_category=args.get('public_category',''),format=args.get('format',''),free=args.get('free','')=='1',district=args.get('district',''),source=args.get('source',''),status=args.get('status',''),kind=args.get('kind',''),only_sessions=args.get('only_sessions','')=='1',featured=args.get('featured','')=='1',curated=args.get('curated','')=='1',hour_from=int(hour_from) if hour_from else None,hour_to=int(hour_to) if hour_to else None,page=int(args.get('page','1')),page_size=int(args.get('page_size','24')),public=args.get('public','')=='1',include_started=args.get('started','')!='0',subtype=args.get('subtype',''))
+                        out=catalog.query_events(conn,query=args.get('query',''),date=args.get('date',''),day=args.get('day',''),date_from=args.get('date_from',''),date_to=args.get('date_to',''),category=args.get('category',''),public_category=args.get('public_category',''),format=args.get('format',''),free=args.get('free','')=='1',district=args.get('district',''),source=args.get('source',''),status=args.get('status',''),kind=args.get('kind',''),only_sessions=args.get('only_sessions','')=='1',featured=args.get('featured','')=='1',curated=args.get('curated','')=='1',hour_from=int(hour_from) if hour_from else None,hour_to=int(hour_to) if hour_to else None,page=int(args.get('page','1')),page_size=int(args.get('page_size','24')),public=args.get('public','')=='1',include_started=args.get('started','')!='0',subtype=args.get('subtype',''),channel=args.get('channel',''))
                 elapsed=(time.monotonic()-started)*1000
                 if elapsed>250: print(f'[LENTO] {url.path}?{url.query} {elapsed:.0f} ms')
                 return self._json(out)
@@ -142,7 +145,7 @@ def make_handler(db):
         def do_POST(self):
             if not self._allowed_host():return self._json({'error':'Host local requerido'},403)
             url=urlsplit(self.path)
-            if url.path not in ('/api/review','/api/verification','/api/publication','/api/curate'):return self._json({'error':'No encontrado'},404)
+            if url.path not in ('/api/review','/api/verification','/api/publication','/api/curate','/api/classification'):return self._json({'error':'No encontrado'},404)
             # Only local browsers, no external form submission and no ambient-auth CSRF.
             if self.headers.get('X-Loagendo-Local')!='1':return self._json({'error':'Cabecera local requerida'},403)
             origin=self.headers.get('Origin','')
@@ -162,6 +165,13 @@ def make_handler(db):
                         out=catalog.save_review(conn,source,id,data.get('status',''),note)
                     elif url.path=='/api/publication':
                         out=catalog.save_publication_decision(conn,source,id,data.get('status',''),note)
+                    elif url.path=='/api/classification':
+                        from src import taxonomy
+                        if catalog.event_detail(conn,source,id) is None: raise LookupError('Ficha no encontrada')
+                        category=data.get('category') or None
+                        adds=data.get('channels_add') or []; removes=data.get('channels_remove') or []
+                        if not (isinstance(adds,list) and isinstance(removes,list)): raise ValueError('Canales: lista requerida')
+                        out=taxonomy.set_override(conn,source,id,category,adds,removes,note); catalog.invalidate_cache()
                     elif url.path=='/api/curate':
                         out=catalog.save_curated_pick(conn,source,id,data.get('position',0),data.get('week_start',''))
                     else:

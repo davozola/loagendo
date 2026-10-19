@@ -178,7 +178,8 @@ class TestCatalogAndApi(unittest.TestCase):
         code,res=self.request('GET','/api/events?day=2026-10-17&public_category=Familia&free=1')
         self.assertEqual(code,200);self.assertEqual(res['total'],1)
         item=res['items'][0]
-        self.assertEqual((item['public_category'],item['time'],item['url']),('Familia','17:30','https://example.org'))
+        # «Familia» (enlace antiguo) es ahora el canal «En familia»; la categoría es la naturaleza del acto.
+        self.assertEqual((item['public_category'],item['time'],item['url']),('escena','17:30','https://example.org'));self.assertIn('familia',item['channels'])
         self.assertTrue(item['is_free']);self.assertEqual(item['price_label'],'Gratis')
         self.assertEqual(item['coordinates'],{'lat':41.1,'lon':2.1})
         body=json.dumps({'source':'diba_bibliotecas','id':'1','position':0,'week_start':'2026-10-17'})

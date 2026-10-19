@@ -28,8 +28,8 @@ from src.network import tls_context
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "venue_eventbrite"
-API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availability,venue"
-PARSER_VERSION = 3  # 3: la API manda en fecha, hora, nombre, resumen, estado y lugar (19-10-2026); 2: ids «-registration-»
+API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availability,venue,format,category"
+PARSER_VERSION = 4  # 4: formato y categoría de Eventbrite para clasificar; 3  # 3: la API manda en fecha, hora, nombre, resumen, estado y lugar (19-10-2026); 2: ids «-registration-»
 RECHECK_DAYS = 3
 TZ = "Europe/Madrid"
 USER_AGENT = "Brollant/1.3 (+https://brollant.com) eventbrite-api"
@@ -96,7 +96,10 @@ def facts_from_event(event, expected_date):
            "api_start_date": start_date, "api_end_date": end_date or start_date, "event_status": event.get("status") or "",
            "timezone": (event.get("start") or {}).get("timezone") or "",
            "api_name": ((event.get("name") or {}).get("text") or "").strip(), "api_summary": (event.get("summary") or "").strip(),
-           "online_event": bool(event.get("online_event"))}
+           "online_event": bool(event.get("online_event")),
+           # Tipo de evento que declara el organizador en Eventbrite («Class, Training, or Workshop», «Music»…).
+           "api_format": ((event.get("format") or {}).get("short_name") or (event.get("format") or {}).get("name") or ""),
+           "api_category": ((event.get("category") or {}).get("short_name") or (event.get("category") or {}).get("name") or "")}
     venue = event.get("venue") or {}
     if isinstance(venue, dict) and venue.get("name"):
         address = venue.get("address") or {}

@@ -114,9 +114,20 @@ def opendata_normalized(raw):
     return (raw or {}).get('loagendo') or {}
 
 
+CCCB_DISCIPLINE={'audiovisuales':'Cine y audiovisual','debates':'Ciencia y divulgación','visitas':'Patrimonio y rutas','escena':'Artes escénicas',
+                 'exposicion':'Arte y exposiciones','musica':'Música y vida nocturna','cursos y talleres':'Talleres y experiencias','educacion':'Talleres y experiencias',
+                 'literatura':'Literatura y palabra'}
+
+
 def category_of(raw, source, kind):
     if kind == 'exhibition':return 'Arte y exposiciones'
     if source=='web_conciertos_club':return 'Música y vida nocturna'
+    # Agendas propias de una sala: lo que programa L'Auditori es música; el Lliure, escena.
+    if source=='web_auditori':return 'Música y vida nocturna'
+    if source=='web_teatre_lliure':return 'Artes escénicas'
+    if source=='web_cccb':
+        discipline=clean(((raw or {}).get('item') or {}).get('discipline') or '')
+        if discipline in CCCB_DISCIPLINE: return CCCB_DISCIPLINE[discipline]
     if source=='opendatabcn_agenda':
         declared=opendata_normalized(raw).get('category')
         if declared: return declared
@@ -782,7 +793,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=22  # 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=23  # 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1068,6 +1079,18 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if district and not events['district']: events['district']=district; events['district_evidence']=how
         if coords and not events['coordinates']: events['coordinates']=coords
     events.update(public_fields(events,projection,requested_day=requested_day,schedule_time=schedule_time))
+    # Clasificación pública (8 categorías + 5 canales, src/taxonomy.py). La categoría anterior se
+    # conserva como legacy_category (subtipos y compatibilidad); nada de lo importado se toca.
+    from src import taxonomy
+    override=taxonomy.overrides(conn).get((source,id))
+    basis={**events,'classification_paths':projection.get('classification_paths') or [],
+           'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
+    verdict=taxonomy.classify(basis,override)
+    events['legacy_category']=events.get('public_category')
+    events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
+                   'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous']})
+    chans=taxonomy.channels(basis,verdict['category'],override)
+    events['channels']=sorted(chans); events['channel_evidence']=chans
     # Precio del detalle oficial (GuiaBCN «Entrada Gratuïta»): gratis solo si lo dice y no da ningún importe.
     detail_price=str(facts.get('price_text') or '')
     if not events.get('is_free') and detail_price and is_free(detail_price,'') and not re.search(r'\d\s*(?:€|eur)',detail_price,re.I):
@@ -1388,10 +1411,12 @@ def is_public(event):
     not collapsed into a canonical twin, and not from a retired source."""
     # Una agenda de Barcelona: lo que solo pasa en línea («On-line») no se publica.
     online=bool(event.get('venue_names')) and all(ONLINE_VENUE.match(v or '') for v in event['venue_names'])
-    return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or event['source'] in HIDDEN_PUBLIC_SOURCES)
+    # Sin categoría fiable (taxonomía de 8) el registro espera revisión editorial: no se publica.
+    pending=event.get('public_category')=='pendiente'
+    return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES)
 
 
-def query_events(conn, *, query='', date='', day='', date_from='', date_to='', category='', public_category='', format='', free=False, district='', source='', status='', kind='', only_sessions=False,featured=False,curated=False,hour_from=None,hour_to=None,page=1,page_size=24,public=False,include_started=True,subtype=''):
+def query_events(conn, *, query='', date='', day='', date_from='', date_to='', category='', public_category='', format='', free=False, district='', source='', status='', kind='', only_sessions=False,featured=False,curated=False,hour_from=None,hour_to=None,page=1,page_size=24,public=False,include_started=True,subtype='',channel=''):
     """``public`` hides records the sources or the editors excluded (services,
     out-of-town rows, calendar notices, editorial exclusions). The admin console
     keeps seeing everything. ``date_from``/``date_to`` select a window (at most
@@ -1399,6 +1424,8 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     first, ordered by date, then one-day acts, then programmes and exhibitions."""
     date=day or date
     if date and not parse_date(date):raise ValueError('Fecha no válida')
+    from src import taxonomy
+    wanted_category,wanted_channel=taxonomy.legacy_filter(public_category,channel)
     window=None
     if date_from or date_to:
         if date: raise ValueError('Usa day o date_from/date_to, no ambos')
@@ -1444,9 +1471,8 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
         if window and not (e['start']<=window[1] and e['end']>=window[0]):continue
         if category and e['category']!=category:continue
         if public and not is_public(e):continue
-        if public_category=='Familia':
-            if not e['family_audience']:continue
-        elif public_category and e['public_category']!=public_category:continue
+        if wanted_channel and wanted_channel not in (e.get('channels') or []):continue
+        if wanted_category and e['public_category']!=wanted_category:continue
         if subtype and e.get('subtype')!=subtype:continue
         if format and e['format']!=format:continue
         if free and not e['is_free']:continue

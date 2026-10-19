@@ -17,6 +17,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import sqlite3
 import os
 import shutil
 import subprocess
@@ -40,7 +41,7 @@ STATIC_FILES = ('public.css', 'public.js', 'vendor/leaflet.css', 'vendor/leaflet
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'subtype', 'venue_upcoming', 'description_credit')
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'venue_upcoming', 'description_credit')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -172,7 +173,7 @@ def compact(event, images, full=True):
         's': event['source'], 'i': event['id'], 't': event['title'], 'a': event['start'], 'b': event['end'], 'kd': event['kind'], 'f': event['format'],
         'pc': event['public_category'], 'd': event['district'] or '', 'fa': 1 if event['family_audience'] else 0, 'hd': 1 if event['has_description'] else 0,
         'v': [v for v in event['venue_names'][:2]], 'g': [round(event['coordinates']['lat'], 5), round(event['coordinates']['lon'], 5)] if event.get('coordinates') else None,
-        'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'st': event.get('subtype') or '', 'tm': event.get('time') or '', 'tl': event['time_label'],
+        'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'ch': event.get('channels') or [], 'tm': event.get('time') or '', 'tl': event['time_label'],
     }
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
@@ -291,9 +292,14 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for stale in ('data',):
         if (out / stale).exists(): shutil.rmtree(out / stale)
     images = ImageExporter(conn, out, media_root, registry, thumbnailer)
+    # Clasificación vigente de todas las fichas (también las pendientes y excluidas): tabla
+    # event_classification + historial de cambios tras cada sincronización (src/taxonomy.py).
+    from src import taxonomy
+    try: classification_changes = taxonomy.record(conn, catalog.all_events(conn))
+    except sqlite3.OperationalError: classification_changes = None  # base de solo lectura
     events = public_events(conn, today)
     catalogue = [compact(e, images, full=False) for e in events]
-    _write_json(out / 'data' / 'subtypes.json', catalog.subtype_groups())
+    _write_json(out / 'data' / 'taxonomy.json', taxonomy.public_labels(events))
     _write_json(out / 'data' / 'catalog.json', {'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'items': catalogue})
     # One ranked first page per day in the horizon, so the first paint and any
     # day tap work before the catalogue has finished loading.
@@ -356,7 +362,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     if not days[today.isoformat()]['items']: blockers.append('El día de hoy no tiene ninguna ficha')
     if file_count > MAX_FILES: blockers.append(f'{file_count} ficheros superan el límite de {MAX_FILES} de Cloudflare Pages')
     return {'status': 'completed' if not blockers else 'blocked', 'blockers': blockers, 'out_dir': str(out), 'generated_at': generated_at, 'today': today.isoformat(),
-            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1)}
+            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'classification_changes': classification_changes, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1)}
 
 
 def deploy(out_dir, command, *, env_file=None, runner=subprocess.run, timeout=1800):
