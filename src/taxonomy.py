@@ -67,12 +67,12 @@ def norm(text):
 LEAD = [
     ('cine', r"cinema|cine|cineforum|cinefòrum|cineclub|projeccio|projeccions|proyeccion|curtmetratges?|cortometrajes?|documental|pel.licula|pelicula|film|sessio de cinema|filmoteca"),
     ('arte', r"exposicio|exposicion|exposicions|exposiciones|inauguracio|inauguracion|vernissage|finissage|instal.lacio|instalacion|videoart|performance|mostra d'art|mostra fotografica|art urba"),
-    ('musica', r"concert|concerts|concierto|conciertos|recital musical|recital de (?:piano|guitarra|cant|violi)|jam session|jam|dj set|dj|audicio|audicion|cantada|havaneres|opera concert|coral|orquestra|orquesta|vermut musical"),
-    ('escena', r"espectacle|espectaculo|espectacles|teatre|teatro|dansa|danza|ballet|circ|circo|titelles|titeres|marionetes|opera|sarsuela|zarzuela|musical|monoleg|monologo|stand.up|comedia|cabaret|clown|magia|mag |impro|improvisacio|contacontes|cuentacuentos|conte|contes|narracio|hora del conte|lectura dramatitzada"),
+    ('musica', r"presentacio (?:del? )?(?:lp|ep|disc|nou disc|album|l'album)|presentacion (?:del? )?(?:lp|ep|disco|album)|concert|concerts|concierto|conciertos|recital musical|recital de (?:piano|guitarra|cant|violi)|jam session|jam|dj set|dj|audicio|audicion|cantada|havaneres|opera concert|coral|orquestra|orquesta|vermut musical"),
+    ('escena', r"espectacle|espectaculo|espectacles|teatre|teatro|dansa|danza|ballet|circ|circo|titelles|titeres|marionetes|opera|sarsuela|zarzuela|musical|monoleg|monologo|stand.up|comedia|cabaret|clown|magia|mag |impro|improvisacio|contacontes|cuentacuentos|conte|contes|sessio de contes|sessio de conte|marato de contes|narracio|hora del conte|lectura dramatitzada"),
     ('charlas', r"cafes? literaris?|cafe literari|xerrada|xerrades|charla|charlas|conferencia|conferencies|conferencias|debat|debate|col.loqui|coloquio|taula rodona|mesa redonda|presentacio|presentacion|club de lectura|tertulia|seminari|seminario|jornada|jornades|jornadas|simposi|congres|visita|visites|visitas|itinerari|itinerario|ruta|rutes|passejada|paseo|sortida|sortides|excursio|recorregut|tour|conversa|conversacio|dialeg|dialogo|entrevista|sessio informativa|lectura poetica|recital de poesia|poesia|podcast|trobada amb l'autor|tast literari|marato de lectura|lectura compartida"),
-    ('talleres', r"taller|tallers|workshop|grup de conversa|grup obert|coaching|tastet|capsula|capsules|capsules formatives|pindola|pindoles|grup d'aprenentatge|aula oberta|sessio formativa|formacio|passatge del terror|tunel del terror|scape room|curs|curso|cursos|classe|clase|classes|masterclass|laboratori|laboratorio|bibliolab|tast|cata|degustacio|degustacion|escape room|gimcana|gincana|yincana|joc|jocs|juego|juegos|activitat familiar|activitat infantil|espai familiar|espai de joc|scape|hackato|hackaton|maker"),
+    ('talleres', r"torneig de (?:magic|escacs|jocs?|videojocs|cartes|rol)|torneo de (?:magic|ajedrez|juegos?|videojuegos|cartas)|taller|tallers|workshop|grup de conversa|grup obert|coaching|tastet|capsula|capsules|capsules formatives|pindola|pindoles|grup d'aprenentatge|aula oberta|sessio formativa|formacio|passatge del terror|tunel del terror|scape room|curs|curso|cursos|classe|clase|classes|masterclass|laboratori|laboratorio|bibliolab|tast|cata|degustacio|degustacion|escape room|gimcana|gincana|yincana|joc|jocs|juego|juegos|activitat familiar|activitat infantil|espai familiar|espai de joc|scape|hackato|hackaton|maker"),
     ('fiestas', r"festa|festes|fiesta|fiestas|fira|fires|feria|ferias|mercat|mercats|mercado|mercadillo|market|flea market|pop.up|castanyada|correfoc|cercavila|revetlla|carnaval|cavalcada|sardanes|sardana|ball de|gegants|castellers|diada|aplec|cagatio|tio|celebracio|celebracion|setmana gastronomica|shopping|vermut popular|calcotada"),
-    ('deporte', r"cursa|carrera popular|carrera|marato|maraton|mitja marato|torneig|torneo|partit|partido|campionat|campeonato|triatlo|triatlon|bicicletada|caminada popular|futbol|basquet|handbol|waterpolo|regata|esport|deporte"),
+    ('deporte', r"cursa|carrera popular|carrera|marato(?! de (?:contes|lectura|poesia))|maraton(?! de (?:cuentos|lectura|poesia))|mitja marato|torneig|torneo|partit|partido|campionat|campeonato|triatlo|triatlon|bicicletada|caminada popular|futbol|basquet|handbol|waterpolo|regata|esport|deporte"),
 ]
 LEAD_RE = [(cat, re.compile(r"^(?:" + pat + r")\b")) for cat, pat in LEAD]
 # Palabras que no dicen el género: se saltan al buscar el género del principio.
@@ -84,7 +84,7 @@ INNER = {
     'arte': r"\b(?:exposicio|exposicion|inauguracio|instal.lacio|fotografi(?:a|c)|pintura|escultura|art contemporani|arts visuals|il.lustracio)\b",
     'musica': r"\b(?:concert|concierto|musica|jazz|rock|flamenc|flamenco|electronica|dj|orquestra|coral|piano|guitarra|hip hop|techno|house|indie|blues|soul|reggae|cumbia|salsa|bossa)\b",
     'escena': r"\b(?:teatre|teatro|dansa|danza|circ|circo|titelles|opera|monoleg|comedia|comedy|stand.?up|open mic|improv|espectacle|espectaculo|contacontes|musical)\b",
-    'charlas': r"\b(?:xerrada|conferencia|debat|debate|presentacio|literatura|llibre|libro|poesia|lectura|book club|walking tour|visita|itinerari|ruta|patrimoni|historia|ciencia|divulgacio|talks?)\b",
+    'charlas': r"\b(?:xerrada|conferencia|debat|debate|presentacio|literatura|llibre|libro|poesia|lectura|book club|walking tour|visita|itinerari|ruta|patrimoni|historia|ciencia|divulgacio|talks?|simposi|simposio|symposium|cicle tematic)\b",
     'talleres': r"\b(?:taller|workshop|curs|curso|tast|cata|manualitats|cuina|cocina)\b",
     'fiestas': r"\b(?:festa|fiesta|fira|feria|mercat|mercado|market|castanyada|festa major|cultura popular|nadal|carnaval)\b",
     'deporte': r"\b(?:cursa|carrera|marato|torneig|torneo|esport|deporte|futbol|basquet|triatlo)\b",
@@ -106,6 +106,10 @@ VENUE_GENRE = [('escena', re.compile(r"^(?:teatre|teatro)\b|\b(?:sala beckett|me
 #  - Servicios y convocatorias: fuera de la agenda.
 #  - Ocio social de ticketera (citas, intercambios, pub crawls, networking, empleo, congresos): fuera.
 #  - Comunidad y cuidados (grupos de barrio, «El barri proposa», «Ens cuidem»): Talleres + Vida de barrio.
+# Productos de ticketera que no son un acto (mejoras de entrada, aparcamiento, paquetes VIP).
+TICKET_PRODUCT = re.compile(r"^(?:upgrade|vip package|paquete vip|parking|aparcament|aparcamiento|meet ?& ?greet)\b")
+# Resúmenes y noticias de programación de la red de centres cívics (no son una actividad con fecha).
+UMBRELLA_VENUE = re.compile(r"^(?:xarxa de centres civics|diversos centres civics|centres civics)\b")
 PATIS = re.compile(r"\bpatis? escolars? oberts?\b")
 SOCIAL = re.compile(r"\b(?:singles|single (?:night|party)|dating|citas|first dates|speed ?dating|language exchange|intercambio de idiomas|intercanvi d'idiomes|pub crawl|party tour|boat party|bar crawl|"
                     r"networking|meet people|new friends|nuevos amigos|afterwork|job fair|feria de empleo|employer|hackathon|womenhack|summit|congress|congres (?:mundial|internacional)|congreso (?:mundial|internacional)|"
@@ -140,13 +144,23 @@ def segments(title):
     return out
 
 
+FIESTA_FRAME = re.compile(r"^(?:festa major|festes|fiestas? mayor|festa de barri|festes de)\b")
+
+
 def lead_category(title):
-    """(categoría, palabra) del género con que empieza el título o alguna de sus partes."""
-    for part in segments(title):
+    """(categoría, palabra) del género con que empieza el título o alguna de sus partes.
+    «Festa Major de X: Concert …» es un concierto dentro de la fiesta: manda la parte con género."""
+    found = []
+    for i, part in enumerate(segments(title)):
         for cat, rx in LEAD_RE:
             m = rx.match(part)
-            if m: return cat, m.group(0)
-    return None, ''
+            if m: found.append((i, cat, m.group(0), part)); break
+    if not found: return None, ''
+    i, cat, word, part = found[0]
+    if cat == 'fiestas' and FIESTA_FRAME.match(part):
+        later = next((f for f in found[1:] if f[0] > i and f[1] != 'fiestas'), None)
+        if later: return later[1], later[2]
+    return cat, word
 
 
 def inner_categories(title):
@@ -166,9 +180,13 @@ def classify(ev, override=None):
     lead, word = lead_category(title)
     official = next((cat for cat, rx in OFFICIAL_TYPE for p in ev.get('classification_paths') or [] if rx.search(norm(p))), None)
     signals = []
+    # Una visita o un taller dentro de una exposición es esa actividad, no la exposición.
+    activity_in_expo = lead in ('charlas', 'talleres') and re.match(r"(?:visita|visites|taller|tallers|itinerari)", word or '')
+    if activity_in_expo:
+        signals.append((lead, 'genero_titulo', f'El título empieza por «{word}»'))
     if ev.get('kind') == 'exhibition' or ev.get('format') == 'exhibition':
         signals.append(('arte', 'formato_exposicion', 'La fuente la publica como exposición'))
-    if lead:
+    if lead and not activity_in_expo:
         signals.append((lead, 'genero_titulo', f'El título empieza por «{word}»'))
     if ev.get('format') in ('workshop', 'course'):
         signals.append(('talleres', 'formato_taller', 'La fuente la publica como taller o curso'))
@@ -190,6 +208,12 @@ def classify(ev, override=None):
     if len(inner) == 1:
         signals.append((inner[0], 'palabra_titulo', 'El título menciona el género'))
     t = norm(title)
+    if TICKET_PRODUCT.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'producto_de_ticketera',
+                'evidence': 'Mejora de entrada o producto de la ticketera, no un acto', 'ambiguous': False}
+    if not signals and ev.get('source') == 'web_centres_civics' and UMBRELLA_VENUE.search(norm(' '.join(ev.get('venue_names') or []))):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'resumen_de_programa',
+                'evidence': 'Noticia o resumen de programación de la red de centres cívics, no una actividad', 'ambiguous': False}
     if PATIS.search(t):
         return {'category': 'talleres', 'status': 'confirmada', 'method': 'regla_editorial',
                 'evidence': 'Patio escolar abierto para jugar en familia (decisión editorial 20-10-2026)', 'ambiguous': False}

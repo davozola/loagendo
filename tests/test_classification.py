@@ -73,7 +73,16 @@ class ClassifyTests(unittest.TestCase):
         out = self.cat("Taller 'Galetes de Nadal'", category='Fiestas y tradiciones')
         self.assertEqual(out['category'], 'talleres')
         out = self.cat('Visita dinamitzada "Fàbriques en joc"', kind='exhibition', format='exhibition')
-        self.assertEqual((out['category'], out['ambiguous']), ('arte', True))
+        self.assertEqual((out['category'], out['ambiguous']), ('charlas', True))  # la visita es la actividad
+
+    def test_precision_fixes_of_20_october(self):
+        for title, kind, want in (("“Festes de Tardor de la Sagrada Família”: Visites a la tomba d’Antoni Gaudí", 'program', 'charlas'),
+                                  ('Festa Major de Gràcia: Concert de la Cobla', 'single', 'musica'), ('Festa Major de Sants', 'program', 'fiestas'),
+                                  ('Lletra petita - Sac de rondalles: Marató de contes infantils', 'single', 'escena'),
+                                  ('Zurich Marató de Barcelona', 'single', 'deporte'), ('Cicle Coll Fantasy: Torneig de magic', 'single', 'talleres'),
+                                  ('La Rauxa - Presentació de LP', 'single', 'musica'), ('Dissabtes familiars: Sessió de contes', 'single', 'escena'),
+                                  ('Upgrade MEET&GREET Synthony', 'single', 'excluida')):
+            self.assertEqual(self.cat(title, kind=kind)['category'], want, title)
 
     def test_editorial_override_wins(self):
         out = taxonomy.classify(ev('Grabada, escrita, pronunciada'), {'category': 'charlas', 'note': 'Ciclo de lecturas del CCCB'})

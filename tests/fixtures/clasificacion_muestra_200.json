@@ -1,0 +1,3011 @@
+{
+ "created": "2026-10-20",
+ "method": "Muestra aleatoria (seed 20261020) de 200 fichas publicadas el 19-10; etiqueta revisada a mano por Claude, pendiente de validación de David. Las marcadas doubtful no cuentan para la precisión estricta.",
+ "items": [
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400748345",
+   "title": "Taller familiar 'Pati d´arts' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400710310",
+   "title": "Exposició \"Sant Andreu contemporani\"",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400737605",
+   "title": "Concert \"Carolina Durante\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400760323",
+   "title": "Exposició \"Tropical\"",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_teatre_lliure",
+   "id": "4a5f6e85917018f41533ad54",
+   "title": "RELÍQUIA",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "e5f7e7a38f15d5f93cf57316",
+   "title": "KALENN",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400761864",
+   "title": "Taller 'Français expérimenté (C1)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400764007",
+   "title": "Taller 'Animació a la lectura'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400733962",
+   "title": "Tots Sants 2026: Activitat Familiar  \"On és la castanyera?\"",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400687445",
+   "title": "Taller 'Gimnàstica dolça per a més grans de 60 anys'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765617",
+   "title": "Tots Sants 2026: Joc del Fantasma: La Recerca del Fantasma",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_auditori",
+   "id": "8b9fd9928302a19577191c0b",
+   "title": "Mañana musical para embarazadas",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_conciertos_club",
+   "id": "5a771a4b75c2abf790c86f77",
+   "title": "ZOE AND THE LONG PLAY BAND",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400787945",
+   "title": "Concert \"Xoel López\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785983",
+   "title": "Taller 'Disseny d'eines ceràmiques amb impressió 3D i posa-les a prova'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400783953",
+   "title": "Mini-elèctric Espai infantil: Ruta 'Descobrim el barri'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "90382fadcf3e10235e44570d",
+   "title": "NyahbingiSound",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400776683",
+   "title": "Taller 'Francès nivell (A2.1)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_ticketmaster_es",
+   "id": "e88e03b7cf893cd44cf51762",
+   "title": "Upgrade MEET&GREET Synthony",
+   "label": "excluida",
+   "predicted_2026_10_20": "musica",
+   "note": "Mejora de entrada de ticketera, no un acto",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400780432",
+   "title": "Concert \"Mujeres\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400780886",
+   "title": "25è Aniversari  Del Petit Liceu: Espectacle \"Trencanous-jazz\"",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786040",
+   "title": "Barcelona Districte Cultural - Escena: Espectacle Teatre \"Clochard\"",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765353",
+   "title": "Barcelona Districte Cultural – Cicle ‘Escena’: Teatre familiar \"El senyor Loupé\"",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784665",
+   "title": "Taller voluntari 'Treballs manuals'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400761924",
+   "title": "Taller 'Taitxí'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400687387",
+   "title": "Taller 'Cuina del món'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400696345",
+   "title": "Taller 'Taitxí'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400753444",
+   "title": "Taller 'Grup de Coral Comunitari'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400741516",
+   "title": "Taller 'Escacs juvenil competició (de 12 a 16 anys)' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_auditori",
+   "id": "86ebeb7a77739f6ca8d9b10b",
+   "title": "Cuarteto con piano de Schumann",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400764969",
+   "title": "Exposició 'Los hijos. Tucumán, 20 años después - Tucumán, Argentina 1997 -2001'",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784096",
+   "title": "Taller 'L'alegria de viure'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400718265",
+   "title": "Taller 'Aprèn a navegar per internet'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_auditori",
+   "id": "32266d3a743a6ea085f9938b",
+   "title": "Bandàstic",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784772",
+   "title": "Espectacle \"La consagració de la primavera\", amb Roger Bernat",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785615",
+   "title": "Taller 'Ús del Mòbil per a Gent Gran*' *NOU",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "d7e51b7a5c751f2229c7d65f",
+   "title": "THE WEDDING MARKET BARCELONA 2026",
+   "label": "fiestas",
+   "predicted_2026_10_20": "fiestas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785239",
+   "title": "Taller 'Dibuixa i experimenta: crea el teu llibre d’artista'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400759121",
+   "title": "Concert \"Cobla Sant Jordi-Ciutat de Barcelona, Sabata & Massana\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400788749",
+   "title": "Concerts del Taller d’Escenes Líriques de Sarsuela de l’Escola Municipal de Música Sant Andreu",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400663347",
+   "title": "Taller per a la gent gran 'Humanitats'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400687516",
+   "title": "Barcelona Districte Cultural - Escena: Petit Sandaru presenta Teatre de text \"La idea brillant (que al principi no ho era)\" de la Cia. Marga Socias",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400670391",
+   "title": "Taller 'Bollywood avançat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400677297",
+   "title": "Patis escolars oberts al barri - Institut Escola El Til·ler",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784723",
+   "title": "Espectacle \"Danses romàntiques\", amb Guillem Mont de Palol",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784317",
+   "title": "Taller 'Ioga sobre cadira'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400712012",
+   "title": "Taller gent gran 'Coral'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785371",
+   "title": "Visites guiades a La Llotja de Mar",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784889",
+   "title": "Dissabtes familiars: Sessió de contes 'Explica’m un Nadal'",
+   "label": "escena",
+   "predicted_2026_10_20": "charlas",
+   "note": "Sesión de cuentos = narración escénica",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784556",
+   "title": "Taller 'Claqué Avançat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785291",
+   "title": "Taller \"Afrobeats II\"",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784746",
+   "title": "Espectacle \"El demonio del cuerpo\", amb Inka Romaní",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "generalitat",
+   "id": "2026091700009",
+   "title": "Barcelona Calling l’Orient Mitjà",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "ad9904a8cd05848cdd2386bb",
+   "title": "Especial CHURROS CON CHOCOLATE + ANTI en el Fòrum",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400776388",
+   "title": "Taller familiar 'Art Botànic (art i naturalesa)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "463e03334250697300e31677",
+   "title": "60juno + Seibiant",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400788818",
+   "title": "Concert \"Ensemble Oikos\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400775343",
+   "title": "Espectacle familiar \"Bandàstic\"",
+   "label": "musica",
+   "predicted_2026_10_20": "escena",
+   "note": "Bandàstic es un concierto familiar de L'Auditori",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786406",
+   "title": "Taller 'Fermentació cervesera'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784421",
+   "title": "Lectures en veu alta",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784758",
+   "title": "Taller 'Pilates multinivell'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400780912",
+   "title": "Exposició \"Dominic Kiessling\" Instal·lació",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400748355",
+   "title": "Taller comunitari 'Biodansa moviment i benestar'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400767550",
+   "title": "Taller 'Manualitats'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785902",
+   "title": "Xerrada 'Coralls de les profunditats de la Mediterrània'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400025475",
+   "title": "Advent Coral a l'Alcaldia de Sants-Montjuïc",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400753868",
+   "title": "Taller 'L'art de la nostra ciutat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400747894",
+   "title": "Taller 'Gimnàstica suau' *N*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400773634",
+   "title": "Taller 'Aprèn com funciona el teu telèfon'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400755687",
+   "title": "Exposició \"Centres de dades: les arrels físiques del món digital\"",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400750611",
+   "title": "Taller 'Tonifica't'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400786069",
+   "title": "Taller 'Casal diari'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "«Casal diari» es más un servicio para mayores que un taller",
+   "doubtful": true
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400263432",
+   "title": "Taller 'Planetari bombolla'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786681",
+   "title": "Taller 'Estimulació sensorial per a nadons",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400789078",
+   "title": "Trobades 'Pedrellianes'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786655",
+   "title": "Teatre \"Impossible\", d'Erri De Luca",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_conciertos_club",
+   "id": "f9fbd29abee6ac1ac3d18ccc",
+   "title": "Mamma mia",
+   "label": "escena",
+   "predicted_2026_10_20": "musica",
+   "note": "Mamma Mia es un musical en teatro",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "76dac0f64512f947764905f9",
+   "title": "Oscar Mulero · Dj Fra · Sylvia",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "2fb46ba8eccffaad6924fed5",
+   "title": "FREE GUEST LIST * HOPE (26th floor W Barcelona)",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400751488",
+   "title": "L'Aventura de conèixer - T' interessa: Xerrada 'Qüestions latents: 'Antoni Gaudí i Maria Montessori: les Escoles de la Sagrada Família' , a càrrec de Francesc-Xavier Marín",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400535758",
+   "title": "Art Llobet 2026 Festival de les Arts i la Guitarra de Barcelona Miquel Llobet",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400727677",
+   "title": "Visita al Mirador del Centre de Cultura Contemporània de Barcelona",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785697",
+   "title": "Cicle 'Fotografia contemporània': Activitat \"Lectura compartida: Naixem de dona, d'Adrienne Rich\"",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400767515",
+   "title": "Taller 'Mindfulness avançat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400744369",
+   "title": "\"Truco o Trato\" al Mercat del Carmel",
+   "label": "fiestas",
+   "predicted_2026_10_20": "fiestas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400682609",
+   "title": "Taller 'Guitarra iniciació'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400789122",
+   "title": "Ruta de comerços emblemàtics de l'Eixample: Ruta 'Comerços emblemàtics de la Rambla de Catalunya'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "b4e36848ae1e7f2713ad0a98",
+   "title": "Lisette Oropesa",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786323",
+   "title": "Visita guiada \"Palau de la música\"",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400760751",
+   "title": "Audició de Nadal, a càrrec d’Escola de Música de Sant Gervasi",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "generalitat",
+   "id": "2026100900008",
+   "title": "Festival de Jazz i Música Creativa de Ciutat Vella",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784767",
+   "title": "Taller 'Tardes de Poesia' * NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400740360",
+   "title": "Exposició \"L´ofici de crear mons”, amb J.S. Linares",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400773342",
+   "title": "Taller 'Balls llatins sense parella: Intermig'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400762869",
+   "title": "Exposició 'Sortir del marc' - Helena Oca",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400732918",
+   "title": "Taller familiar 'Sensibilització musical (2 a 3 anys)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "33ea59b198633bcdc6c5c8db",
+   "title": "Belako",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400776861",
+   "title": "Casal Vivertimento!  Activitat Gimcana: 'Missió: El cristall perdut'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400776395",
+   "title": "Cursos i tallers ' La Divina comèdia, III: \"Paradís\". Lectura i interpretació d’un clàssic'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400759095",
+   "title": "Concert \"El Concert per a piano de Brahms\" amb Stefan Dohr & Maxim Lando",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784501",
+   "title": "Taller 'Iniciació al patronatge' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784029",
+   "title": "Taller 'El viatge de l’heroi: les grans sagues de la mitologia grecoromana' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400733395",
+   "title": "Taller 'Puntes de coixí'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784308",
+   "title": "Taller 'Castellà Inicial'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400725657",
+   "title": "Taller 'Relaxació musical per a adults'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400762119",
+   "title": "Taller ' Italià inicial'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "diba_bibliotecas",
+   "id": "agendabiblioteques452769898",
+   "title": "Xerrada 'Menopausa: quins canvis produeix i com podem cuidar-nos?",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400749974",
+   "title": "Taller 'Costura (Diferents nivells)' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765350",
+   "title": "Tots Sants 2026: La Castanyada, amb la Cia. Routart",
+   "label": "fiestas",
+   "predicted_2026_10_20": "fiestas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400684780",
+   "title": "Taller 'Guitarra'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400789158",
+   "title": "L'Aventura de conèixer - Cicle temàtic: 6a edició 'Jugar amb... la ciència-ficció' - \"IA Puzzle espacial\"",
+   "label": "charlas",
+   "predicted_2026_10_20": "talleres",
+   "note": "Ciclo temático de conferencias en biblioteca",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400773940",
+   "title": "'Visita comentada'",
+   "label": "charlas",
+   "predicted_2026_10_20": "arte",
+   "note": "Visita dentro de una exposición: es la actividad (regla 20-10)",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400783222",
+   "title": "Concert \"Javus Quartett\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400576434",
+   "title": "Joc familiar 'Jugatecambiental' del Botànic Històric",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400769098",
+   "title": "Taller 'Swing solo'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784583",
+   "title": "Taller 'Iniciació tennis taula'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400705006",
+   "title": "Patis escolars oberts al barri - Institut Escola Tramuntana",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "generalitat",
+   "id": "20260605032",
+   "title": "Memòria en temps de guerra. Visita guiada a la Torre Bellesguard, el Pati Llimona i la Basílica dels Sants Just i Pastor",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400702143",
+   "title": "Taller 'Guitarra'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400744211",
+   "title": "Concert \"Concerts per a dos teclats d’Antoni Soler\" amb Dani Espasa & Juan de la Rubia",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "9437de44e287460c2c3d6158",
+   "title": "Lotus Juice",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_eventbrite",
+   "id": "9933844176ab05169205a690",
+   "title": "PERIODICO DE AYER · ¡Salsa hasta la Muerte!",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400775494",
+   "title": "Taller 'Castanyoles'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400783947",
+   "title": "Ruta 'Del gorg de la mola a sant andreu de la barca'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400733380",
+   "title": "Taller 'Country'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785199",
+   "title": "Concert didàctic \"Blues a les escoles: conèixer el blues\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400787027",
+   "title": "Espectacle \"Escenes d'una separació\"",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "c93620e23fc0a521d025057b",
+   "title": "Hal9000",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400787985",
+   "title": "Concert \"pablopablo\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400786004",
+   "title": "Taller 'Dansa irlandesa'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400765179",
+   "title": "25è Festival de Creació Contemporània \"Escena Poblenou\": Projecte \"Embrions #13\"",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400765693",
+   "title": "Concert \"La Oreja de Van Gogh\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786950",
+   "title": "Activitats en familia: Cinema \" Peixet, el petit aventurer\"",
+   "label": "cine",
+   "predicted_2026_10_20": "cine",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_conciertos_club",
+   "id": "944ebdc22debdb020b7001b3",
+   "title": "Jam Session Blues & Early Jazz",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785799",
+   "title": "Barcelona Districte Cultural – Cicle ‘Petit Pantalla': Projecció \"Billy el hàmster cowboy\"",
+   "label": "cine",
+   "predicted_2026_10_20": "cine",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400677306",
+   "title": "Patis escolars oberts al barri - Escola Bogatell",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785075",
+   "title": "Espectacle \"Buenas noches in the night\", amb Facu Díaz",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784995",
+   "title": "Taller 'Iniciació a l'automaquillatge'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400725081",
+   "title": "Taller 'Francès conversa bàsica'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400696772",
+   "title": "Taller 'Ceràmica amb fang'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "897807d85b16ce9bcc7c9850",
+   "title": "Tito Ramírez presenta \"Sonido Conquistador\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_auditori",
+   "id": "9460d1f3babf97b475b821f0",
+   "title": "Pica-So - ¡10 Años!",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786349",
+   "title": "El Kit emprenedor: Primers passos: Perd la por a ser autònom/a i a emprendre",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "Formación para emprender: dudoso que sea agenda cultural",
+   "doubtful": true
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400788830",
+   "title": "Presentació del catàleg 'VUIT', amb Frederic Amat i Valentín Roma",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400787809",
+   "title": "Jornades 'Un viatge en el temps: el Poble Espanyol de Montjuïc'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "«Jornades» en Poble Espanyol: recreación histórica, podría ser Fiestas",
+   "doubtful": true
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400786105",
+   "title": "Exposició \"Juntes i visibles\"",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400609689",
+   "title": "Curs 'Astronomia pràctic'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785451",
+   "title": "Barcelona Districte Cultural - Cicle 'Escena': Monogràfic d'autoficció: “Jo soc l’altre. Em pertany a mi, però també a tothom.”",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_dice",
+   "id": "f5c07bf59ecd9ccee999feb5",
+   "title": "Hotties: ØTTA",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400770601",
+   "title": "Taller digital per a gent gran 'Compra segura per internet'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785516",
+   "title": "Espectacle familiar 'Castanyes i xocolatada'",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "«Castanyes i xocolatada» es una fiesta, no un espectáculo",
+   "doubtful": true
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400769679",
+   "title": "Taller 'Guitarra (diferents nivells)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400786430",
+   "title": "Taller digital 'Explora la ciutat màquina (machinarium)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400725183",
+   "title": "Taller 'Zumba'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784559",
+   "title": "Taller 'Costura Comunitària'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400783624",
+   "title": "Taller 'Història amb veu de dona' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400680733",
+   "title": "Taller 'Urban sketching'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400785748",
+   "title": "Taller 'Circ per a tothom!' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400761466",
+   "title": "'Tió de Nadal!'",
+   "label": "fiestas",
+   "predicted_2026_10_20": "fiestas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400783933",
+   "title": "Taller 'Cuina de territori. Cistella de tardor. Bolets de temporada'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400762617",
+   "title": "Taller 'Sevillanes avançat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400775376",
+   "title": "Exposició \"Aluna: Un solo ser\"",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_auditori",
+   "id": "60f4110435b809a1ae756b36",
+   "title": "Homenaje a Albéniz",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400783876",
+   "title": "Taller 'Country avançat'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400689747",
+   "title": "Taller 'Creació vídeo documental amb tècniques d'animació experimental'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400733978",
+   "title": "Exposició \"30 anys d’il•lustració professional editorial\" + Xerrada",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400701632",
+   "title": "Taller 'El cercle del ganxet'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400786177",
+   "title": "Taller 'Producció musical'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400725032",
+   "title": "Taller 'Ballet clàssic'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400758904",
+   "title": "Espectacle \"Cómo pasar de los 60 sin morir en el intento\", amb Albert Boira",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400753873",
+   "title": "Taller 'Psicologia aplicada: eines pel dia a dia' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400781061",
+   "title": "Concert \"Sant Andreu Jazz Band\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_sala_vol",
+   "id": "3b2c62accd87b643094f0100",
+   "title": "Oval presenta: leather.head",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400707928",
+   "title": "Ruta nocturna al Cementiri de Poblenou",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400775401",
+   "title": "Exposició 'Joan Miró. Cercles'",
+   "label": "arte",
+   "predicted_2026_10_20": "arte",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400309174",
+   "title": "Taller 'Francès conversa B2-C1'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400785086",
+   "title": "Itinerari 'El perfum de les espècies: Un viatge per la cuina d'Orient' *N*",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400740488",
+   "title": "25N Dia Internacional per a l'Eliminació de la Violència vers les Dones: Contes pel 25 N",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400691076",
+   "title": "Patis escolars oberts al barri - Escola Bressol Municipal El Putxet",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_teatre_lliure",
+   "id": "ddeabbdcbf0059fa54339022",
+   "title": "UN HURACÀ AVANÇA ALEGREMENT",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "venue_songkick",
+   "id": "75ee94b85516f376cd0f046c",
+   "title": "Hal9000",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "web_teatre_lliure",
+   "id": "c449fe26cd0923acf8fed1ea",
+   "title": "HAPPY END",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400772010",
+   "title": "Joc familiar 'La gata Lluna del Monestir de Pedralbes'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400761892",
+   "title": "Taller 'Capoeira infantil'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400789007",
+   "title": "Concert \"Benjamin Herman trio ft Tomoaki Baba\"",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400776644",
+   "title": "Taller 'Cuina sana sense embolics' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400786672",
+   "title": "Taller 'Français en chanson'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400780860",
+   "title": "Concert \"Benvingut Jonathan Nott\", una nova primavera musical",
+   "label": "musica",
+   "predicted_2026_10_20": "musica",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400688599",
+   "title": "Taller 'Aprèn a cosir a màquina: Iniciació'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400784166",
+   "title": "Programa Escena – Barcelona Districte Cultural: Espectacle de dansa \"Café de copla\", amb Pol Jimenez",
+   "label": "escena",
+   "predicted_2026_10_20": "escena",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400770113",
+   "title": "Taller 'Contes Castanyoween'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400694231",
+   "title": "Taller 'Danses del món'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400691072",
+   "title": "Patis escolars oberts al barri - Escola Bressol Municipal Canigó",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784423",
+   "title": "Conferències 'Aula d'Extensió Universitaria'",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400677275",
+   "title": "Patis escolars oberts al barri - Escola El Carmel",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400735840",
+   "title": "Grup d'Homes GBTI. Espai experiencial i de conscienciació col·lectiva",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "Grupo de hombres: espacio comunitario, no charla",
+   "doubtful": true
+  },
+  {
+   "source": "web_cccb",
+   "id": "2c1fac2c78cddf8d517b2119",
+   "title": "Visita guiada a «Charlotte Perriand», Fundació Joan Miró",
+   "label": "charlas",
+   "predicted_2026_10_20": "charlas",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400731021",
+   "title": "Taller 'Anàlisi i crítica cinematogràfica' *NOU*",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "guiabcn",
+   "id": "99400788191",
+   "title": "Cicle \"Keisuke Kinoshita\"",
+   "label": "cine",
+   "predicted_2026_10_20": "cine",
+   "note": "",
+   "doubtful": false
+  },
+  {
+   "source": "opendatabcn_agenda",
+   "id": "99400784370",
+   "title": "Taller 'Patchwork (grup A)'",
+   "label": "talleres",
+   "predicted_2026_10_20": "talleres",
+   "note": "",
+   "doubtful": false
+  }
+ ],
+ "stratified": {
+  "method": "20 fichas al azar (seed 1020) de cada categoría pequeña, para medir su precisión con más base",
+  "items": [
+   {
+    "source": "guiabcn",
+    "id": "99400785190",
+    "title": "Projecció i votació \"MOVIE123MENT 2a EDICIÓ\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "generalitat",
+    "id": "2026100900024",
+    "title": "Sâlmon",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788186",
+    "title": "Cicle \"Àlex Brendemühl | Els passos dobles\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400785904",
+    "title": "Documental \"La pietà\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400770504",
+    "title": "Barcelona Districte Cultural – Cicle ‘Pantalla’: Projecció \" L'edat imminent\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400785796",
+    "title": "Barcelona Districte Cultural – Cicle ‘Pantalla’: Projecció \"Liuben\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "web_cccb",
+    "id": "a77c1e8c8b379106c5fcc22b",
+    "title": "Cineclub Xcèntric",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400786061",
+    "title": "Barcelona Districte Cultural: Projecció \"L'Olívia i el terratrèmol invisible\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400760820",
+    "title": "Projecció \"Exit 8\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400786934",
+    "title": "Barcelona Districte Cultural – Cicle ‘Pantalla. Petita Pantalla’: Cinema \"El secret de la mallerenga\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400772031",
+    "title": "Barcelona Districte Cultural - Cicle 'Pantalla': Projecció  \"Liuben\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400740716",
+    "title": "Cicle 'Cineclac': Projecció \"La rosa púrpura de el Cairo\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400771163",
+    "title": "Barcelona Districte Cultural - Cicle 'Pantalla': Cinema \"Miss Carbón\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400749866",
+    "title": "Cicle: 'Petit Pantalla': Projecció \"Peixet, el petit aventurer\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400763800",
+    "title": "Barcelona Districte Cultural – Cicle ‘Pantalla’: Projecció \"Calladita\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400776953",
+    "title": "Cicle 'Mirades. Cicle de cinema documental i d'autor': Projecció \"Donna Haraway: Story Telling for Earthly Survival\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788894",
+    "title": "L'aventura de conèixer - La Claqueta: XIV Cicle de Cinema \"REC i ACCIÓ\". Projecció \"Si decido quedarme\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400786553",
+    "title": "Cicle 'Veus recuperades': Projecció \"Transmissions. Memòries de Lluís Sala\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400770506",
+    "title": "Barcelona Districte Cultural – Cicle ‘Pantalla’: Projecció \" Miss carbón\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400740719",
+    "title": "Barcelona Districte Cultural - Cicle 'Pantalla': Projecció' \"Calladita\"",
+    "label": "cine",
+    "predicted_2026_10_20": "cine",
+    "note": "",
+    "doubtful": false,
+    "stratum": "cine"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400743288",
+    "title": "Tots Sants 2026: Parades de castanyes a Les Corts",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400774569",
+    "title": "Mercat d'artesania a la Plaça Joan Coromines",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400448318",
+    "title": "'Obrim Carrers': Gran de Gràcia",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787649",
+    "title": "La Castanyada \" Compartim la festa\"",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788898",
+    "title": "Castanyada terrorífica i túnel del terror al Casal de Barri Verdun",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400786285",
+    "title": "Nadal infantil a la Guatlla",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400739671",
+    "title": "Festa 'Cap d'any infantil'",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400721626",
+    "title": "Tots Sants 2026: Festa de la Castanyada al Casal de Persones Grans del Taulat",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400778503",
+    "title": "Fundació Pasqual Maragall al Mercat de Les Corts",
+    "label": "excluida",
+    "predicted_2026_10_20": "fiestas",
+    "note": "Mesa informativa de una fundación, no una actividad",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400788588",
+    "title": "Correfoc",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400774567",
+    "title": "Mercat d'artesania a la Plaça Sant Agustí",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400745081",
+    "title": "Tots Sants: A Sant Antoni la castanya et fa viure. Castanyada al Mercat de Sant Antoni",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788557",
+    "title": "“Festes de Tardor de la Sagrada Família”: Visites a la tomba d’Antoni Gaudí",
+    "label": "charlas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788615",
+    "title": "Barcelona Textile Expo",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "Feria comercial: ¿fiesta/mercado o excluir?",
+    "doubtful": true,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400722264",
+    "title": "Castanyada infantil del Gòtic",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400355746",
+    "title": "Tots Sants 2026: \"Creepy Halloween Family\" al Poble Espanyol",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400322908",
+    "title": "Tots Sants 2026: Castanyada a la plaça! Espectacle 'El monstre del jardí'",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788788",
+    "title": "Celebració del Dia Internacional de la Llengua Romaní",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400783593",
+    "title": "Castanyoween al barri del Congrés i els Indians",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "generalitat",
+    "id": "20251024017",
+    "title": "Celebració de l'Any Gaudí a la Casa Vicens",
+    "label": "fiestas",
+    "predicted_2026_10_20": "fiestas",
+    "note": "Título sin género",
+    "doubtful": true,
+    "stratum": "fiestas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400720832",
+    "title": "22è Cicle Cultural Coll Fantasy: Torneig de magic al Coll",
+    "label": "talleres",
+    "predicted_2026_10_20": "deporte",
+    "note": "Torneo de juego de cartas, no deporte",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400777314",
+    "title": "Grup de ping pong",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400763066",
+    "title": "Bàsquet \"FC Barcelona - Dubai Basketball\" Partit de l'Eurolliga 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400672706",
+    "title": "Futbol 'F.C. Barcelona - R.C.D. Espanyol' Partit de Lliga",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400676522",
+    "title": "Bàsquet \"F.C. Barcelona - Rio Breogán\" Partit de la Lliga Endesa 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787529",
+    "title": "Final de la Champions League masculina de 2029",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400280621",
+    "title": "Bàsquet \"F.C. Barcelona - Real Madrid\" Partit de la Lliga Endesa 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400674471",
+    "title": "Lletra petita - Sac de rondalles: Marató de contes infantils “La paraula trobada”",
+    "label": "escena",
+    "predicted_2026_10_20": "deporte",
+    "note": "Maratón de cuentos = narración",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400297801",
+    "title": "Futbol 'F.C. Barcelona - Real Madrid' Partit de Lliga",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787978",
+    "title": "Futbol \"F.C. Barcelona Femení - Arsenal Women\", corresponent a la fase de grups de la UEFA Women's Champions League 2026-27",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400400324",
+    "title": "Futbol 'F.C. Barcelona - Sevilla F.C.' Partit de Lliga",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400672823",
+    "title": "Bàsquet \"FC Barcelona - EA7 Emporio Armani Milan\" Partit de l'Eurolliga 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400280614",
+    "title": "Bàsquet \"F.C. Barcelona - UCAM Murcia\" Partit de la Lliga Endesa 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400104910",
+    "title": "\"Barnatresc 2026\": Caminada de Montjuïc",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400763065",
+    "title": "Bàsquet \"FC Barcelona - Hapoel Ibi Tel Aviv\" Partit de l'Eurolliga 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400677462",
+    "title": "Cursa solidària 'Correm Junts. La Milla de Sarrià'",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400256861",
+    "title": "48a edició Zurich Marató de Barcelona 2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400632619",
+    "title": "Futbol \"F.C. Barcelona - Deportivo Alavés\". Partit de Lliga",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400632611",
+    "title": "Futbol \"F.C. Barcelona - Club Atlético Osasuna\". Partit de Lliga",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400695361",
+    "title": "Bàsquet \"FC Barcelona - Partizan Belgrado\" Partit de l'Eurolliga 2026-2027",
+    "label": "deporte",
+    "predicted_2026_10_20": "deporte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "deporte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400772412",
+    "title": "Exposició 'Asunción Bastida. Barcelona i l'alta costura'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400780838",
+    "title": "Exposició 'Identitats. Fotografia comunitària a la Barceloneta'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400780914",
+    "title": "Exposició \"Xavier Mariscal\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400775385",
+    "title": "Exposició '40 anys 40 històries'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "generalitat",
+    "id": "2026093000010",
+    "title": "Exposició \"Una història americana\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "web_cccb",
+    "id": "88987106269a0c8cad28c253",
+    "title": "Instalación: Send Me Colors: Mechanical Gestures to Preserve Flowers",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400772333",
+    "title": "Exposició 'El viatge invers: Un fresc sonor al romànic', a càrrec d'Ona Balló",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400769771",
+    "title": "Exposició 'Natura encapsulada'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400782190",
+    "title": "Exposició 'Viure, conviure i sobreviure. Brigades internacionals i multilingüisme'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400788592",
+    "title": "Exposició 'Com la vida mateixa', de Juan Miguel Morales",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "generalitat",
+    "id": "2026101400023",
+    "title": "Visita dinamitzada \"Fàbriques en joc\"",
+    "label": "charlas",
+    "predicted_2026_10_20": "arte",
+    "note": "Visita dinamizada dentro de un museo",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400731726",
+    "title": "Exposició 'Fotògrafs del barri: Isidre Garcia'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400787176",
+    "title": "Exposició \"25N - Contra la violència de gènere\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400771627",
+    "title": "Exposició 'Anna Moreno. La tercera torsió'",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "generalitat",
+    "id": "20251024004",
+    "title": "Exposició \"Latent structures\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400786270",
+    "title": "Mostra de treballs del taller\"Touchdesigner: Construcció d'un set d'improvisació\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400772128",
+    "title": "Exposició \"Heat Shimmer, Hips Quiver, Open Smother, Lipped Lover\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400771631",
+    "title": "Exposició \"Aurèlia Muñoz. Ens\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400682667",
+    "title": "Exposició \"The Bucha Blackboard\"",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "guiabcn",
+    "id": "G07",
+    "title": "Exposició Resistències de dones a Catalunya i Palestina",
+    "label": "arte",
+    "predicted_2026_10_20": "arte",
+    "note": "",
+    "doubtful": false,
+    "stratum": "arte"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400733222",
+    "title": "Xerrada 'Autoritarisme i resistència: Alternatives en tems convulsos'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400786718",
+    "title": "Conferència \"Veure és creure: L'increible món de la imatge cerebral\"",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787271",
+    "title": "Cicle 'Tardor Solidària': Xerrada 'La Sagrera, de la vila romana a l’alta velocitat'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400750960",
+    "title": "Itinerari 'Jo també formo part d'això'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400754036",
+    "title": "Visita guiada al Convent de Sant Agustí",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400748535",
+    "title": "Itinerari: 'Visita al'observatori Fabra'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788758",
+    "title": "Dia Internacional de les Cures i el Suport: Taula de diàleg 'De la llar a l’agenda pública: visibilitzant el treball de cures'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400740402",
+    "title": "22è Cicle Cultural Coll Fantasy: Club de Lectura de ciència-ficció i fantasia",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400764222",
+    "title": "Xerrada 'Gestió emocional per a persones jubilades'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400740726",
+    "title": "Xerrada ''El moviment veïnal durant la transició\"",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400789157",
+    "title": "Festival de recerca i creació en el context del paradigma quàntic \"Difracta '26\"",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "Festival de investigación mixto",
+    "doubtful": true,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400772509",
+    "title": "Sessions obertes a la participació ciutadana per conèixer el projecte de la transformació de la Rambla",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "Sesión de participación ciudadana: ¿excluir?",
+    "doubtful": true,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400785211",
+    "title": "Activitat de poesia. \" El Salt al buit: Com vèncer la por a la pàgina en blanc\"",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "Podría ser taller de escritura",
+    "doubtful": true,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788828",
+    "title": "Visita guiada a 'Declaració d’amor a Lenin', amb Juana Dolores Romero Casanova",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400785816",
+    "title": "Dia Mundial de l'alimentació: Xerrada 'La garrofa'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "venue_dice",
+    "id": "623e89e391c51735c432701d",
+    "title": "La Rauxa - Presentació de LP",
+    "label": "musica",
+    "predicted_2026_10_20": "charlas",
+    "note": "Presentación de un disco en sala de conciertos",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400786281",
+    "title": "Visita  guiada CaixaFòrum",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400785454",
+    "title": "Itinerari 'Joan Miró: Cercles'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787442",
+    "title": "Barcelona, Capital Mundial de l’Arquitectura 2026: Ruta 'Fonts i aqüeductes. Natura i arquitectura'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "opendatabcn_agenda",
+    "id": "99400749677",
+    "title": "Xerrada: 'Produir i consumir a Collserola'",
+    "label": "charlas",
+    "predicted_2026_10_20": "charlas",
+    "note": "",
+    "doubtful": false,
+    "stratum": "charlas"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787856",
+    "title": "Festival IF Barcelona 2026: Espectacle \"Il Terzo Reich (El tercer reich)\", de Romeo Castelluci",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "generalitat",
+    "id": "2026092100025",
+    "title": "El conte de Nadal de Charles Dickens",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787006",
+    "title": "Espectacle \"Cabaret\"",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400788478",
+    "title": "Espectacle \"Si Déu és bellesa, la Bellesa existeix?\", amb Albert Arribas, Sílvia Delagneau i Alícia Gorina",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400744778",
+    "title": "Barcelona Districte Cultural - Escena: Espectacle: Teatre 'Malas hierbas'",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400769734",
+    "title": "Espectacle \"La Capçallera (La cartellera de capçalera per a públic teatrero)\"",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400785069",
+    "title": "Espectacle \"Los Ex\", amb David García",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400770688",
+    "title": "Lletra Petita - Llibres a escena: Narració \"English story time: 'We disagree about this tree\", a càrrec de Santa's Helper",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400300596",
+    "title": "Espectacle \"Pastoretes de Vallvidrera'",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787386",
+    "title": "Lletra petita - Llibres a escena: Narració 'La roda de la vida', a càrrec d'Elena Andrés i Isabel Solà",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400760891",
+    "title": "Espectacle infantil \"Flama\"",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "web_teatre_lliure",
+    "id": "dca4f361a26bb75dcc20eaf3",
+    "title": "XIRGU",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400787032",
+    "title": "Lectura dramatitzada \"Calla, nena\", amb Mariona Esplugues",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400626822",
+    "title": "Teatre \"Enric IV\", de William Shakespeare",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400765199",
+    "title": "25è Festival de Creació Contemporània \"Escena Poblenou\": Espectacle \"Tros\", d'Sputniks Cia.",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400739812",
+    "title": "Barcelona Districte Cultural - Cicle 'Escena': Teatre de text \"La confusió\" de Sala Flyhard",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400783050",
+    "title": "Teatre \"Nada (No res)\", de Ricard Soler Mallol",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400783063",
+    "title": "Cicle 'ORIOL GENÍS: paraula, cos i caràcter': Teatre \"Compto cada passa meva sobre la terra\", de Lluïsa Cunillé i Xavier Albertí",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400782662",
+    "title": "Espectacle \"Olives arbequines\"",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   },
+   {
+    "source": "guiabcn",
+    "id": "99400687307",
+    "title": "Espectacle \"Ces't la vie: Quan la vida és fa opera\"",
+    "label": "escena",
+    "predicted_2026_10_20": "escena",
+    "note": "",
+    "doubtful": false,
+    "stratum": "escena"
+   }
+  ]
+ }
+}
