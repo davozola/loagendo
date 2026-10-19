@@ -114,8 +114,18 @@ PATIS = re.compile(r"\bpatis? escolars? oberts?\b")
 SOCIAL = re.compile(r"\b(?:singles|single (?:night|party)|dating|citas|first dates|speed ?dating|language exchange|intercambio de idiomas|intercanvi d'idiomes|pub crawl|party tour|boat party|bar crawl|"
                     r"networking|meet people|new friends|nuevos amigos|afterwork|job fair|feria de empleo|employer|hackathon|womenhack|summit|congress|congres (?:mundial|internacional)|congreso (?:mundial|internacional)|"
                     r"conference|forum event|venture capital|real estate|inversion inmobiliaria|investment|pub quiz|trivia|casino barcelona|expansion playbook|evento anual)\b")
-COMMUNITY = re.compile(r"(?:\bel barri proposa\b|\bens cuidem\b|\bgrup (?:comunitari|de suport|virtual de suport|de dones|de teixidores|de cura|d'insomni)|"
-                       r"\bactivitat comunitaria\b|\bcura comunitaria\b|\bespai de (?:participacio|pausa|cura|acompanyament)\b|\btrobada 'repara)")
+COMMUNITY = re.compile(r"(?:\bel barri proposa\b|\bens cuidem\b|\bgrup de cura\b|\bcura comunitaria\b|\bgrup (?:comunitari|de dones|de teixidores|obert)|"
+                       r"\bactivitat comunitaria\b|\bespai de participacio\b|\btrobada 'repara)")
+# Grupos de apoyo y cuidados (20-10-2026): son un servicio para quien lo necesita, no un plan de agenda.
+SUPPORT = re.compile(r"(?:\bgrup (?:virtual )?de suport\b|\bgrupo de apoyo\b|\bgrup d'insomni\b|"
+                     r"\bacompanyament al dol\b|\bespai de (?:pausa|cura|acompanyament)\b|\bdemencia\b|\balzheimer\b|\bpersones cuidadores\b)")
+# Series de fichas casi iguales que la web agrupa en una sola fila (cada ficha se conserva entera).
+SERIES = [("patis-escolars-oberts", PATIS)]
+
+
+def series_of(title):
+    t = norm(title)
+    return next((key for key, rx in SERIES if rx.search(t)), '')
 SERVICE = re.compile(r"\b(?:campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
 
 SOURCE_CATEGORY = {
@@ -223,6 +233,9 @@ def classify(ev, override=None):
     if SERVICE.search(t) and not (lead and lead in ('talleres', 'charlas', 'musica', 'escena', 'cine')):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
                 'evidence': 'Servicio, campaña o convocatoria, no una actividad programada (decisión editorial 20-10-2026)', 'ambiguous': False}
+    if SUPPORT.search(t) and not (lead and lead in ('musica', 'escena', 'cine', 'arte')):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'grupo_de_apoyo',
+                'evidence': 'Grupo de apoyo o de cuidados: un servicio, no un plan de agenda (decisión 20-10-2026)', 'ambiguous': False}
     if not lead and COMMUNITY.search(t):
         return {'category': 'talleres', 'status': 'probable', 'method': 'comunidad_y_cuidados',
                 'evidence': 'Grupo o espacio comunitario del barrio (decisión editorial 20-10-2026)', 'ambiguous': False}

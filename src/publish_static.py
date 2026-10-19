@@ -177,6 +177,7 @@ def compact(event, images, full=True):
     }
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
+    if event.get('series'): out['se'] = event['series']  # serie que la web agrupa en una fila
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
     if not full: return out

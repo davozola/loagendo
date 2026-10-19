@@ -123,7 +123,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -550,9 +550,20 @@ function row(e) {
 /* ---------- render ---------- */
 const hourKey = (e, live) => (live && (e._st.state === 'started' || e._st.state === 'open')) ? 'now' : String(Math.floor(e._st.sort / 60)).padStart(2, '0');
 function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>${esc(label)}</span></div>` }
+// Series de fichas casi iguales (p. ej. un patio escolar abierto por escuela): una fila y el resto plegado.
+function seriesFold(list) {
+  const out = [], seen = {};
+  for (const e of list) {
+    if (!e.series) { out.push(e); continue }
+    if (seen[e.series]) { seen[e.series].more.push(e); continue }
+    out.push(seen[e.series] = {first: e, more: []});
+  }
+  return out.map(x => !x.first ? row(x) : !x.more.length ? row(x.first)
+    : `<div class="ev-series">${row(x.first)}<details class="ev-more"><summary>${L('Ver', 'Mostra')} ${x.more.length} ${L('más de esta serie', 'més d’aquesta sèrie')}</summary>${x.more.map(row).join('')}</details></div>`).join('');
+}
 function rows(list, id) {
   const limit = state.limits[id] || STEP, shown = list.slice(0, limit), left = list.length - shown.length;
-  return shown.map(row).join('') + (left > 0 ? `<button class="ag-toggle" type="button" data-step="${id}">${L('Ver', 'Mostra')} ${Math.min(STEP, left)} ${L('más', 'més')} · ${L('quedan', 'en queden')} ${left.toLocaleString('es-ES')}</button>` : '');
+  return seriesFold(shown) + (left > 0 ? `<button class="ag-toggle" type="button" data-step="${id}">${L('Ver', 'Mostra')} ${Math.min(STEP, left)} ${L('más', 'més')} · ${L('quedan', 'en queden')} ${left.toLocaleString('es-ES')}</button>` : '');
 }
 function foldHtml(id, title, list, sub = '') {
   if (!list.length) return '';
@@ -570,15 +581,17 @@ function renderDay(m) {
   const nowOpen = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'wide').sort((a, b) => (a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4) || byTitle(a, b));
   if (nowTimed.length || nowOpen.length) {
     const cap = state.expanded.has('nowOpen') ? nowOpen.length : 8, more = nowOpen.length - cap;
-    groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara')} · ${clock(m.now.min)}`, ' is-now')}${nowTimed.map(row).join('')}${nowOpen.slice(0, cap).map(row).join('')}${more > 0 ? `<button class="ag-toggle" type="button" data-expand="nowOpen">${L('Ver las', 'Mostra les')} ${nowOpen.length.toLocaleString('es-ES')} ${L('abiertas ahora', 'obertes ara')}</button>` : ''}</div>`;
+    groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nowTimed)}${nowOpen.slice(0, cap).map(row).join('')}${more > 0 ? `<button class="ag-toggle" type="button" data-expand="nowOpen">${L('Ver las', 'Mostra les')} ${nowOpen.length.toLocaleString('es-ES')} ${L('abiertas ahora', 'obertes ara')}</button>` : ''}</div>`;
   }
+  let bucket = [];
+  const flush = () => { if (current !== null) groups += seriesFold(bucket) + '</div>'; bucket = [] };
   for (const e of timeline) {
     const h = hourOf(e);
     if (h === 'now') continue;
-    if (h !== current) { if (current !== null) groups += '</div>'; groups += `<div class="ag-group">${groupHead(`${h} h`)}`; current = h }
-    groups += row(e);
+    if (h !== current) { flush(); groups += `<div class="ag-group">${groupHead(`${h} h`)}`; current = h }
+    bucket.push(e);
   }
-  if (current !== null) groups += '</div>';
+  flush();
   if (show.wide && s.wideNoHours.length) groups += `<div class="ag-group">${groupHead(L('Horario amplio sin horas indicadas', 'Horari ampli sense hores indicades'))}${rows(s.wideNoHours, 'wideNoHours')}</div>`;
   if (show.tbc && s.tbc.length) groups += `<div class="ag-group" id="ag-tbc">${groupHead(L('Hora por confirmar', 'Hora per confirmar'), ' is-tbc')}${rows(s.tbc, 'tbc')}</div>`;
   if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió'))}${rows(s.run, 'run')}</div>`;
@@ -602,7 +615,7 @@ function renderRange(m) {
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(visible)]).filter(([, l]) => l.length);
   const days = buckets.slice(0, state.shown).map(([d, list]) => {
     const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
-    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${shown.map(row).join('')}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia')}</button>`}</div>`;
+    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia')}</button>`}</div>`;
   }).join('');
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
   let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`}</div>`;
@@ -616,7 +629,7 @@ function renderRange(m) {
 function venueView(items) {
   const groups = {};
   for (const e of items) { const name = e.venue_names?.[0] || t('Sin recinto identificado'); (groups[name] ??= []).push(e) }
-  return `<div class="venue-groups">${Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([name, events]) => `<details><summary><span>${esc(name)}</span><b>${events.length}</b></summary><div>${events.map(row).join('')}</div></details>`).join('')}</div>`;
+  return `<div class="venue-groups">${Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([name, events]) => `<details><summary><span>${esc(name)}</span><b>${events.length}</b></summary><div>${seriesFold(events)}</div></details>`).join('')}</div>`;
 }
 function renderAgenda() {
   const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();

@@ -1091,6 +1091,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                    'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous']})
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
+    events['series']=taxonomy.series_of(events['title'])
     # Precio del detalle oficial (GuiaBCN «Entrada Gratuïta»): gratis solo si lo dice y no da ningún importe.
     detail_price=str(facts.get('price_text') or '')
     if not events.get('is_free') and detail_price and is_free(detail_price,'') and not re.search(r'\d\s*(?:€|eur)',detail_price,re.I):

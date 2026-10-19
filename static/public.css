@@ -336,3 +336,8 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .channel-chip.active{background:var(--fg);border-color:var(--fg);color:var(--bg)}
 @media(max-width:620px){.discover{flex-direction:column;align-items:stretch;gap:6px}.discover h3{font-size:11px}
 .cat-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cat-chips .filter-chip{justify-content:center;min-height:36px;padding:0 8px;white-space:normal;line-height:1.15;text-align:center}.cat-chips .filter-chip:first-child{grid-column:span 2}}
+
+/* Series agrupadas (20-10-2026) */
+.ev-more>summary{cursor:pointer;list-style:none;padding:6px 0 10px;font-size:13px;font-weight:600;color:var(--accentText)}
+.ev-more>summary::-webkit-details-marker{display:none}
+.ev-more>summary:before{content:'+ '}.ev-more[open]>summary:before{content:'− '}

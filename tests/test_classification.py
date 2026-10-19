@@ -63,6 +63,11 @@ class ClassifyTests(unittest.TestCase):
             self.assertEqual(self.cat(title, source=source)['category'], 'excluida', title)
         # Un género cultural explícito manda sobre la palabra suelta.
         self.assertEqual(self.cat("Concert 'Campanya de Nadal'")['category'], 'musica')
+        # Grupos de apoyo: fuera (servicio, no plan).
+        for title in ('Grup de suport per a persones cuidadores de persones amb demència', "'El barri proposa': Espai d'acompanyament al dol (Ens cuidem)"):
+            self.assertEqual(self.cat(title)['category'], 'excluida', title)
+        self.assertEqual(taxonomy.series_of('Patis escolars oberts al barri - Escola Bogatell'), 'patis-escolars-oberts')
+        self.assertEqual(taxonomy.series_of('Concert de jazz'), '')
         # Comunidad y cuidados: Talleres + Vida de barrio.
         group = ev("'El barri proposa': Grup de dones autogestionat", venue_names=['Casal de Barri Comunitari'])
         out = taxonomy.classify(group)
