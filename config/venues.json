@@ -224,8 +224,8 @@
         "Harlem Jazz",
         "Harlem"
       ],
-      "enabled": true,
-      "note": "20-10-2026: la portada y cada ficha /events/ llevan schema.org/Event (JSON-LD); se siguen las fichas.",
+      "enabled": false,
+      "note": "20-10-2026: publica schema.org, pero su robots.txt no permite leer la web; desactivado (se respeta robots.txt). Sus conciertos siguen llegando por Open Data BCN, la Generalitat y conciertos.club.",
       "agenda_url": "https://www.harlemjazzclub.es/",
       "max_pages": 40
     },
