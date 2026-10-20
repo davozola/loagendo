@@ -1,4 +1,4 @@
-"""GRAF (graf.cat): agenda de espacios de arte contemporáneo, solo Barcelona (20-10-2026)."""
+"""GRAF (graf.cat): feed iCal + ficha de cada acto; solo Barcelona (20-10-2026)."""
 import datetime as dt
 import json
 import tempfile
@@ -9,53 +9,76 @@ from mvp import catalog
 from src import web_agendas
 from src.pipeline import connect
 
-PAGE = """<section><div class="agenda-grid-item"> <a target="_self" href="https://graf.cat/events/event/codi-font-audiovisual-cinema-indigena/"> <div class="entry-date">20.10.2026</div> <h3 class="entry-author"> Santa Mònica </h3> <h4 class="entry-title"> Codi Font Audiovisual: Cinema Indígena </h4> <div class="small"> <div class="entry-time"> <span class="time-start">19</span> – <span class="time_end">20:15</span> h </div> </div> <div class="entry-price small"> Activitat gratuïta </div> </a> <div class="small"> <div class="entry-terms"><a class="underline-1" href="https://graf.cat/events/category/screening/">Screening</a></div> </div> </div>
-<div class="agenda-grid-item"> <a target="_self" href="https://graf.cat/events/event/hacerse-rala/"> <div class="entry-date">22.10.2026</div> <h3 class="entry-author"> Galeria H2O </h3> <h4 class="entry-title"> Ho has vist? Ho vaig veure, però ja no hi era. Marian Brea </h4> <div class="small"> <div class="entry-time"> <span class="time-start">18</span> – <span class="time_end">21</span> h </div> </div> <div class="entry-price small"> Activitat gratuïta </div> </a> <div class="small"> <div class="entry-terms"><a class="underline-1" href="https://graf.cat/events/category/inauguracio/">Inauguració</a></div> </div> </div>
-<div class="agenda-grid-item"> <a target="_self" href="https://graf.cat/events/event/trobada-open-studio/"> <div class="entry-date">20.10.2026</div> <h3 class="entry-author"> Bòlit, Centre d'Art Contemporani. Girona </h3> <h4 class="entry-title"> Trobada / Open Studio </h4> <h4 class="entry-title"><mark>● <u>Lloc</u>: Centre Cultural La Mercè</mark></h4> <div class="small"> <div class="entry-time"> <span class="time-start">19</span> – <span class="time_end">20:30</span> h </div> </div> <div class="entry-price small"> Activitat gratuïta </div> </a> <div class="small"> <div class="entry-terms"><a class="underline-1" href="https://graf.cat/events/category/trobada/">Trobada</a></div> </div> </div>
-<div class="agenda-grid-item"> <a target="_self" href="https://graf.cat/events/event/projecte-extramurs-2026-dora-garcia/"> <div class="entry-date">04.07 – 13.12</div> <h3 class="entry-author"> Museu Tàpies </h3> <h4 class="entry-title"> Projecte Extramurs 2026. Dora García </h4> </a> <div class="small"> <div class="entry-terms"><a href="https://graf.cat/events/category/exposicio/">Exposició</a></div> </div> </div></section>"""
+FEED = ("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GRAF//NONSGML Events//EN\r\n"
+        # sesión con hora (UTC → Madrid), sin LOCATION/GEO
+        "BEGIN:VEVENT\r\nUID:X-EO-60244-1@x\r\nDTSTART:20261020T170000Z\r\nDTEND:20261020T181500Z\r\nSUMMARY: Codi Font Audiovisual: Cinema Indígena\r\n"
+        "CATEGORIES:Screening\r\nORGANIZER;CN=\"Santa Mònica\":MAILTO:a@b.c\r\nURL;VALUE=URI:https://graf.cat/events/event/codi-font-audiovisual-cinema-indi\r\n gena/\r\n"
+        "ATTACH;FMTTYPE=image/jpeg:https://graf.cat/wp-content/uploads/2026/09/cine.jpg\r\nEND:VEVENT\r\n"
+        # inauguración en galería, con GEO
+        "BEGIN:VEVENT\r\nUID:X-EO-61000-1@x\r\nDTSTART:20261022T160000Z\r\nDTEND:20261022T190000Z\r\nSUMMARY: Ho has vist? Marian Brea\r\nCATEGORIES:Inauguració\r\n"
+        "LOCATION:Galeria H2O\r\nGEO:41.403;2.157\r\nORGANIZER;CN=\"Galeria H2O\":MAILTO:a@b.c\r\nURL;VALUE=URI:https://graf.cat/events/event/marian-brea-opening/\r\nEND:VEVENT\r\n"
+        # exposición de día completo (DTEND exclusivo)
+        "BEGIN:VEVENT\r\nUID:X-EO-57846-1@x\r\nDTSTART;VALUE=DATE:20260704\r\nDTEND;VALUE=DATE:20261214\r\nSUMMARY: Projecte Extramurs 2026. Dora García\r\nCATEGORIES:Exposició\r\n"
+        "LOCATION:Museu Tàpies\r\nGEO:41.391606;2.163713\r\nORGANIZER;CN=\"Museu Tàpies\":MAILTO:a@b.c\r\nURL;VALUE=URI:https://graf.cat/events/event/extramurs/\r\n"
+        "ATTACH;FMTTYPE=image/jpeg:https://graf.cat/wp-content/uploads/2026/06/dora.jpg\r\nEND:VEVENT\r\n"
+        # fuera de Barcelona
+        "BEGIN:VEVENT\r\nUID:X-EO-1-1@x\r\nDTSTART:20261020T170000Z\r\nDTEND:20261020T183000Z\r\nSUMMARY: Trobada / Open Studio\r\nCATEGORIES:Trobada\r\n"
+        "ORGANIZER;CN=\"Bòlit\":MAILTO:a@b.c\r\nURL;VALUE=URI:https://graf.cat/events/event/trobada-open-studio/\r\nEND:VEVENT\r\n"
+        # histórico: no entra
+        "BEGIN:VEVENT\r\nUID:X-EO-2-1@x\r\nDTSTART;VALUE=DATE:20150118\r\nDTEND;VALUE=DATE:20150119\r\nSUMMARY: The Sign is the Circle\r\nCATEGORIES:Exposició\r\n"
+        "ORGANIZER;CN=\"ProjecteSD\":MAILTO:a@b.c\r\nURL;VALUE=URI:https://graf.cat/events/event/old/\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n")
 DETAIL = {
-    'https://graf.cat/events/event/codi-font-audiovisual-cinema-indigena/': '<div class="entry-venue-address themed"> La Rambla, 7 08002 Barcelona </div><a href="https://www.santamonica.cat/x" target="_blank" class="entry-website underline-1">Pàgina web</a>',
-    'https://graf.cat/events/event/hacerse-rala/': '<div class="entry-venue-address themed"> Carrer de Joaquín Costa, 30 08001 Barcelona </div>',
+    'https://graf.cat/events/event/codi-font-audiovisual-cinema-indigena/':
+        '<meta property="og:image" content="https://graf.cat/og.jpg"><div class="entry-venue-address themed"> La Rambla, 7 08002 Barcelona </div>'
+        '<div class="entry-price"> Preu: Activitat gratuïta </div><a href="https://www.santamonica.cat/x" target="_blank" class="entry-website underline-1">Pàgina web</a>'
+        '<div class="detail-section-main"> <p>DIMARTS DE VÍDEO amb Maria Ignacia Ibarra</p> <p><i>Codi font audiovisual</i>, projecció comentada.</p> </div> <div class="detail-section-image-col"></div>',
+    'https://graf.cat/events/event/marian-brea-opening/': '<div class="entry-venue-address themed"> Carrer de Joaquín Costa, 30 08001 Barcelona </div><div class="detail-section-main"><p>Inauguració de la mostra.</p></div>',
+    'https://graf.cat/events/event/extramurs/': '<div class="entry-venue-address themed"> Carrer d’Aragó, 255 08007 Barcelona </div><div class="detail-section-main"><p>Projecte a l’espai públic.</p></div>',
     'https://graf.cat/events/event/trobada-open-studio/': '<div class="entry-venue-address themed"> Plaça de l’Oli, 1 17004 Girona </div>',
-    'https://graf.cat/events/event/projecte-extramurs-2026-dora-garcia/': '<div class="entry-venue-address themed"> Carrer d’Aragó, 255 08007 Barcelona </div>',
 }
 
 
 class GrafTests(unittest.TestCase):
-    def test_listing_parses_facts_without_texts_or_images(self):
-        rows = web_agendas.parse_graf(PAGE, today=dt.date(2026, 10, 19))
-        self.assertEqual([r['title'] for r in rows][:2], ['Codi Font Audiovisual: Cinema Indígena', 'Ho has vist? Ho vaig veure, però ja no hi era. Marian Brea'])
-        first = rows[0]
-        self.assertEqual((first['start'], first['time_text'], first['raw']['item']['time_end'], first['price_text'], first['raw']['item']['graf_category']),
-                         ('2026-10-20', '19:00', '20:15', 'Activitat gratuïta', 'Screening'))
-        self.assertEqual(rows[2]['venues'][0]['name'], 'Centre Cultural La Mercè')  # «Lloc» manda sobre el nombre del espacio
-        self.assertEqual((rows[3]['start'], rows[3]['end'], rows[3]['kind']), ('2026-07-04', '2026-12-13', 'exhibition'))
-        self.assertFalse(any(r['raw'].get('image') for r in rows))
+    def test_ical_feed_gives_sessions_times_ranges_and_images(self):
+        rows = {r['title']: r for r in web_agendas.parse_graf(FEED, today=dt.date(2026, 10, 19))}
+        self.assertNotIn('The Sign is the Circle', rows)  # histórico
+        cine = rows['Codi Font Audiovisual: Cinema Indígena']
+        self.assertEqual((cine['start'], cine['time_text'], cine['raw']['item']['time_end'], cine['raw']['image']),
+                         ('2026-10-20', '19:00', '20:15', 'https://graf.cat/wp-content/uploads/2026/09/cine.jpg'))
+        self.assertEqual(cine['url'], 'https://graf.cat/events/event/codi-font-audiovisual-cinema-indigena/')  # línea plegada
+        self.assertEqual(rows['Ho has vist? Marian Brea']['venues'][0]['coords'], (41.403, 2.157))
+        expo = rows['Projecte Extramurs 2026. Dora García']
+        self.assertEqual((expo['start'], expo['end'], expo['kind'], expo['time_text']), ('2026-07-04', '2026-12-13', 'exhibition', ''))
 
-    def test_only_barcelona_addresses_are_eligible(self):
+    def test_detail_page_gives_address_text_price_and_web(self):
+        d = web_agendas.graf_detail(DETAIL['https://graf.cat/events/event/codi-font-audiovisual-cinema-indigena/'])
+        self.assertEqual((d['address'], d['price'], d['web'], d['image']), ('La Rambla, 7 08002 Barcelona', 'Activitat gratuïta', 'https://www.santamonica.cat/x', 'https://graf.cat/og.jpg'))
+        self.assertEqual(d['description'], 'DIMARTS DE VÍDEO amb Maria Ignacia Ibarra\n\nCodi font audiovisual , projecció comentada.')
+
+    def test_sync_keeps_only_barcelona_with_text_and_image_and_reuses_details(self):
         self.assertTrue(web_agendas.in_barcelona('La Rambla, 7 08002 Barcelona'))
-        self.assertFalse(web_agendas.in_barcelona("Plaça de l'Oli, 1 17004 Girona"))
         self.assertFalse(web_agendas.in_barcelona('Carrer Major, 1 08172 Sant Cugat del Vallès'))
         with tempfile.TemporaryDirectory() as folder:
             conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn)
-            web_agendas.SOURCES['web_graf']  # fuente registrada
             calls = []
             def fetcher(url, timeout):
-                calls.append(url); return PAGE if url == web_agendas.SOURCES['web_graf']['url'] else DETAIL[url]
+                calls.append(url); return FEED if url == web_agendas.SOURCES['web_graf']['url'] else DETAIL[url]
+            from unittest import mock
+            fixed = lambda page: web_agendas.parse_graf(page, today=dt.date(2026, 10, 19))
+            patch = mock.patch.dict(web_agendas.PARSERS, {'web_graf': fixed}); patch.start(); self.addCleanup(patch.stop)
             out = web_agendas.sync(conn, 'web_graf', fetcher=fetcher)
             self.assertEqual(out['status'], 'completed')
-            rows = {r[0]: (r[1], json.loads(r[2])['item']['graf_address']) for r in conn.execute("SELECT title,eligibility,raw_json FROM source_records WHERE source='web_graf'")}
-            self.assertEqual(rows['Trobada / Open Studio'][0], 'exclude')
-            self.assertNotEqual(rows['Codi Font Audiovisual: Cinema Indígena'][0], 'exclude')
-            # Segunda pasada: la dirección ya conocida no se vuelve a pedir.
+            rows = {r[0]: r[1] for r in conn.execute("SELECT title,eligibility FROM source_records WHERE source='web_graf'")}
+            self.assertEqual(rows.get('Trobada / Open Studio'), 'exclude')
             calls.clear(); web_agendas.sync(conn, 'web_graf', fetcher=fetcher)
-            self.assertEqual(calls, [web_agendas.SOURCES['web_graf']['url']])
+            self.assertEqual(calls, [web_agendas.SOURCES['web_graf']['url']])  # fichas ya leídas: no se piden otra vez
+            assets = conn.execute("SELECT rights_status, credit FROM media_assets WHERE source='web_graf' ORDER BY credit").fetchall()
+            self.assertIn(('authorized', 'Museu Tàpies · vía GRAF'), assets)
             catalog.invalidate_cache()
-            items = {e['title']: e for e in catalog.query_events(conn, date_from='2026-10-19', date_to='2026-10-30', public=True)['items']}
-            opening = items['Ho has vist? Ho vaig veure, però ja no hi era. Marian Brea']
-            self.assertEqual((opening['public_category'], 'galerias' in opening['channels']), ('arte', True))
-            self.assertEqual(items['Codi Font Audiovisual: Cinema Indígena']['public_category'], 'cine')
-            self.assertNotIn('Trobada / Open Studio', items)
+            key = conn.execute("SELECT id FROM source_records WHERE source='web_graf' AND title LIKE 'Projecte Extramurs%'").fetchone()[0]
+            detail = catalog.event_detail(conn, 'web_graf', key)
+            self.assertEqual((detail['description'], detail['public_category'], 'galerias' in detail['channels']), ('Projecte a l’espai públic.', 'arte', True))
+            self.assertTrue(detail['media'])
 
 
 if __name__ == '__main__':

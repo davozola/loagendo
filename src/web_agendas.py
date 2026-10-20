@@ -38,20 +38,21 @@ SOURCES = {
     'web_conciertos_club': {'url': 'https://conciertos.club/barcelona', 'venue': 'Barcelona', 'address': 'Barcelona'},
     # GRAF (graf.cat): agenda común de ~130 espacios de creación contemporánea de Catalunya
     # (galerías, centros de arte, festivales). Inauguraciones, performances, proyecciones,
-    # charlas. Solo se guarda lo factual (título, fecha, hora, espacio, tipo, enlace); ni textos
-    # ni imágenes. La ciudad se comprueba en la ficha de cada acto: solo Barcelona.
-    'web_graf': {'url': 'https://graf.cat/agenda/', 'venue': 'GRAF', 'address': 'Catalunya'},
+    # charlas. Feed iCal completo (fechas, horas, espacio, coordenadas, imagen) + ficha de cada
+    # acto (dirección, texto, precio, web propia). Decisión de David (20-10-2026): se usa todo,
+    # con crédito a GRAF y al espacio. La ciudad se comprueba en la ficha: solo Barcelona.
+    'web_graf': {'url': 'https://graf.cat/feed/eo-events/', 'venue': 'GRAF', 'address': 'Catalunya', 'max_bytes': 16_000_000},
 }
 
 MONTHS = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12,
           'gener':1,'febrer':2,'març':3,'abril':4,'maig':5,'juny':6,'juliol':7,'agost':8,'setembre':9,'octubre':10,'novembre':11,'desembre':12}
 
-def fetch(url, timeout=30):
+def fetch(url, timeout=30, max_bytes=4_000_000):
     request=Request(url,headers={'Accept':'text/html','User-Agent':'Brollant/1.3 (+https://brollant.com) agenda collector'})
     try:
         with urlopen(request,timeout=timeout,context=tls_context()) as response:  # nosec B310: fixed first-party URLs above
             if not 200 <= response.status < 300: raise RuntimeError('HTTP %s' % response.status)
-            return response.read(4_000_000).decode('utf-8','replace')
+            return response.read(max_bytes).decode('utf-8','replace')
     except URLError as error:
         # Some macOS Python distributions ship a CA bundle that does not yet
         # include a valid issuer used by a first-party cultural site.  The
@@ -63,7 +64,7 @@ def fetch(url, timeout=30):
              '--max-time',str(timeout),url], check=True, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, timeout=timeout+5,
         )
-        return result.stdout[:4_000_000].decode('utf-8','replace')
+        return result.stdout[:max_bytes].decode('utf-8','replace')
 
 def fetch_pages(cfg, fetcher, timeout):
     """Fetch the configured pages, stopping early when a page has no current item."""
@@ -71,7 +72,7 @@ def fetch_pages(cfg, fetcher, timeout):
     out=[]
     for index in range(first,first+count):
         url=cfg['url'] if index==first and 'page_url' in cfg else cfg.get('page_url',cfg['url']).format(page=index)
-        body=fetcher(url,timeout); out.append((url,body))
+        body=fetcher(url,timeout,cfg['max_bytes']) if 'max_bytes' in cfg and fetcher is fetch else fetcher(url,timeout); out.append((url,body))
         if marker and marker not in body: break
         if out and len(out)>1 and body==out[-2][1]: break  # identical page: pagination not effective
     return out
@@ -242,72 +243,102 @@ def parse_conciertos_club(page):
         result.append(record)
     return result
 
-GRAF_ITEM = re.compile(r'<div class="agenda-grid-item">(.*?)(?=<div class="agenda-grid-item">|</section>|$)', re.S)
-
-
-def _graf_dates(text, today=None):
-    """«20.10.2026» → (2026-10-20, 2026-10-20); «04.07 – 13.12» → del año en curso (o el que cuadre)."""
-    today = today or dt.date.today()
-    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*[–-]\s*(\d{1,2})\.(\d{1,2})\.(\d{4}))?', text)
-    if m:
-        a = dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
-        b = dt.date(int(m.group(6)), int(m.group(5)), int(m.group(4))) if m.group(4) else a
-        return a.isoformat(), b.isoformat()
-    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\s*[–-]\s*(\d{1,2})\.(\d{1,2})', text)
-    if not m: return None
-    a = dt.date(today.year, int(m.group(2)), int(m.group(1)))
-    if a > today + dt.timedelta(days=200): a = a.replace(year=a.year - 1)
-    b = dt.date(a.year, int(m.group(4)), int(m.group(3)))
-    if b < a: b = b.replace(year=b.year + 1)
-    return a.isoformat(), b.isoformat()
+MADRID = ZoneInfo('Europe/Madrid')
 
 
 def _graf_text(fragment):
     return ' '.join(html.unescape(re.sub(r'<[^>]+>', ' ', fragment or '')).split())
 
 
-def parse_graf(page, today=None):
-    source = 'web_graf'; result = []
-    for block in GRAF_ITEM.findall(page):
-        url = re.search(r'<a[^>]+href="(https://graf\.cat/(?:es/|en/)?events/event/[^"]+)"', block)
-        date = re.search(r'<div class="entry-date">(.*?)</div>', block, re.S)
-        space = re.search(r'<h3 class="entry-author">(.*?)</h3>', block, re.S)
-        titles = re.findall(r'<h4 class="entry-title">(.*?)</h4>', block, re.S)
-        if not (url and date and space and titles): continue
-        dates = _graf_dates(_graf_text(date.group(1)), today)
-        if not dates: continue
-        title = _graf_text(titles[0]); place = ''
-        for extra in titles[1:]:
-            m = re.search(r'Lloc\s*:\s*(.+)', _graf_text(extra))
-            if m: place = m.group(1).strip()
-        t_start = re.search(r'<span class="time-start">\s*([\d:]+)\s*</span>', block)
-        t_end = re.search(r'<span class="time_end">\s*([\d:]+)\s*</span>', block)
-        clock = lambda v: (f'{int(v.split(":")[0]):02d}:{(v.split(":") + ["00"])[1]:0>2}' if v and re.fullmatch(r'\d{1,2}(?::\d{2})?', v) else '')
-        start_time = clock(t_start.group(1)) if t_start else ''
-        end_time = clock(t_end.group(1)) if t_end else ''
-        price = re.search(r'<div class="entry-price[^"]*">(.*?)</div>', block, re.S)
-        category = re.search(r'<div class="entry-terms">.*?>([^<]+)</a>', block, re.S)
-        cat = html.unescape(category.group(1)).strip() if category else ''
-        venue = place or _graf_text(space.group(1))
-        record = _record(source, title, dates[0], dates[1], html.unescape(url.group(1)), venue, '', {
-            'parser_version': 'graf-v1', 'graf_space': _graf_text(space.group(1)), 'graf_place': place, 'graf_category': cat,
-            'time_end': end_time, 'price_label': _graf_text(price.group(1)) if price else ''}, start_time)
-        if cat.lower().startswith('exposici') and dates[0] != dates[1]: record['kind'] = 'exhibition'
-        if cat.lower().startswith('convocat'): record['eligibility'] = 'exclude'  # convocatorias para artistas: no son actos
-        price_text = record['raw']['item']['price_label']
-        if price_text: record['price_text'] = price_text
-        record['organizers'] = [_graf_text(space.group(1))]
-        record['evidence_level'] = 'third_party_listing_unverified'
-        record['alerts'] = ['THIRD_PARTY_DISCOVERY_LISTING', 'SCHEDULE_UNVERIFIED', 'NO_COPIED_DESCRIPTION']
-        result.append(record)
+def _ics_events(text):
+    """VEVENTs del iCal como dicts {CAMPO: (parámetros, valor)}; desdobla líneas y escapes."""
+    text = re.sub(r'\r?\n[ \t]', '', text.replace('\r\n', '\n'))
+    out = []
+    for block in text.split('BEGIN:VEVENT')[1:]:
+        block = block.split('END:VEVENT')[0]; ev = {}
+        for line in block.split('\n'):
+            m = re.match(r'([A-Z-]+)((?:;[^:]*)?):(.*)', line)
+            if not m: continue
+            value = m.group(3).replace('\\n', '\n').replace('\\,', ',').replace('\\;', ';').replace('\\\\', '\\').strip()
+            ev.setdefault(m.group(1), []).append((m.group(2), value))
+        out.append(ev)
+    return out
+
+
+def _ics_moment(params, value):
+    """(fecha local, hora local 'HH:MM' o '') de un DTSTART/DTEND/RDATE."""
+    if 'VALUE=DATE' in params or re.fullmatch(r'\d{8}', value):
+        return dt.date(int(value[:4]), int(value[4:6]), int(value[6:8])), ''
+    m = re.fullmatch(r'(\d{8})T(\d{2})(\d{2})(\d{2})(Z?)', value)
+    if not m: return None, ''
+    moment = dt.datetime(int(value[:4]), int(value[4:6]), int(value[6:8]), int(m.group(2)), int(m.group(3)))
+    moment = moment.replace(tzinfo=dt.timezone.utc).astimezone(MADRID) if m.group(5) else moment
+    return moment.date(), moment.strftime('%H:%M')
+
+
+def parse_graf(page, today=None, horizon_days=183):
+    """Feed iCal de GRAF (Event Organiser: https://graf.cat/feed/eo-events/). Una ficha por
+    sesión (las RDATE son sesiones adicionales); exposiciones y periodos, una ficha con su rango.
+    Solo lo vigente: termina desde ayer y empieza en los próximos ``horizon_days`` días."""
+    source = 'web_graf'; today = today or dt.date.today(); result = []
+    first, last = today - dt.timedelta(days=1), today + dt.timedelta(days=horizon_days)
+    for ev in _ics_events(page):
+        get = lambda k: (ev.get(k) or [('', '')])[0]
+        url = get('URL')[1]; title = get('SUMMARY')[1].strip()
+        start, start_time = _ics_moment(*get('DTSTART')); end, end_time = _ics_moment(*get('DTEND'))
+        if not (url and title and start): continue
+        all_day = not start_time
+        if end is None: end = start
+        if all_day and end > start: end -= dt.timedelta(days=1)  # DTEND de día completo es exclusivo
+        rrule = get('RRULE')[1]
+        if rrule:
+            until = re.search(r'UNTIL=(\d{8})', rrule)
+            if until: end = max(end, dt.date(int(until.group(1)[:4]), int(until.group(1)[4:6]), int(until.group(1)[6:8])))
+        sessions = [(start, end, start_time, end_time)]
+        for params, value in ev.get('RDATE', []):
+            for one in value.split(','):
+                day, at = _ics_moment(params, one)
+                if day and day != start: sessions.append((day, day, at or start_time, end_time))
+        geo = get('GEO')[1]; coords = None
+        if re.fullmatch(r'-?[\d.]+;-?[\d.]+', geo or ''):
+            lat, lon = (float(x) for x in geo.split(';')); coords = (lat, lon)
+        organizer = re.search(r'CN="?([^":]+)"?', get('ORGANIZER')[0] or '')
+        organizer = organizer.group(1).strip() if organizer else ''
+        location = get('LOCATION')[1].strip() or organizer
+        category = get('CATEGORIES')[1].split(',')[0].strip()
+        image = get('ATTACH')[1] if get('ATTACH')[1].startswith('https://') else ''
+        uid = get('UID')[1]
+        for day, until, at, until_time in sessions:
+            if until < first or day > last: continue
+            record = _record(source, title, day.isoformat(), until.isoformat(), url, location, '', {
+                'parser_version': 'graf-ical-v1', 'graf_uid': uid, 'graf_category': category, 'graf_organizer': organizer,
+                'time_end': until_time if until_time != at else '', 'rrule': rrule}, at, image)
+            record['venues'][0]['coords'] = coords
+            record['organizers'] = [organizer] if organizer else []
+            if category.lower().startswith('exposici') and until > day: record['kind'] = 'exhibition'
+            if category.lower().startswith('convocat'): record['eligibility'] = 'exclude'  # convocatorias para artistas
+            record['evidence_level'] = 'third_party_listing_unverified'
+            record['alerts'] = ['THIRD_PARTY_LISTING', 'SCHEDULE_UNVERIFIED']
+            result.append(record)
     return result
 
 
-def graf_address(page):
-    """Dirección de la ficha de GRAF («La Rambla, 7 08002 Barcelona») y su web propia."""
+def graf_detail(page):
+    """De la ficha de GRAF: dirección, web propia del acto, precio, texto e imagen."""
     address = re.search(r'<div class="entry-venue-address[^"]*">(.*?)</div>', page, re.S)
     web = re.search(r'<a href="(https?://[^"]+)"[^>]*class="entry-website', page)
-    return (_graf_text(address.group(1)) if address else ''), (html.unescape(web.group(1)) if web else '')
+    price = re.search(r'<div class="entry-price[^"]*">\s*(?:Preu|Precio|Price)\s*:\s*(.*?)</div>', page, re.S)
+    body = re.search(r'<div class="detail-section-main">(.*?)</div>\s*<div class="detail-section-image-col">', page, re.S) \
+        or re.search(r'<div class="detail-section-main">(.*?)</div>', page, re.S)
+    paragraphs = []
+    if body:
+        for chunk in re.split(r'(?i)</p>|<br\s*/?>|</li>|</h\d>', body.group(1)):
+            line = _graf_text(chunk)
+            if line: paragraphs.append(line)
+    image = re.search(r'<meta property="og:image" content="([^"]+)"', page)
+    return {'address': _graf_text(address.group(1)) if address else '', 'web': html.unescape(web.group(1)) if web else '',
+            'price': _graf_text(price.group(1)) if price else '', 'description': '\n\n'.join(paragraphs)[:6000],
+            'image': html.unescape(image.group(1)) if image else ''}
 
 
 def in_barcelona(address):
@@ -315,23 +346,28 @@ def in_barcelona(address):
     return bool(re.search(r'\b080\d\d\b', a)) or bool(re.search(r'\bbarcelona\s*$', a)) and not re.search(r'\b08[1-9]\d\d\b', a)
 
 
-def _add_graf_places(conn, records, fetcher, timeout, budget=220):
-    """Dirección de cada acto (una lectura por ficha nueva; las ya conocidas se reaprovechan).
-    Fuera de Barcelona → no elegible (se conserva, no se publica). Sin dirección todavía → no elegible."""
+def _add_graf_details(conn, records, fetcher, timeout, budget=400):
+    """Ficha de cada acto (una lectura por URL y pasada; lo ya leído se reaprovecha): dirección,
+    texto, precio, web propia e imagen. Fuera de Barcelona o sin dirección → no elegible."""
+    cache = {}
     for record in records:
         prev = conn.execute('SELECT raw_json FROM source_records WHERE source=? AND id=?', (record['source'], record['id'])).fetchone()
         item = (json.loads(prev[0]).get('item') or {}) if prev else {}
-        if 'graf_address' in item:
-            address, web = item['graf_address'], item.get('graf_web', '')
-        elif budget > 0:
-            try: address, web = graf_address(fetcher(record['url'], timeout))
-            except Exception: address, web = None, ''
+        detail = item.get('graf_detail') or cache.get(record['url'])
+        if detail is None and budget > 0:
+            try: detail = graf_detail(fetcher(record['url'], timeout))
+            except Exception: detail = None
             budget -= 1
             if fetcher is fetch: time.sleep(1)
-        else:
-            address, web = None, ''
-        if address is not None: record['raw']['item'].update({'graf_address': address, 'graf_web': web})
-        if address: record['venues'][0]['address'] = address
+        if detail is not None:
+            cache[record['url']] = detail
+            record['raw']['item']['graf_detail'] = detail
+            record['raw']['descripcio'] = detail['description']
+            if detail['address']: record['venues'][0]['address'] = detail['address']
+            if detail['price']: record['price_text'] = detail['price']
+            if not record['raw'].get('image') and detail['image']: record['raw']['image'] = detail['image']
+            if detail['web']: record['raw']['item']['event_web'] = detail['web']
+        address = (detail or {}).get('address', '')
         if not address or not in_barcelona(address):
             record['eligibility'] = 'exclude'; record['alerts'] = record['alerts'] + ['OUTSIDE_BARCELONA' if address else 'ADDRESS_UNKNOWN']
 
@@ -386,13 +422,17 @@ def sync(conn, source, fetcher=fetch, timeout=30):
         page='\n'.join(body for _,body in pages); records=PARSERS[source](page); mutated=0
         seen=set(); records=[r for r in records if not (r['id'] in seen or seen.add(r['id']))]
         if source=='web_centres_civics': _add_centres_sessions(conn,records,fetcher,timeout)
-        if source=='web_graf': _add_graf_places(conn,records,fetcher,timeout)
+        if source=='web_graf': _add_graf_details(conn,records,fetcher,timeout)
         with conn:
             for record in records:
                 mutated+=int(_upsert_record(conn,run_id,record)[0])
                 image=record['raw'].get('image','')
                 if image.startswith(('https://','http://')):
-                    register(conn,source,record['id'],image,alt=record['title'],credit=SOURCES[source]['venue'],rights_status='unknown')
+                    if source=='web_graf':  # política de la fuente (registro): imagen autorizada por decisión editorial, crédito al espacio
+                        organizer=(record['organizers'] or [''])[0]
+                        register(conn,source,record['id'],image,alt=record['title'],credit=f"{organizer} · vía GRAF" if organizer else 'GRAF')
+                    else:
+                        register(conn,source,record['id'],image,alt=record['title'],credit=SOURCES[source]['venue'],rights_status='unknown')
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=?,rows_received=?,rows_mutated=?,warning_json=? WHERE id=?",(now_utc(),len(urls),len(records),mutated,'[]',run_id))
         return {'id':run_id,'source':source,'status':'completed','rows_received':len(records),'rows_mutated':mutated}
     except Exception as error:
