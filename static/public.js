@@ -915,6 +915,9 @@ $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
 $('formatFilter').addEventListener('change', e => { state.format = e.target.value; refresh() });
 $('districtFilter').addEventListener('change', e => { state.district = e.target.value; refresh() });
 $('freeOnly').addEventListener('change', e => { state.free = e.target.checked; refresh() });
+// El campo de fecha va invisible encima del botón «Fecha»: en Chrome y Safari de escritorio un clic
+// en él no abre el calendario (solo su icono, que no se ve). Se abre explícitamente.
+$('dayPicker').addEventListener('click', e => { try { e.target.showPicker() } catch (_) { /* navegador sin showPicker: comportamiento nativo */ } });
 $('dayPicker').addEventListener('change', e => { if (!e.target.value) return; state.day = e.target.value; state.range = ''; refresh() });
 $('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
 $('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });
