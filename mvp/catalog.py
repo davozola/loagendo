@@ -806,7 +806,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=23  # 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=24  # 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -882,6 +882,8 @@ def project_raw(source, id, title, start, end, kind, url, raw):
             'family_audience':family_audience(raw,source,title),'price_label':split_price(price)[0] or None,'is_free':is_free(price,free_label),
             'schedule_text_time':schedule_time,'hours_label':hours_label,'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
+            # Texto de la fuente para la extracción con IA (src/ai_extract.py): descripción, horario y precio tal cual.
+            'ai_text':'\n\n'.join(x for x in (description.strip()[:2500],('Horari: '+str(source_time(raw,source)).strip()) if str(source_time(raw,source) or '').strip() else '',('Preu: '+str(price).strip()) if str(price or '').strip() else '') if x),
             'source_label':(raw.get('loagendo') or {}).get('source_label') if source.startswith('venue_') else None,
             'classification_paths':classification_paths(raw,source),
             'place_id':(lambda place:place[0] if place else None)(__import__('src.place_images',fromlist=['place_of']).place_of(raw,source))}
@@ -1091,14 +1093,35 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         district,coords,how=gazetteer(conn).resolve(events['venue_names'],events['coordinates'])
         if district and not events['district']: events['district']=district; events['district_evidence']=how
         if coords and not events['coordinates']: events['coordinates']=coords
+    # Texto de la fuente (para la IA) y lo extraído de él con cita comprobada (src/ai_extract.py).
+    events['source_text']='\n\n'.join(x for x in ((projection.get('ai_text') or '').strip(),(archived_description or '').strip()) if x)[:3000]
+    from src import ai_assist, ai_extract
+    ai_data=ai_assist.data_for(conn,source+':'+id,events) or {}
+    own_time=any(o.get('time') for o in occurrences) or events.get('hours_by_day') or schedule_time or projection.get('schedule_text_time')
+    ai_sessions=[x for x in ai_data.get('sessions') or [] if x.get('time')] if not own_time else []
+    if ai_sessions:
+        events['occurrences']=[{'date':x['date'],'time':x['time'],'evidence_field':'ia_texto','verified':False} for x in ai_sessions]
+        events['has_candidate']=True
     events.update(public_fields(events,projection,requested_day=requested_day,schedule_time=schedule_time))
+    if ai_sessions and events.get('time_source')=='candidate_occurrence': events['time_source']='ia_texto'
+    events['ai_quotes']={}
+    if ai_sessions: events['ai_quotes']['time']=ai_sessions[0]['quote']
+    price=ai_data.get('price')
+    if price and not events.get('is_free') and not events.get('price_label'):
+        events['price_label']=price['label']; events['is_free']=bool(price['free']); events['price_source']='ia_texto'; events['ai_quotes']['price']=price['quote']
+    if ai_data.get('registration'): events['ai_quotes']['registration']=ai_data['registration']['quote']
+    if ai_data.get('place'): events['ai_place']=ai_data['place']
+    # Franja de edad: la regla (título o texto) primero; la IA solo si la regla no la ve.
+    by_rule=ai_extract.ages_by_rule(title,events['source_text'])
+    if by_rule: events.update(age_min=by_rule[0],age_max=by_rule[1],age_evidence=by_rule[2],age_source='fuente')
+    elif ai_data.get('ages'): events.update(age_min=ai_data['ages']['min'],age_max=ai_data['ages']['max'],age_evidence=ai_data['ages']['quote'],age_source='ia')
+    else: events.update(age_min=None,age_max=None,age_evidence='',age_source='')
     # Clasificación pública (8 categorías + 5 canales, src/taxonomy.py). La categoría anterior se
     # conserva como legacy_category (subtipos y compatibilidad); nada de lo importado se toca.
     from src import taxonomy
     override=taxonomy.overrides(conn).get((source,id))
-    basis={**events,'classification_paths':projection.get('classification_paths') or [],
+    basis={**events,'classification_paths':projection.get('classification_paths') or [],'ai_family':ai_data.get('family'),'ai_outdoor':ai_data.get('outdoor'),
            'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
-    from src import ai_assist
     ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
     verdict=taxonomy.classify(basis,override,ai)
     events['legacy_category']=events.get('public_category')

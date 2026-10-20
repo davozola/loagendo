@@ -30,7 +30,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 1, 'duplicado': 1}
+PROMPT_VERSION = {'categoria': 1, 'duplicado': 1, 'datos': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -70,7 +70,33 @@ TOOL_DUPLICATE = {'name': 'comparar', 'description': 'Devuelve el veredicto de c
                       'type': 'object', 'required': ['n', 'veredicto', 'confianza', 'motivo'],
                       'properties': {'n': {'type': 'integer'}, 'veredicto': {'type': 'string', 'enum': ['mismo', 'distinto', 'sesion']},
                                      'confianza': {'type': 'number'}, 'motivo': {'type': 'string'}}}}}}}
-TASKS = {'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas'), 'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares')}
+def _parse_category(row, payload):
+    if row.get('categoria') not in CATEGORY_KEYS: return None
+    return row['categoria'], _conf(row), str(row.get('motivo') or '')[:300]
+
+
+def _parse_duplicate(row, payload):
+    if row.get('veredicto') not in ('mismo', 'distinto', 'sesion'): return None
+    return row['veredicto'], _conf(row), str(row.get('motivo') or '')[:300]
+
+
+def _parse_datos(row, payload):
+    from src.ai_extract import verify
+    start, end = (payload.get('fechas') or ['', ''])[:2]
+    kept, dropped = verify(row, payload.get('texto') or '', start or '', end or start or '')
+    return json.dumps(kept, ensure_ascii=False), 1.0, f'{len(dropped)} datos descartados por no pasar la comprobación de cita' if dropped else ''
+
+
+def _conf(row):
+    try: return max(0.0, min(1.0, float(row.get('confianza'))))
+    except (TypeError, ValueError): return 0.0
+
+
+def _tasks():
+    from src import ai_extract
+    return {'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
+            'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
+            'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos)}
 
 
 def load_key(env_path=None):
@@ -162,6 +188,26 @@ def category_candidates(conn, events, today):
     return out
 
 
+def data_candidates(conn, events, today):
+    from src import ai_extract, taxonomy
+    current = suggestions(conn); out = []
+    for e in events:
+        if not taxonomy.eligible(e, today) or not ai_extract.needs(e): continue
+        payload = ai_extract.payload(e); s = current.get(('datos', e['key']))
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['datos']: continue
+        out.append((e['key'], payload))
+    return out
+
+
+def data_for(conn, key, ev):
+    """Datos extraídos y comprobados vigentes para la ficha (dict) o None."""
+    from src import ai_extract
+    s = suggestions(conn).get(('datos', key))
+    if not s or s['prompt_version'] != PROMPT_VERSION['datos'] or s['input_hash'] != _hash(ai_extract.payload(ev)): return None
+    try: return json.loads(s['answer'])
+    except ValueError: return None
+
+
 def duplicate_candidates(conn, events, today):
     from src import dedupe
     by_key = {e['key']: e for e in events}; current = suggestions(conn); out = []
@@ -189,7 +235,7 @@ def _request(method, url, key, body=None, timeout=60, raw=False):
 
 
 def _params(task, chunk, model):
-    system, tool, field = TASKS[task]
+    system, tool, field, _ = _tasks()[task]
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
     return {'model': model, 'max_tokens': 120 + 90 * len(chunk),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
@@ -197,25 +243,26 @@ def _params(task, chunk, model):
             'messages': [{'role': 'user', 'content': json.dumps(listing, ensure_ascii=False)}]}
 
 
-def _answers(task, message):
-    """[(n, answer, confidence, reason)] a partir de un mensaje con tool_use."""
-    _, tool, field = TASKS[task]; key = 'categoria' if task == 'categoria' else 'veredicto'
+def _answers(task, message, chunk):
+    """[(n, answer, confidence, reason)] a partir de un mensaje con tool_use (ya validado por la tarea)."""
+    _, tool, field, parse = _tasks()[task]
     for block in message.get('content') or []:
         if block.get('type') == 'tool_use' and block.get('name') == tool['name']:
             out = []
             for row in (block.get('input') or {}).get(field) or []:
-                try: out.append((int(row['n']), str(row[key]), max(0.0, min(1.0, float(row['confianza']))), str(row.get('motivo') or '')[:300]))
+                try: n = int(row['n'])
                 except (KeyError, TypeError, ValueError): continue
+                if not 0 <= n < len(chunk): continue
+                parsed = parse(row, chunk[n][1])
+                if parsed: out.append((n, *parsed))
             return out
     return []
 
 
 def _store(conn, task, chunk, answers, model, batch_id):
-    valid = CATEGORY_KEYS if task == 'categoria' else ['mismo', 'distinto', 'sesion']
     now = _now(); stored = 0
     with conn:
         for n, answer, confidence, reason in answers:
-            if not 0 <= n < len(chunk) or answer not in valid: continue
             item, payload = chunk[n]; row = (task, item, _hash(payload), model, PROMPT_VERSION[task], answer, confidence, reason, batch_id, now)
             conn.execute("""INSERT INTO ai_suggestions(task,item,input_hash,model,prompt_version,answer,confidence,reason,batch_id,created_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(task,item) DO UPDATE SET input_hash=excluded.input_hash,model=excluded.model,
@@ -234,8 +281,8 @@ def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None):
         if usage is not None:
             for k, v in (message.get('usage') or {}).items():
                 if isinstance(v, int): usage[k] = usage.get(k, 0) + v
-        for n, answer, confidence, reason in _answers(task, message):
-            if 0 <= n < len(chunk): out[chunk[n][0]] = (answer, confidence, reason)
+        for n, answer, confidence, reason in _answers(task, message, chunk):
+            out[chunk[n][0]] = (answer, confidence, reason)
     return out
 
 
@@ -254,7 +301,7 @@ def collect(conn, key, requester=_request):
             if result.get('type') != 'succeeded' or not chunk: continue
             message = result['message']
             for k in batch_usage: batch_usage[k] += int((message.get('usage') or {}).get(k) or 0)
-            stored += _store(conn, task, chunk, _answers(task, message), model, batch_id)
+            stored += _store(conn, task, chunk, _answers(task, message, chunk), model, batch_id)
         for k in usage: usage[k] += batch_usage[k]
         with conn:
             conn.execute("UPDATE ai_batches SET status='ended', ended_at=?, usage_json=? WHERE batch_id=?", (_now(), json.dumps(batch_usage), batch_id))
@@ -289,7 +336,7 @@ def run(conn, job=None, requester=_request, today=None):
         if stored: catalog.invalidate_cache()
         events = catalog.all_events(conn)
         sent = {}
-        for task, finder in (('categoria', category_candidates), ('duplicado', duplicate_candidates)):
+        for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
         return {'status': 'completed', 'stored': stored, 'usage': usage, 'submitted': sent}
     except urllib.error.HTTPError as err:

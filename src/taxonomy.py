@@ -297,6 +297,10 @@ def channels(ev, category, override=None):
     paths = [norm(p) for p in ev.get('classification_paths') or []]
     if ev.get('family_audience'):
         out['familia'] = 'La fuente la marca para público familiar o infantil'
+    elif ev.get('age_max') is not None and ev['age_max'] <= 14:
+        out['familia'] = f'Edad indicada: {ev.get("age_evidence") or ""}'.strip()
+    elif ev.get('ai_family'):
+        out['familia'] = f'IA, según el texto: «{ev["ai_family"].get("quote", "")}»'
     elif PATIS.search(title):
         out['familia'] = 'Patio escolar abierto para jugar en familia'
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
@@ -318,6 +322,8 @@ def channels(ev, category, override=None):
         out['barrio'] = 'Fiesta o mercado en la calle o en un equipamiento de proximidad'
     elif not recurring and NEIGHBOUR_VENUE.search(venue):
         out['barrio'] = f'Actividad puntual de una entidad vecinal: {(ev.get("venue_names") or [""])[0]}'
+    if ev.get('ai_outdoor') and not (OUTDOOR_TITLE.search(title) or OUTDOOR_VENUE.search(venue)):
+        out['aire'] = f'IA, según el texto: «{ev["ai_outdoor"].get("quote", "")}»'
     if OUTDOOR_TITLE.search(title):
         out['aire'] = 'La actividad es en la calle o al aire libre'
     elif OUTDOOR_VENUE.search(venue):

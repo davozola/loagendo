@@ -341,3 +341,10 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ev-more>summary{cursor:pointer;list-style:none;padding:6px 0 10px;font-size:13px;font-weight:600;color:var(--accentText)}
 .ev-more>summary::-webkit-details-marker{display:none}
 .ev-more>summary:before{content:'+ '}.ev-more[open]>summary:before{content:'− '}
+
+/* Franjas de edad (20-10-2026) */
+.age-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 12px;padding:2px 0}.age-row::-webkit-scrollbar{display:none}.age-row[hidden]{display:none}
+.age-chip{flex:0 0 auto;min-height:32px;border:1px solid var(--line2);border-radius:999px;background:transparent;padding:0 12px;font-size:12.5px;font-weight:600;color:inherit;cursor:pointer;white-space:nowrap}
+.age-chip.active{background:var(--accent);border-color:var(--accent);color:var(--onAccent)}.age-chip.age-nd{border-style:dashed}
+.ev-age{font-weight:600;color:var(--accentText)}.ev-age.age-nd{font-weight:500;color:var(--soft);font-style:italic}
+.ai-note{display:block;margin-top:4px;font-size:12px;color:var(--soft)}

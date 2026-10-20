@@ -41,7 +41,7 @@ STATIC_FILES = ('public.css', 'public.js', 'vendor/leaflet.css', 'vendor/leaflet
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'venue_upcoming', 'description_credit')
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'venue_upcoming', 'description_credit')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -177,6 +177,7 @@ def compact(event, images, full=True):
     }
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
+    if event.get('age_source'): out['ag'] = [event['age_min'], 99 if event.get('age_max') is None else event['age_max']]  # franja de edad
     if event.get('series'): out['se'] = event['series']  # serie que la web agrupa en una fila
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
