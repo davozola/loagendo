@@ -38,6 +38,11 @@ DETAIL = {
 }
 
 
+SPACES = ('<script id="map-scripts-js-extra">\nvar venues = [{"id":1,"slug":"museu-tapies","address":"\\u003Ch5\\u003EMuseu T\\u00e0pies\\u003C/h5\\u003EArag\\u00f3 255","opening":["Dimarts a diumenge: 10 a 19 h\\r\\nDilluns tancat"]},'
+          '{"id":2,"slug":"galeria-h2o","address":"\\u003Ch5\\u003EGaleria H2O\\u003C/h5\\u003EJoaqu\\u00edn Costa 30","opening":["Dimarts a dissabte 17 a 20 h"]},'
+          '{"id":3,"slug":"sense","address":"\\u003Ch5\\u003ESense horari\\u003C/h5\\u003E","opening":[""]}];\n</script>')
+
+
 class GrafTests(unittest.TestCase):
     def test_ical_feed_gives_sessions_times_ranges_and_images(self):
         rows = {r['title']: r for r in web_agendas.parse_graf(FEED, today=dt.date(2026, 10, 19))}
@@ -55,6 +60,14 @@ class GrafTests(unittest.TestCase):
         self.assertEqual((d['address'], d['price'], d['web'], d['image']), ('La Rambla, 7 08002 Barcelona', 'Activitat gratuïta', 'https://www.santamonica.cat/x', 'https://graf.cat/og.jpg'))
         self.assertEqual(d['description'], 'DIMARTS DE VÍDEO amb Maria Ignacia Ibarra\n\nCodi font audiovisual , projecció comentada.')
 
+
+    def test_spaces_directory_gives_opening_hours(self):
+        spaces = web_agendas.graf_spaces(SPACES)
+        self.assertEqual(sorted(spaces), ['galeria h2o', 'museu tapies'])
+        self.assertEqual(spaces['museu tapies']['opening'], 'Dimarts a diumenge: 10 a 19 h\nDilluns tancat')
+        self.assertEqual(web_agendas._match_space(spaces, 'Galeria H2O · Sala 2')['slug'], 'galeria-h2o')
+        self.assertIsNone(web_agendas._match_space(spaces, 'Centre Cívic Guinardó'))
+
     def test_sync_keeps_only_barcelona_with_text_and_image_and_reuses_details(self):
         self.assertTrue(web_agendas.in_barcelona('La Rambla, 7 08002 Barcelona'))
         self.assertFalse(web_agendas.in_barcelona('Carrer Major, 1 08172 Sant Cugat del Vallès'))
@@ -62,7 +75,7 @@ class GrafTests(unittest.TestCase):
             conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn)
             calls = []
             def fetcher(url, timeout):
-                calls.append(url); return FEED if url == web_agendas.SOURCES['web_graf']['url'] else DETAIL[url]
+                calls.append(url); return FEED if url == web_agendas.SOURCES['web_graf']['url'] else SPACES if url == web_agendas.GRAF_SPACES_URL else DETAIL[url]
             from unittest import mock
             fixed = lambda page: web_agendas.parse_graf(page, today=dt.date(2026, 10, 19))
             patch = mock.patch.dict(web_agendas.PARSERS, {'web_graf': fixed}); patch.start(); self.addCleanup(patch.stop)
@@ -71,7 +84,7 @@ class GrafTests(unittest.TestCase):
             rows = {r[0]: r[1] for r in conn.execute("SELECT title,eligibility FROM source_records WHERE source='web_graf'")}
             self.assertEqual(rows.get('Trobada / Open Studio'), 'exclude')
             calls.clear(); web_agendas.sync(conn, 'web_graf', fetcher=fetcher)
-            self.assertEqual(calls, [web_agendas.SOURCES['web_graf']['url']])  # fichas ya leídas: no se piden otra vez
+            self.assertEqual(calls, [web_agendas.SOURCES['web_graf']['url'], web_agendas.GRAF_SPACES_URL])  # fichas ya leídas: no se piden otra vez
             assets = conn.execute("SELECT rights_status, credit FROM media_assets WHERE source='web_graf' ORDER BY credit").fetchall()
             self.assertIn(('authorized', 'Museu Tàpies · vía GRAF'), assets)
             catalog.invalidate_cache()
@@ -79,6 +92,9 @@ class GrafTests(unittest.TestCase):
             detail = catalog.event_detail(conn, 'web_graf', key)
             self.assertEqual((detail['description'], detail['public_category'], 'galerias' in detail['channels']), ('Projecte a l’espai públic.', 'arte', True))
             self.assertTrue(detail['media'])
+            self.assertEqual(detail['schedule_note'], 'Horario del espacio (según GRAF): Dimarts a diumenge: 10 a 19 h · Dilluns tancat')
+            opening = conn.execute("SELECT id FROM source_records WHERE source='web_graf' AND title LIKE 'Ho has vist%'").fetchone()[0]
+            self.assertNotIn('Horario del espacio', catalog.event_detail(conn, 'web_graf', opening).get('schedule_note') or '')  # un acto de un día no hereda el horario
 
 
 if __name__ == '__main__':

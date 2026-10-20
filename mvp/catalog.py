@@ -809,7 +809,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=26  # 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=27  # 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1171,6 +1171,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         od_table=source=='opendatabcn_agenda' and bool(raw.get('timetable'))
         sched_days=opendata_facts.get('schedule_days','') if od_table else archived_facts.get('schedule_days') or (opendata_facts.get('schedule_days','') if source=='opendatabcn_agenda' else '')
         sched_note=opendata_facts.get('schedule_note','') if od_table else archived_facts.get('schedule_note') or (opendata_facts.get('schedule_note','') if source=='opendatabcn_agenda' else '')
+        space=((raw.get('item') or {}).get('space_opening') or {}) if source=='web_graf' else {}
+        if space.get('opening') and not sched_note:
+            sched_note='Horario del espacio (según GRAF): '+' · '.join(space['opening'].splitlines())
         events.update({
             'description':('' if boiler else source_description(raw,source)) or archived_description,
             'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=sched_days,registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),

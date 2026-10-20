@@ -341,12 +341,48 @@ def graf_detail(page):
             'image': html.unescape(image.group(1)) if image else ''}
 
 
+GRAF_SPACES_URL = 'https://graf.cat/espais/'
+
+
+def graf_spaces(page):
+    """Directorio de espacios de GRAF (/espais/ lleva «var venues = [...]»): nombre, dirección y
+    horario de apertura tal como lo publica cada espacio. {nombre normalizado: espacio}."""
+    m = re.search(r'var venues\s*=\s*(\[.*?\]);\s*\n', page or '', re.S)
+    if not m: return {}
+    try: items = json.loads(m.group(1))
+    except json.JSONDecodeError: return {}
+    out = {}
+    for item in items:
+        name = re.search(r'<h5>(.*?)</h5>', str(item.get('address') or ''), re.S)
+        opening = '\n'.join(x.strip() for x in str((item.get('opening') or [''])[0] or '').replace('\u2028', '\n').splitlines() if x.strip())
+        if not name or not opening: continue
+        name = _graf_text(name.group(1))
+        out[_space_key(name)] = {'name': name, 'slug': item.get('slug', ''), 'opening': opening[:600], 'source_url': GRAF_SPACES_URL}
+    return out
+
+
+def _space_key(name):
+    import unicodedata
+    text = unicodedata.normalize('NFKD', str(name or '')).encode('ascii', 'ignore').decode().lower()
+    return ' '.join(re.sub(r'[^a-z0-9]+', ' ', text).split())
+
+
+def _match_space(spaces, name):
+    """El espacio por su nombre; si no es idéntico, uno solo cuyo nombre (≥8 letras) esté
+    contenido en el del lugar («Centre de les Arts Lliures - Fundació Joan Brossa»)."""
+    key = _space_key(name)
+    if not spaces or not key: return None
+    if key in spaces: return spaces[key]
+    found = [v for k, v in spaces.items() if len(k) >= 8 and (' %s ' % k) in (' %s ' % key)]
+    return found[0] if len(found) == 1 else None
+
+
 def in_barcelona(address):
     a = (address or '').lower()
     return bool(re.search(r'\b080\d\d\b', a)) or bool(re.search(r'\bbarcelona\s*$', a)) and not re.search(r'\b08[1-9]\d\d\b', a)
 
 
-def _add_graf_details(conn, records, fetcher, timeout, budget=400):
+def _add_graf_details(conn, records, fetcher, timeout, budget=400, spaces=None):
     """Ficha de cada acto (una lectura por URL y pasada; lo ya leído se reaprovecha): dirección,
     texto, precio, web propia e imagen. Fuera de Barcelona o sin dirección → no elegible."""
     cache = {}
@@ -367,6 +403,11 @@ def _add_graf_details(conn, records, fetcher, timeout, budget=400):
             if detail['price']: record['price_text'] = detail['price']
             if not record['raw'].get('image') and detail['image']: record['raw']['image'] = detail['image']
             if detail['web']: record['raw']['item']['event_web'] = detail['web']
+        # Exposición de varios días en un espacio del directorio de GRAF: su horario de apertura,
+        # tal cual y con su procedencia (20-10-2026). Un acto de un día no lo hereda.
+        space = _match_space(spaces, record['venues'][0].get('name'))
+        if space and record['start'] != record['end']:
+            record['raw']['item']['space_opening'] = space
         address = (detail or {}).get('address', '')
         if not address or not in_barcelona(address):
             record['eligibility'] = 'exclude'; record['alerts'] = record['alerts'] + ['OUTSIDE_BARCELONA' if address else 'ADDRESS_UNKNOWN']
@@ -422,7 +463,10 @@ def sync(conn, source, fetcher=fetch, timeout=30):
         page='\n'.join(body for _,body in pages); records=PARSERS[source](page); mutated=0
         seen=set(); records=[r for r in records if not (r['id'] in seen or seen.add(r['id']))]
         if source=='web_centres_civics': _add_centres_sessions(conn,records,fetcher,timeout)
-        if source=='web_graf': _add_graf_details(conn,records,fetcher,timeout)
+        if source=='web_graf':
+            try: spaces=graf_spaces(fetcher(GRAF_SPACES_URL,timeout))
+            except Exception: spaces={}
+            _add_graf_details(conn,records,fetcher,timeout,spaces=spaces)
         with conn:
             for record in records:
                 mutated+=int(_upsert_record(conn,run_id,record)[0])
