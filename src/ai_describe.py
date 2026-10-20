@@ -24,7 +24,12 @@ MIN_TEXT = 80
 
 PROMO = re.compile(r"\b(?:imprescindible|increible|espectacular|maravillos[oa]|meravellos[ao]?|inolvidable|inoblidable|"
                    r"fascinant[e]?|apasionante|apassionant|imperdible|no te lo pierdas|no t'ho perdis|no et perdis|no os lo perdais|unmissable|"
-                   r"genial|fantastic[oa]?|extraordinari[oa]?|brillant[e]?|el mejor|la millor|el millor|la mejor|ven a|vine a|reserva ya)\b")
+                   r"genial|extraordinari[oa]?|brillant[e]?|el mejor|la millor|el millor|la mejor|ven a|vine a|reserva ya)\b")
+# «Fantástico» es promoción («un espectáculo fantástico») salvo como género o tipo, detrás de su
+# nombre: «criaturas fantásticas», «literatura fantàstica», «seres fantásticos» (20-10-2026).
+FANTASTIC = re.compile(r"\bfantastic[oa]?s?\b")
+FANTASTIC_GENRE = re.compile(r"\b(?:criatur\w*|ser|sers|seres|essers?|mon|mons|mundos?|literatur\w*|personatg\w*|personaj\w*|anim\w*|bestiari\w*|"
+                             r"univers\w*|genere|genero|cinema|cine|relat\w*|cont\w*|cuent\w*|novel\w*|imaginari\w*|fauna|realisme|realismo|ficcio\w*|ficcion\w*)\s+fantastic")
 # Nombres que el castellano traduce del catalán de la fuente (o al revés): no son datos nuevos.
 EQUIV = {'navidad': 'nadal', 'ayuntamiento': 'ajuntament', 'mujeres': 'dones', 'ano': 'any', 'anos': 'anys', 'nueva': 'nova', 'nuevo': 'nou',
          'media': 'mitjana', 'estado': 'estat', 'chaikovski': 'txaikovski', 'chaikovsky': 'txaikovski', 'espana': 'espanya', 'cataluna': 'catalunya'}
@@ -81,6 +86,7 @@ def check(text, source_payload):
     f = fold(text); src = fold(json.dumps(source_payload, ensure_ascii=False))
     m = PROMO.search(f)
     if m: problems.append(f'promocional: «{m.group(0)}»')
+    elif FANTASTIC.search(f) and len(FANTASTIC.findall(f)) > len(FANTASTIC_GENRE.findall(f)): problems.append('promocional: «fantastic»')
     for n in set(re.findall(r'\d+', f)):
         if not re.search(rf'(?<!\d){n}(?!\d)', src): problems.append(f'número que no está en los datos: {n}')
     words = set(re.findall(r"[a-z0-9']+", src))

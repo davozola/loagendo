@@ -43,3 +43,11 @@ class FamilyAiTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class FantasticTests(unittest.TestCase):
+    def test_fantastic_as_genre_is_not_promotion(self):
+        from src.ai_describe import check
+        data = {'texto': 'Personatges de la mitologia catalana'}
+        self.assertEqual(check('Personajes de la mitología catalana y criaturas fantásticas.', data), [])
+        self.assertTrue(check('Un espectáculo fantástico sobre la mitología catalana.', data))
