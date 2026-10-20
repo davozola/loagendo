@@ -470,6 +470,17 @@ const CHIPS = [
 ];
 state.show = {fixed: true, wide: false, tbc: true, soon: false};
 try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
+// «Arte y galerías» vive sobre todo de exposiciones (horario amplio) y de talleres de varias
+// sesiones: al entrar en el canal se ven todos los tipos; al salir vuelve la vista de cada uno.
+// (Cambios hechos dentro del canal no se guardan como preferencia general.)
+const CHANNEL_VIEW = {galerias: {fixed: true, wide: true, soon: true, tbc: true}};
+let savedShow = null;
+function channelView() {
+  const view = state.chans.length === 1 ? CHANNEL_VIEW[state.chans[0]] : null;
+  if (view && !savedShow) { savedShow = {...state.show}; Object.assign(state.show, view) }
+  else if (!view && savedShow) { state.show = savedShow; savedShow = null }
+}
+channelView();
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
 function chipsHtml(counts) {
   return `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
@@ -877,7 +888,7 @@ document.addEventListener('click', e => {
   if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }
   if (button.dataset.moredays) { state.shown += 7; stableRender(); return }
   if (button.dataset.dayall) { state.openDays.add(button.dataset.dayall); stableRender(); return }
-  if (button.dataset.chip) { const k = button.dataset.chip; state.show[k] = !state.show[k]; try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} stableRender(); return }
+  if (button.dataset.chip) { const k = button.dataset.chip; state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
   if (button.dataset.day) { state.day = button.dataset.day; state.range = ''; refresh(); return }
   if (button.dataset.period !== undefined) { if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
@@ -887,7 +898,7 @@ document.addEventListener('click', e => {
     refresh(); return
   }
   if (button.dataset.age) { const a = button.dataset.age; state.ages = state.ages.includes(a) ? state.ages.filter(x => x !== a) : [...state.ages, a]; refresh(); return }
-  if (button.dataset.channel) { const c = button.dataset.channel; state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; refresh(); return }
+  if (button.dataset.channel) { const c = button.dataset.channel; state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; channelView(); refresh(); return }
   if (button.dataset.district) { state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
   if (button.dataset.save) { toggleSave(button.dataset.save); return }
   if (button.dataset.share) { shareEvent(button.dataset.share); return }
