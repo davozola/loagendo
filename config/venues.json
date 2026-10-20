@@ -223,8 +223,10 @@
         "Harlem Jazz",
         "Harlem"
       ],
-      "enabled": false,
-      "note": "URL facilitada por David Sola (12-10-2026); pendiente de censo para activar el conector."
+      "enabled": true,
+      "note": "20-10-2026: la portada y cada ficha /events/ llevan schema.org/Event (JSON-LD); se siguen las fichas.",
+      "agenda_url": "https://www.harlemjazzclub.es/",
+      "max_pages": 40
     },
     {
       "slug": "sala_vol",

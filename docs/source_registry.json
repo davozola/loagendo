@@ -183,5 +183,16 @@
     "public_credit": true,
     "presentation_basis": "Decisión de David Sola (20-10-2026): usar toda la información de GRAF (texto, imágenes) para el canal Arte y galerías, con crédito y enlace.",
     "image_reuse_basis": "Decisión editorial de David Sola (20-10-2026): mostrar la imagen que el espacio publica en GRAF para el acto, con crédito al espacio y a GRAF y enlace a la ficha. Revisable si GRAF o el espacio lo piden."
+  },
+  "venue_ia_*": {
+    "owner": "Cada sala de config/agendas_ia.json",
+    "dataset": "Página pública de agenda de la sala, leída con IA (Claude Haiku) y comprobada contra su texto",
+    "data_reuse_status": "metadata_reference_only",
+    "license_basis": "Se publican título, fecha, hora, precio declarado, sala y enlace a la página de la sala; cada dato con su cita literal comprobada. No se copia prosa en público.",
+    "attribution": "«Datos de la sala», con enlace a la página de la sala",
+    "update_date_required": true,
+    "image_reuse_confirmed": true,
+    "image_reuse_basis": "Decisión editorial de David Sola (20-10-2026): mostrar la imagen que la propia sala publica para compartir cada acto (og:image), con crédito a la sala.",
+    "remarks": "Lectura cada dos días; solo agendas con activa=true tras revisar la muestra (scripts/muestra_agendas_ia.py). Lo que desaparece de la página deja de publicarse, no se borra."
   }
 }

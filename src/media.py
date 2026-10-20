@@ -45,6 +45,8 @@ def source_rights_policy(source, registry_path=REGISTRY_PATH):
 
 def _wildcard_entry(registry, source):
     """'venue_*' covers every venue_<slug> source; 'ticketing_*' every ticketing/aggregator one."""
+    if source.startswith('venue_ia_'):
+        return registry.get('venue_ia_*') or registry.get('venue_*')
     if source.startswith('venue_'):
         try:
             from src.venue_feeds import load_venues
