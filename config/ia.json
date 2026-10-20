@@ -1,6 +1,6 @@
 {
-  "descripciones_publicas": true,
-  "nota": "Descripciones breves con IA (src/ai_describe.py): se generan y se ven en el panel; en la web pública solo cuando esto sea true, tras revisar la muestra (python3 scripts/muestra_descripciones.py). Decisión de David, 20-10-2026. Activado por decisión de David el 20-10-2026.",
+  "descripciones_publicas": false,
+  "nota": "Descripciones breves con IA (src/ai_describe.py): EN PAUSA desde el 20-10-2026 por decisión de David; no se generan (config/automation.json → ia-asistente → \"descripcion\": false) ni se publican. Para reactivar: quitar esa línea, poner esto a true y revisar antes la muestra (python3 scripts/muestra_descripciones.py).",
   "familia_ia_publica": true,
   "nota_familia": "Recomendación automática «para ir en familia» de exposiciones (src/ai_family.py): se genera con el trabajo ia-asistente y se ve en el panel; en la web solo cuando esto sea true, tras revisar la muestra (python3 scripts/muestra_familia.py). Activado por decisión de David el 20-10-2026 tras revisar la muestra (umbral 0,7)."
 }

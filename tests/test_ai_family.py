@@ -51,3 +51,20 @@ class FantasticTests(unittest.TestCase):
         data = {'texto': 'Personatges de la mitologia catalana'}
         self.assertEqual(check('Personajes de la mitología catalana y criaturas fantásticas.', data), [])
         self.assertTrue(check('Un espectáculo fantástico sobre la mitología catalana.', data))
+
+
+class PausedDescriptionsTests(unittest.TestCase):
+    def test_descriptions_are_neither_requested_nor_published(self):
+        import sqlite3
+        from pathlib import Path
+        from unittest import mock
+        from src import ai_describe
+        root = Path(__file__).resolve().parents[1]
+        job = next(j for j in json.loads((root / 'config' / 'automation.json').read_text())['jobs'] if j['name'] == 'ia-asistente')
+        conn = sqlite3.connect(':memory:'); ai_assist.initialize(conn); sent = []
+        with mock.patch.object(ai_assist, 'load_key', return_value='k'), mock.patch.object(ai_assist, 'collect', return_value=(0, {})), \
+             mock.patch.object(ai_assist, 'submit', side_effect=lambda c, k, t, i, m, r: sent.append(t)), \
+             mock.patch('mvp.catalog.all_events', return_value=[]), mock.patch('src.ai_select.ensure', return_value=None):
+            ai_assist.run(conn, job, today='2026-10-20')
+        self.assertNotIn('descripcion', sent)
+        self.assertFalse(ai_describe.public_enabled())
