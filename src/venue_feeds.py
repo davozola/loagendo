@@ -481,7 +481,10 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         if pages and venue.get("follow_links", True):
             known = {urljoin(page_url, str(node.get("url") or "")) for page_url, node in nodes}
             for listing_url, body in pages:
-                for link in event_links(body, listing_url, budget, exclude=known):
+                links = event_links(body, listing_url, budget * 4, exclude=known)
+                if venue.get("link_pattern"):  # solo fichas de evento («/es/evento/» en Apolo), no paginación ni ciclos
+                    links = [l for l in links if re.search(venue["link_pattern"], l)]
+                for link in links[:budget]:
                     if fetched >= len(pages) + budget: break
                     if fetcher is fetch and not robots_allows(link): continue
                     status, final_url, detail = fetcher(link, timeout); fetched += 1

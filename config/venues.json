@@ -41,7 +41,8 @@
       ],
       "max_pages": 220,
       "title_regex": "^(?:Concierto de\\s+)?(.+?)\\s+en\\s+(?:la\\s+)?(?:Sala Apolo|\\(2\\) de Apolo|CINC de Apolo|\\(2\\)|CINC)\\s*-\\s*\\d{1,2}\\s+de\\s+\\w+(?:\\s+de)?\\s+\\d{4}\\s*$",
-      "note": "20-10-2026: agenda paginada (/es/agenda?page=N, 10 por página, ~18 páginas); cada ficha /es/evento/ lleva schema.org/Event. Antes se leía solo la página del ciclo AFERS (17 actos)."
+      "note": "20-10-2026: agenda paginada (/es/agenda?page=N, 10 por página, ~18 páginas); cada ficha /es/evento/ lleva schema.org/Event. Antes se leía solo la página del ciclo AFERS (17 actos).",
+      "link_pattern": "/es/evento/"
     },
     {
       "slug": "razzmatazz",
@@ -94,7 +95,7 @@
       "feed": {
         "kind": "html",
         "url": "https://sidecar.es/programacio/",
-        "item": "div.info-box",
+        "item": "article.archive",
         "fields": {
           "title": "a.title",
           "url": "a.title@href",
@@ -111,7 +112,8 @@
             "Dj session"
           ]
         },
-        "details": true
+        "details": true,
+        "note": "20-10-2026: la web cambió; cada concierto es un <article class=archive> (antes div.info-box con el título dentro)."
       },
       "note": "Programació en HTML (un bloque div.info-box por concierto: fecha, hora, título, estilo, precio); se omiten las DJ sessions. Imagen y texto de la página de cada concierto."
     },

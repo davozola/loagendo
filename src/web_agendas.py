@@ -41,7 +41,7 @@ SOURCES = {
     # charlas. Feed iCal completo (fechas, horas, espacio, coordenadas, imagen) + ficha de cada
     # acto (dirección, texto, precio, web propia). Decisión de David (20-10-2026): se usa todo,
     # con crédito a GRAF y al espacio. La ciudad se comprueba en la ficha: solo Barcelona.
-    'web_graf': {'url': 'https://graf.cat/feed/eo-events/', 'venue': 'GRAF', 'address': 'Catalunya', 'max_bytes': 16_000_000},
+    'web_graf': {'url': 'https://graf.cat/feed/eo-events/', 'venue': 'GRAF', 'address': 'Catalunya', 'max_bytes': 16_000_000, 'timeout': 120, 'retries': 1},
 }
 
 MONTHS = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12,
@@ -72,7 +72,16 @@ def fetch_pages(cfg, fetcher, timeout):
     out=[]
     for index in range(first,first+count):
         url=cfg['url'] if index==first and 'page_url' in cfg else cfg.get('page_url',cfg['url']).format(page=index)
-        body=fetcher(url,timeout,cfg['max_bytes']) if 'max_bytes' in cfg and fetcher is fetch else fetcher(url,timeout); out.append((url,body))
+        if fetcher is fetch:
+            # Feed grande y lento de generar (GRAF, 16 MB): más margen y un reintento si el servidor se queda callado.
+            wait=max(timeout,cfg.get('timeout',0))
+            for attempt in range(1+cfg.get('retries',0)):
+                try: body=fetcher(url,wait,cfg['max_bytes']) if 'max_bytes' in cfg else fetcher(url,wait); break
+                except (TimeoutError,OSError) as error:
+                    if attempt>=cfg.get('retries',0): raise
+                    time.sleep(10)
+        else: body=fetcher(url,timeout)
+        out.append((url,body))
         if marker and marker not in body: break
         if out and len(out)>1 and body==out[-2][1]: break  # identical page: pagination not effective
     return out
