@@ -387,7 +387,9 @@ function timesIn(s) { return [...new Set((String(s || '').match(/\b(?:[01]?\d|2[
 // y entre medias está cerrado (ranges).
 function rangeIn(s) {
   const ranges = [...String(s || '').matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\s*[–-]\s*([01]?\d|2[0-3]):([0-5]\d)\b/g)]
-    .map(m => ({open: Number(m[1]) * 60 + Number(m[2]), close: Number(m[3]) * 60 + Number(m[4])})).filter(r => r.close > r.open);
+    .map(m => ({open: Number(m[1]) * 60 + Number(m[2]), close: Number(m[3]) * 60 + Number(m[4])}))
+    // «19:00–00:00», «22:00–03:00»: cierra pasada la medianoche, no a primera hora de ese mismo día.
+    .map(r => r.close <= r.open && r.close <= 6 * 60 && r.open >= 12 * 60 ? {...r, close: r.close + 1440} : r).filter(r => r.close > r.open);
   if (!ranges.length) return null;
   return {open: ranges[0].open, close: ranges[ranges.length - 1].close, ranges};
 }
