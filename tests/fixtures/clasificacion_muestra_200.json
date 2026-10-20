@@ -330,9 +330,9 @@
    "source": "venue_eventbrite",
    "id": "d7e51b7a5c751f2229c7d65f",
    "title": "THE WEDDING MARKET BARCELONA 2026",
-   "label": "fiestas",
+   "label": "excluida",
    "predicted_2026_10_20": "fiestas",
-   "note": "",
+   "note": "Feria comercial del sector (config/ia_instrucciones.md, 20-10)",
    "doubtful": false
   },
   {
@@ -2170,9 +2170,9 @@
     "source": "guiabcn",
     "id": "99400322908",
     "title": "Tots Sants 2026: Castanyada a la plaça! Espectacle 'El monstre del jardí'",
-    "label": "fiestas",
+    "label": "escena",
     "predicted_2026_10_20": "fiestas",
-    "note": "",
+    "note": "El título nombra un espectáculo (criterio de config/ia_instrucciones.md)",
     "doubtful": false,
     "stratum": "fiestas"
    },

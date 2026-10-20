@@ -111,6 +111,7 @@ TICKET_PRODUCT = re.compile(r"^(?:upgrade|vip package|paquete vip|parking|aparca
 # Resúmenes y noticias de programación de la red de centres cívics (no son una actividad con fecha).
 UMBRELLA_VENUE = re.compile(r"^(?:xarxa de centres civics|diversos centres civics|centres civics)\b")
 PATIS = re.compile(r"\bpatis? escolars? oberts?\b")
+TRADE_FAIR = re.compile(r"\b(?:wedding market|bridal|fira nupcial|salo nupcial|salon nupcial|feria de bodas|textile expo|real estate expo)\b")
 SOCIAL = re.compile(r"\b(?:singles|single (?:night|party)|dating|citas|first dates|speed ?dating|language exchange|intercambio de idiomas|intercanvi d'idiomes|pub crawl|party tour|boat party|bar crawl|"
                     r"networking|meet people|new friends|nuevos amigos|afterwork|job fair|feria de empleo|employer|hackathon|womenhack|summit|congress|congres (?:mundial|internacional)|congreso (?:mundial|internacional)|"
                     r"conference|forum event|venture capital|real estate|inversion inmobiliaria|investment|pub quiz|trivia|casino barcelona|expansion playbook|evento anual)\b")
@@ -143,9 +144,9 @@ OFFICIAL_TYPE = [  # Tipologia oficial (Open Data / GuiaBCN): tipo de actividad
 
 
 def segments(title):
-    """El título entero y cada parte tras «:», « - » o comillas de programa:
-    «Tots Sants 2026: Castanyada a …», «Cicle 'Afins': Xerrada …»."""
-    t = norm(title)
+    """El título entero y cada parte tras «:», «!», « - » o comillas de programa:
+    «Tots Sants 2026: Castanyada a …», «Cicle 'Afins': Xerrada …», «Castanyada a la plaça! Espectacle …»."""
+    t = norm(re.sub(r'!\s+', ': ', title or ''))
     parts = [t] + [p.strip(" '\"") for p in re.split(r":\s+|\s+-\s+|\s+–\s+", t)[1:]]
     out = []
     for p in parts:
@@ -154,7 +155,7 @@ def segments(title):
     return out
 
 
-FIESTA_FRAME = re.compile(r"^(?:festa major|festes|fiestas? mayor|festa de barri|festes de)\b")
+FIESTA_FRAME = re.compile(r"^(?:festa major|festes|fiestas? mayor|festa de barri|festes de|castanyada|castanada)\b")
 
 
 def lead_category(title):
@@ -254,6 +255,9 @@ def _classify_rules(ev, override=None):
     if PATIS.search(t):
         return {'category': 'talleres', 'status': 'confirmada', 'method': 'regla_editorial',
                 'evidence': 'Patio escolar abierto para jugar en familia (decisión editorial 20-10-2026)', 'ambiguous': False}
+    if TRADE_FAIR.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'feria_comercial',
+                'evidence': 'Feria comercial del sector (bodas, textil, inmobiliaria…): fuera de la agenda cultural', 'ambiguous': False}
     if not lead and not inner_categories(title) and SOCIAL.search(t):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'ocio_social_o_profesional',
                 'evidence': 'Ocio social, networking, empleo o congreso: fuera de la agenda cultural (decisión editorial 20-10-2026)', 'ambiguous': False}
