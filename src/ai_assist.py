@@ -228,7 +228,11 @@ def description_for(conn, key, ev):
     if not s or s['prompt_version'] != prompt_version('descripcion') or s['input_hash'] != _hash(ai_describe.payload(ev)): return None
     try: d = json.loads(s['answer'])
     except ValueError: return None
-    return {'es': d.get('es', ''), 'ca': d.get('ca', ''), 'model': s['model']} if d.get('ok') else None
+    # Se vuelve a comprobar con las reglas vigentes (así una mejora de la comprobación vale también
+    # para lo ya generado, sin volver a llamar a la API).
+    payload = ai_describe.payload(ev); es, ca = d.get('es', ''), d.get('ca', '')
+    if not (es and ca) or ai_describe.check(es, payload) or ai_describe.check(ca, payload): return None
+    return {'es': es, 'ca': ca, 'model': s['model']}
 
 
 def duplicate_candidates(conn, events, today):

@@ -22,9 +22,12 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_CHARS = 240
 MIN_TEXT = 80
 
-PROMO = re.compile(r"\b(?:imprescindible|increible|increible|unic|unica|unico|espectacular|maravillos[oa]|meravellos[ao]?|inolvidable|inoblidable|magic[ao]?|magica|"
+PROMO = re.compile(r"\b(?:imprescindible|increible|espectacular|maravillos[oa]|meravellos[ao]?|inolvidable|inoblidable|"
                    r"fascinant[e]?|apasionante|apassionant|imperdible|no te lo pierdas|no t'ho perdis|no et perdis|no os lo perdais|unmissable|"
-                   r"genial|fantastic[oa]?|extraordinari[oa]?|brillant[e]?|el mejor|la millor|el millor|la mejor|ven a|vine a|reserva ya|corre)\b")
+                   r"genial|fantastic[oa]?|extraordinari[oa]?|brillant[e]?|el mejor|la millor|el millor|la mejor|ven a|vine a|reserva ya)\b")
+# Nombres que el castellano traduce del catalán de la fuente (o al revés): no son datos nuevos.
+EQUIV = {'navidad': 'nadal', 'ayuntamiento': 'ajuntament', 'mujeres': 'dones', 'ano': 'any', 'anos': 'anys', 'nueva': 'nova', 'nuevo': 'nou',
+         'media': 'mitjana', 'estado': 'estat', 'chaikovski': 'txaikovski', 'chaikovsky': 'txaikovski', 'espana': 'espanya', 'cataluna': 'catalunya'}
 STOP_CAPS = {'el', 'la', 'els', 'les', 'los', 'las', 'un', 'una', 'en', 'a', 'de', 'del', 'con', 'amb', 'para', 'per', 'y', 'i', 'este', 'esta', 'aquest', 'aquesta',
              'exposicion', 'exposicio', 'concierto', 'concert', 'taller', 'espectaculo', 'espectacle', 'proyeccion', 'projeccio', 'charla', 'xerrada', 'visita',
              'fiesta', 'festa', 'barcelona', 'ciclo', 'cicle', 'festival', 'sesion', 'sessio', 'teatro', 'teatre', 'danza', 'dansa', 'cine', 'cinema', 'musica',
@@ -64,18 +67,26 @@ def _proper_nouns(sentence_text):
     return out
 
 
+def _cognate(word, words):
+    """Misma palabra en la otra lengua (orquesta/orquestra, sinfonía/simfonia, cívico/cívic, fundación/fundació)."""
+    from difflib import SequenceMatcher
+    return len(word) >= 4 and any(w[:2] == word[:2] and SequenceMatcher(None, w, word).ratio() >= 0.72 for w in words if abs(len(w) - len(word)) <= 3)
+
+
 def check(text, source_payload):
     """Lista de problemas (vacía = aceptable)."""
     problems = []
     if not text: return ['vacía']
-    if len(text) > MAX_CHARS + 20: problems.append(f'larga ({len(text)} caracteres)')
+    if len(text) > MAX_CHARS + 60: problems.append(f'larga ({len(text)} caracteres)')
     f = fold(text); src = fold(json.dumps(source_payload, ensure_ascii=False))
     m = PROMO.search(f)
     if m: problems.append(f'promocional: «{m.group(0)}»')
     for n in set(re.findall(r'\d+', f)):
         if not re.search(rf'(?<!\d){n}(?!\d)', src): problems.append(f'número que no está en los datos: {n}')
+    words = set(re.findall(r"[a-z0-9']+", src))
     for word in _proper_nouns(text):
-        if word not in src: problems.append(f'nombre que no está en los datos: {word}')
+        if word in src or EQUIV.get(word, '\0') in src or _cognate(word, words): continue
+        problems.append(f'nombre que no está en los datos: {word}')
     return problems
 
 
