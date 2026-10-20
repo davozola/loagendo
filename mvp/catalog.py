@@ -601,8 +601,11 @@ def is_free(price, free_label):
     """True only when the source says so: a 'gratuita' flag set to yes, or a
     price text that literally says free. 'No' is not a free label."""
     label=clean(free_label)
-    if label in ('no','false','0','n'): return any(term in clean(price) for term in ('gratis','gratuit','gratuito','free'))
     if label in ('si','s','yes','true','1'): return True
+    # «Preus: des de 10 €. Els menors de 2 anys tenen entrada gratuïta»: si el texto da un importe,
+    # no es gratis aunque mencione una gratuidad parcial (detectado al evaluar la extracción, 20-10-2026).
+    if re.search(r'(?<![\d.,])(?:[1-9]\d*(?:[.,]\d+)?|0[.,]\d*[1-9]\d*)\s*(?:€|eur\b|euros?)',str(price or ''),re.I): return False
+    if label in ('no','false','0','n'): return any(term in clean(price) for term in ('gratis','gratuit','gratuito','free'))
     return any(term in clean(price+' '+free_label) for term in ('gratis','gratuit','gratuito','free','entrada lliure'))
 
 
@@ -806,7 +809,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=24  # 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=25  # 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)

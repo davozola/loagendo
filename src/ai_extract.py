@@ -36,7 +36,7 @@ AGE_PATTERNS = [  # (regex, constructor, solo en el título)
     (re.compile(rf"(?<!\w)\+ ?{_N}\b"), lambda a: (int(a), None), True),
     (re.compile(rf"\b(?:fins a|hasta|menors de|menores de) {_N} {_Y}"), lambda a: (0, int(a)), True),
     (re.compile(rf"\bde {_N} a {_N} (?:mesos|meses)\b"), lambda a, b: (0, max(1, (int(b) + 11) // 12)), False),
-    (re.compile(r"\b(?:nadons|bebes)\b"), lambda: (0, 1), True),
+    (re.compile(r"\b(?:nadons|bebes)\b"), lambda: (0, 2), True),
     (re.compile(r"\bprimera infancia\b"), lambda: (0, 3), True),
 ]
 

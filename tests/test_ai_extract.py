@@ -38,6 +38,12 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(ai_extract.ages_by_rule('Música per a nadons de 18 a 36 mesos')[:2], (0, 3))
         self.assertEqual(ai_extract.ages_by_rule('Concert +18')[:2], (18, None))
 
+    def test_a_price_with_an_amount_is_not_free_even_if_it_mentions_free_entry(self):
+        from mvp.catalog import is_free
+        self.assertFalse(is_free('Preus: des de 10 € Les nenes i els nens menors de 2 anys tenen entrada gratuïta', ''))
+        self.assertTrue(is_free('Activitat gratuïta', ''))
+        self.assertTrue(is_free('', 'Sí'))
+
 
 class ApplyTests(unittest.TestCase):
     def test_extracted_time_price_and_ages_fill_gaps_with_their_quotes(self):
