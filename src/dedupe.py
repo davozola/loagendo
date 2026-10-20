@@ -497,3 +497,39 @@ def _same_site(a, b, km=0.4):
     if d is not None: return d <= km
     va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
     return bool(va & vb)
+
+
+def unconfirmed_by_venue(conn, groups, venues=None, today=None):
+    """Anuncios de terceros (Songkick, DICE, Xceed…) en una sala cuya agenda propia damos por
+    completa («agenda_completa» en config/venues.json) que no casan con ningún acto de esa
+    agenda, en una fecha que la agenda ya cubre (20-10-2026). No se oculta nada: la ficha
+    lleva la marca «Fecha no confirmada por la sala». {clave: nombre de la sala}."""
+    import datetime as dt, json
+    from pathlib import Path
+    if venues is None:
+        try: venues = json.loads((Path(__file__).resolve().parent.parent / "config" / "venues.json").read_text(encoding="utf-8"))["venues"]
+        except (OSError, ValueError, KeyError): return {}
+    today = (today or dt.date.today()).isoformat()
+    complete = [v for v in venues if v.get("enabled") and v.get("agenda_completa")]
+    if not complete: return {}
+    root = lambda k: groups.get(k, k)
+    out = {}
+    for venue in complete:
+        own = "venue_" + venue["slug"]
+        names = [_clean(n) for n in [venue["name"]] + list(venue.get("aliases") or []) if len(_clean(n)) >= 6]
+        try:
+            last = conn.execute("SELECT MAX(end_date) FROM source_records WHERE source=? AND eligibility<>'exclude'", (own,)).fetchone()[0]
+            own_roots = {root(f"{own}:{i}") for (i,) in conn.execute("SELECT id FROM source_records WHERE source=? AND end_date>=?", (own, today))}
+            rows = conn.execute(f"""SELECT r.source, r.id, v.venue FROM source_records r
+                  JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+                  WHERE r.source IN ({','.join('?' * len(SINGLE_ACT_SOURCES))}) AND r.eligibility<>'exclude'
+                    AND r.start_date=r.end_date AND r.start_date>=? AND r.start_date<=?""", (*SINGLE_ACT_SOURCES, today, last or "")).fetchall()
+        except sqlite3.DatabaseError:
+            continue
+        if not last or not own_roots: continue
+        for source, rid, place in rows:
+            clean = " %s " % _clean(place)
+            if not any(" %s " % n in clean for n in names): continue
+            key = f"{source}:{rid}"
+            if root(key) not in own_roots: out[key] = venue["name"]
+    return out

@@ -912,6 +912,19 @@ def _collapse_groups(conn):
     except sqlite3.DatabaseError: return {}
 
 
+_UNCONFIRMED_CACHE={'groups':None,'stamp':None,'keys':{}}
+
+
+def venue_unconfirmed(conn, groups):
+    """src.dedupe.unconfirmed_by_venue, recalculado cuando cambian los grupos o las agendas de sala."""
+    try: stamp=conn.execute("SELECT COUNT(*),MAX(raw_sha256) FROM source_records WHERE source LIKE 'venue_%'").fetchone()
+    except sqlite3.DatabaseError: return {}
+    if _UNCONFIRMED_CACHE['groups'] is not groups or _UNCONFIRMED_CACHE['stamp']!=stamp:
+        from src.dedupe import unconfirmed_by_venue
+        _UNCONFIRMED_CACHE.update(groups=groups,stamp=stamp,keys=unconfirmed_by_venue(conn,groups))
+    return _UNCONFIRMED_CACHE['keys']
+
+
 def borrow_from_twins(conn, event):
     """Fill a canonical detail with what its collapsed twins (other sources
     describing the same act) carry and it lacks: description, hours, price,
@@ -1144,6 +1157,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])
+    # Anuncio de una ticketera que la agenda propia de la sala no recoge (src/dedupe.unconfirmed_by_venue).
+    events['venue_unconfirmed']=venue_unconfirmed(conn,prefetch.collapsed if prefetch is not None else _collapse_groups(conn)).get(source+':'+id,'')
     # Precio del detalle oficial (GuiaBCN «Entrada Gratuïta»): gratis solo si lo dice y no da ningún importe.
     detail_price=str(facts.get('price_text') or '')
     if not events.get('is_free') and detail_price and is_free(detail_price,'') and not re.search(r'\d\s*(?:€|eur)',detail_price,re.I):

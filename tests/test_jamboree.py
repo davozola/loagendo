@@ -33,3 +33,24 @@ class TribeListTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnconfirmedTest(unittest.TestCase):
+    def test_third_party_date_missing_from_complete_agenda_is_flagged(self):
+        import sqlite3
+        from src.dedupe import unconfirmed_by_venue
+        conn = sqlite3.connect(":memory:")
+        conn.execute("CREATE TABLE source_records(source,id,title,start_date,end_date,eligibility)")
+        conn.execute("CREATE TABLE source_venues(source,id,seq,venue)")
+        rows = [("venue_jamboree", "j1", "Chico Pinheiro Quartet", "2026-10-20", "Jamboree Jazz Club"),
+                ("venue_jamboree", "j2", "Clarence Bekker Christmas Special", "2026-12-17", "Jamboree Jazz Club"),
+                ("venue_songkick", "s1", "Chico Pinheiro", "2026-10-20", "Jamboree Jazz Club"),      # casa con la agenda
+                ("venue_songkick", "s2", "Clarence Bekker", "2026-11-19", "Jamboree Jazz Club"),     # la sala no lo tiene
+                ("venue_songkick", "s3", "Lejano", "2027-03-01", "Jamboree Jazz Club"),              # más allá de la agenda
+                ("venue_songkick", "s4", "Otro", "2026-11-19", "Sala Apolo")]                         # sala sin agenda completa
+        for source, rid, title, day, venue in rows:
+            conn.execute("INSERT INTO source_records VALUES(?,?,?,?,?, 'publish')", (source, rid, title, day, day))
+            conn.execute("INSERT INTO source_venues VALUES(?,?,0,?)", (source, rid, venue))
+        venues = [{"slug": "jamboree", "name": "Jamboree Jazz Club", "aliases": ["Jamboree"], "enabled": True, "agenda_completa": True}]
+        groups = {"venue_songkick:s1": "venue_jamboree:j1"}
+        self.assertEqual(unconfirmed_by_venue(conn, groups, venues, today=dt.date(2026, 10, 20)), {"venue_songkick:s2": "Jamboree Jazz Club"})

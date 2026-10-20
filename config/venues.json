@@ -50,7 +50,8 @@
         "url": "https://jamboreejazz.com/agenda/",
         "details": false
       },
-      "note": "20-10-2026: agenda propia (The Events Calendar). Pases, sala y precio del listado; el JSON-LD da 00:00."
+      "note": "20-10-2026: agenda propia (The Events Calendar). Pases, sala y precio del listado; el JSON-LD da 00:00.",
+      "agenda_completa": true
     },
     {
       "slug": "sidecar",
@@ -116,7 +117,8 @@
         "url": "https://www.heliogabal.com/wp-admin/admin-ajax.php?action=WP_FullCalendar",
         "details": true
       },
-      "note": "Agenda publicada por el plugin WP FullCalendar (JSON por rango de fechas); imagen y texto de la propia página de cada concierto (og:image / og:description)."
+      "note": "Agenda publicada por el plugin WP FullCalendar (JSON por rango de fechas); imagen y texto de la propia página de cada concierto (og:image / og:description).",
+      "agenda_completa": true
     },
     {
       "slug": "sala_upload",
@@ -215,7 +217,8 @@
         },
         "details": true
       },
-      "note": "Agenda en HTML (un bloque a.dataModule por noche: día, dd/mm/aaaa hh:mm, precio a la izquierda; artistas a la derecha, unidos con \" + \"). Las fechas pasadas del histórico se descartan."
+      "note": "Agenda en HTML (un bloque a.dataModule por noche: día, dd/mm/aaaa hh:mm, precio a la izquierda; artistas a la derecha, unidos con \" + \"). Las fechas pasadas del histórico se descartan.",
+      "agenda_completa": true
     },
     {
       "slug": "auditori",
