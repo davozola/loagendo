@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from src.media import is_event_image
 
-SOURCES = {'opendatabcn_agenda':'Ajuntament de Barcelona · Open Data (agenda cultural)','generalitat':'Generalitat de Catalunya','diba_bibliotecas':'Biblioteques — Diputació', 'diba_turismo':'Turisme — Diputació','guiabcn':'GuiaBCN','web_macba':'MACBA · agenda directa','web_cccb':'CCCB · agenda directa','web_teatre_lliure':'Teatre Lliure · agenda directa','web_auditori':"L'Auditori · agenda directa",'web_centres_civics':'Centres Cívics · agenda directa','web_conciertos_club':'Conciertos.Club · descubrimiento'}
+SOURCES = {'opendatabcn_agenda':'Ajuntament de Barcelona · Open Data (agenda cultural)','generalitat':'Generalitat de Catalunya','diba_bibliotecas':'Biblioteques — Diputació', 'diba_turismo':'Turisme — Diputació','guiabcn':'GuiaBCN','web_macba':'MACBA · agenda directa','web_cccb':'CCCB · agenda directa','web_teatre_lliure':'Teatre Lliure · agenda directa','web_auditori':"L'Auditori · agenda directa",'web_centres_civics':'Centres Cívics · agenda directa','web_graf':'GRAF · agenda de creació contemporània','web_conciertos_club':'Conciertos.Club · descubrimiento'}
 VENUES_PATH = Path(__file__).resolve().parents[1] / 'config' / 'venues.json'
 try:
     _VENUES={v['slug']:v for v in json.loads(VENUES_PATH.read_text(encoding='utf-8')).get('venues',[]) if v.get('slug')}
@@ -119,12 +119,24 @@ CCCB_DISCIPLINE={'audiovisuales':'Cine y audiovisual','debates':'Ciencia y divul
                  'literatura':'Literatura y palabra'}
 
 
+# Tipo de acto que declara GRAF (graf.cat) → categoría interna.
+GRAF_CATEGORY=((('exposici','inauguraci','performance','open studio','estudi obert','instal'),'Arte y exposiciones'),
+               (('screening','projecci','cinema','video'),'Cine y audiovisual'),
+               (('xerrada','seminari','conferenci','presentaci','conversa','taula rodona','debat','jornad','simposi','lectura','visita'),'Literatura y palabra'),
+               (('taller','curs','workshop','formaci'),'Talleres y experiencias'),
+               (('concert','sessio d\'escolta','escolta'),'Música y vida nocturna'))
+
+
 def category_of(raw, source, kind):
     if kind == 'exhibition':return 'Arte y exposiciones'
     if source=='web_conciertos_club':return 'Música y vida nocturna'
     # Agendas propias de una sala: lo que programa L'Auditori es música; el Lliure, escena.
     if source=='web_auditori':return 'Música y vida nocturna'
     if source=='web_teatre_lliure':return 'Artes escénicas'
+    if source=='web_graf':
+        cat=clean(((raw or {}).get('item') or {}).get('graf_category') or '')
+        for words,value in GRAF_CATEGORY:
+            if any(cat.startswith(w) for w in words): return value
     if source=='web_cccb':
         discipline=clean(((raw or {}).get('item') or {}).get('discipline') or '')
         if discipline in CCCB_DISCIPLINE: return CCCB_DISCIPLINE[discipline]

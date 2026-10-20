@@ -306,6 +306,8 @@ def channels(ev, category, override=None):
     is_art = (category == 'arte' and not NON_ART_EXPO.search(title) and (ART_VENUE.search(venue) or any(ART_PATH.search(p) for p in paths) or ART_TITLE.search(title)))
     if is_art or ART_TITLE.search(title) and (category in ('arte', 'charlas') or ART_VENUE.search(venue)):
         out['galerias'] = 'Arte: ' + ('lugar de arte' if ART_VENUE.search(venue) else 'disciplina artística según la fuente' if any(ART_PATH.search(p) for p in paths) else 'inauguración, performance o visita de exposición')
+    if ev.get('source') == 'web_graf':
+        out['galerias'] = 'Agenda GRAF de espacios de creación contemporánea'
     # Festivales: la ficha del festival, no cada función suelta «Festival X: Concert Y».
     if (ev.get('format') == 'festival' or FESTIVAL_RE.match(SKIP_LEAD.sub('', title)) or (FESTIVAL_RE.search(title) and ':' not in title)):
         out['festivales'] = 'Festival según la fuente o su nombre'

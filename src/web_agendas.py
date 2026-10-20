@@ -36,6 +36,11 @@ SOURCES = {
     # collector stops at the first page without any item marked `vigent`.
     'web_centres_civics': {'url': 'https://ajuntament.barcelona.cat/centrescivics/ca/programacio-cultural', 'page_url': 'https://ajuntament.barcelona.cat/centrescivics/ca/programacio-cultural/p/page/{page}', 'venue': 'Xarxa de Centres Cívics de Barcelona', 'address': 'Barcelona', 'pages': 8, 'first_page': 0, 'continue_marker': 'vigent'},
     'web_conciertos_club': {'url': 'https://conciertos.club/barcelona', 'venue': 'Barcelona', 'address': 'Barcelona'},
+    # GRAF (graf.cat): agenda común de ~130 espacios de creación contemporánea de Catalunya
+    # (galerías, centros de arte, festivales). Inauguraciones, performances, proyecciones,
+    # charlas. Solo se guarda lo factual (título, fecha, hora, espacio, tipo, enlace); ni textos
+    # ni imágenes. La ciudad se comprueba en la ficha de cada acto: solo Barcelona.
+    'web_graf': {'url': 'https://graf.cat/agenda/', 'venue': 'GRAF', 'address': 'Catalunya'},
 }
 
 MONTHS = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12,
@@ -237,7 +242,100 @@ def parse_conciertos_club(page):
         result.append(record)
     return result
 
-PARSERS={'web_macba':parse_macba,'web_cccb':parse_cccb,'web_teatre_lliure':parse_teatre_lliure,'web_auditori':parse_auditori,'web_centres_civics':parse_centres_civics,'web_conciertos_club':parse_conciertos_club}
+GRAF_ITEM = re.compile(r'<div class="agenda-grid-item">(.*?)(?=<div class="agenda-grid-item">|</section>|$)', re.S)
+
+
+def _graf_dates(text, today=None):
+    """«20.10.2026» → (2026-10-20, 2026-10-20); «04.07 – 13.12» → del año en curso (o el que cuadre)."""
+    today = today or dt.date.today()
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*[–-]\s*(\d{1,2})\.(\d{1,2})\.(\d{4}))?', text)
+    if m:
+        a = dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        b = dt.date(int(m.group(6)), int(m.group(5)), int(m.group(4))) if m.group(4) else a
+        return a.isoformat(), b.isoformat()
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\s*[–-]\s*(\d{1,2})\.(\d{1,2})', text)
+    if not m: return None
+    a = dt.date(today.year, int(m.group(2)), int(m.group(1)))
+    if a > today + dt.timedelta(days=200): a = a.replace(year=a.year - 1)
+    b = dt.date(a.year, int(m.group(4)), int(m.group(3)))
+    if b < a: b = b.replace(year=b.year + 1)
+    return a.isoformat(), b.isoformat()
+
+
+def _graf_text(fragment):
+    return ' '.join(html.unescape(re.sub(r'<[^>]+>', ' ', fragment or '')).split())
+
+
+def parse_graf(page, today=None):
+    source = 'web_graf'; result = []
+    for block in GRAF_ITEM.findall(page):
+        url = re.search(r'<a[^>]+href="(https://graf\.cat/(?:es/|en/)?events/event/[^"]+)"', block)
+        date = re.search(r'<div class="entry-date">(.*?)</div>', block, re.S)
+        space = re.search(r'<h3 class="entry-author">(.*?)</h3>', block, re.S)
+        titles = re.findall(r'<h4 class="entry-title">(.*?)</h4>', block, re.S)
+        if not (url and date and space and titles): continue
+        dates = _graf_dates(_graf_text(date.group(1)), today)
+        if not dates: continue
+        title = _graf_text(titles[0]); place = ''
+        for extra in titles[1:]:
+            m = re.search(r'Lloc\s*:\s*(.+)', _graf_text(extra))
+            if m: place = m.group(1).strip()
+        t_start = re.search(r'<span class="time-start">\s*([\d:]+)\s*</span>', block)
+        t_end = re.search(r'<span class="time_end">\s*([\d:]+)\s*</span>', block)
+        clock = lambda v: (f'{int(v.split(":")[0]):02d}:{(v.split(":") + ["00"])[1]:0>2}' if v and re.fullmatch(r'\d{1,2}(?::\d{2})?', v) else '')
+        start_time = clock(t_start.group(1)) if t_start else ''
+        end_time = clock(t_end.group(1)) if t_end else ''
+        price = re.search(r'<div class="entry-price[^"]*">(.*?)</div>', block, re.S)
+        category = re.search(r'<div class="entry-terms">.*?>([^<]+)</a>', block, re.S)
+        cat = html.unescape(category.group(1)).strip() if category else ''
+        venue = place or _graf_text(space.group(1))
+        record = _record(source, title, dates[0], dates[1], html.unescape(url.group(1)), venue, '', {
+            'parser_version': 'graf-v1', 'graf_space': _graf_text(space.group(1)), 'graf_place': place, 'graf_category': cat,
+            'time_end': end_time, 'price_label': _graf_text(price.group(1)) if price else ''}, start_time)
+        if cat.lower().startswith('exposici') and dates[0] != dates[1]: record['kind'] = 'exhibition'
+        price_text = record['raw']['item']['price_label']
+        if price_text: record['price_text'] = price_text
+        record['organizers'] = [_graf_text(space.group(1))]
+        record['evidence_level'] = 'third_party_listing_unverified'
+        record['alerts'] = ['THIRD_PARTY_DISCOVERY_LISTING', 'SCHEDULE_UNVERIFIED', 'NO_COPIED_DESCRIPTION']
+        result.append(record)
+    return result
+
+
+def graf_address(page):
+    """Dirección de la ficha de GRAF («La Rambla, 7 08002 Barcelona») y su web propia."""
+    address = re.search(r'<div class="entry-venue-address[^"]*">(.*?)</div>', page, re.S)
+    web = re.search(r'<a href="(https?://[^"]+)"[^>]*class="entry-website', page)
+    return (_graf_text(address.group(1)) if address else ''), (html.unescape(web.group(1)) if web else '')
+
+
+def in_barcelona(address):
+    a = (address or '').lower()
+    return bool(re.search(r'\b080\d\d\b', a)) or bool(re.search(r'\bbarcelona\s*$', a)) and not re.search(r'\b08[1-9]\d\d\b', a)
+
+
+def _add_graf_places(conn, records, fetcher, timeout, budget=220):
+    """Dirección de cada acto (una lectura por ficha nueva; las ya conocidas se reaprovechan).
+    Fuera de Barcelona → no elegible (se conserva, no se publica). Sin dirección todavía → no elegible."""
+    for record in records:
+        prev = conn.execute('SELECT raw_json FROM source_records WHERE source=? AND id=?', (record['source'], record['id'])).fetchone()
+        item = (json.loads(prev[0]).get('item') or {}) if prev else {}
+        if 'graf_address' in item:
+            address, web = item['graf_address'], item.get('graf_web', '')
+        elif budget > 0:
+            try: address, web = graf_address(fetcher(record['url'], timeout))
+            except Exception: address, web = None, ''
+            budget -= 1
+            if fetcher is fetch: time.sleep(1)
+        else:
+            address, web = None, ''
+        if address is not None: record['raw']['item'].update({'graf_address': address, 'graf_web': web})
+        if address: record['venues'][0]['address'] = address
+        if not address or not in_barcelona(address):
+            record['eligibility'] = 'exclude'; record['alerts'] = record['alerts'] + ['OUTSIDE_BARCELONA' if address else 'ADDRESS_UNKNOWN']
+
+
+PARSERS={'web_graf':parse_graf,'web_macba':parse_macba,'web_cccb':parse_cccb,'web_teatre_lliure':parse_teatre_lliure,'web_auditori':parse_auditori,'web_centres_civics':parse_centres_civics,'web_conciertos_club':parse_conciertos_club}
 
 SESSION_LINE = re.compile(r'^(\d{1,2})/(\d{1,2})(?:/(\d{4}))?\s*(?:[–-]|,|a\s+les)\s*(\d{1,2})(?:[.:](\d{2}))?\s*h\b')
 
@@ -287,6 +385,7 @@ def sync(conn, source, fetcher=fetch, timeout=30):
         page='\n'.join(body for _,body in pages); records=PARSERS[source](page); mutated=0
         seen=set(); records=[r for r in records if not (r['id'] in seen or seen.add(r['id']))]
         if source=='web_centres_civics': _add_centres_sessions(conn,records,fetcher,timeout)
+        if source=='web_graf': _add_graf_places(conn,records,fetcher,timeout)
         with conn:
             for record in records:
                 mutated+=int(_upsert_record(conn,run_id,record)[0])

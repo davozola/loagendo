@@ -200,7 +200,7 @@ def main():
     parser.add_argument('--enrich-event',metavar='SOURCE:ID',help='Reconsulta una ficha concreta para recuperar horario, texto e imagen de su fuente')
     parser.add_argument('--download-local-media',type=int,metavar='MAX',help='Descarga referencias de imagen para esta copia local; no cambia sus derechos')
     parser.add_argument('--media-source',help='Limita --download-local-media a una fuente concreta')
-    parser.add_argument('--sync-web',choices=('web_macba','web_cccb','web_teatre_lliure','web_auditori','web_centres_civics','web_conciertos_club'),help='Sincroniza una agenda pública permitida')
+    parser.add_argument('--sync-web',choices=('web_macba','web_cccb','web_teatre_lliure','web_auditori','web_centres_civics','web_conciertos_club','web_graf'),help='Sincroniza una agenda pública permitida')
     parser.add_argument('--run-jobs',action='store_true',help='Ejecuta trabajos de automatización que estén vencidos y termina')
     parser.add_argument('--force-jobs',action='store_true',help='Con --run-jobs, ejecuta también los trabajos aún no vencidos')
     parser.add_argument('--run-job',metavar='NOMBRE',help='Ejecuta un solo trabajo de config/automation.json ahora mismo (p. ej. fotos-equipamientos)')

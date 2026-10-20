@@ -13,6 +13,7 @@
     {"name": "web-auditori", "kind": "web", "source": "web_auditori", "every_minutes": 360, "retry_after_minutes": 360, "enabled": true},
     {"name": "web-centres-civics", "kind": "web", "source": "web_centres_civics", "every_minutes": 360, "enabled": true},
     {"name": "web-conciertos-club", "kind": "web", "source": "web_conciertos_club", "every_minutes": 180, "enabled": true, "note": "Directorio privado: en público enlaza a la sala (public_presentation=venue_link_only)"},
+    {"name": "web-graf", "kind": "web", "source": "web_graf", "every_minutes": 720, "enabled": true, "note": "Agenda GRAF (graf.cat) de espacios de arte contemporáneo: solo Barcelona (dirección de cada ficha), sin textos ni imágenes; canal Arte y galerías (20-10-2026)"},
     {"name": "recintos-schema-org", "kind": "venues", "source": "", "every_minutes": 360, "timeout_seconds": 25, "enabled": true},
     {"name": "enriquecer-fichas", "kind": "enrich", "every_minutes": 60, "limit": 500, "enabled": true},
     {"name": "api-ticketmaster", "kind": "ticketmaster", "source": "venue_ticketmaster_es", "every_minutes": 360, "retry_after_minutes": 360, "enabled": true, "note": "Discovery API v2: eventos de Barcelona a 6 meses; clave TICKETMASTER_API_KEY en .env. Borra los eventos ya pasados de esta fuente (decisión de David, 18-10-2026)"},

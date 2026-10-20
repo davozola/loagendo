@@ -20,8 +20,8 @@ echo "1/6 · Salas con schema.org (Sala Apolo con hora, Ticketmaster aparte)"
 job recintos-schema-org
 echo "2/6 · Ticketmaster (apertura de puertas, sin eventos de prueba)"
 job api-ticketmaster
-echo "3/6 · CCCB, MACBA y centres cívics (periodos de exposición, horas y sesiones; ~3 min)"
-job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club
+echo "3/6 · CCCB, MACBA, centres cívics y GRAF (galerías) (periodos de exposición, horas y sesiones; ~3 min)"
+job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club; job web-graf
 echo "4/6 · Eventbrite: hora y traslados desde su API"
 job eventbrite-api
 echo "5/6 · Duplicados entre fuentes"

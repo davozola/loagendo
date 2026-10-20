@@ -170,5 +170,17 @@
     "update_date_required": true,
     "image_reuse_confirmed": true,
     "image_reuse_basis": "Decisión editorial de David Sola (13-10-2026): las fotos de los equipamientos municipales pueden usarse como imagen de respaldo, siempre rotuladas como imagen del equipamiento y nunca presentadas como imagen de la actividad."
+  },
+  "web_graf": {
+    "owner": "GRAF — comunitat de creació contemporània de Catalunya (graf.cat)",
+    "dataset": "Agenda pública de GRAF (espais d'art contemporani, galeries, centres d'art)",
+    "data_reuse_status": "discovery_metadata_only",
+    "license_basis": "Agenda pública sin licencia explícita; robots.txt permite el rastreo. Solo se usan hechos (título, fecha, hora, espacio, tipo, dirección) y el enlace a la ficha de GRAF.",
+    "attribution": "GRAF (graf.cat)",
+    "update_date_required": true,
+    "image_reuse_confirmed": false,
+    "remarks": "Colector limitado a direcciones de Barcelona (código postal 080xx, comprobado en la ficha de cada acto, una lectura por ficha nueva). No copia descripciones ni imágenes. Recomendado: pedir permiso explícito a info@graf.cat.",
+    "public_credit": true,
+    "presentation_basis": "Decisión de David Sola (20-10-2026): ampliar «Arte y galerías» con inauguraciones y actividad de galerías. En público: datos factuales y enlace a la ficha de GRAF."
   }
 }
