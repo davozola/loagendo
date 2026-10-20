@@ -56,6 +56,8 @@ SYSTEM = """Lees la página de agenda de una sala o espacio cultural de Barcelon
 Reglas estrictas:
 - Devuelve TODOS los actos con fecha que aparecen en el texto, uno por uno, aunque sean muchos (50 o más) y aunque se repitan cada semana: no resumas, no agrupes, no te quedes con una muestra.
 - Solo actos que la página anuncia explícitamente con fecha. Nada deducido, nada inventado. Si la agenda es de varias salas, indica en sala cuál de las salas_posibles.
+- Solo actos en la ciudad de Barcelona: si el texto dice que es en otra ciudad (Madrid, online, etc.), no lo incluyas.
+- Si otros_lugares es true y el texto dice que el acto es en otro lugar de Barcelona (otro cine, museo, sala…), pon en sala ese lugar tal como aparece escrito y en cita_sala la frase donde se lee. Si otros_lugares es false, no incluyas actos que el texto sitúa en otro lugar.
 - titulo: tal como aparece en la página (cópialo literal, sin añadir ni traducir).
 - sesiones: cada fecha (y hora, si la página la da) del acto. fecha en formato AAAA-MM-DD. Si la página no da el año o el mes junto al día, usa la fecha futura más próxima coherente con la página y con la fecha de hoy que te doy.
 - cita_fecha y cita_hora: copia literal y corta (máx. 120 caracteres) del texto donde se lee el día y la hora; tiene que poder encontrarse tal cual en la página. Si no hay hora escrita, hora y cita_hora vacías.
@@ -72,6 +74,7 @@ TOOL = {'name': 'actos', 'description': 'Actos que anuncia la página, con citas
                            'sesiones': {'type': 'array', 'items': {'type': 'object', 'required': ['fecha', 'cita_fecha'], 'properties': {
                                'fecha': {'type': 'string'}, 'cita_fecha': {'type': 'string'}, 'hora': {'type': 'string'}, 'cita_hora': {'type': 'string'}}}},
                            'periodo': {'type': 'object', 'properties': {'inicio': {'type': 'string'}, 'fin': {'type': 'string'}, 'cita': {'type': 'string'}}},
+                           'cita_sala': {'type': 'string'},
                            'precio': {'type': 'string'}, 'cita_precio': {'type': 'string'}}}}}}}
 
 
@@ -190,7 +193,7 @@ def _near(a_positions, b_positions, before, after):
     return any(-before <= b - a <= after for a in a_positions for b in b_positions)
 
 
-def verify(item, text, links, today, salas=None):
+def verify(item, text, links, today, salas=None, other_places=False):
     """(acto comprobado o None, motivos de descarte)."""
     hay = fold(text); why = []
     title = ' '.join(str(item.get('titulo') or '').split())
@@ -202,6 +205,12 @@ def verify(item, text, links, today, salas=None):
         sala = next((s for s in salas if fold(s['name']) == fold(item.get('sala'))), None)
         if not sala: return None, [f"sala no configurada: {item.get('sala')!r}"]
         out['sala'] = sala
+    elif other_places and str(item.get('sala') or '').strip():
+        # Acto en otro lugar (Goethe-Institut en el Institut français, Casa Amèrica en Cinemes Girona):
+        # el lugar tiene que estar escrito en la página, cerca del título.
+        place = ' '.join(str(item['sala']).split())
+        if not _near(tpos, _positions(place, hay), 1500, 1500): return None, [f"lugar que no está junto al acto: {place!r}"]
+        out['sala'] = {'name': place, 'address': ''}
     for s in item.get('sesiones') or []:
         qd = str(s.get('cita_fecha') or ''); dpos = _positions(qd, hay)
         if not dpos: why.append(f"cita de fecha que no está en la página: {qd!r}"); continue
@@ -256,7 +265,7 @@ def ask(agenda, text, page_url, today, key, requester=None, model=None, usage=No
     found = []
     salas = [s['name'] for s in agenda.get('salas') or []]
     for part in chunks(text):
-        context = {'sala': agenda['name'], 'salas_posibles': salas, 'pagina': page_url, 'hoy': today.isoformat(), 'texto': part}
+        context = {'sala': agenda['name'], 'salas_posibles': salas, 'otros_lugares': bool(agenda.get('otros_lugares')), 'pagina': page_url, 'hoy': today.isoformat(), 'texto': part}
         body = {'model': model, 'max_tokens': 16000,
                 'system': [{'type': 'text', 'text': SYSTEM, 'cache_control': {'type': 'ephemeral'}}],
                 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'actos'},
@@ -352,7 +361,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
-            act, why = verify(item, text, links, today, agenda.get('salas'))
+            act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')))
             if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)
             else: result['rejected'].append({'item': item, 'why': why})
         page['events'] = len(items)

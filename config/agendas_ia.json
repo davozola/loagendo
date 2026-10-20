@@ -233,6 +233,121 @@
         "https://caixaforum.org/ca/barcelona/activitats"
       ],
       "activa": false
+    },
+    {
+      "slug": "institut_francais",
+      "name": "Institut français de Barcelona",
+      "address": "Carrer de Moià 8, 08006 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.institutfrancais.es/barcelona/eventos/nuestros-eventos/"
+      ],
+      "otros_lugares": true,
+      "activa": false
+    },
+    {
+      "slug": "goethe",
+      "name": "Goethe-Institut Barcelona",
+      "address": "C Roger de Flor 224, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.goethe.de/ins/es/ca/sta/bcn/ver.cfm"
+      ],
+      "otros_lugares": true,
+      "activa": false
+    },
+    {
+      "slug": "casa_asia",
+      "name": "Casa Àsia",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://www.casaasia.es/actividades/"
+      ],
+      "otros_lugares": true,
+      "activa": false
+    },
+    {
+      "slug": "casa_america",
+      "name": "Casa Amèrica Catalunya",
+      "address": "C Còrsega 299, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.americat.barcelona/ca/agenda"
+      ],
+      "otros_lugares": true,
+      "activa": false
+    },
+    {
+      "slug": "hangar",
+      "name": "Hangar",
+      "address": "C Emília Coranty 16, 08018 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://hangar.org/ca/category/agenda-hangar/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "sala_fenix",
+      "name": "Sala Fènix",
+      "address": "C Riereta 31, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://salafenix.com/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "el_malda",
+      "name": "Teatre El Maldà",
+      "address": "C Pi 5, 08002 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://elmalda.cat/calendari/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "la_bonne",
+      "name": "La Bonne – Centre de Cultura de Dones Francesca Bonnemaison",
+      "address": "C Sant Pere Més Baix 7, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://labonne.org/temes/activitats/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "ateneu_9barris",
+      "name": "Ateneu Popular 9 Barris",
+      "address": "C Portlligat 11-15, 08042 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://ateneu9b.net/ca/programacions"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "disseny_hub",
+      "name": "Disseny Hub Barcelona",
+      "address": "Plaça de les Glòries Catalanes 37-38, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.dissenyhub.barcelona/ca/activitats/per-a-tothom",
+        "https://www.dissenyhub.barcelona/ca/activitats/families"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "palau_robert",
+      "name": "Palau Robert",
+      "address": "Passeig de Gràcia 107, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://palaurobert.gencat.cat/ca/agenda/"
+      ],
+      "activa": false
     }
   ]
 }

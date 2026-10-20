@@ -109,3 +109,13 @@ class PeriodTests(unittest.TestCase):
         self.assertEqual(b['periodo'], ('2026-10-21', '2026-11-15'))
         c, _ = ai_agenda.verify({'titulo': 'Gola', 'periodo': {'inicio': '2026-10-21', 'fin': '2026-12-15', 'cita': 'Del 21/10/2026 al 15/11/2026'}}, text, links, TODAY)
         self.assertIsNone(c)
+
+
+class OtherPlaceTests(unittest.TestCase):
+    def test_event_elsewhere_keeps_the_place_written_next_to_it(self):
+        text, links = ai_agenda.clean('<p>Der Held vom Bahnhof Friedrichstraße</p><p>22.10.2026 | 20:00 Uhr</p><p>Institut français Barcelona, Barcelona</p>', 'https://x.test/')
+        item = {'titulo': 'Der Held vom Bahnhof Friedrichstraße', 'sala': 'Institut français Barcelona', 'sesiones': [{'fecha': '2026-10-22', 'cita_fecha': '22.10.2026'}]}
+        act, _ = ai_agenda.verify(item, text, links, TODAY, None, True)
+        self.assertEqual(act['sala']['name'], 'Institut français Barcelona')
+        self.assertIsNone(ai_agenda.verify({**item, 'sala': 'Cines Verdi'}, text, links, TODAY, None, True)[0])
+        self.assertNotIn('sala', ai_agenda.verify(item, text, links, TODAY)[0])  # sin otros_lugares: la sala de la agenda
