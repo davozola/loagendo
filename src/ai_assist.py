@@ -278,7 +278,7 @@ def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    per_item = {'datos': 400, 'descripcion': 260}.get(task, 90)
+    per_item = {'datos': 400, 'descripcion': 260}.get(task, 150)  # tope de salida, no se cobra si no se usa
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},
@@ -314,17 +314,27 @@ def _store(conn, task, chunk, answers, model, batch_id):
     return stored
 
 
-def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None):
-    """Llamada directa (sin lote), para evaluar: [(item, payload)] → {item: (answer, confidence, reason)}."""
+def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None, retries=2):
+    """Llamada directa (sin lote), para evaluar: [(item, payload)] → {item: (answer, confidence, reason)}.
+    Si una respuesta llega cortada o se salta fichas, las que faltan se reintentan en grupos más
+    pequeños (hasta ``retries`` veces)."""
     key = key or load_key(); out = {}; requester = requester or _request
-    for start in range(0, len(items), ITEMS_PER_REQUEST):
-        chunk = items[start:start + ITEMS_PER_REQUEST]
-        message = requester('POST', f'{API}/messages', key, _params(task, chunk, model), timeout=120)
-        if usage is not None:
+    usage = usage if usage is not None else {}
+    pending, size = list(items), ITEMS_PER_REQUEST
+    for attempt in range(retries + 1):
+        for start in range(0, len(pending), size):
+            chunk = pending[start:start + size]
+            message = requester('POST', f'{API}/messages', key, _params(task, chunk, model), timeout=180)
             for k, v in (message.get('usage') or {}).items():
                 if isinstance(v, int): usage[k] = usage.get(k, 0) + v
-        for n, answer, confidence, reason in _answers(task, message, chunk):
-            out[chunk[n][0]] = (answer, confidence, reason)
+            reason = message.get('stop_reason') or '?'
+            usage.setdefault('stop_reasons', {}); usage['stop_reasons'][reason] = usage['stop_reasons'].get(reason, 0) + 1
+            for n, answer, confidence, why in _answers(task, message, chunk):
+                out[chunk[n][0]] = (answer, confidence, why)
+        pending = [x for x in pending if x[0] not in out]
+        if not pending: break
+        size = 10
+    usage['sin_respuesta'] = len(pending)
     return out
 
 

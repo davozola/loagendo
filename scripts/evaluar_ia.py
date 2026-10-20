@@ -42,6 +42,7 @@ def main(db):
     pct = lambda c, k: f"{c[k]}/{c['n']} = {100 * c[k] / max(1, c['n']):.1f} %"
     print('Todas:      reglas', pct(score, 'reglas'), '| IA', pct(score, 'ia'), '| combinada', pct(score, 'combinada'))
     print('Casos débiles (donde actúa la IA):  reglas', pct(weak, 'reglas'), '| IA', pct(weak, 'ia'), '| combinada', pct(weak, 'combinada'))
+    print('Fichas sin respuesta de la IA (cuentan como fallo):', usage.pop('sin_respuesta', 0), '· fin de respuesta:', usage.pop('stop_reasons', {}))
     print('Tokens:', usage)
     for m in misses[:40]: print('  ✗', m)
 
