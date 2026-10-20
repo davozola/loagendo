@@ -264,13 +264,23 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
         groups.setdefault(find(key), []).append(key)
+    # Misma fuente con dos fichas del mismo acto: manda la que cubre más días (no se pierde ninguna fecha).
+    spans = {}
+    try:
+        members = [k for k in parent]
+        for i in range(0, len(members), 500):
+            chunk = members[i:i + 500]
+            for src, rid, a, b in conn.execute(f"SELECT source,id,start_date,end_date FROM source_records WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
+                try: spans[f"{src}:{rid}"] = (dt.date.fromisoformat(str(b)[:10]) - dt.date.fromisoformat(str(a)[:10])).days
+                except ValueError: pass
+    except sqlite3.DatabaseError: pass
     def rank(key):
-        return (source_rank(key.split(":", 1)[0]), key)
+        return (source_rank(key.split(":", 1)[0]), -spans.get(key, 0), key)
     out = {}
     for members in groups.values():
         canonical = min(members, key=rank)
@@ -473,6 +483,60 @@ def title_pairs(conn):
                 elif a["route"] and b["route"] and first_time(a) and first_time(a) == first_time(b):
                     pairs.append((a["key"], b["key"]))
     return pairs
+
+
+def contained_pairs(conn):
+    """La misma función con dos títulos, uno dentro del otro, en el mismo sitio y a la misma hora un
+    día que comparten: «Calderada» (20 y 27 de octubre, 19 h) y «"Calderada". El meu clàssic: Pere
+    Calders» (20 de octubre, 19 h) en el TNC, aunque sean de la misma fuente (20-10-2026)."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude' AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10)) <= 60""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    items, by_word = [], {}
+    for source, rid, title, start, end, venue, lat, lon in rows:
+        key = _title_key(title)
+        it = {"key": f"{source}:{rid}", "source": source, "id": rid, "title_key": key, "start": start, "end": end, "venue": venue or "", "lat": lat, "lon": lon}
+        items.append(it)
+        for w in set(key.split()):
+            if len(w) >= 5: by_word.setdefault(w, []).append(it)
+    def times(item):
+        return {(d, t) for d, t in conn.execute("SELECT local_date, local_time FROM candidate_occurrences WHERE source=? AND id=? AND local_time IS NOT NULL", (item["source"], item["id"]))}
+    def text_times(item):
+        """Horario en texto de la fuente («Dimarts 20: 19 h Dimarts 27: 19 h») cuando no hay sesiones."""
+        row = conn.execute("SELECT json_extract(raw_json,'$.normalized.time_text') FROM source_records WHERE source=? AND id=?", (item["source"], item["id"])).fetchone()
+        text = _clean(row[0] if row and row[0] else "")
+        clock = {f"{int(h):02d}:{int(m or 0):02d}" for h, m in re.findall(r"\b([01]?\d|2[0-3])(?:[:.]([0-5]\d))?\s*h\b", text)}
+        clock |= {f"{int(h):02d}:{m}" for h, m in re.findall(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", text)}
+        days = {int(d) for d in re.findall(r"\b(?:dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+(\d{1,2})\b", text)}
+        return clock, days
+    def same_session(a, b):
+        ta, tb = times(a), times(b)
+        if ta & tb: return True
+        for x, y, tx in ((a, b, ta), (b, a, tb)):
+            if tx: continue  # x tiene sesiones propias; ya se compararon
+            clock, days = text_times(x)
+            if any(t in clock and x["start"] <= d <= x["end"] and (not days or int(d[8:10]) in days) for d, t in (times(y))): return True
+        return False
+    pairs = []
+    for a in items:
+        ka = a["title_key"]
+        if len(ka) < 6 or len(ka.split()) > 6 or ka in CONTAINED_GENERIC or _generic_site(a): continue
+        longest = max(ka.split(), key=len)
+        if len(longest) < 5: continue
+        for b in by_word.get(longest, []):
+            kb = b["title_key"]
+            if b is a or kb == ka or f" {ka} " not in f" {kb} " or not _same_site(a, b): continue
+            if a["end"] < b["start"] or b["end"] < a["start"]: continue
+            if same_session(a, b): pairs.append((a["key"], b["key"]))
+    return list(dict.fromkeys(pairs))
+
+
+CONTAINED_GENERIC = {"concert", "concierto", "taller", "visita guiada", "jam session", "club de lectura", "hora del conte", "contacontes", "espectacle familiar", "dj session"}
 
 
 ROUTE = re.compile(r"^(?:itinerari|itinerario|ruta|visita|passejada|paseo|recorregut|excursio|sortida)\b")
