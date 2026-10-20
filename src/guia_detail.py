@@ -15,7 +15,7 @@ from src import guia_schedule
 
 # Also versions the description selection. GuiaBCN exposes a metadata-only
 # meta description ("Quan / On") alongside the actual body copy.
-SCHEDULE_PARSER_VERSION = 8  # 8 (20-10-2026): horario de la página del Lliure, «Quan?» de Barcelona és molt més (Diputació), «próximamente» del MACBA, «per determinar». 7 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
+SCHEDULE_PARSER_VERSION = 9  # 9 (20-10-2026): «Fecha y horario» y «Precios» de la información práctica del CCCB. 8 (20-10-2026): horario de la página del Lliure, «Quan?» de Barcelona és molt més (Diputació), «próximamente» del MACBA, «per determinar». 7 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
 # 6: 6 (18-10-2026): horario de GuiaBCN desde la API de detalle, fila a fila y por día.
 # 5: 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
 
@@ -221,6 +221,7 @@ def page_schedule(source, content, start='', end=''):
     """Horario escrito en la página de la propia fuente (20-10-2026), tal cual:
       · Teatre Lliure: bloque «Horario/Horari» («De miércoles a viernes a las 19.30 h …»), y su precio.
       · Barcelona és molt més (Diputació): bloque «Quan?» («22/10/2026 · 18:30 - 20:00»).
+      · CCCB: «Fecha y horario» y «Precios» de la información práctica.
       · MACBA: aviso «próximamente» cuando aún no hay horario.
     Devuelve (hora si es única, texto del horario, hechos)."""
     facts={}
@@ -239,6 +240,22 @@ def page_schedule(source, content, start='', end=''):
             times=re.findall(r'\b(\d{1,2}):(\d{2})\b',text)
             one=start and start==end
             return (f'{int(times[0][0]):02d}:{times[0][1]}' if times and one else ''),text,facts
+    if source=='web_cccb':
+        # «Información práctica»: <h3 class="component-heading">Fecha y horario</h3> seguido de
+        # párrafos («23 octubre 2026», «10.00 – 22.00») hasta el siguiente encabezado.
+        def cccb_block(names):
+            m=re.search(r'<h3[^>]*component-heading[^>]*>\s*(?:%s)\s*</h3>(.*?)(?=<h3[^>]*component-heading|<footer|$)'%names,content,re.S|re.I)
+            return _lines(m.group(1))[:6] if m else []
+        price=cccb_block('Precios?|Preus?|Prices?')
+        if price:
+            facts['price_text']=' · '.join(price)
+            if re.search(r'reserva|inscripci',facts['price_text'],re.I): facts['registration_required']=True
+        lines=cccb_block('Fecha y horario|Data i horari|Date and time|Horario|Horari')
+        if lines:
+            text=' · '.join(lines)
+            times=re.findall(r'\b(\d{1,2})[.:](\d{2})\b',text)
+            one=start and start==end
+            return (f'{int(times[0][0]):02d}:{times[0][1]}' if times and one and int(times[0][0])<24 else ''),text,facts
     if source=='web_macba' and re.search(r'button-secondary[^>]*>\s*pr(?:ó|&oacute;|o)ximament',content,re.I):
         return '','Próximamente',facts
     return '','',facts

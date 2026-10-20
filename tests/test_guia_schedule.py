@@ -443,4 +443,10 @@ class PageScheduleTests(unittest.TestCase):
         t, text, facts = page_schedule('web_teatre_lliure', '<h3 class="tit">Horario</h3> <p class="text">Domingos a las 18.30 h<br> 28/11 no hay función</p><h3 class="tit">Precio</h3> <p class="text">De 8 € a 32 €</p>')
         self.assertEqual((text, facts['price_text']), ('Domingos a las 18.30 h\n28/11 no hay función', 'De 8 € a 32 €'))
         self.assertEqual(page_schedule('diba_turismo', '<h4 class="mt-4">Quan?</h4> <p><b>22/10/2026</b></p> <p>18:30 - 20:00</p> <h4>On?</h4>', '2026-10-22', '2026-10-22')[:2], ('18:30', '22/10/2026 · 18:30 - 20:00'))
+        cccb = ('<h3 class="component-heading mb-0 text-break">Fecha y horario</h3><div class="clearfix component-paragraph text-break"><span> 23 octubre 2026 </span></div><p>10.00 – 22.00&nbsp;</p>'
+                '<h3 class="component-heading mb-0">Precios</h3><p>Gratuito con reserva</p><h3 class="component-heading">Lugar</h3><p>Hall</p>')
+        t, text, facts = page_schedule('web_cccb', cccb, '2026-10-23', '2026-10-23')
+        self.assertEqual((t, text), ('10:00', '23 octubre 2026 · 10.00 – 22.00'))
+        self.assertEqual(facts['price_text'], 'Gratuito con reserva'); self.assertTrue(facts['registration_required'])
+        self.assertEqual(page_schedule('web_cccb', cccb, '2026-10-23', '2026-11-30')[0], '')
         self.assertEqual(page_schedule('web_macba', '<span class="macba-button button-secondary px-3">próximamente</span>')[1], 'Próximamente')
