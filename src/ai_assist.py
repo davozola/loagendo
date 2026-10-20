@@ -30,7 +30,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1}
+PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -93,8 +93,9 @@ def _conf(row):
 
 
 def _tasks():
-    from src import ai_extract, ai_describe
-    return {'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
+    from src import ai_extract, ai_describe, ai_family
+    return {'familia': (ai_family.SYSTEM, ai_family.TOOL, 'fichas', ai_family.parse),
+            'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
             'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
             'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos),
             'descripcion': (ai_describe.SYSTEM, ai_describe.TOOL, 'fichas', ai_describe.parse)}
@@ -235,6 +236,28 @@ def description_for(conn, key, ev):
     return {'es': es, 'ca': ca, 'model': s['model']}
 
 
+def family_candidates(conn, events, today):
+    from src import ai_family, taxonomy
+    current = suggestions(conn); out = []
+    for e in events:
+        if not taxonomy.eligible(e, today) or not ai_family.needs(e): continue
+        payload = ai_family.payload(e); s = current.get(('familia', e['key']))
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('familia'): continue
+        out.append((e['key'], payload))
+    return out
+
+
+def family_for(conn, key, ev):
+    """Recomendación «en familia» vigente y aceptada ({es, ca, confidence, model}) o None."""
+    from src import ai_family
+    s = suggestions(conn).get(('familia', key))
+    if not s or s['prompt_version'] != prompt_version('familia') or s['input_hash'] != _hash(ai_family.payload(ev)): return None
+    try: d = json.loads(s['answer'])
+    except ValueError: return None
+    if not ai_family.accepted(d, s['confidence']): return None
+    return {'es': d['es'], 'ca': d['ca'], 'confidence': s['confidence'], 'model': s['model']}
+
+
 def duplicate_candidates(conn, events, today):
     from src import dedupe
     by_key = {e['key']: e for e in events}; current = suggestions(conn); out = []
@@ -282,7 +305,7 @@ def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    per_item = {'datos': 400, 'descripcion': 260}.get(task, 150)  # tope de salida, no se cobra si no se usa
+    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220}.get(task, 150)  # tope de salida, no se cobra si no se usa
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},
@@ -392,7 +415,7 @@ def run(conn, job=None, requester=_request, today=None):
         if stored: catalog.invalidate_cache()
         events = catalog.all_events(conn)
         sent = {}
-        for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('duplicado', duplicate_candidates)):
+        for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('familia', family_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
         selection = None
         if job.get('seleccion', True):

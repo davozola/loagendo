@@ -87,3 +87,9 @@ Código: `src/ai_assist.py`; trabajo automático `ia-asistente` (cada 3 h) en `c
   ficha; se rechazan si mencionan un nombre o número que no esté en los datos o usan lenguaje promocional.
   Se muestran encima del texto original (que no se toca). Públicas solo con `config/ia.json` →
   `descripciones_publicas: true`, tras revisar `python3 scripts/muestra_descripciones.py`.
+
+## En familia: texto de la fuente y recomendación automática (20-10-2026)
+
+- **Texto de la fuente** (`taxonomy.family_text`): entra en «En familia» lo que su texto declara para familias o infancia («per a famílies», «públic familiar», «edat recomanada: a partir de 3 anys», «adreçat a infants»). No cuentan «totes les edats» ni «tots els públics», ni un servicio de canguratge.
+- **Recomendación automática de exposiciones** (`src/ai_family.py`, tarea `familia` de ia-asistente): la IA valora si una exposición que la fuente no marca es buen plan con niños (sí / dudoso / no) y da un motivo breve en castellano y catalán que pasa la comprobación de las descripciones (nombres y números presentes en los datos, sin promoción). Entra solo «sí» con confianza ≥ 0,8. Nunca da edades. En la ficha se lee «Recomendación automática para ir en familia: …».
+- Publicación: `config/ia.json` → `familia_ia_publica`, tras revisar `python3 scripts/muestra_familia.py` (reports/muestra_familia.html). Hasta entonces solo se ve en el panel.

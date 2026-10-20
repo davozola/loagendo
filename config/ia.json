@@ -1,4 +1,6 @@
 {
   "descripciones_publicas": false,
-  "nota": "Descripciones breves con IA (src/ai_describe.py): se generan y se ven en el panel; en la web pública solo cuando esto sea true, tras revisar la muestra (python3 scripts/muestra_descripciones.py). Decisión de David, 20-10-2026."
+  "nota": "Descripciones breves con IA (src/ai_describe.py): se generan y se ven en el panel; en la web pública solo cuando esto sea true, tras revisar la muestra (python3 scripts/muestra_descripciones.py). Decisión de David, 20-10-2026.",
+  "familia_ia_publica": false,
+  "nota_familia": "Recomendación automática «para ir en familia» de exposiciones (src/ai_family.py): se genera con el trabajo ia-asistente y se ve en el panel; en la web solo cuando esto sea true, tras revisar la muestra (python3 scripts/muestra_familia.py)."
 }

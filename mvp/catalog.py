@@ -1146,7 +1146,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # conserva como legacy_category (subtipos y compatibilidad); nada de lo importado se toca.
     from src import taxonomy
     override=taxonomy.overrides(conn).get((source,id))
+    # Exposición sin marca familiar de la fuente: valoración automática (src/ai_family.py). Se guarda
+    # siempre para el panel; cuenta para el canal solo cuando config/ia.json lo publica.
+    from src import ai_family
+    events['family_ai']=ai_assist.family_for(conn,source+':'+id,events) if events.get('format')=='exhibition' else None
     basis={**events,'classification_paths':projection.get('classification_paths') or [],'ai_family':ai_data.get('family'),'ai_outdoor':ai_data.get('outdoor'),
+           'ai_family_rec':events['family_ai'] if ai_family.public_enabled() else None,
            'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
     ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
     verdict=taxonomy.classify(basis,override,ai)

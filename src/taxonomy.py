@@ -335,6 +335,8 @@ def channels(ev, category, override=None):
         out['familia'] = 'Patio escolar abierto para jugar en familia'
     elif family_text(' '.join((ev.get('title') or '', ev.get('source_text') or ''))):
         out['familia'] = f'La fuente lo indica en su texto: «…{family_text(" ".join((ev.get("title") or "", ev.get("source_text") or "")))}…»'
+    elif ev.get('ai_family_rec'):
+        out['familia'] = f'Recomendación automática (IA): {ev["ai_family_rec"].get("es", "")}'
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
     # equipamiento municipal. Entra: fiestas mayores y de barrio, actividad vecinal o comunitaria,
     # fiestas y mercados en la calle o en equipamientos de proximidad, y actividades puntuales de
