@@ -340,7 +340,7 @@ def submit(conn, key, task, items, model=MODEL, requester=_request):
     if not items: return None
     chunks = {f'{task[:3]}-{n}': items[start:start + ITEMS_PER_REQUEST] for n, start in enumerate(range(0, len(items), ITEMS_PER_REQUEST))}
     body = {'requests': [{'custom_id': cid, 'params': _params(task, chunk, model)} for cid, chunk in chunks.items()]}
-    info = requester('POST', f'{API}/messages/batches', key, body)
+    info = requester('POST', f'{API}/messages/batches', key, body, timeout=300)  # lotes grandes: subida de varios MB
     with conn:
         conn.execute('INSERT INTO ai_batches(batch_id,task,model,status,items_json,created_at) VALUES(?,?,?,?,?,?)',
                      (info['id'], task, model, 'in_progress', json.dumps(chunks, ensure_ascii=False), _now()))
