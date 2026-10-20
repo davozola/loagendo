@@ -178,7 +178,26 @@ def inner_categories(title):
     return sorted({cat for cat, rx in INNER_RE.items() if rx.search(t)})
 
 
-def classify(ev, override=None):
+def classify(ev, override=None, ai=None):
+    """Reglas + (si la hay) la sugerencia de IA vigente. La IA solo decide cuando las reglas no son
+    seguras (pendiente, ambigua o solo «probable») y su confianza es alta; nunca contra una
+    corrección editorial ni contra una regla fuerte sin conflicto. Devuelve también el veredicto
+    de las reglas (``rule_status``, ``rule_ambiguous``) para saber qué mandar a la IA."""
+    rules = _classify_rules(ev, override)
+    out = {**rules, 'rule_status': rules['status'], 'rule_ambiguous': rules['ambiguous']}
+    if not ai or rules['status'] == 'editorial': return out
+    from src.ai_assist import APPLY_CATEGORY
+    weak = rules['status'] in ('pendiente', 'probable') or rules['ambiguous']
+    answer = ai.get('answer')
+    if not weak or ai.get('confidence', 0) < APPLY_CATEGORY or answer == PENDING: return out
+    if answer not in CATEGORIES and answer != EXCLUDED: return out
+    if rules['status'] == 'excluida': return out  # las exclusiones por regla editorial no las deshace la IA
+    return {**out, 'category': answer, 'status': 'excluida' if answer == EXCLUDED else 'ia', 'method': 'ia',
+            'evidence': f"IA ({ai.get('model', '')}, confianza {ai.get('confidence', 0):.2f}): {ai.get('reason', '')}. Reglas: {rules['evidence']}",
+            'ambiguous': False}
+
+
+def _classify_rules(ev, override=None):
     """→ dict(category, status, method, evidence, ambiguous).
 
     status: 'editorial' | 'confirmada' | 'probable' | 'pendiente'."""
@@ -470,5 +489,21 @@ def report(conn, events, today, examples=8, queue_limit=300):
         'pending_reasons': dict(Counter(e.get('category_method') for e in pending).most_common()),
         'queue': [brief(e) for e in sorted(pending, key=lambda e: (e['start'], e['title']))[:queue_limit]],
         'recurring': [{'pattern': k, 'count': n} for k, n in recurring.most_common(25) if n > 1],
-        'coverage': coverage, 'changes': changes, 'overrides': ov,
+        'coverage': coverage, 'changes': changes, 'overrides': ov, 'ai': _ai_stats(conn, base),
     }
+
+
+def _ai_stats(conn, base):
+    """Uso y efecto de la IA: sugerencias, aplicadas, lotes y tokens (para vigilar el gasto)."""
+    import json
+    try:
+        rows = conn.execute("SELECT task, answer, COUNT(*) FROM ai_suggestions GROUP BY 1,2").fetchall()
+        batches = conn.execute("SELECT status, usage_json FROM ai_batches").fetchall()
+    except sqlite3.DatabaseError:
+        return {'enabled': False}
+    usage = {}
+    for _, u in batches:
+        for k, v in json.loads(u or '{}').items(): usage[k] = usage.get(k, 0) + v
+    return {'enabled': True, 'suggestions': [{'task': t, 'answer': a, 'count': n} for t, a, n in rows],
+            'applied_categories': sum(1 for e in base if e.get('category_method') == 'ia'),
+            'batches': {'total': len(batches), 'in_progress': sum(1 for b in batches if b[0] == 'in_progress')}, 'tokens': usage}

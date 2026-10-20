@@ -260,6 +260,10 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
             parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     # Un festival es una sola ficha: sus fichas en otras fuentes y los
     # conciertos sueltos de artistas de su cartel se agrupan en él.
+    # Pares que la IA da por el mismo acto con confianza alta (src/ai_assist.py, trazado en ai_suggestions).
+    from src.ai_assist import same_pairs
+    for a, b in same_pairs(conn):
+        parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}

@@ -1098,10 +1098,13 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     override=taxonomy.overrides(conn).get((source,id))
     basis={**events,'classification_paths':projection.get('classification_paths') or [],
            'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
-    verdict=taxonomy.classify(basis,override)
+    from src import ai_assist
+    ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
+    verdict=taxonomy.classify(basis,override,ai)
     events['legacy_category']=events.get('public_category')
     events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
-                   'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous']})
+                   'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous'],
+                   'rule_status':verdict['rule_status'],'rule_ambiguous':verdict['rule_ambiguous']})
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])

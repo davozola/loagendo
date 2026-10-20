@@ -60,3 +60,19 @@ recurrentes, cambios tras sincronizar y correcciones.
 
 `excluida` no se publica ni entra en la cola de pendientes; el registro se conserva y una corrección
 editorial lo devuelve a una categoría. El panel lista las excluidas con su motivo.
+
+## IA (Claude API) — desde el 20-10-2026
+Código: `src/ai_assist.py`; trabajo automático `ia-asistente` (cada 3 h) en `config/automation.json`.
+- **Qué hace:** propone categoría para las fichas que las reglas no aseguran (pendientes, ambiguas o solo
+  «probables») y juzga los pares de posibles duplicados que las reglas no fusionan. Salida cerrada (una de las
+  8 categorías, «excluida» o «pendiente»; «mismo»/«distinto»/«sesion»), con confianza y motivo. Nunca escribe
+  texto para la web ni reescribe descripciones.
+- **Cuándo se aplica:** automáticamente con confianza ≥ 0,80 (categoría) o ≥ 0,85 (duplicado «mismo»).
+  Nunca contra una corrección editorial, una regla fuerte sin conflicto ni una exclusión editorial por regla.
+  En la ficha: `category_status = ia`, `category_method = ia` y la evidencia con modelo, confianza y motivo.
+- **Trazabilidad:** `ai_suggestions` (vigente) y `ai_suggestion_log` (historial), con modelo, versión del
+  prompt y huella de lo enseñado: si la ficha cambia, la sugerencia deja de valer y se vuelve a preguntar.
+- **Coste:** modelo Haiku, API de lotes (mitad de precio), instrucciones en caché, 40 fichas por petición,
+  sin repetir lo ya respondido. Uso por lote en `ai_batches`; resumen en /admin → Clasificación → IA.
+- **Clave:** `ANTHROPIC_API_KEY=...` en `.env` (no se versiona). Sin clave el trabajo no hace nada.
+- **Medir:** `python3 scripts/evaluar_ia.py` compara reglas, IA y combinación con la muestra etiquetada.
