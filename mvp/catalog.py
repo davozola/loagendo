@@ -40,7 +40,7 @@ PUBLIC_CATEGORY_MAP = {
 }
 # "Familia" is an audience, not an activity type: a family concert is still a
 # concert. The public filter therefore matches `family_audience`.
-FAMILY_TOKENS = ('familiar','infantil','infantils','nens i nenes','hora del conte','en familia','per a infants','per a families','petita infancia','bebes','nadons','contacontes')
+FAMILY_TOKENS = ('familiar','infantil','infantils','per a families','para familias','nens i nenes','hora del conte','en familia','per a infants','per a families','petita infancia','bebes','nadons','contacontes')
 
 
 TAXONOMY_PATH = Path(__file__).resolve().parents[1] / 'config' / 'guiabcn_taxonomy.json'
@@ -809,7 +809,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=27  # 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=28  # 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)

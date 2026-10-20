@@ -302,6 +302,24 @@ NON_ART_EXPO = re.compile(r"\b(?:historia|historic|memoria|patrimoni|ciencia|cie
 FESTIVAL_RE = re.compile(r"\b(?:festival|fest|biennal|bienal|mostra internacional|gallery weekend)\b")
 
 
+# La fuente lo dice en su texto (20-10-2026): «per a famílies», «públic familiar», «edat recomanada:
+# a partir de 3 anys», «adreçat a infants». No basta «totes les edats» ni «tots els públics», y un
+# servicio de canguratge para los hijos de quien hace la actividad no la hace familiar.
+FAMILY_TEXT = re.compile(r"(?:per a|para|dirigida a|dirigit a|dirigido a|pensada per a|pensat per a|adrecada a|adrecat a)\s+"
+                         r"(?:tota la |toda la |les |las |los |els )?(?:families|familias|infants|nens i nenes|ninos y ninas|criatures|public familiar|public infantil|publico familiar|publico infantil)\b"
+                         r"|\bpublic (?:familiar|infantil)\b|\bpublico (?:familiar|infantil)\b|\btaller (?:per a|para) famil"
+                         r"|\bedat recomanada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anys|any|a)\b|\bedad recomendada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anos|ano|a)\b")
+NOT_FAMILY_TEXT = re.compile(r"per a infants i adults|para ninos y adultos|canguratge|cangur|servei de guarderia|servicio de guarderia|espai infantil mentre|ludoteca mentre")
+
+
+def family_text(text):
+    """Fragmento del texto de la fuente que declara público familiar o infantil, o ''."""
+    t = norm(text)
+    if NOT_FAMILY_TEXT.search(t): return ''
+    m = FAMILY_TEXT.search(t)
+    return t[max(0, m.start() - 30):m.end() + 20].strip() if m else ''
+
+
 def channels(ev, category, override=None):
     """{canal: evidencia}. Un evento puede estar en varios; sin canal sigue en la agenda."""
     out = {}
@@ -315,6 +333,8 @@ def channels(ev, category, override=None):
         out['familia'] = f'IA, según el texto: «{ev["ai_family"].get("quote", "")}»'
     elif PATIS.search(title):
         out['familia'] = 'Patio escolar abierto para jugar en familia'
+    elif family_text(' '.join((ev.get('title') or '', ev.get('source_text') or ''))):
+        out['familia'] = f'La fuente lo indica en su texto: «…{family_text(" ".join((ev.get("title") or "", ev.get("source_text") or "")))}…»'
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
     # equipamiento municipal. Entra: fiestas mayores y de barrio, actividad vecinal o comunitaria,
     # fiestas y mercados en la calle o en equipamientos de proximidad, y actividades puntuales de

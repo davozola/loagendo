@@ -209,3 +209,15 @@ class PublicUiTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class FamilyTextTests(unittest.TestCase):
+    def test_source_text_declaring_families_or_child_age_puts_it_in_familia(self):
+        from src.taxonomy import channels, family_text
+        museum = {'title': 'Visita dinamitzada "Sobreviure a la prehistòria"', 'source_text': "Visita dinamitzada a l’exposició del museu per a famílies.", 'start': '2026-10-25', 'end': '2026-10-25'}
+        self.assertIn('familia', channels(museum, 'arte'))
+        self.assertTrue(family_text('Edat recomanada: a partir de 3 anys'))
+        self.assertFalse(family_text('Edat recomanada: a partir de 16 anys'))
+        self.assertFalse(family_text('Taller de tapís. Espai de canguratge per a infants a partir dels 4 anys.'))
+        self.assertFalse(family_text('Una exposició per a tots els públics i totes les edats.'))
+        self.assertFalse(family_text('Més de sis-cents llibres per a infants i adults.'))
