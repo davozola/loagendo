@@ -49,7 +49,8 @@
       "urls": [
         "https://www.conservatoriliceu.es/auditori/programacio/"
       ],
-      "activa": false
+      "activa": false,
+      "descartada": "La página de programación no da actos con fecha legibles sin JavaScript; 20-10-2026"
     },
     {
       "slug": "almo2bar",
@@ -79,9 +80,10 @@
       "address": "Carrer de Béjar 53, Barcelona",
       "type": "cinema",
       "urls": [
-        "https://zumzeigcine.coop/cinema/calendari/"
+        "https://zumzeigcine.coop/"
       ],
-      "activa": false
+      "activa": false,
+      "nota": "La portada da cada película con su próxima sesión («Dimecres 21.10.26 (19:00)»); el calendario parte el día en otra línea y no se puede citar."
     },
     {
       "slug": "phenomena",
@@ -161,7 +163,8 @@
       "urls": [
         "https://www.teatreakademia.cat/"
       ],
-      "activa": false
+      "activa": false,
+      "descartada": "La portada no da actos con fecha; falta encontrar su página de agenda; 20-10-2026"
     },
     {
       "slug": "grup_focus",
@@ -192,7 +195,8 @@
           "name": "La Villarroel",
           "address": "C Villarroel 87, Barcelona"
         }
-      ]
+      ],
+      "descartada": "Su cartelera no dice en qué teatro es cada obra (la IA devolvía «Goya, Romea, Condal o Villarroel»); 20-10-2026"
     },
     {
       "slug": "fundacio_miro",
@@ -254,7 +258,8 @@
         "https://www.goethe.de/ins/es/ca/sta/bcn/ver.cfm"
       ],
       "otros_lugares": true,
-      "activa": false
+      "activa": false,
+      "descartada": "La web responde 403 a nuestro lector; 20-10-2026"
     },
     {
       "slug": "casa_asia",
@@ -265,7 +270,8 @@
         "https://www.casaasia.es/actividades/"
       ],
       "otros_lugares": true,
-      "activa": false
+      "activa": false,
+      "descartada": "Sin actos legibles sin JavaScript; 20-10-2026"
     },
     {
       "slug": "casa_america",
@@ -347,7 +353,8 @@
       "urls": [
         "https://palaurobert.gencat.cat/ca/agenda/"
       ],
-      "activa": false
+      "activa": false,
+      "descartada": "Su robots.txt no permite leer la agenda; 20-10-2026"
     }
   ]
 }

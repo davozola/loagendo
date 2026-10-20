@@ -40,11 +40,11 @@ MAX_CHARS = 70000            # tope de texto por agenda y pasada
 IMAGE_BUDGET = 40            # páginas de acto leídas por agenda y pasada para su imagen
 NEAR_TIME, NEAR_PRICE, NEAR_DATE_AFTER, NEAR_DATE_BEFORE = 500, 900, 700, 5000
 
-MONTHS = {1: ('gen', 'ene', 'jan'), 2: ('feb',), 3: ('mar',), 4: ('abr', 'apr'), 5: ('mai', 'may'), 6: ('jun',),
+MONTHS = {1: ('gen', 'ene', 'jan'), 2: ('feb', 'febr'), 3: ('mar',), 4: ('abr', 'apr'), 5: ('mai', 'may'), 6: ('jun',),
           7: ('jul',), 8: ('ago', 'aug'), 9: ('set', 'sep'), 10: ('oct',), 11: ('nov',), 12: ('des', 'dic', 'dec')}
 MONTH_RX = re.compile(r"\b(gener|febrer|marc|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre|enero|febrero|marzo|mayo|junio|julio|agosto|"
                       r"septiembre|setiembre|noviembre|diciembre|january|february|march|april|june|july|august|september|october|november|december|"
-                      r"gen|ene|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|oct|nov|des|dic|dec)\.?\b")
+                      r"gen|ene|febr|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|oct|nov|des|dic|dec)\.?\b")
 WEEKDAYS = {0: ('dilluns', 'lunes', 'monday', 'dl', 'lun'), 1: ('dimarts', 'martes', 'tuesday', 'dt', 'mar'), 2: ('dimecres', 'miercoles', 'wednesday', 'dc', 'mie', 'mi'),
             3: ('dijous', 'jueves', 'thursday', 'dj', 'jue', 'ju'), 4: ('divendres', 'viernes', 'friday', 'dv', 'vie', 'vi'),
             5: ('dissabte', 'sabado', 'saturday', 'ds', 'sab', 'sa'), 6: ('diumenge', 'domingo', 'sunday', 'dg', 'dom', 'do')}
@@ -60,7 +60,7 @@ Reglas estrictas:
 - Si otros_lugares es true y el texto dice que el acto es en otro lugar de Barcelona (otro cine, museo, sala…), pon en sala ese lugar tal como aparece escrito y en cita_sala la frase donde se lee. Si otros_lugares es false, no incluyas actos que el texto sitúa en otro lugar.
 - titulo: tal como aparece en la página (cópialo literal, sin añadir ni traducir).
 - sesiones: cada fecha (y hora, si la página la da) del acto. fecha en formato AAAA-MM-DD. Si la página no da el año o el mes junto al día, usa la fecha futura más próxima coherente con la página y con la fecha de hoy que te doy.
-- cita_fecha y cita_hora: copia literal y corta (máx. 120 caracteres) del texto donde se lee el día y la hora; tiene que poder encontrarse tal cual en la página. Si no hay hora escrita, hora y cita_hora vacías.
+- cita_fecha y cita_hora: copia literal y corta (máx. 120 caracteres) del texto donde se lee el día y la hora; tiene que poder encontrarse tal cual en la página. cita_fecha nunca es solo un número: incluye el mes o el día de la semana que lo acompañan («20 octubre», «Dimarts 27», «21.10.26»). Si no hay hora escrita, hora y cita_hora vacías.
 - Si la página da un periodo («del 15 d'octubre al 22 de novembre»), usa periodo {inicio, fin, cita} en lugar de una sesión por día.
 - precio y cita_precio solo si la página lo escribe para ese acto.
 - enlace: la marca [Ln] que va justo con ese acto en el texto, si la hay (por ejemplo L12); si no, vacío.
@@ -171,11 +171,13 @@ def _date_from_quote(iso, quote, today, allow_past=False):
     if not re.search(rf"(?<!\d)0?{d.day}(?!\d)", q): return None
     years = set(re.findall(r"\b(20\d\d)\b", q))
     if years and str(d.year) not in years: return None
-    numeric = re.search(rf"(?<!\d)0?{d.day}\s*[/.-]\s*(\d{{1,2}})(?:\s*[/.-]\s*(\d{{2,4}}))?", q)
+    # «21/10», «21.10.26», «21-10-2026» (el guion solo con año: «22-26 octubre» es un intervalo de días).
+    numeric = re.search(rf"(?<!\d)0?{d.day}\s*[/.]\s*(1[0-2]|0?[1-9])(?!\d)(?:\s*[/.]\s*(\d{{2,4}}))?|(?<!\d)0?{d.day}-(1[0-2]|0?[1-9])-(\d{{2,4}})", q)
     months = [m for m in MONTH_RX.findall(q)]
     if numeric:
-        if int(numeric.group(1)) != d.month: return None
-        if numeric.group(2) and int(numeric.group(2)[-2:]) != d.year % 100: return None
+        month, year = numeric.group(1) or numeric.group(3), numeric.group(2) or numeric.group(4)
+        if int(month) != d.month: return None
+        if year and int(year[-2:]) != d.year % 100: return None
     elif months:
         if not any(m[:3] in MONTHS[d.month] or m in MONTHS[d.month] for m in months): return None
     else:
@@ -193,7 +195,12 @@ def _near(a_positions, b_positions, before, after):
     return any(-before <= b - a <= after for a in a_positions for b in b_positions)
 
 
-def verify(item, text, links, today, salas=None, other_places=False):
+def _same_place(a, b):
+    a, b = fold(a), fold(b)
+    return bool(a and b) and (a in b or b in a)
+
+
+def verify(item, text, links, today, salas=None, other_places=False, own_name=''):
     """(acto comprobado o None, motivos de descarte)."""
     hay = fold(text); why = []
     title = ' '.join(str(item.get('titulo') or '').split())
@@ -205,7 +212,7 @@ def verify(item, text, links, today, salas=None, other_places=False):
         sala = next((s for s in salas if fold(s['name']) == fold(item.get('sala'))), None)
         if not sala: return None, [f"sala no configurada: {item.get('sala')!r}"]
         out['sala'] = sala
-    elif other_places and str(item.get('sala') or '').strip():
+    elif other_places and str(item.get('sala') or '').strip() and not _same_place(item['sala'], own_name):
         # Acto en otro lugar (Goethe-Institut en el Institut français, Casa Amèrica en Cinemes Girona):
         # el lugar tiene que estar escrito en la página, cerca del título.
         place = ' '.join(str(item['sala']).split())
@@ -361,14 +368,14 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
-            act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')))
+            act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'])
             if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)
             else: result['rejected'].append({'item': item, 'why': why})
         page['events'] = len(items)
     # Un mismo acto en dos páginas (semanas de la Filmoteca): una sola entrada por título y enlace.
     merged = {}
     for act in result['accepted']:
-        k = (fold(act['titulo']), (act.get('sala') or {}).get('name', ''))
+        k = (fold(act['titulo']), (act.get('sala') or {}).get('name', ''))  # noqa
         if k not in merged: merged[k] = act; continue
         m = merged[k]
         m['sesiones'] = sorted(set(m['sesiones']) | set(act['sesiones']))
@@ -447,7 +454,7 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     from src import ai_assist
     key = ai_assist.load_key()
     if not key: return {'status': 'skipped', 'reason': 'Falta ANTHROPIC_API_KEY en .env'}
-    agendas = [a for a in load_agendas() if a.get('activa')]
+    agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada')]
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()

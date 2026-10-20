@@ -119,3 +119,18 @@ class OtherPlaceTests(unittest.TestCase):
         self.assertEqual(act['sala']['name'], 'Institut français Barcelona')
         self.assertIsNone(ai_agenda.verify({**item, 'sala': 'Cines Verdi'}, text, links, TODAY, None, True)[0])
         self.assertNotIn('sala', ai_agenda.verify(item, text, links, TODAY)[0])  # sin otros_lugares: la sala de la agenda
+
+
+class DateFormatTests(unittest.TestCase):
+    def test_day_ranges_and_catalan_abbreviations(self):
+        self.assertEqual(ai_agenda._date_from_quote('2026-10-22', '22-26 octubre 2026 - Hangar', TODAY), dt.date(2026, 10, 22))
+        self.assertEqual(ai_agenda._date_from_quote('2026-10-26', '22-26 octubre 2026 - Hangar', TODAY), dt.date(2026, 10, 26))
+        self.assertEqual(ai_agenda._date_from_quote('2027-02-13', '13 febr. - 16 març', TODAY), dt.date(2027, 2, 13))
+        self.assertEqual(ai_agenda._date_from_quote('2027-03-16', '13 febr. - 16 març', TODAY), dt.date(2027, 3, 16))
+        self.assertEqual(ai_agenda._date_from_quote('2026-10-21', '21-10-2026', TODAY), dt.date(2026, 10, 21))
+
+    def test_own_venue_named_in_other_places_mode_is_the_agenda_venue(self):
+        text, links = ai_agenda.clean('<p>Café-philo 20 octubre 19:00</p>', 'https://x.test/')
+        act, _ = ai_agenda.verify({'titulo': 'Café-philo', 'sala': 'Institut français de Barcelona', 'sesiones': [{'fecha': '2026-10-20', 'cita_fecha': '20 octubre'}]},
+                                  text, links, TODAY, None, True, 'Institut français de Barcelona')
+        self.assertNotIn('sala', act)

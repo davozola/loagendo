@@ -25,6 +25,7 @@ def main(slugs=()):
     today = dt.date.today(); usage = {}; parts = []; summary = []
     for agenda in ai_agenda.load_agendas():
         if slugs and agenda['slug'] not in slugs: continue
+        if agenda.get('descartada') and not slugs: continue
         # Reutiliza lo leído hoy (si una ejecución anterior se cortó) en lugar de volver a pagar la IA.
         try: cached = json.loads((ROOT / 'reports' / 'muestra_agendas_ia.json').read_text(encoding='utf-8')).get(agenda['slug'])
         except (OSError, ValueError): cached = None
