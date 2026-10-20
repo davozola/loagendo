@@ -550,6 +550,7 @@ function whenCell(e) {
   }
   if (a.kind === 'wide') {
     const last = daysBetween(e._day || today, a.until) <= 1;
+    if (!a.noHours && a.open === 0 && a.close >= 1439 && !(a.ranges || []).some(r => r.open > 0 || r.close < 1439)) return `<div class="when w-wide"><span class="w-state-wide">${L('Todo el día', 'Tot el dia')}</span>${e.start !== e.end ? `<span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span>` : ''}</div>`;
     if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? L('Exposición', 'Exposició') : L('Todo el día', 'Tot el dia')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
     let main, note = '', cls = '';
     if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les')} ${clock(st.closesAt ?? a.close)}` }
@@ -791,7 +792,8 @@ async function loadDistricts() {
 
 /* ---------- detail ---------- */
 // «23:59» es como Xceed escribe «medianoche».
-const showTime = v => String(v || '').replace(/\b23:59\b/g, L('medianoche', 'mitjanit'));
+// «00:00–23:59» (fachadas, espacios al aire libre: «Cada dia de 00.00 h a 23.59 h») es todo el día.
+const showTime = v => String(v || '').replace(/\b0?0[:.]00\s*[–-]\s*23[:.]59\b/g, L('todo el día', 'tot el dia')).replace(/\b23:59\b/g, L('medianoche', 'mitjanit'));
 function detailWhen(e) {
   const day = e.start === e.end ? e.start : state.day;
   const when = e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`;

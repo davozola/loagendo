@@ -17,6 +17,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import re
 import sqlite3
 import os
 import shutil
@@ -220,7 +221,7 @@ def share_card(detail, today):
         x = dt.date.fromisoformat(d); return f"{DAYS_ES[x.weekday()]} {x.day} {MONTHS_ES[x.month - 1]}"
     start, end = detail.get('start') or '', detail.get('end') or ''
     label = detail.get('time_label') or ''
-    hours = '' if label in GENERIC_TIME else str(label).replace('23:59', 'medianoche')
+    hours = '' if label in GENERIC_TIME else re.sub(r'\b0?0[:.]00\s*[–-]\s*23[:.]59\b', 'todo el día', str(label)).replace('23:59', 'medianoche')
     if start and start == end: when = day(start) + (f' · {hours}' if hours else '')
     elif start and end:
         x = dt.date.fromisoformat(end)
