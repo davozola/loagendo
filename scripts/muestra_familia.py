@@ -34,7 +34,7 @@ def main(n=0, db=None):
         a = json.loads(got[0]); conf = got[1]
         group = 'entra' if ai_family.accepted(a, conf) else 'si_rechazado' if a['valoracion'] == 'si' else a['valoracion']
         groups[group].append((e, a, conf))
-    names = {'entra': 'Sí: entraría en «En familia»', 'si_rechazado': 'Sí, pero no entra (confianza < 80 % o motivo que no pasa la comprobación)',
+    names = {'entra': 'Sí: entraría en «En familia»', 'si_rechazado': 'Sí, pero no entra (confianza < 70 % o motivo que no pasa la comprobación)',
              'dudoso': 'Dudoso (no entra)', 'no': 'No (no entra)', 'sin_respuesta': 'Sin respuesta'}
     parts = []
     for g, rows in groups.items():

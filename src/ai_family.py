@@ -20,7 +20,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-APPLY = 0.8
+APPLY = 0.7  # 0,7 por decisión de David (20-10-2026) tras revisar la muestra
 MAX_REASON = 160
 
 SYSTEM = """Valoras si una exposición de la agenda cultural de Barcelona (Brollant) es un buen plan para ir en familia con niños y niñas (aprox. 4-12 años).
