@@ -208,6 +208,9 @@ def candidate_sessions(r):
         # single dated act (CCCB listing, L'Auditori event timestamp).
         if s is not None and span==0 and re.fullmatch(r'\d{2}:\d{2}',str(r['time_text'])):
             return [{'local_date':str(s),'local_time':str(r['time_text']),'time_zone':'Europe/Madrid','type':'first_party_listing_time_candidate','evidence_field':r.get('time_evidence_field','listing_time'),'end_time':None}]
+        # Varios pases el mismo día tal como los imprime la sala («19:00 · 20:30», Jamboree).
+        if s is not None and span==0 and r['source'].startswith('venue_') and re.fullmatch(r'\d{2}:\d{2}(?: · \d{2}:\d{2})+',str(r['time_text'])):
+            return [{'local_date':str(s),'local_time':t,'time_zone':'Europe/Madrid','type':'first_party_listing_time_candidate','evidence_field':'listing_sessions','end_time':None} for t in str(r['time_text']).split(' · ')]
         return []
     # The laboratory snapshot froze a window; live connectors must not. Only a
     # dated start is required (candidates stay unverified either way).

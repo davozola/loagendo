@@ -314,6 +314,8 @@ def record_from_jsonld(venue, node, page_url):
     performers = performers if isinstance(performers, list) else [performers]
     organizers = [_text(o) for o in ([node.get("organizer")] if node.get("organizer") else []) if _text(o)]
     time_text = _time(node.get("startDate"))
+    sessions = [t for t in (node.get("x_sessions") or []) if re.fullmatch(r"\d{2}:\d{2}", str(t))]
+    if len(sessions) > 1: time_text = " · ".join(sessions)   # pases que imprime la sala («19:00h 20:30h»)
     key = record_id(venue["slug"], url.split("?", 1)[0], start, title)
     kind, eligibility = event_kind(title, "", delta(start, end), "", "venue_" + venue["slug"])
     status = str(node.get("eventStatus") or "")
@@ -330,7 +332,7 @@ def record_from_jsonld(venue, node, page_url):
         # A marketplace lists every kind of event: classify by the schema type, not the site.
         category = next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
     label = venue["name"] + (" · ticketera" if venue.get("type") == "ticketing" else " · agregador" if venue.get("type") == "aggregator" else " · agenda del recinto")
-    raw = {"source_page": page_url, "item": node, "image": image, "venue": venue["name"], "loagendo": {"description": description[:2000], "tickets_url": tickets_url, "performers": [_text(p) for p in performers][:10], "category": category, "source_label": label, "schema_types": types}}
+    raw = {"source_page": page_url, "item": node, "image": image, "venue": venue["name"], "loagendo": {"room": _text(node.get("x_room")), "description": description[:2000], "tickets_url": tickets_url, "performers": [_text(p) for p in performers][:10], "category": category, "source_label": label, "schema_types": types}}
     return {"source": "venue_" + venue["slug"], "id": key, "title": title, "start": start, "end": end or start, "time_text": time_text, "price_text": price_text,
             "kind": kind, "eligibility": eligibility, "start_timestamp": "", "frequency": "", "raw": raw,
             "venues": [{"name": venue_name or venue["name"], "address": address_text, "coords": coords}], "organizers": organizers or [venue["name"]], "url": url,
@@ -380,6 +382,46 @@ def html_agenda_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+def tribe_list_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """WordPress «The Events Calendar» en vista de lista (Jamboree, 20-10-2026): su JSON-LD
+    y su API REST dan las fechas a las 00:00, pero cada <article> del listado imprime los
+    pases («19:00h», «20:30h»), la sala, el precio y el enlace de entradas. Se leen tal cual."""
+    feed = venue["feed"]; today = today or dt.date.today()
+    status, final_url, body = fetcher(feed["url"], timeout)
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, feed["url"]))
+    base = final_url or feed["url"]
+    def strip(fragment): return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", fragment or "")).split())
+    nodes, fetched = [], 1
+    budget = int(venue.get("max_pages", DEFAULT_MAX_PAGES)) if feed.get("details", False) else 0
+    for block in re.findall(r'<article[^>]*tribe-events-calendar-list__event[ "].*?</article>', body, re.S):
+        day = re.search(r'<time[^>]*datetime="(\d{4}-\d{2}-\d{2})"', block)
+        title = re.search(r'<a[^>]*tribe-events-calendar-list__event-title-link[^>]*>(.*?)</a>', block, re.S)
+        if not day or not title or day.group(1) < today.isoformat(): continue
+        url = re.search(r'<a[^>]*href="([^"]+)"[^>]*tribe-events-calendar-list__event-title-link', block) or re.search(r'<a href="([^"]+)"', block)
+        sessions = []
+        for raw_time in re.findall(r'tribe-event-sesion-hora[^>]*>(.*?)</div>', block, re.S):
+            m = re.search(r'\b(\d{1,2}):(\d{2})\s*h?\b', strip(raw_time))
+            if m and int(m.group(1)) < 24: sessions.append(f"{int(m.group(1)):02d}:{m.group(2)}")
+        sessions = list(dict.fromkeys(sessions))
+        room = re.search(r'event-venue-title[^>]*>(.*?)</span>', block, re.S)
+        prices = [strip(x) for x in re.findall(r'<span class="preu-[^"]*">(.*?)</span>', block, re.S) if strip(x)]
+        tickets = re.search(r'boton-entradas-list">\s*<a href="([^"]+)"', block)
+        image = re.search(r'<img[^>]*tribe-events-calendar-list__event-featured-image[^>]*src="([^"]+)"', block)
+        tags = [strip(x) for x in re.findall(r'class="tribe-events-tag"[^>]*>(.*?)</a>', block, re.S)]
+        event_url = urljoin(base, html.unescape(url.group(1))) if url else base
+        node = {"@type": "MusicEvent", "name": strip(title.group(1)), "url": event_url,
+                "startDate": day.group(1) + (("T" + sessions[0]) if sessions else ""), "endDate": day.group(1),
+                "location": {"@type": "Place", "name": venue["name"], "address": venue.get("address") or {"@type": "PostalAddress", "addressLocality": "Barcelona"}},
+                "x_sessions": sessions, "x_room": strip(room.group(1)) if room else "", "keywords": tags}
+        if prices: node["offers"] = {"@type": "Offer", "price": " / ".join(prices), "url": html.unescape(tickets.group(1)) if tickets else ""}
+        elif tickets: node["offers"] = {"@type": "Offer", "url": html.unescape(tickets.group(1))}
+        if image: node["image"] = html.unescape(image.group(1))
+        if event_url.startswith("http") and event_url != base and fetched <= budget and (fetcher is not fetch or robots_allows(event_url)):
+            node = _page_extras(node, event_url, fetcher, timeout); fetched += 1
+        nodes.append((event_url, node))
+    return nodes, fetched
+
+
 def wp_fullcalendar_nodes(venue, fetcher=fetch, timeout=25, today=None):
     """WordPress sites running the WP FullCalendar plugin (Events Manager and
     friends) answer ``admin-ajax.php?action=WP_FullCalendar&start=…&end=…``
@@ -418,9 +460,9 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
-            nodes, fetched = (wp_fullcalendar_nodes if kind == "wp_fullcalendar" else html_agenda_nodes)(venue, fetcher, timeout); urls = []
+            nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "tribe_list": tribe_list_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout); urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)
             status, final_url, body = fetcher(agenda_url, timeout)

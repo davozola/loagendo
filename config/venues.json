@@ -33,11 +33,24 @@
       "slug": "jamboree",
       "name": "Jamboree Jazz Club",
       "type": "music",
-      "url": "https://www.jamboreejazz.com/",
-      "enabled": false,
+      "url": "https://jamboreejazz.com/",
+      "enabled": true,
       "aliases": [
         "Jamboree"
-      ]
+      ],
+      "site": "https://jamboreejazz.com/",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Plaça Reial, 17",
+        "postalCode": "08002",
+        "addressLocality": "Barcelona"
+      },
+      "feed": {
+        "kind": "tribe_list",
+        "url": "https://jamboreejazz.com/agenda/",
+        "details": false
+      },
+      "note": "20-10-2026: agenda propia (The Events Calendar). Pases, sala y precio del listado; el JSON-LD da 00:00."
     },
     {
       "slug": "sidecar",
