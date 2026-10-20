@@ -130,6 +130,8 @@ class ChannelTests(unittest.TestCase):
         self.assertIn('galerias', taxonomy.channels(art, 'arte'))
         science = ev("Exposició 'Història de la ciència a Barcelona'", kind='exhibition', venue_names=['Museu de Ciències'])
         self.assertNotIn('galerias', taxonomy.channels(science, 'arte'))
+        self.assertIn('galerias', taxonomy.channels(ev("Taller 'Aquarel·la i il·lustració botànica'"), 'talleres'))
+        self.assertNotIn('galerias', taxonomy.channels(ev("Taller 'Cuina de tardor'"), 'talleres'))
         opening = ev("Inauguració 'Nous treballs'", venue_names=['Espai X'])
         self.assertIn('galerias', taxonomy.channels(opening, 'arte'))
 

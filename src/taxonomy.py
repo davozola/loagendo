@@ -294,6 +294,10 @@ OUTDOOR_TITLE = re.compile(r"\b(?:a l'aire lliure|al aire libre|open air|correfo
 ART_VENUE = re.compile(r"\b(?:galeria|galerie|gallery|macba|fundacio joan brossa|escola massana|centre d'art|arts santa monica|santa monica|la escocesa|fundacio sunol|museu tapies|fundacio antoni tapies|museu del disseny|disseny hub|virreina|nau bostik|piramidon|homesession|halfhouse|museu d'art|museo de arte|fundacio (?:joan )?miro|fundacio tapies|museu tapies|la virreina|fabra i coats|hangar|santa monica|caixaforum|kbr|la capella|cccb|meam|museu picasso|museu nacional d'art|mnac|fundacio vila casas|espai 13|bombon|etherton|chiquita room|ana mas|projecte sd|nogueras blanchard|joan prats|senda|marlborough|pigment gallery|parking gallery|la plataforma)\b")
 ART_PATH = re.compile(r"(?:pintura|fotografia|escultura|art contemporani|arts visuals|il.lustracio|gravat|dibuix|art urba|instal.lacio|performance|videoart|disseny)")
 ART_TITLE = re.compile(r"\b(?:inauguracio|inauguracion|vernissage|finissage|performance|instal.lacio|videoart|art contemporani|arte contemporaneo|visita comentada a l'exposicio|conversa amb l'artista|open studio|estudis oberts|gallery weekend|swab|loop)\b")
+# Talleres y cursos de práctica artística (20-10-2026): también en «Arte y galerías».
+ART_PRACTICE = re.compile(r"\b(?:pintura|dibuix|dibujo|aquarel.la|acuarela|ceramica|escultura|gravat|grabado|il.lustracio|ilustracion|urban sketch\w*|collage|"
+                          r"fotografia|art contemporani|arts visuals|modelatge|modelado|serigrafia|linograbat|linograbado|estampacio|estampacion|retrat|retrato|"
+                          r"llibre d'artista|libro de artista|art textil|cianotip\w*|enquadernacio|encuadernacion|calligrafia|caligrafia|torn de ceramica)\b")
 NON_ART_EXPO = re.compile(r"\b(?:historia|historic|memoria|patrimoni|ciencia|cientific|natura|biodiversitat|medi ambient|salut|documental|arxiu)\b")
 FESTIVAL_RE = re.compile(r"\b(?:festival|fest|biennal|bienal|mostra internacional|gallery weekend)\b")
 
@@ -337,7 +341,10 @@ def channels(ev, category, override=None):
     elif OUTDOOR_VENUE.search(venue):
         out['aire'] = f'Espacio exterior: {(ev.get("venue_names") or [""])[0]}'
     is_art = (category == 'arte' and not NON_ART_EXPO.search(title) and (ART_VENUE.search(venue) or any(ART_PATH.search(p) for p in paths) or ART_TITLE.search(title)))
-    if is_art or ART_TITLE.search(title) and (category in ('arte', 'charlas') or ART_VENUE.search(venue)):
+    art_workshop = category == 'talleres' and ART_PRACTICE.search(title)
+    if art_workshop:
+        out['galerias'] = 'Taller o curso de práctica artística'
+    elif is_art or ART_TITLE.search(title) and (category in ('arte', 'charlas') or ART_VENUE.search(venue)):
         out['galerias'] = 'Arte: ' + ('lugar de arte' if ART_VENUE.search(venue) else 'disciplina artística según la fuente' if any(ART_PATH.search(p) for p in paths) else 'inauguración, performance o visita de exposición')
     if ev.get('source') == 'web_graf':
         out['galerias'] = 'Agenda GRAF de espacios de creación contemporánea'
