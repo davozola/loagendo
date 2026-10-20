@@ -809,7 +809,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=25  # 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=26  # 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -992,7 +992,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if found:
             v=place[0]; generic=not v[1] or len(str(v[1]))<12 or str(v[1]).count('Barcelona')>=2
             place=[(v[0],found[0] if generic and found[0] else v[1],found[1],found[2])]+list(place[1:])
-    archived_description,schedule_time,_,_=enrichment(conn,source,id,prefetch)
+    archived_description,schedule_time,page_schedule_text,_=enrichment(conn,source,id,prefetch)
     facts=detail_facts(conn,source,id,prefetch) or {}
     hours_by_day=facts.get('hours_by_day') or {}
     notes_by_day=projection.get('notes_by_day') or {}
@@ -1100,6 +1100,11 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['source_text']='\n\n'.join(x for x in ((projection.get('ai_text') or '').strip(),(archived_description or '').strip()) if x)[:3000]
     from src import ai_assist, ai_extract
     ai_data=ai_assist.data_for(conn,source+':'+id,events) or {}
+    # Horario en líneas de la página de la sala (Teatre Lliure): días, pases, días sin función y funciones sueltas.
+    if not any((events.get('hours_by_day') or {}).values()) and page_schedule_text and '\n' in page_schedule_text:
+        from src.guia_schedule import lines_schedule
+        by_line=lines_schedule(page_schedule_text,start,end)
+        if by_line: events['hours_by_day']=by_line
     own_time=any(o.get('time') for o in occurrences) or events.get('hours_by_day') or schedule_time or projection.get('schedule_text_time')
     ai_sessions=[x for x in ai_data.get('sessions') or [] if x.get('time')] if not own_time else []
     if ai_sessions:
@@ -1107,6 +1112,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['has_candidate']=True
     events.update(public_fields(events,projection,requested_day=requested_day,schedule_time=schedule_time))
     if ai_sessions and events.get('time_source')=='candidate_occurrence': events['time_source']='ia_texto'
+    # La fuente dice que la hora aún no está fijada: se dice así, no «por confirmar» (20-10-2026).
+    if not events.get('time') and not any((events.get('hours_by_day') or {}).values()) and page_schedule_text:
+        if re.search(r'\b(?:per determinar|por determinar|a determinar)\b',page_schedule_text,re.I): events['time_label']='Hora por determinar'
+        elif re.search(r'\b(?:pr[oó]ximamente|properament)\b',page_schedule_text,re.I): events['time_label']='Horario próximamente'
     events['ai_quotes']={}
     if ai_sessions: events['ai_quotes']['time']=ai_sessions[0]['quote']
     price=ai_data.get('price')

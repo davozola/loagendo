@@ -530,3 +530,47 @@ def dated_outside(rows, start, end, margin=14):
     if not explicit: return {}
     wide = schedule_by_day(explicit, a - dt.timedelta(days=margin), b + dt.timedelta(days=margin))
     return {k: v for k, v in wide.items() if not (a.isoformat() <= k <= b.isoformat())}
+
+
+_NO_SHOW = re.compile(r"^(\d{1,2})/(\d{1,2})(?:/\d{2,4})?\s+(?:no\s+hay\s+funci|no\s+hi\s+ha\s+funci|sin\s+funci|sense\s+funci|no\s+hi\s+ha\s+sessi|no\s+hay\s+sesi)", re.I)
+_ONE_SHOW = re.compile(r"^(\d{1,2})/(\d{1,2})(?:/\d{2,4})?\s*(?:,|-|–)?\s*(?:a\s+las|a\s+les|at)\s+(\d{1,2})[.:](\d{2})", re.I)
+_TIME_JOIN = re.compile(r"\s+(?:a\s+las|a\s+les|at)\s+", re.I)
+
+
+def lines_schedule(text, start, end):
+    """{fecha ISO: horas} de un horario de sala en líneas (Teatre Lliure, 20-10-2026):
+    «De miércoles a viernes a las 19.30 h», «Sábados a las 17.00 h y a las 20.30 h»,
+    «28/11 no hay función», «Función escolar / 25/11 a las 10.30 h». Solo lo que dice el texto."""
+    s0, e0 = _date(start), _date(end)
+    if not s0 or not e0: return {}
+    def dated(day, month):
+        for year in sorted({s0.year, e0.year}):
+            try:
+                d = dt.date(year, int(month), int(day))
+            except ValueError:
+                continue
+            if s0 <= d <= e0: return d.isoformat()
+        return None
+    weekly, skip, extra = [], set(), {}
+    for line in str(text or '').split('\n'):
+        line = ' '.join(line.split())
+        if not line: continue
+        m = _NO_SHOW.match(line)
+        if m:
+            d = dated(m.group(1), m.group(2))
+            if d: skip.add(d)
+            continue
+        m = _ONE_SHOW.match(line)
+        if m:
+            d = dated(m.group(1), m.group(2))
+            if d: extra.setdefault(d, []).append(f'{int(m.group(3)):02d}:{m.group(4)}')
+            continue
+        if re.match(r"(?:de\s+|del\s+|els\s+|los\s+)?" + _WEEKDAY, line, re.I) and _TIME_JOIN.search(line):
+            weekly.append(_TIME_JOIN.sub(': ', line, count=1))
+    rows = weekly_rows('. '.join(weekly)) if weekly else []
+    hours = schedule_by_day(rows, start, end) if rows else {}
+    for d in skip: hours.pop(d, None)
+    for d, times in extra.items():
+        current = [x for x in (hours.get(d) or '').split(' · ') if x]
+        hours[d] = ' · '.join(sorted(set(current + times)))
+    return dict(sorted(hours.items()))

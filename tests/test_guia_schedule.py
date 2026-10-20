@@ -426,3 +426,21 @@ class MusicRouteTests(unittest.TestCase):
         self.assertEqual(public_category(cat, 'guiabcn', 'Tots Sants 2026: Castanyada a Can Portabella'), 'Barrio')
         self.assertEqual(public_category(cat, 'guiabcn', 'Barcelona Guitar Trio & Dance'), 'Conciertos')
         self.assertEqual(public_category(cat, 'guiabcn', "5è matí musical 'El Batec del Poblet'"), 'Conciertos')
+
+
+class LinesScheduleTests(unittest.TestCase):
+    def test_theatre_page_lines_with_days_off_and_extra_shows(self):
+        from src.guia_schedule import lines_schedule
+        text = "De miércoles a viernes a las 19.30 h\nSábados a las 17.00 h y a las 20.30 h\nDomingos a las 18.30 h\n28/11 no hay función\nFunción escolar\n25/11 a las 10.30 h"
+        hb = lines_schedule(text, '2026-11-19', '2026-12-13')
+        self.assertEqual((hb['2026-11-21'], hb['2026-11-22'], hb['2026-11-25']), ('17:00 · 20:30', '18:30', '10:30 · 19:30'))
+        self.assertNotIn('2026-11-28', hb); self.assertNotIn('2026-11-23', hb)  # sin función y lunes
+
+
+class PageScheduleTests(unittest.TestCase):
+    def test_lliure_diputacio_and_macba_pages(self):
+        from src.guia_detail import page_schedule
+        t, text, facts = page_schedule('web_teatre_lliure', '<h3 class="tit">Horario</h3> <p class="text">Domingos a las 18.30 h<br> 28/11 no hay función</p><h3 class="tit">Precio</h3> <p class="text">De 8 € a 32 €</p>')
+        self.assertEqual((text, facts['price_text']), ('Domingos a las 18.30 h\n28/11 no hay función', 'De 8 € a 32 €'))
+        self.assertEqual(page_schedule('diba_turismo', '<h4 class="mt-4">Quan?</h4> <p><b>22/10/2026</b></p> <p>18:30 - 20:00</p> <h4>On?</h4>', '2026-10-22', '2026-10-22')[:2], ('18:30', '22/10/2026 · 18:30 - 20:00'))
+        self.assertEqual(page_schedule('web_macba', '<span class="macba-button button-secondary px-3">próximamente</span>')[1], 'Próximamente')

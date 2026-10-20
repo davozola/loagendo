@@ -15,7 +15,7 @@ from src import guia_schedule
 
 # Also versions the description selection. GuiaBCN exposes a metadata-only
 # meta description ("Quan / On") alongside the actual body copy.
-SCHEDULE_PARSER_VERSION = 7  # 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
+SCHEDULE_PARSER_VERSION = 8  # 8 (20-10-2026): horario de la página del Lliure, «Quan?» de Barcelona és molt més (Diputació), «próximamente» del MACBA, «per determinar». 7 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
 # 6: 6 (18-10-2026): horario de GuiaBCN desde la API de detalle, fila a fila y por día.
 # 5: 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
 
@@ -212,11 +212,43 @@ def detail_facts(content):
     facts['registration_required']=bool(re.search(r'inscripci',note))
     return {key:value for key,value in facts.items() if value not in ('',None,False)}
 
+def _lines(fragment):
+    parts=re.split(r'(?i)<br\s*/?>|</p>|</li>|</div>',fragment or '')
+    return [' '.join(html.unescape(re.sub(r'<[^>]+>',' ',x)).split()) for x in parts if re.sub(r'<[^>]+>','',x).strip()]
+
+
+def page_schedule(source, content, start='', end=''):
+    """Horario escrito en la página de la propia fuente (20-10-2026), tal cual:
+      · Teatre Lliure: bloque «Horario/Horari» («De miércoles a viernes a las 19.30 h …»), y su precio.
+      · Barcelona és molt més (Diputació): bloque «Quan?» («22/10/2026 · 18:30 - 20:00»).
+      · MACBA: aviso «próximamente» cuando aún no hay horario.
+    Devuelve (hora si es única, texto del horario, hechos)."""
+    facts={}
+    if source=='web_teatre_lliure':
+        block=re.search(r'<h3 class="tit">\s*(?:Horario|Horari|Schedule)\s*</h3>\s*<p class="text">(.*?)</p>',content,re.S|re.I)
+        price=re.search(r'<h3 class="tit">\s*(?:Precio|Preu|Price)\s*</h3>\s*<p class="text">(.*?)</p>',content,re.S|re.I)
+        if price: facts['price_text']=' '.join(_lines(price.group(1)))
+        if block:
+            text='\n'.join(_lines(block.group(1)))
+            if re.search(r'\b(?:a determinar|per determinar|por determinar|properament|próximamente)\b',text,re.I): return '','Por determinar',facts
+            return '',text,facts
+    if source=='diba_turismo':
+        block=re.search(r'<h4[^>]*>\s*Quan\?\s*</h4>(.*?)<h4',content,re.S|re.I)
+        if block:
+            lines=_lines(block.group(1)); text=' · '.join(lines)
+            times=re.findall(r'\b(\d{1,2}):(\d{2})\b',text)
+            one=start and start==end
+            return (f'{int(times[0][0]):02d}:{times[0][1]}' if times and one else ''),text,facts
+    if source=='web_macba' and re.search(r'button-secondary[^>]*>\s*pr(?:ó|&oacute;|o)ximament',content,re.I):
+        return '','Próximamente',facts
+    return '','',facts
+
+
 def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetcher=None, record_ids=None, delay_seconds=0.5):
     """Archive presentation metadata without modifying imported source records."""
     initialize(conn)
     if sources is None:
-        sources=('guiabcn','web_macba','web_cccb','web_teatre_lliure','web_auditori','web_centres_civics')
+        sources=('guiabcn','web_macba','web_cccb','web_teatre_lliure','web_auditori','web_centres_civics','diba_turismo')
     if not sources: return {'attempted':0,'enriched':0,'failed':0,'media_references':0}
     marks=','.join('?' for _ in sources)
     record_ids=tuple(record_ids or ())
@@ -229,12 +261,15 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
     # periodically when no explicit hour was found.
     missing='' if refresh else """AND (
       NOT EXISTS (SELECT 1 FROM source_enrichments x WHERE x.source=source_records.source AND x.id=source_records.id)
+      OR (source_records.source<>'guiabcn' AND EXISTS (
+        SELECT 1 FROM source_enrichments x WHERE x.source=source_records.source AND x.id=source_records.id
+          AND COALESCE(x.schedule_parser_version,0)<? AND source_records.end_date>=date('now')))
       OR (source_records.source='guiabcn' AND EXISTS (
         SELECT 1 FROM source_enrichments x WHERE x.source=source_records.source AND x.id=source_records.id
           AND (COALESCE(x.schedule_parser_version,0)<? OR (COALESCE(x.schedule_time,'')='' AND (COALESCE(x.schedule_checked_at,'')='' OR x.schedule_checked_at<?)))
       ))
     )"""
-    missing_params=() if refresh else (SCHEDULE_PARSER_VERSION,retry_before)
+    missing_params=() if refresh else (SCHEDULE_PARSER_VERSION,SCHEDULE_PARSER_VERSION,retry_before)
     # Un registro de GuiaBCN que también está en Open Data BCN no se publica
     # (gana Open Data, que ya trae su horario): no se pide su detalle salvo
     # que se pida explícitamente (refresh, --enrich-event).
@@ -262,6 +297,9 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
             if fetcher: content=fetcher(url,timeout)
             else: content=_fetch_html(req,timeout)
             parser=MetaParser();parser.feed(content);description=parser.description; schedule_time,schedule_text=parser.schedule; facts=detail_facts(content)
+            page_time,page_text,page_facts=page_schedule(source,content,start_date,end_date)
+            if page_text: schedule_time,schedule_text=page_time,page_text
+            facts.update(page_facts)
             if source=='guiabcn':
                 # El horario sale de la API de detalle (filas con días y horas
                 # separados); la página solo aporta descripción, enlaces e imagen.

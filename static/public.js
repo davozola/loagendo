@@ -563,6 +563,8 @@ function whenCell(e) {
   if (a.kind === 'started') return `<div class="when w-course"><span class="w-kind">${L('En marcha', 'En marxa')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
   if (a.kind === 'run') return `<div class="when w-course"><span class="w-kind">${L('En programación', 'En programació')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
   if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa') : L('hora por confirmar', 'hora per confirmar')}</span></div>`;
+  const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar'), 'Horario próximamente': L('Horario próximamente', 'Horari properament')}[e.time_label];
+  if (fixedLater) return `<div class="when w-tbc"><span class="w-mid">${esc(fixedLater)}</span><span class="w-note">${L('según la fuente', 'segons la font')}</span></div>`;
   return `<div class="when w-tbc"><span class="w-mid">${L('Hora por confirmar', 'Hora per confirmar')}</span><span class="w-note">${a.run ? esc(`${L('en cartel', 'en cartell')} ${untilText(e, a.until)}`) : L('confírmala antes de ir', 'confirma-la abans d\'anar-hi')}</span></div>`;
 }
 function row(e) {
