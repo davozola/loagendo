@@ -120,10 +120,11 @@ CCCB_DISCIPLINE={'audiovisuales':'Cine y audiovisual','debates':'Ciencia y divul
 
 
 # Tipo de acto que declara GRAF (graf.cat) → categoría interna.
-GRAF_CATEGORY=((('exposici','inauguraci','performance','open studio','estudi obert','instal'),'Arte y exposiciones'),
+GRAF_CATEGORY=((('exposici','inauguraci','finissage','performance','open studio','estudi obert','instal'),'Arte y exposiciones'),
+               (('arts en viu',),'Artes escénicas'),
                (('screening','projecci','cinema','video'),'Cine y audiovisual'),
                (('xerrada','seminari','conferenci','presentaci','conversa','taula rodona','debat','jornad','simposi','lectura','visita'),'Literatura y palabra'),
-               (('taller','curs','workshop','formaci'),'Talleres y experiencias'),
+               (('taller','curs','workshop','formaci','laboratori'),'Talleres y experiencias'),
                (('concert','sessio d\'escolta','escolta'),'Música y vida nocturna'))
 
 

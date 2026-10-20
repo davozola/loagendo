@@ -293,6 +293,7 @@ def parse_graf(page, today=None):
             'parser_version': 'graf-v1', 'graf_space': _graf_text(space.group(1)), 'graf_place': place, 'graf_category': cat,
             'time_end': end_time, 'price_label': _graf_text(price.group(1)) if price else ''}, start_time)
         if cat.lower().startswith('exposici') and dates[0] != dates[1]: record['kind'] = 'exhibition'
+        if cat.lower().startswith('convocat'): record['eligibility'] = 'exclude'  # convocatorias para artistas: no son actos
         price_text = record['raw']['item']['price_label']
         if price_text: record['price_text'] = price_text
         record['organizers'] = [_graf_text(space.group(1))]
