@@ -221,3 +221,12 @@ class FamilyTextTests(unittest.TestCase):
         self.assertFalse(family_text('Taller de tapís. Espai de canguratge per a infants a partir dels 4 anys.'))
         self.assertFalse(family_text('Una exposició per a tots els públics i totes les edats.'))
         self.assertFalse(family_text('Més de sis-cents llibres per a infants i adults.'))
+
+
+class ActivityFiledAsExhibitionTests(unittest.TestCase):
+    def test_title_naming_an_activity_wins_over_the_exhibition_category(self):
+        self.assertEqual(catalog.effective_kind('opendatabcn_agenda', {}, 'exhibition', "Taller 'Grup Costura - dimecres'", '2026-10-07', '2026-11-18'), 'program')
+        self.assertEqual(catalog.format_of('program', "Taller 'Grup Costura - dimecres'", '2026-10-07', '2026-11-18'), 'workshop')
+        self.assertEqual(catalog.effective_kind('generalitat', {}, 'exhibition', 'Visita dinamitzada "Posem ordre a la història"', '2026-11-28', '2026-11-28'), 'single')
+        self.assertEqual(catalog.effective_kind('generalitat', {}, 'exhibition', 'Exposició "Sim, el dibuix i la guerra"', '2026-05-08', '2026-12-31'), 'exhibition')
+        self.assertEqual(catalog.effective_kind('web_graf', {}, 'exhibition', 'Synthetic Nature. Alejandro Monge', '2026-09-17', '2026-10-31'), 'exhibition')

@@ -430,8 +430,26 @@ def music_route(title_text):
     return 'Conciertos'
 
 
+# Actividad que la fuente archiva en «exposicions» (Open Data BCN, Generalitat): el título la nombra
+# como taller, visita, festival… («Taller 'Grup Costura'», «Visita dinamitzada…», «Festival FotoFest»).
+ACTIVITY_TITLE=re.compile(r"^(?:taller|tallers|tastet|curs|curset|curso|visita|visites|activitat|actividad|festival|festa|fiesta|fira|feria|setmana|semana|cloenda|"
+                          r"presentacio|presentacion|contes?|cuentos?|xerrada|conferencia|halloween|dates de festa|jornada|jornades)\b")
+
+
+def _activity_kind(title, start, end):
+    text=re.sub(r"^[^a-z0-9]+","",clean(title))
+    if not ACTIVITY_TITLE.match(text): return None
+    span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
+    if re.match(r"(?:curs|curset|curso)\b",text): return 'course'
+    if re.match(r"(?:festival|festa|fiesta|fira|feria|setmana|semana|jornades|dates de festa)\b",text) or span>2: return 'program'
+    return 'single'
+
+
 def effective_kind(source, raw, stored_kind, title, start, end):
-    """Repair legacy GuiaBCN rows whose feed type was the generic 'Agenda'."""
+    """Repair legacy GuiaBCN rows whose feed type was the generic 'Agenda', and activities that a
+    source files as exhibitions (20-10-2026)."""
+    if stored_kind=='exhibition':
+        return _activity_kind(title,start,end) or stored_kind
     if source!='guiabcn' or stored_kind!='Agenda': return stored_kind
     span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
     text=clean(title)
@@ -809,7 +827,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=28  # 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=29  # 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
