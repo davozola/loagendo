@@ -55,7 +55,7 @@ const CA = {
   'Saltar a la agenda':'Salta a l\'agenda','Agenda':'Agenda','Selección':'Selecció','Barrios':'Barris','Guardados':'Desats','Ver guardados':'Mostra els desats','Cambiar modo claro u oscuro':'Canvia el mode clar o fosc',
   'Agenda cultural · Barcelona':'Agenda cultural · Barcelona','Qué hacer en Barcelona':'Què fer a Barcelona','hoy.':'avui.','Conciertos, teatro, exposiciones, cine y planes de barrio, con horario y enlace a la fuente oficial. Actualizada varias veces al día.':'Concerts, teatre, exposicions, cinema i plans de barri, amb horari i enllaç a la font oficial. Actualitzada diverses vegades al dia.',
   'Selección de la semana':'Selecció de la setmana','Buscar en la agenda':'Cerca a l\'agenda','Artista, sala, barrio, obra…':'Artista, sala, barri, obra…','7 días':'7 dies','30 días':'30 dies','6 meses':'6 mesos','Elegir una fecha concreta':'Tria una data concreta','Días anteriores':'Dies anteriors','Días siguientes':'Dies següents','Días de agenda':'Dies d\'agenda','Periodo':'Període',
-  'Filtros':'Filtres','Filtros activos':'Filtres actius','Limpiar':'Esborra','Cerrar filtros':'Tanca els filtres','Qué te apetece':'Què et ve de gust','Categoría':'Categoria','Tipo':'Tipus','Distrito':'Districte','Filtrar por distrito':'Filtra per districte','Formato':'Format','Filtrar por formato':'Filtra per format','Todos los formatos':'Tots els formats','Incluir cursos ya empezados':'Inclou cursos ja començats','Solo gratis':'Només gratis','Filtrar por horario':'Filtra per horari','Franja horaria':'Franja horària','Mañana':'Matí','Tarde':'Tarda','Noche':'Nit','Desde':'Des de','Hasta':'Fins a','Hora desde':'Hora des de','Hora hasta':'Hora fins a','Quitar horario':'Treu l\'horari','Vista':'Vista','Modo de vista':'Mode de vista','Lista':'Llista','Mapa':'Mapa','Por sitio':'Per lloc',
+  'Filtros':'Filtres','Filtros activos':'Filtres actius','Tipo de plan':'Tipus de pla','Para quién · Descubre':'Per a qui · Descobreix','Atajos':'Dreceres','Por la noche':'A la nit','Limpiar':'Esborra','Cerrar filtros':'Tanca els filtres','Qué te apetece':'Què et ve de gust','Categoría':'Categoria','Tipo':'Tipus','Distrito':'Districte','Filtrar por distrito':'Filtra per districte','Formato':'Format','Filtrar por formato':'Filtra per format','Todos los formatos':'Tots els formats','Incluir cursos ya empezados':'Inclou cursos ja començats','Solo gratis':'Només gratis','Filtrar por horario':'Filtra per horari','Franja horaria':'Franja horària','Mañana':'Matí','Tarde':'Tarda','Noche':'Nit','Desde':'Des de','Hasta':'Fins a','Hora desde':'Hora des de','Hora hasta':'Hora fins a','Quitar horario':'Treu l\'horari','Vista':'Vista','Modo de vista':'Mode de vista','Lista':'Llista','Mapa':'Mapa','Por sitio':'Per lloc',
   'Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.':'Els horaris i preus es mostren tal com els publica cada font. Confirma\'ls abans d\'anar-hi.','Por distritos':'Per districtes','Próximos 14 días':'Propers 14 dies','Fuentes y créditos':'Fonts i crèdits',
   'Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.':'Dades: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) i agendes dels equipaments. Confirma els horaris a la font.',
   'Cambiar idioma':'Canvia l\'idioma','mañana.':'demà.','este fin de semana.':'aquest cap de setmana.','esta semana.':'aquesta setmana.','este mes.':'aquest mes.','Exposición':'Exposició','Hoy, lunes':'Avui, dilluns'
@@ -289,6 +289,8 @@ function clearFilter(k) {
 function renderActive() {
   const list = activeFilterList();
   $('activeFilters').innerHTML = list.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (list.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
+  const quick = [['free', t('Gratis')], ['familia', chanName('familia')], ['noche', t('Por la noche')]];
+  $('quickFilters').innerHTML = list.length ? '' : quick.map(([k, l]) => `<button class="quick-chip" type="button" data-quick="${k}">${esc(l)}</button>`).join('');
   const n = list.length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
 }
@@ -466,10 +468,10 @@ function status(a, now) {
 
 /* ---------- botones de tipo ---------- */
 const CHIPS = [
-  {k: 'fixed', label: () => L('Empiezan a una hora', 'Comencen a una hora'), desc: () => L('Conciertos, funciones, charlas', 'Concerts, funcions, xerrades'), mark: 'dot'},
-  {k: 'wide', label: () => L('Horario amplio', 'Horari ampli'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais'), mark: 'bar'},
-  {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`), mark: ''},
-  {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar'), desc: () => '', mark: 'dash'},
+  {k: 'fixed', label: () => L('Empiezan a una hora', 'Comencen a una hora'), short: () => L('Con hora', 'Amb hora'), desc: () => L('Conciertos, funciones, charlas', 'Concerts, funcions, xerrades'), mark: 'dot'},
+  {k: 'wide', label: () => L('Horario amplio', 'Horari ampli'), short: () => L('Abierto', 'Obert'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais'), mark: 'bar'},
+  {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos'), short: () => L('Talleres', 'Tallers'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`), mark: ''},
+  {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar'), short: () => L('Sin hora', 'Sense hora'), desc: () => '', mark: 'dash'},
 ];
 state.show = {fixed: true, wide: false, tbc: true, soon: false};
 try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
@@ -486,7 +488,10 @@ function channelView() {
 channelView();
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
 function chipsHtml(counts) {
-  return `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
+  const html = `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}<span class="ag-chip-long">${esc(c.label())}</span><span class="ag-chip-short" aria-hidden="true">${esc(c.short())}</span> <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
+  // El mismo selector, con descripciones, encabeza el panel de filtros.
+  const tf = $('typeFilter'); if (tf) tf.innerHTML = html;
+  return html;
 }
 
 /* ---------- modelo ---------- */
@@ -684,24 +689,16 @@ function renderAgenda() {
   stick(); mountFilterUi();
 }
 // Móvil: pie fijo en el panel de filtros («Ver N planes» cierra y deja claro que ya están aplicados)
-// y botón flotante «Filtros» al alcance del pulgar mientras se recorre la agenda.
+// (la barra de filtros fija hace de acceso permanente; ya no hay botón flotante).
 function mountFilterUi() {
   if (!$('filtersFoot')) {
     const foot = document.createElement('div'); foot.id = 'filtersFoot'; foot.className = 'filters-foot';
     foot.innerHTML = `<button id="filtersClear" class="filters-clear" type="button">${L('Limpiar', 'Esborra')}</button><button id="filtersApply" class="filters-apply" type="button"></button>`;
     $('filters').append(foot);
-    const fab = document.createElement('button'); fab.id = 'fabFilters'; fab.className = 'fab-filters'; fab.type = 'button'; fab.hidden = true;
-    fab.innerHTML = `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>${L('Filtros', 'Filtres')}</span><b hidden></b>`;
-    document.body.append(fab);
-    if ('IntersectionObserver' in window) new IntersectionObserver(([en]) => { fab.dataset.inAgenda = en.isIntersecting ? '1' : ''; syncFab() }, {rootMargin: '-120px 0px -40% 0px'}).observe($('agenda'));
-    document.addEventListener('scroll', syncFab, {passive: true});
   }
   const n = state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
   $('filtersApply').textContent = `${L('Ver', 'Mostra')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans')}`;
-  const active = activeFilterList().length, b = $('fabFilters').querySelector('b'); b.hidden = !active; b.textContent = active;
-  syncFab();
 }
-function syncFab() { const fab = $('fabFilters'); if (!fab) return; const toggle = $('openFilters').getBoundingClientRect(); fab.hidden = !(fab.dataset.inAgenda && toggle.bottom < 0 && !$('filters').classList.contains('open')) }
 function stick() { const h = document.querySelector('.site-header'); if (h) document.documentElement.style.setProperty('--stick', h.getBoundingClientRect().height + 'px') }
 function stableRender() {
   const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
@@ -895,6 +892,7 @@ document.addEventListener('click', e => {
   if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }
   if (button.dataset.moredays) { state.shown += 7; stableRender(); return }
   if (button.dataset.dayall) { state.openDays.add(button.dataset.dayall); stableRender(); return }
+  if (button.dataset.quick) { const k = button.dataset.quick; if (k === 'free') state.free = true; if (k === 'familia' && !state.chans.includes('familia')) { state.chans = [...state.chans, 'familia']; channelView() } if (k === 'noche') { state.hourFrom = 19; state.hourTo = 23 } refresh(); return }
   if (button.dataset.chip) { const k = button.dataset.chip; state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
   if (button.dataset.day) { state.day = button.dataset.day; state.range = ''; refresh(); return }

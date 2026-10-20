@@ -356,3 +356,37 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Selección de la semana con 7 fichas (20-10-2026): en escritorio, las dos últimas ocupan media fila cada una */
 @media(min-width:1101px){.curated .pick-small:nth-child(6),.curated .pick-small:nth-child(7){grid-column:span 2}.curated .pick-small:nth-child(n+6) .pick-media{height:180px}}
+
+/* Navegación de filtros (21-10-2026): barra fija con «Filtros», filtros activos y atajos;
+   tipo de plan y «Para quién» dentro del panel; pestañas compactas en móvil */
+.filter-bar{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.filter-bar-chips{display:flex;gap:6px;align-items:center;min-width:0;flex:1}
+.filter-bar .active-filters{margin:0}
+.quick-filters{display:none}
+.ag-chip-short{display:none}
+.type-filter .ag-chips{grid-template-columns:1fr;gap:6px;margin:0}
+@media(min-width:961px){.type-group{display:none}} /* en escritorio las tarjetas ya están junto a la lista */
+.type-filter .ag-chip{min-height:0;padding:8px 11px}
+.filters-panel .discover{display:block;margin:0}
+.filters-panel .channel-row{flex-wrap:wrap;overflow:visible}
+.filters-panel .age-row{flex-wrap:wrap;overflow:visible;margin:8px 0 0}
+.quick-chip{flex:0 0 auto;min-height:36px;padding:0 12px;border:1px dashed var(--line2);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
+.quick-chip:hover{background:var(--hover)}
+@media(max-width:960px){
+  .filter-bar{position:sticky;top:var(--stick,0px);z-index:30;margin:0 calc(-1 * var(--gutter)) 10px;padding:8px var(--gutter);background:var(--bg);border-bottom:1px solid var(--line)}
+  .filter-bar .filters-toggle{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;border:1px solid var(--accent);border-radius:999px;font:inherit;font-size:14.5px;cursor:pointer}
+  .filter-bar-chips{overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 90%,transparent);mask-image:linear-gradient(90deg,#000 90%,transparent)}
+  .filter-bar-chips::-webkit-scrollbar{display:none}
+  .filter-bar .active-filters{flex-wrap:nowrap}
+  .filter-bar .active-chip{white-space:nowrap}
+  .quick-filters{display:flex;gap:6px}.quick-filters:empty{display:none}
+  .fab-filters{display:none!important}
+}
+@media(max-width:760px){
+  .content .ag-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 10px}
+  .content .ag-chips::-webkit-scrollbar{display:none}
+  .content .ag-chip{flex:0 0 auto;min-height:36px;padding:0 12px;border-radius:999px;justify-content:center}
+  .content .ag-chip-desc,.content .ag-chip-long{display:none}
+  .content .ag-chip-short{display:inline}
+  .content .ag-chip-top{font-size:13px;gap:6px;white-space:nowrap}
+}
