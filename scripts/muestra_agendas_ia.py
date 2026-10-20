@@ -25,8 +25,21 @@ def main(slugs=()):
     today = dt.date.today(); usage = {}; parts = []; summary = []
     for agenda in ai_agenda.load_agendas():
         if slugs and agenda['slug'] not in slugs: continue
-        try: res = ai_agenda.read_agenda(agenda, today, key, usage=usage)
-        except Exception as error: res = {'pages': [{'url': '', 'error': str(error)}], 'accepted': [], 'rejected': []}
+        # Reutiliza lo leído hoy (si una ejecución anterior se cortó) en lugar de volver a pagar la IA.
+        try: cached = json.loads((ROOT / 'reports' / 'muestra_agendas_ia.json').read_text(encoding='utf-8')).get(agenda['slug'])
+        except (OSError, ValueError): cached = None
+        if cached and cached.get('day') == today.isoformat() and '--de-nuevo' not in sys.argv:
+            res = cached['result']
+            for a in res['accepted']: a['sesiones'] = [tuple(x) for x in a['sesiones']]
+        else:
+          try: res = ai_agenda.read_agenda(agenda, today, key, usage=usage)
+          except Exception as error: res = {'pages': [{'url': '', 'error': str(error)}], 'accepted': [], 'rejected': []}
+        try:
+            cache_path = ROOT / 'reports' / 'muestra_agendas_ia.json'
+            cache = json.loads(cache_path.read_text(encoding='utf-8')) if cache_path.exists() else {}
+            cache[agenda['slug']] = {'day': today.isoformat(), 'result': res}
+            cache_path.write_text(json.dumps(cache, ensure_ascii=False, default=list), encoding='utf-8')
+        except (OSError, ValueError): pass
         errors = [p['error'] for p in res['pages'] if p.get('error')]
         summary.append(f"{agenda['name']}: {len(res['accepted'])} actos" + (f" · {len(res['rejected'])} descartados" if res['rejected'] else '') + (f" · ERROR {errors[0]}" if errors else ''))
         rows = ''.join(
@@ -36,7 +49,7 @@ def main(slugs=()):
             f"{html.escape(' → '.join(a['periodo'])) if a.get('periodo') else ''}</td><td>{html.escape(a.get('precio') or '')}</td>"
             f"<td><small>{'<br>'.join(html.escape(k + ': «' + v + '»') for k, v in a['quotes'].items())}</small>"
             f"{'<br><small class=ko>' + html.escape('; '.join(a['why_partial'])) + '</small>' if a.get('why_partial') else ''}</td></tr>"
-            for a in sorted(res['accepted'], key=lambda a: (a['sesiones'] or [(a.get('periodo') or ('',))[0]])[0]))
+            for a in sorted(res['accepted'], key=lambda a: a['sesiones'][0][0] if a['sesiones'] else (a.get('periodo') or ('',))[0]))
         bad = ''.join(f"<li><b>{html.escape(str(r['item'].get('titulo')))}</b> — {html.escape('; '.join(r['why']))}</li>" for r in res['rejected'])
         pages = ' · '.join(html.escape(f"{p['url']} ({p.get('chars', 0)} car.)" + (f" ERROR {p['error']}" if p.get('error') else '')) for p in res['pages'])
         parts.append(f"<h2>{html.escape(agenda['name'])} · {len(res['accepted'])} actos</h2><p class=msg>{pages}</p>"
@@ -51,4 +64,4 @@ def main(slugs=()):
 
 
 if __name__ == '__main__':
-    main(tuple(sys.argv[1:]))
+    main(tuple(a for a in sys.argv[1:] if not a.startswith('--')))
