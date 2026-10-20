@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / 'config' / 'agendas_ia.json'
 PROMPT_VERSION = 1
 LABEL = 'Datos de la sala'
-CHUNK_CHARS = 14000          # ~4.000-5.000 tokens por petición
+CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
 IMAGE_BUDGET = 40            # páginas de acto leídas por agenda y pasada para su imagen
 NEAR_TIME, NEAR_PRICE, NEAR_DATE_AFTER, NEAR_DATE_BEFORE = 500, 900, 700, 5000
@@ -54,7 +54,8 @@ FREE_RX = re.compile(r"gratu|gratis|lliure|libre|free|sense cost|sin coste")
 
 SYSTEM = """Lees la página de agenda de una sala o espacio cultural de Barcelona y devuelves los actos que anuncia, para la agenda Brollant.
 Reglas estrictas:
-- Solo actos que la página anuncia explícitamente con fecha. Nada deducido, nada inventado, nada de otras salas salvo que la agenda sea de varias salas (entonces indica cuál).
+- Devuelve TODOS los actos con fecha que aparecen en el texto, uno por uno, aunque sean muchos (50 o más) y aunque se repitan cada semana: no resumas, no agrupes, no te quedes con una muestra.
+- Solo actos que la página anuncia explícitamente con fecha. Nada deducido, nada inventado. Si la agenda es de varias salas, indica en sala cuál de las salas_posibles.
 - titulo: tal como aparece en la página (cópialo literal, sin añadir ni traducir).
 - sesiones: cada fecha (y hora, si la página la da) del acto. fecha en formato AAAA-MM-DD. Si la página no da el año o el mes junto al día, usa la fecha futura más próxima coherente con la página y con la fecha de hoy que te doy.
 - cita_fecha y cita_hora: copia literal y corta (máx. 120 caracteres) del texto donde se lee el día y la hora; tiene que poder encontrarse tal cual en la página. Si no hay hora escrita, hora y cita_hora vacías.
@@ -90,7 +91,9 @@ def expand_urls(agenda, today):
 
 # ---------- limpieza de la página ----------
 class _Cleaner(HTMLParser):
-    SKIP = {'script', 'style', 'noscript', 'svg', 'nav', 'header', 'footer', 'form', 'iframe', 'template', 'button', 'select'}
+    # <header>, <form> y <button> no se saltan: muchas webs ponen dentro la cabecera de cada acto
+    # (Antic Teatre: <article><header>fecha, título…</header>) o envuelven el listado en un filtro.
+    SKIP = {'script', 'style', 'noscript', 'svg', 'nav', 'footer', 'iframe', 'template', 'select'}
     BLOCK = {'p', 'div', 'li', 'tr', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article', 'dt', 'dd', 'td', 'th', 'time'}
 
     def __init__(self, base_url):
@@ -155,13 +158,13 @@ def _positions(needle, hay):
     return out
 
 
-def _date_from_quote(iso, quote, today):
+def _date_from_quote(iso, quote, today, allow_past=False):
     """La fecha de la IA es coherente con su cita: el día está; el mes, el año y el día de la semana, si
     la cita los nombra, coinciden; sin mes en la cita, es la fecha futura más próxima con ese día."""
     try: d = dt.date.fromisoformat(str(iso)[:10])
     except ValueError: return None
     q = fold(quote)
-    if d < today or d > today + dt.timedelta(days=400): return None
+    if (d < today and not allow_past) or d < today - dt.timedelta(days=1200) or d > today + dt.timedelta(days=400): return None
     if not re.search(rf"(?<!\d)0?{d.day}(?!\d)", q): return None
     years = set(re.findall(r"\b(20\d\d)\b", q))
     if years and str(d.year) not in years: return None
@@ -174,6 +177,7 @@ def _date_from_quote(iso, quote, today):
         if not any(m[:3] in MONTHS[d.month] or m in MONTHS[d.month] for m in months): return None
     else:
         # Sin mes: tiene que ser la primera fecha futura con ese número de día.
+        if allow_past: return None
         probe = today
         while probe.day != d.day: probe += dt.timedelta(days=1)
         if probe != d: return None
@@ -217,7 +221,17 @@ def verify(item, text, links, today, salas=None):
     p = item.get('periodo') or {}
     if p.get('inicio') and p.get('fin'):
         qp = str(p.get('cita') or ''); ppos = _positions(qp, hay)
-        a, b = _date_from_quote(p['inicio'], qp, today - dt.timedelta(days=400)), _date_from_quote(p['fin'], qp, today)
+        a, b = _date_from_quote(p['inicio'], qp, today, allow_past=True), _date_from_quote(p['fin'], qp, today)
+        if not a and b and str(p['inicio'])[:10] <= today.isoformat():
+            # Obra en cartel desde antes de hoy («Del dv. 19.04.24 al dc. 30.12.26») que la IA recorta a
+            # hoy: vale la primera fecha que da la cita, si es anterior a hoy.
+            first = re.search(r"(?<!\d)(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})(?!\d)", fold(qp))
+            if first:
+                y = int(first.group(3)); y = y + 2000 if y < 100 else y
+                try:
+                    cand = dt.date(y, int(first.group(2)), int(first.group(1)))
+                    if cand < today: a = cand
+                except ValueError: pass
         if ppos and a and b and a <= b and (_near(tpos, ppos, 1500, 1500)):
             out['periodo'] = (a.isoformat(), b.isoformat()); out['quotes'].setdefault('date', qp)
         else: why.append(f"periodo sin cita válida: {p!r}")
@@ -243,7 +257,7 @@ def ask(agenda, text, page_url, today, key, requester=None, model=None, usage=No
     salas = [s['name'] for s in agenda.get('salas') or []]
     for part in chunks(text):
         context = {'sala': agenda['name'], 'salas_posibles': salas, 'pagina': page_url, 'hoy': today.isoformat(), 'texto': part}
-        body = {'model': model, 'max_tokens': 8000,
+        body = {'model': model, 'max_tokens': 16000,
                 'system': [{'type': 'text', 'text': SYSTEM, 'cache_control': {'type': 'ephemeral'}}],
                 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'actos'},
                 'messages': [{'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]}
@@ -251,6 +265,8 @@ def ask(agenda, text, page_url, today, key, requester=None, model=None, usage=No
         if usage is not None:
             for k, v in (message.get('usage') or {}).items():
                 if isinstance(v, int): usage[k] = usage.get(k, 0) + v
+            usage.setdefault('stop_reasons', {}); reason = message.get('stop_reason') or '?'
+            usage['stop_reasons'][reason] = usage['stop_reasons'].get(reason, 0) + 1
         for block in message.get('content') or []:
             if block.get('type') == 'tool_use' and block.get('name') == 'actos':
                 found.extend(x for x in (block.get('input') or {}).get('actos') or [] if isinstance(x, dict))
@@ -334,6 +350,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
     if result['unchanged']: return result
     for page, text, links, page_url in fetched:
         items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
+        result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
             act, why = verify(item, text, links, today, agenda.get('salas'))
             if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)

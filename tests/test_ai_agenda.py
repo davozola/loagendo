@@ -97,3 +97,15 @@ class SyncTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PeriodTests(unittest.TestCase):
+    def test_running_show_and_future_period_pass(self):
+        text, links = ai_agenda.clean('<article><header><h3>Impro Show</h3><p>Del dv. 19.04.24 al dc. 30.12.26</p></header></article>'
+                                      '<article><header><h3>Gola</h3><p>Del 21/10/2026 al 15/11/2026</p></header></article>', 'https://x.test/')
+        a, _ = ai_agenda.verify({'titulo': 'Impro Show', 'periodo': {'inicio': '2026-10-20', 'fin': '2026-12-30', 'cita': 'Del dv. 19.04.24 al dc. 30.12.26'}}, text, links, TODAY)
+        self.assertEqual(a['periodo'], ('2024-04-19', '2026-12-30'))
+        b, _ = ai_agenda.verify({'titulo': 'Gola', 'periodo': {'inicio': '2026-10-21', 'fin': '2026-11-15', 'cita': 'Del 21/10/2026 al 15/11/2026'}}, text, links, TODAY)
+        self.assertEqual(b['periodo'], ('2026-10-21', '2026-11-15'))
+        c, _ = ai_agenda.verify({'titulo': 'Gola', 'periodo': {'inicio': '2026-10-21', 'fin': '2026-12-15', 'cita': 'Del 21/10/2026 al 15/11/2026'}}, text, links, TODAY)
+        self.assertIsNone(c)

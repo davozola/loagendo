@@ -41,7 +41,7 @@ def main(slugs=()):
             cache_path.write_text(json.dumps(cache, ensure_ascii=False, default=list), encoding='utf-8')
         except (OSError, ValueError): pass
         errors = [p['error'] for p in res['pages'] if p.get('error')]
-        summary.append(f"{agenda['name']}: {len(res['accepted'])} actos" + (f" · {len(res['rejected'])} descartados" if res['rejected'] else '') + (f" · ERROR {errors[0]}" if errors else ''))
+        summary.append(f"{agenda['name']}: {len(res['accepted'])} actos" + (f" (la IA devolvió {res['raw_items']})" if res.get('raw_items') is not None else '') + (f" · {len(res['rejected'])} descartados" if res['rejected'] else '') + (f" · ERROR {errors[0]}" if errors else ''))
         rows = ''.join(
             f"<tr><td><b>{html.escape(a['titulo'])}</b>{'<br><small>' + html.escape(a['sala']['name']) + '</small>' if a.get('sala') else ''}"
             f"{'<br><a href=' + json.dumps(a['url']) + ' target=_blank>ficha</a>' if a.get('url') else ''}</td>"

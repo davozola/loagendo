@@ -1,28 +1,238 @@
 {
   "nota": "Agendas de sala leídas con IA y comprobadas contra el texto de la página (src/ai_agenda.py). Decisión de David, 20-10-2026: 20 salas, ficha con «Datos de la sala», imágenes con crédito a la sala, lectura cada dos días. Una sala se publica solo con \"activa\": true, tras revisar la muestra (python3 scripts/muestra_agendas_ia.py). Las direcciones salen de otras fichas de la base o de la web de la sala; si no hay, se deja vacía. {lunes+N} = lunes de esta semana + N días.",
   "agendas": [
-    {"slug": "luz_de_gas", "name": "Luz de Gas", "address": "C Muntaner 246, 08021 Barcelona", "type": "music", "urls": ["https://luzdegas.com/es/calendar/"], "activa": false},
-    {"slug": "marula", "name": "Marula Café", "address": "Carrer dels Escudellers 49, 08002 Barcelona", "type": "music", "urls": ["https://marulacafe.com/agenda/"], "activa": false},
-    {"slug": "tradicionarius", "name": "Centre Artesà Tradicionàrius", "address": "", "type": "music", "urls": ["https://www.tradicionarius.cat/ca/programacio"], "activa": false},
-    {"slug": "conservatori_liceu", "name": "Fundació Conservatori del Liceu", "address": "Carrer Nou de la Rambla 82, 08001 Barcelona", "type": "music", "urls": ["https://www.conservatoriliceu.es/auditori/programacio/"], "activa": false},
-    {"slug": "almo2bar", "name": "Almo2bar", "address": "Carrer de Bruniquer 59, 08024 Barcelona", "type": "music", "urls": ["https://almo2bar.com/"], "activa": false},
-    {"slug": "filmoteca", "name": "Filmoteca de Catalunya", "address": "Plaça de Salvador Seguí 1-9, 08001 Barcelona", "type": "cinema", "urls": ["https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+0}", "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+7}", "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+14}"], "activa": false},
-    {"slug": "zumzeig", "name": "Zumzeig Cinecooperativa", "address": "Carrer de Béjar 53, Barcelona", "type": "cinema", "urls": ["https://zumzeigcine.coop/cinema/calendari/"], "activa": false},
-    {"slug": "phenomena", "name": "Phenomena Experience", "address": "C Sant Antoni Maria Claret 168, 08025 Barcelona", "type": "cinema", "urls": ["https://phenomena-experience.com/index?pag=cartelera"], "activa": false},
-    {"slug": "beckett", "name": "Sala Beckett", "address": "C Pere IV 228-232, Barcelona", "type": "theatre", "urls": ["https://www.salabeckett.cat/espectacles/"], "activa": false},
-    {"slug": "antic_teatre", "name": "Antic Teatre", "address": "C Verdaguer i Callís 12, Barcelona", "type": "theatre", "urls": ["https://www.anticteatre.com/programacio/"], "activa": false},
-    {"slug": "teatreneu", "name": "Teatreneu", "address": "C Terol 26, Barcelona", "type": "theatre", "urls": ["https://www.teatreneu.com/ca/cartellera.html"], "activa": false},
-    {"slug": "teatre_victoria", "name": "Teatre Victòria", "address": "", "type": "theatre", "urls": ["https://www.teatrevictoria.com/ca/cartellera.html"], "activa": false},
-    {"slug": "teatre_gaudi", "name": "Teatre Gaudí", "address": "C Sant Antoni Maria Claret 120, Barcelona", "type": "theatre", "urls": ["https://teatregaudibarcelona.com/cartellera/"], "activa": false},
-    {"slug": "tantarantana", "name": "Tantarantana Teatre", "address": "Carrer de les Flors 22, Barcelona", "type": "theatre", "urls": ["https://tantarantana.com/programacio/"], "activa": false},
-    {"slug": "akademia", "name": "Teatre Akadèmia", "address": "C Buenos Aires 47-49, Barcelona", "type": "theatre", "urls": ["https://www.teatreakademia.cat/"], "activa": false},
-    {"slug": "grup_focus", "name": "Teatres del Grup Focus", "type": "theatre", "urls": ["https://cartellera.focus.cat/ca/"], "activa": false,
-     "salas": [{"name": "Teatre Romea", "address": "C Hospital 51, 08001 Barcelona"}, {"name": "Teatre Goya", "address": "C Joaquín Costa 68, Barcelona"},
-               {"name": "Teatre Borràs", "address": "Pl Urquinaona 9, Barcelona"}, {"name": "Teatre Condal", "address": "Av Paral·lel 91, Barcelona"},
-               {"name": "La Villarroel", "address": "C Villarroel 87, Barcelona"}]},
-    {"slug": "fundacio_miro", "name": "Fundació Joan Miró", "address": "Avinguda de Miramar 1, Barcelona", "type": "culture", "urls": ["https://www.fmirobcn.org/ca/totes-les-activitats/"], "activa": false},
-    {"slug": "ateneu", "name": "Ateneu Barcelonès", "address": "Carrer de la Canuda 6, Barcelona", "type": "culture", "urls": ["https://ateneubcn.cat/programacio/"], "activa": false},
-    {"slug": "la_pedrera", "name": "La Pedrera", "address": "Passeig de Gràcia 92, Barcelona", "type": "culture", "urls": ["https://www.lapedrera.com/ca/activitats/"], "activa": false},
-    {"slug": "caixaforum", "name": "CaixaForum Barcelona", "address": "Avinguda de Francesc Ferrer i Guàrdia 6-8, 08004 Barcelona", "type": "culture", "urls": ["https://caixaforum.org/ca/barcelona/actividades"], "activa": false}
+    {
+      "slug": "luz_de_gas",
+      "name": "Luz de Gas",
+      "address": "C Muntaner 246, 08021 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://luzdegas.com/es/calendar/"
+      ],
+      "activa": false,
+      "salas": [
+        {
+          "name": "Luz de Gas",
+          "address": "C Muntaner 246, 08021 Barcelona"
+        },
+        {
+          "name": "Sala B",
+          "address": "C Muntaner 246, 08021 Barcelona"
+        }
+      ]
+    },
+    {
+      "slug": "marula",
+      "name": "Marula Café",
+      "address": "Carrer dels Escudellers 49, 08002 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://marulacafe.com/agenda/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "tradicionarius",
+      "name": "Centre Artesà Tradicionàrius",
+      "address": "",
+      "type": "music",
+      "urls": [
+        "https://www.tradicionarius.cat/ca/programacio"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "conservatori_liceu",
+      "name": "Fundació Conservatori del Liceu",
+      "address": "Carrer Nou de la Rambla 82, 08001 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.conservatoriliceu.es/auditori/programacio/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "almo2bar",
+      "name": "Almo2bar",
+      "address": "Carrer de Bruniquer 59, 08024 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://almo2bar.com/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "filmoteca",
+      "name": "Filmoteca de Catalunya",
+      "address": "Plaça de Salvador Seguí 1-9, 08001 Barcelona",
+      "type": "cinema",
+      "urls": [
+        "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+0}",
+        "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+7}",
+        "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+14}"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "zumzeig",
+      "name": "Zumzeig Cinecooperativa",
+      "address": "Carrer de Béjar 53, Barcelona",
+      "type": "cinema",
+      "urls": [
+        "https://zumzeigcine.coop/cinema/calendari/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "phenomena",
+      "name": "Phenomena Experience",
+      "address": "C Sant Antoni Maria Claret 168, 08025 Barcelona",
+      "type": "cinema",
+      "urls": [
+        "https://phenomena-experience.com/index?pag=cartelera"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "beckett",
+      "name": "Sala Beckett",
+      "address": "C Pere IV 228-232, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.salabeckett.cat/espectacles/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "antic_teatre",
+      "name": "Antic Teatre",
+      "address": "C Verdaguer i Callís 12, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.anticteatre.com/programacio/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "teatreneu",
+      "name": "Teatreneu",
+      "address": "C Terol 26, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatreneu.com/ca/cartellera.html"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "teatre_victoria",
+      "name": "Teatre Victòria",
+      "address": "",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatrevictoria.com/ca/cartellera.html"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "teatre_gaudi",
+      "name": "Teatre Gaudí",
+      "address": "C Sant Antoni Maria Claret 120, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://teatregaudibarcelona.com/cartellera/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "tantarantana",
+      "name": "Tantarantana Teatre",
+      "address": "Carrer de les Flors 22, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://tantarantana.com/programacio/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "akademia",
+      "name": "Teatre Akadèmia",
+      "address": "C Buenos Aires 47-49, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatreakademia.cat/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "grup_focus",
+      "name": "Teatres del Grup Focus",
+      "type": "theatre",
+      "urls": [
+        "https://cartellera.focus.cat/ca/"
+      ],
+      "activa": false,
+      "salas": [
+        {
+          "name": "Teatre Romea",
+          "address": "C Hospital 51, 08001 Barcelona"
+        },
+        {
+          "name": "Teatre Goya",
+          "address": "C Joaquín Costa 68, Barcelona"
+        },
+        {
+          "name": "Teatre Borràs",
+          "address": "Pl Urquinaona 9, Barcelona"
+        },
+        {
+          "name": "Teatre Condal",
+          "address": "Av Paral·lel 91, Barcelona"
+        },
+        {
+          "name": "La Villarroel",
+          "address": "C Villarroel 87, Barcelona"
+        }
+      ]
+    },
+    {
+      "slug": "fundacio_miro",
+      "name": "Fundació Joan Miró",
+      "address": "Avinguda de Miramar 1, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.fmirobcn.org/ca/totes-les-activitats/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "ateneu",
+      "name": "Ateneu Barcelonès",
+      "address": "Carrer de la Canuda 6, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://ateneubcn.cat/programacio/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "la_pedrera",
+      "name": "La Pedrera",
+      "address": "Passeig de Gràcia 92, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.lapedrera.com/ca/activitats/"
+      ],
+      "activa": false
+    },
+    {
+      "slug": "caixaforum",
+      "name": "CaixaForum Barcelona",
+      "address": "Avinguda de Francesc Ferrer i Guàrdia 6-8, 08004 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://caixaforum.org/ca/barcelona/activitats"
+      ],
+      "activa": false
+    }
   ]
 }
