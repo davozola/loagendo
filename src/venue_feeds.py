@@ -387,7 +387,7 @@ def html_agenda_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
-def tribe_list_nodes(venue, fetcher=fetch, timeout=25, today=None):
+def tribe_list_nodes(venue, fetcher=fetch, timeout=25, today=None, known=None):
     """WordPress «The Events Calendar» en vista de lista (Jamboree, 20-10-2026): su JSON-LD
     y su API REST dan las fechas a las 00:00, pero cada <article> del listado imprime los
     pases («19:00h», «20:30h»), la sala, el precio y el enlace de entradas. Se leen tal cual."""
@@ -421,8 +421,18 @@ def tribe_list_nodes(venue, fetcher=fetch, timeout=25, today=None):
         if prices: node["offers"] = {"@type": "Offer", "price": " / ".join(prices), "url": html.unescape(tickets.group(1)) if tickets else ""}
         elif tickets: node["offers"] = {"@type": "Offer", "url": html.unescape(tickets.group(1))}
         if image: node["image"] = html.unescape(image.group(1))
-        if event_url.startswith("http") and event_url != base and fetched <= budget and (fetcher is not fetch or robots_allows(event_url)):
-            node = _page_extras(node, event_url, fetcher, timeout); fetched += 1
+        # Texto e imagen de la página del concierto (og:description / og:image). Lo ya leído en pasadas
+        # anteriores se reaprovecha: solo se piden las páginas nuevas. Fecha y hora siguen siendo las del
+        # listado (el JSON-LD de la página las da a las 00:00).
+        prev = (known or {}).get(event_url) or {}
+        if prev.get("description"): node["description"] = prev["description"]
+        if prev.get("image") and not node.get("image"): node["image"] = prev["image"]
+        if not prev.get("description") and event_url.startswith("http") and event_url != base and fetched <= budget and (fetcher is not fetch or robots_allows(event_url)):
+            st, _, page = fetcher(event_url, timeout); fetched += 1
+            if st == 200:
+                meta = og_meta(page)
+                if meta.get("og:description"): node["description"] = meta["og:description"]
+                if meta.get("og:image") and not node.get("image"): node["image"] = meta["og:image"]
         nodes.append((event_url, node))
     return nodes, fetched
 
@@ -467,7 +477,16 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         kind = (venue.get("feed") or {}).get("kind")
         if kind in ("wp_fullcalendar", "html", "tribe_list"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
-            nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "tribe_list": tribe_list_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout); urls = []
+            if kind == "tribe_list":
+                known = {}
+                for (raw,) in conn.execute("SELECT raw_json FROM source_records WHERE source=?", (source,)):
+                    try: item = (json.loads(raw).get("item") or {})
+                    except ValueError: continue
+                    if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
+                nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
+            else:
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+            urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)
             status, final_url, body = fetcher(agenda_url, timeout)

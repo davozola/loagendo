@@ -63,3 +63,20 @@ class ApoloTitleTest(unittest.TestCase):
         record = record_from_jsonld(apolo, node, node["url"])
         self.assertEqual((record["title"], record["time_text"]), ("Yard Act", "19:30"))
         self.assertEqual(record_from_jsonld(apolo, {**node, "name": "Nitsa: Oscar Mulero"}, node["url"])["title"], "Nitsa: Oscar Mulero")
+
+
+class JamboreeDetailTests(unittest.TestCase):
+    def test_reads_text_once_and_keeps_listing_times(self):
+        calls = []
+        def fetcher(url, timeout):
+            calls.append(url)
+            if url.endswith('/agenda/'): return 200, url, PAGE
+            return 200, url, '<meta property="og:description" content="Guitarrista de São Paulo."><script type="application/ld+json">{"@type":"Event","startDate":"2026-10-20T00:00"}</script>'
+        venue = {**VENUE, 'feed': {**VENUE['feed'], 'details': True}}
+        nodes, _ = tribe_list_nodes(venue, fetcher, today=dt.date(2026, 10, 20))
+        chico = nodes[0][1]
+        self.assertEqual((chico['description'], chico['startDate']), ('Guitarrista de São Paulo.', '2026-10-20T19:00'))
+        calls.clear()
+        known = {u: {'description': n['description']} for u, n in nodes}
+        tribe_list_nodes(venue, fetcher, today=dt.date(2026, 10, 20), known=known)
+        self.assertEqual(calls, ['https://jamboreejazz.com/agenda/'])   # ya leídas: no se piden otra vez
