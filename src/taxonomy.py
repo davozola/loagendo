@@ -528,6 +528,11 @@ def _ai_stats(conn, base):
     usage = {}
     for _, u in batches:
         for k, v in json.loads(u or '{}').items(): usage[k] = usage.get(k, 0) + v
-    return {'enabled': True, 'suggestions': [{'task': t, 'answer': a, 'count': n} for t, a, n in rows],
+    try:
+        sel = conn.execute('SELECT day, model, picks_json FROM ai_selection ORDER BY day DESC LIMIT 1').fetchone()
+        selection = {'day': sel[0], 'model': sel[1], 'picks': json.loads(sel[2])} if sel else None
+    except sqlite3.DatabaseError:
+        selection = None
+    return {'enabled': True, 'selection': selection, 'suggestions': [{'task': t, 'answer': a, 'count': n} for t, a, n in rows],
             'applied_categories': sum(1 for e in base if e.get('category_method') == 'ia'),
             'batches': {'total': len(batches), 'in_progress': sum(1 for b in batches if b[0] == 'in_progress')}, 'tokens': usage}

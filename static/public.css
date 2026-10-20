@@ -353,3 +353,6 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .sheet-brief{margin:14px 0 6px;padding:12px 14px;border:1px dashed var(--line2);border-radius:14px;background:var(--accentSoft)}
 .sheet-brief p{margin:0 0 6px;font-size:15px;line-height:1.45}
 .copy-original{display:block;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+
+/* Selección de la semana con 7 fichas (20-10-2026): en escritorio, las dos últimas ocupan media fila cada una */
+@media(min-width:1101px){.curated .pick-small:nth-child(6),.curated .pick-small:nth-child(7){grid-column:span 2}.curated .pick-small:nth-child(n+6) .pick-media{height:180px}}

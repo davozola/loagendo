@@ -172,7 +172,7 @@ const hoursOf = v => (String(v || '').match(/\b(?:[01]\d|2[0-3]):[0-5]\d\b/g) ||
 async function staticEvents(p) {
   const day = p.get('day') || '', from = p.get('date_from') || '', to = p.get('date_to') || '';
   const page = Number(p.get('page') || 1), size = Number(p.get('page_size') || PAGE);
-  if (p.get('featured') === '1') { const d = await dayFile(day || today); return {items: d.featured.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: d.featured.length} }
+  if (p.get('featured') === '1') { const d = await dayFile(day || today); return {items: d.featured.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: d.featured.length, ai: Boolean(d.featured_ai)} }
   const filters = {cat: p.getAll('public_category').filter(Boolean), chans: p.getAll('channel').filter(Boolean), ages: p.getAll('edad').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
     hourFrom: p.get('hour_from') ? Number(p.get('hour_from')) : null, hourTo: p.get('hour_to') ? Number(p.get('hour_to')) : null, started: p.get('started') !== '0'};
   const plain = !filters.cat.length && !filters.chans.length && !filters.ages.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
@@ -350,8 +350,9 @@ async function selection() {
   try {
     const d = await get('/api/events?' + new URLSearchParams({day: state.day, featured: '1', page_size: '30', public: '1'}));
     const ranked = d.items.slice();  // already ordered by score and daily rotation
+    // Elegida por la IA (src/ai_select.py): se respeta su orden. Si no, las reglas, con imagen y texto primero.
     const complete = ranked.filter(e => e.media?.length && e.has_description);
-    const items = complete.concat(ranked.filter(e => !complete.includes(e) && (e.media?.length || e.has_description))).slice(0, 5);
+    const items = (d.ai ? ranked : complete.concat(ranked.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)))).slice(0, 7);
     const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 13);
     $('weekRange').textContent = `${labelDate(state.day)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${t('Aún no hay actividades destacadas para estas fechas.')}</div>`;

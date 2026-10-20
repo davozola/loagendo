@@ -315,8 +315,17 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         featured = catalog.query_events(conn, day=day, featured=True, public=True, page_size=30)
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
+        # Selección de la semana elegida por la IA para ese día (src/ai_select.py): va primero, en su orden.
+        from src.ai_select import picks_for
+        chosen = picks_for(conn, day); ai_pick = False
+        if chosen:
+            pool = {e['key']: e for e in catalog.query_events(conn, day=day, featured=True, public=True, page_size=100)['items']}
+            first = [pool[k] for k in chosen if k in pool]
+            if len(first) >= 5:
+                picks = first + [e for e in picks if e['key'] not in set(chosen)]
+                picks = picks[:FEATURED_SIZE]; ai_pick = True
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images) for e in page['items']],
-                     'featured': [compact(e, images) for e in picks], 'districts': catalog.districts(conn, day)}
+                     'featured': [compact(e, images) for e in picks], 'featured_ai': ai_pick, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:

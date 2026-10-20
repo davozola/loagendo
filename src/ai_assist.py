@@ -390,6 +390,10 @@ def run(conn, job=None, requester=_request, today=None):
         sent = {}
         for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
-        return {'status': 'completed', 'stored': stored, 'usage': usage, 'submitted': sent}
+        selection = None
+        if job.get('seleccion', True):
+            from src import ai_select
+            selection = ai_select.ensure(conn, key, model=model, requester=requester if requester is not _request else None)
+        return {'status': 'completed', 'stored': stored, 'usage': usage, 'submitted': sent, 'selection': selection}
     except urllib.error.HTTPError as err:
         return {'status': 'failed', 'error': f'API de Claude: HTTP {err.code}'}
