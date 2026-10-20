@@ -163,7 +163,7 @@ def suggestions(conn):
 def category_for(conn, key, ev):
     """La sugerencia vigente de categoría para la ficha (o None si no hay o si la ficha cambió)."""
     s = suggestions(conn).get(('categoria', key))
-    if not s or s['prompt_version'] != PROMPT_VERSION['categoria'] or s['input_hash'] != _hash(category_payload(ev)): return None
+    if not s or s['prompt_version'] != prompt_version('categoria') or s['input_hash'] != _hash(category_payload(ev)): return None
     return s
 
 
@@ -171,7 +171,7 @@ def same_pairs(conn):
     """Pares que la IA da por el mismo acto con confianza alta (para la fusión de duplicados)."""
     out = []
     for (task, item), s in suggestions(conn).items():
-        if task == 'duplicado' and s['answer'] == 'mismo' and s['confidence'] >= APPLY_DUPLICATE and s['prompt_version'] == PROMPT_VERSION['duplicado']:
+        if task == 'duplicado' and s['answer'] == 'mismo' and s['confidence'] >= APPLY_DUPLICATE and s['prompt_version'] == prompt_version('duplicado'):
             a, _, b = item.partition('|'); out.append((a, b))
     return out
 
@@ -185,7 +185,7 @@ def category_candidates(conn, events, today):
         if e.get('rule_status') != 'pendiente' and not e.get('rule_ambiguous'): continue
         if not taxonomy.eligible(e, today) or e.get('category_status') == 'editorial': continue
         payload = category_payload(e); s = current.get(('categoria', e['key']))
-        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['categoria']: continue
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('categoria'): continue
         out.append((e['key'], payload))
     return out
 
@@ -196,7 +196,7 @@ def data_candidates(conn, events, today):
     for e in events:
         if not taxonomy.eligible(e, today) or not ai_extract.needs(e): continue
         payload = ai_extract.payload(e); s = current.get(('datos', e['key']))
-        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['datos']: continue
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('datos'): continue
         out.append((e['key'], payload))
     return out
 
@@ -205,7 +205,7 @@ def data_for(conn, key, ev):
     """Datos extraídos y comprobados vigentes para la ficha (dict) o None."""
     from src import ai_extract
     s = suggestions(conn).get(('datos', key))
-    if not s or s['prompt_version'] != PROMPT_VERSION['datos'] or s['input_hash'] != _hash(ai_extract.payload(ev)): return None
+    if not s or s['prompt_version'] != prompt_version('datos') or s['input_hash'] != _hash(ai_extract.payload(ev)): return None
     try: return json.loads(s['answer'])
     except ValueError: return None
 
@@ -216,7 +216,7 @@ def description_candidates(conn, events, today):
     for e in events:
         if not taxonomy.eligible(e, today) or not ai_describe.needs(e): continue
         payload = ai_describe.payload(e); s = current.get(('descripcion', e['key']))
-        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['descripcion']: continue
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('descripcion'): continue
         out.append((e['key'], payload))
     return out
 
@@ -225,7 +225,7 @@ def description_for(conn, key, ev):
     """Descripción breve vigente y aceptada ({es, ca, model}) o None."""
     from src import ai_describe
     s = suggestions(conn).get(('descripcion', key))
-    if not s or s['prompt_version'] != PROMPT_VERSION['descripcion'] or s['input_hash'] != _hash(ai_describe.payload(ev)): return None
+    if not s or s['prompt_version'] != prompt_version('descripcion') or s['input_hash'] != _hash(ai_describe.payload(ev)): return None
     try: d = json.loads(s['answer'])
     except ValueError: return None
     return {'es': d.get('es', ''), 'ca': d.get('ca', ''), 'model': s['model']} if d.get('ok') else None
@@ -243,7 +243,7 @@ def duplicate_candidates(conn, events, today):
         if not ea or not eb or max(ea['end'], eb['end']) < today: continue
         if groups.get(a, a) == groups.get(b, b): continue  # las reglas ya los agrupan
         payload = pair_payload(ea, eb); item = f'{a}|{b}'; s = current.get(('duplicado', item))
-        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['duplicado']: continue
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('duplicado'): continue
         out.append((item, payload))
     return out
 
@@ -257,8 +257,26 @@ def _request(method, url, key, body=None, timeout=60, raw=False):
     return payload.decode('utf-8') if raw else json.loads(payload)
 
 
+GUIDE_PATH = ROOT / 'config' / 'ia_instrucciones.md'
+
+
+def guide():
+    """Instrucciones editoriales editables (config/ia_instrucciones.md) para la categoría."""
+    try: return GUIDE_PATH.read_text(encoding='utf-8').strip()
+    except OSError: return ''
+
+
+def prompt_version(task):
+    """Versión del prompt: la fija del código más la huella de las instrucciones editables, para que
+    editar el archivo invalide las respuestas anteriores."""
+    base = PROMPT_VERSION[task]
+    if task != 'categoria' or not guide(): return base
+    return base * 1000 + int(hashlib.sha256(guide().encode()).hexdigest()[:5], 16) % 1000
+
+
 def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
+    if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
     per_item = {'datos': 400, 'descripcion': 260}.get(task, 90)
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
@@ -287,7 +305,7 @@ def _store(conn, task, chunk, answers, model, batch_id):
     now = _now(); stored = 0
     with conn:
         for n, answer, confidence, reason in answers:
-            item, payload = chunk[n]; row = (task, item, _hash(payload), model, PROMPT_VERSION[task], answer, confidence, reason, batch_id, now)
+            item, payload = chunk[n]; row = (task, item, _hash(payload), model, prompt_version(task), answer, confidence, reason, batch_id, now)
             conn.execute("""INSERT INTO ai_suggestions(task,item,input_hash,model,prompt_version,answer,confidence,reason,batch_id,created_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(task,item) DO UPDATE SET input_hash=excluded.input_hash,model=excluded.model,
                 prompt_version=excluded.prompt_version,answer=excluded.answer,confidence=excluded.confidence,reason=excluded.reason,

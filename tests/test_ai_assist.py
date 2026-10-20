@@ -62,6 +62,7 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(body['params']['system'][0]['cache_control']['type'], 'ephemeral')
         self.assertEqual(body['params']['tool_choice'], {'type': 'tool', 'name': 'clasificar'})
         self.assertIn('Grabada', body['params']['messages'][0]['content'])
+        self.assertIn('Instrucciones editoriales', body['params']['system'][0]['text'])  # config/ia_instrucciones.md
         # Mientras el lote está en curso no se vuelve a mandar la misma ficha.
         self.calls.clear(); out = ai_assist.run(self.conn, {'duplicado': False}, requester=self.fake(), today='2026-10-19')
         self.assertIsNone(out['submitted']['categoria'])
@@ -85,8 +86,8 @@ class DuplicateTests(unittest.TestCase):
             conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn); ai_assist.initialize(conn)
             from src import dedupe
             dedupe.initialize(conn)
-            conn.execute("INSERT INTO ai_suggestions VALUES ('duplicado','venue_dice:a|web_conciertos_club:b','h','m',?, 'mismo',0.95,'',NULL,'t')", (ai_assist.PROMPT_VERSION['duplicado'],))
-            conn.execute("INSERT INTO ai_suggestions VALUES ('duplicado','venue_dice:c|web_conciertos_club:d','h','m',?, 'mismo',0.6,'',NULL,'t')", (ai_assist.PROMPT_VERSION['duplicado'],))
+            conn.execute("INSERT INTO ai_suggestions VALUES ('duplicado','venue_dice:a|web_conciertos_club:b','h','m',?, 'mismo',0.95,'',NULL,'t')", (ai_assist.prompt_version('duplicado'),))
+            conn.execute("INSERT INTO ai_suggestions VALUES ('duplicado','venue_dice:c|web_conciertos_club:d','h','m',?, 'mismo',0.6,'',NULL,'t')", (ai_assist.prompt_version('duplicado'),))
             conn.commit()
             groups = dedupe.canonical_groups(conn)
             self.assertEqual(len({groups.get('venue_dice:a', 'venue_dice:a'), groups.get('web_conciertos_club:b', 'web_conciertos_club:b')}), 1)
