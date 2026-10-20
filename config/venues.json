@@ -13,7 +13,35 @@
         "La 2 de Apolo",
         "La [2] de Apolo",
         "Sala Apolo"
-      ]
+      ],
+      "agenda_url": "https://www.sala-apolo.com/es/agenda",
+      "urls": [
+        "https://www.sala-apolo.com/es/agenda",
+        "https://www.sala-apolo.com/es/agenda?page=1",
+        "https://www.sala-apolo.com/es/agenda?page=2",
+        "https://www.sala-apolo.com/es/agenda?page=3",
+        "https://www.sala-apolo.com/es/agenda?page=4",
+        "https://www.sala-apolo.com/es/agenda?page=5",
+        "https://www.sala-apolo.com/es/agenda?page=6",
+        "https://www.sala-apolo.com/es/agenda?page=7",
+        "https://www.sala-apolo.com/es/agenda?page=8",
+        "https://www.sala-apolo.com/es/agenda?page=9",
+        "https://www.sala-apolo.com/es/agenda?page=10",
+        "https://www.sala-apolo.com/es/agenda?page=11",
+        "https://www.sala-apolo.com/es/agenda?page=12",
+        "https://www.sala-apolo.com/es/agenda?page=13",
+        "https://www.sala-apolo.com/es/agenda?page=14",
+        "https://www.sala-apolo.com/es/agenda?page=15",
+        "https://www.sala-apolo.com/es/agenda?page=16",
+        "https://www.sala-apolo.com/es/agenda?page=17",
+        "https://www.sala-apolo.com/es/agenda?page=18",
+        "https://www.sala-apolo.com/es/agenda?page=19",
+        "https://www.sala-apolo.com/es/agenda?page=20",
+        "https://www.sala-apolo.com/es/agenda?page=21"
+      ],
+      "max_pages": 220,
+      "title_regex": "^(?:Concierto de\\s+)?(.+?)\\s+en\\s+(?:la\\s+)?(?:Sala Apolo|\\(2\\) de Apolo|CINC de Apolo|\\(2\\)|CINC)\\s*-\\s*\\d{1,2}\\s+de\\s+\\w+(?:\\s+de)?\\s+\\d{4}\\s*$",
+      "note": "20-10-2026: agenda paginada (/es/agenda?page=N, 10 por página, ~18 páginas); cada ficha /es/evento/ lleva schema.org/Event. Antes se leía solo la página del ciclo AFERS (17 actos)."
     },
     {
       "slug": "razzmatazz",

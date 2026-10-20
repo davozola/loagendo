@@ -54,3 +54,12 @@ class UnconfirmedTest(unittest.TestCase):
         venues = [{"slug": "jamboree", "name": "Jamboree Jazz Club", "aliases": ["Jamboree"], "enabled": True, "agenda_completa": True}]
         groups = {"venue_songkick:s1": "venue_jamboree:j1"}
         self.assertEqual(unconfirmed_by_venue(conn, groups, venues, today=dt.date(2026, 10, 20)), {"venue_songkick:s2": "Jamboree Jazz Club"})
+
+
+class ApoloTitleTest(unittest.TestCase):
+    def test_title_regex_keeps_the_act_name(self):
+        apolo = next(v for v in json.loads((Path(__file__).parent.parent / "config" / "venues.json").read_text(encoding="utf-8"))["venues"] if v["slug"] == "sala_apolo")
+        node = {"@type": "Event", "name": "Concierto de Yard Act en La (2) de Apolo - 20 de octubre 2026", "startDate": "2026-10-20 CEST 19:30", "url": "https://www.sala-apolo.com/es/evento/yard-act-20261020-7308"}
+        record = record_from_jsonld(apolo, node, node["url"])
+        self.assertEqual((record["title"], record["time_text"]), ("Yard Act", "19:30"))
+        self.assertEqual(record_from_jsonld(apolo, {**node, "name": "Nitsa: Oscar Mulero"}, node["url"])["title"], "Nitsa: Oscar Mulero")

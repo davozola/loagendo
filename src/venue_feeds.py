@@ -271,6 +271,11 @@ def record_id(slug, url, start, title):
 def record_from_jsonld(venue, node, page_url):
     """Normalise one schema.org Event into Brollant's record shape."""
     title = _text(node.get("name"))
+    # Sala que añade a cada título su coletilla («Concierto de X en La (2) de Apolo - 31 de octubre 2026»):
+    # «title_regex» en config/venues.json deja solo el grupo 1, el nombre que imprime la propia sala.
+    if venue.get("title_regex"):
+        m = re.match(venue["title_regex"], title, re.I)
+        if m and m.group(1).strip(): title = m.group(1).strip()
     start, end = _date(node.get("startDate")), _date(node.get("endDate")) or _date(node.get("startDate"))
     if not title or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", start): return None
     # Una sesión nocturna que acaba de madrugada («22:00 → 03:00 del día siguiente») es de un solo día.
