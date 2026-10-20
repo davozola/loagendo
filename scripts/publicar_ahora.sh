@@ -24,8 +24,8 @@ echo "3/8 · Agendas web: CCCB, MACBA, centres cívics, conciertos.club, GRAF (c
 job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club; job web-graf
 echo "4/8 · Agendas de sala leídas con IA (25 salas; la primera vez lee todas, ~10 min)"
 job agendas-ia
-echo "5/8 · Horario de la página de cada acto (CCCB, Lliure, Diputació, MACBA…)"
-job enriquecer-fichas
+echo "5/8 · Horario de la página de cada acto y texto de la web del organizador para fichas sin texto"
+job enriquecer-fichas; job textos-organizador
 echo "6/8 · IA: categorías pendientes, datos que faltan, familia en exposiciones, duplicados y selección de la semana"
 job ia-asistente
 echo "7/8 · Duplicados entre fuentes"

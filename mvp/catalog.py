@@ -779,6 +779,8 @@ class Prefetch:
                 try: parsed=json.loads(links)
                 except (TypeError,json.JSONDecodeError): parsed=[]
                 self.enrichment[(s,i)]=(desc if usable_description(desc) else '',st or '',stx or '',parsed if isinstance(parsed,list) else [])
+        from src.organizer_text import texts as _organizer_texts
+        self.organizer=_organizer_texts(conn)
         if 'source_detail_facts' in tables:
             for s,i,facts in conn.execute('SELECT source,id,facts_json FROM source_detail_facts'):
                 try: self.facts[(s,i)]=json.loads(facts) or {}
@@ -800,6 +802,15 @@ def enrichment(conn, source, record_id, prefetch=None):
     try: links=json.loads(row[-1])
     except (TypeError,json.JSONDecodeError): links=[]
     return (row[0] if usable_description(row[0]) else '',row[1] or '',row[2] or '',links if isinstance(links,list) else [])
+
+
+def organizer_description(conn, source, record_id, prefetch=None):
+    """Texto de la web del organizador (src/organizer_text.py) o ''."""
+    if prefetch is not None: return (getattr(prefetch,'organizer',{}) or {}).get((source,record_id),('',''))[0]
+    try:
+        row=conn.execute("SELECT text FROM organizer_texts WHERE source=? AND id=? AND status='ok'",(source,record_id)).fetchone()
+    except sqlite3.DatabaseError: return ''
+    return row[0] if row else ''
 
 
 def detail_facts(conn, source, record_id, prefetch=None):
@@ -1061,6 +1072,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         moved_to=facts['api_start_date']
     # GuiaBCN's listing never carries prose: its description lives in the
     # archived official page, so the listing must look there too.
+    # Sin texto en GuiaBCN: el de la web oficial del acto, con su crédito (src/organizer_text.py).
+    if not projection['has_description'] and len((archived_description or '').strip())<80:
+        organizer=organizer_description(conn,source,id,prefetch)
+        if organizer: archived_description=organizer
     has_description=projection['has_description'] or len((archived_description or '').strip())>=40
     summary=projection['summary'] or (archived_description or '').strip()[:220]
     boiler=is_boilerplate(conn,source,projection.get('summary'))
@@ -1205,6 +1220,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if raw is None: raw=json.loads(raw_text)
         price,free=source_price(raw,source)
         archived_description,schedule_time,schedule_text,archived_links=enrichment(conn,source,id,prefetch)
+        organizer_credit=''
+        if len((archived_description or '').strip())<80 and not source_description(raw,source):
+            organizer=organizer_description(conn,source,id,prefetch)
+            if organizer: archived_description,organizer_credit=organizer,'la web del organizador'
         archived_facts=detail_facts(conn,source,id,prefetch)
         opendata_facts=(_opendata_schedule(raw)['facts'] if raw.get('timetable') else opendata_normalized(raw)) if source=='opendatabcn_agenda' else {}
         links=source_links(raw,source,url)
@@ -1225,6 +1244,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             sched_note='Horario del espacio (según GRAF): '+' · '.join(space['opening'].splitlines())
         events.update({
             'description':('' if boiler else source_description(raw,source)) or archived_description,
+            **({'description_credit':organizer_credit} if organizer_credit else {}),
             'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=sched_days,registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),
             'time_text':(opendata_facts.get('schedule_hours') if od_table else '') or schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
             'schedule_days':sched_days,
