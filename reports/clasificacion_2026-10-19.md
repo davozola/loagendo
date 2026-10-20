@@ -91,3 +91,13 @@ Motivos de las 417 pendientes: sin señal 318 · servicio o convocatoria 99 (82 
 
 Resultado sobre las mismas 9.544 elegibles: **9.231 publicadas (96,7 %)**, 247 pendientes (CCCB 82, Eventbrite 64, centres cívics 47, GuiaBCN 36…), 66 excluidas.
 Canales: Vida de barrio 2.238, En familia 930, Arte y galerías 275, Festivales 221, Al aire libre 199.
+
+## Actualización 20-10-2026 (madrugada): los seis puntos de la autocrítica
+1. **Precisión medida** (`reports/evaluacion_clasificacion_2026-10-20.md`): antes de corregir, 97,4 % en muestra aleatoria y ~94 % en las categorías pequeñas; reglas corregidas; evaluación repetible con `scripts/evaluar_clasificacion.py`.
+2. **Cursos en Talleres**: la web ya los separaba (botón «Talleres y cursos», apagado por defecto; los empezados, ocultos). Talleres = 515 puntuales + 3.503 cursos; el informe lo muestra.
+3. **Vida de barrio**: 2.238 → 373 fichas (≈4 %): fiestas mayores, entidades vecinales, grupos comunitarios, fiestas en la calle.
+4. **Grupos de apoyo** fuera (21); **patis escolars** plegados en una fila por día con «Ver N más de esta serie».
+5. **Resincronización**: CCCB ya resincronizado por el motor (disciplina en 103/142, cobertura 93 %). Eventbrite pendiente de su trabajo `eventbrite-api` en el Mac. Cola revisada: 137 → 73 pendientes (33 correcciones editoriales claras + reglas para orientación laboral juvenil y noticias de centres cívics).
+6. **Arte y galerías**: nueva fuente GRAF (graf.cat): ~100 actos al mes en Barcelona (17 inauguraciones, 9 performances, 42 exposiciones de galería, charlas, proyecciones). Entra con el próximo ciclo del motor.
+
+Base real 20-10: 9.502 elegibles · 9.254 publicadas (97,4 %) · 73 pendientes · 175 excluidas.
