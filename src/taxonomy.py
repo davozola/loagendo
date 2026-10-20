@@ -184,14 +184,18 @@ def classify(ev, override=None, ai=None):
     corrección editorial ni contra una regla fuerte sin conflicto. Devuelve también el veredicto
     de las reglas (``rule_status``, ``rule_ambiguous``) para saber qué mandar a la IA."""
     rules = _classify_rules(ev, override)
-    out = {**rules, 'rule_status': rules['status'], 'rule_ambiguous': rules['ambiguous']}
+    out = {**rules, 'rule_status': rules['status'], 'rule_ambiguous': rules['ambiguous'], 'ai_disagrees': ''}
     if not ai or rules['status'] == 'editorial': return out
     from src.ai_assist import APPLY_CATEGORY
-    weak = rules['status'] in ('pendiente', 'probable') or rules['ambiguous']
     answer = ai.get('answer')
-    if not weak or ai.get('confidence', 0) < APPLY_CATEGORY or answer == PENDING: return out
-    if answer not in CATEGORIES and answer != EXCLUDED: return out
-    if rules['status'] == 'excluida': return out  # las exclusiones por regla editorial no las deshace la IA
+    if ai.get('confidence', 0) < APPLY_CATEGORY or answer == PENDING or (answer not in CATEGORIES and answer != EXCLUDED): return out
+    # Medido el 20-10-2026 (scripts/evaluar_ia.py, 310 fichas): reglas 98,7 %, IA 92,6 %; en los casos
+    # dudosos, reglas 95 % e IA 84 %. La IA solo decide donde las reglas no dan categoría (pendientes);
+    # en el resto, si discrepa con confianza alta, se señala para revisión y manda la regla.
+    if rules['status'] != 'pendiente':
+        if answer != rules['category'] and rules['status'] != 'excluida':
+            out['ai_disagrees'] = f"{answer} ({ai.get('confidence', 0):.2f}): {ai.get('reason', '')}"
+        return out
     return {**out, 'category': answer, 'status': 'excluida' if answer == EXCLUDED else 'ia', 'method': 'ia',
             'evidence': f"IA ({ai.get('model', '')}, confianza {ai.get('confidence', 0):.2f}): {ai.get('reason', '')}. Reglas: {rules['evidence']}",
             'ambiguous': False}
@@ -494,6 +498,7 @@ def report(conn, events, today, examples=8, queue_limit=300):
         'pending_by_source': dict(Counter(e['source'] for e in pending).most_common()),
         'pending_reasons': dict(Counter(e.get('category_method') for e in pending).most_common()),
         'queue': [brief(e) for e in sorted(pending, key=lambda e: (e['start'], e['title']))[:queue_limit]],
+        'ai_disagreements': [{**brief(e), 'ai': e.get('ai_disagrees')} for e in pub if e.get('ai_disagrees')][:queue_limit],
         'recurring': [{'pattern': k, 'count': n} for k, n in recurring.most_common(25) if n > 1],
         'coverage': coverage, 'changes': changes, 'overrides': ov, 'ai': _ai_stats(conn, base),
     }

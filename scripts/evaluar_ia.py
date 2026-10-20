@@ -33,7 +33,8 @@ def main(db):
         ai = answers.get(k); ai_cat = ai[0] if ai else None
         rule_cat = e['public_category'] if e.get('category_method') != 'ia' else None
         score['n'] += 1; score['reglas'] += rule_cat == label; score['ia'] += ai_cat == label
-        combined = ai_cat if (ai and is_weak and ai[1] >= ai_assist.APPLY_CATEGORY and ai_cat not in ('pendiente',)) else rule_cat
+        # Política vigente: la IA solo decide si las reglas dejan la ficha pendiente.
+        combined = ai_cat if (ai and rules == 'pendiente' and ai[1] >= ai_assist.APPLY_CATEGORY and ai_cat != 'pendiente') else rule_cat
         score['combinada'] += combined == label
         if is_weak:
             weak['n'] += 1; weak['reglas'] += rule_cat == label; weak['ia'] += ai_cat == label; weak['combinada'] += combined == label

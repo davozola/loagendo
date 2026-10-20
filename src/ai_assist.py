@@ -30,7 +30,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 1, 'duplicado': 1, 'datos': 1, 'descripcion': 1}
+PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -50,14 +50,14 @@ Categorías:
 - deporte: competiciones y partidos, carreras populares, caminatas deportivas.
 - excluida: no es un plan de agenda cultural: servicios (punto TIC, asesoramiento, orientación laboral o de estudios), campañas y recogidas solidarias, convocatorias y premios, grupos de apoyo (duelo, demencia, salud), ocio social o profesional (citas, intercambio de idiomas, pub crawls, networking, ferias de empleo, congresos), productos de ticketera.
 - pendiente: no hay información suficiente para decidir.
-Reglas: una visita o un taller dentro de una exposición es charlas o talleres, no arte. Una sesión dentro de un festival o ciclo se clasifica por la actividad, no por el festival. Usa solo lo que dicen los datos; no supongas. Confianza entre 0 y 1: por encima de 0.8 solo si el dato lo deja claro. El motivo, una frase corta en castellano.
+Reglas: una visita o un taller dentro de una exposición es charlas o talleres, no arte. Una sesión dentro de un festival o ciclo se clasifica por la actividad, no por el festival. Usa solo lo que dicen los datos; no supongas. Confianza entre 0 y 1: por encima de 0.8 solo si el dato lo deja claro. El motivo, como máximo 12 palabras.
 Recibes una lista JSON de fichas (n, título, sala, categoría de la fuente, tipo, extracto). Responde con la herramienta clasificar, una entrada por ficha."""
 
 SYSTEM_DUPLICATE = """Comparas pares de fichas de una agenda cultural de Barcelona que vienen de fuentes distintas y decides si son el mismo acto.
 - mismo: el mismo acto en la misma fecha y lugar (pueden diferir el título, la hora de puertas o el formato del nombre).
 - distinto: actos diferentes (otra obra, otro artista, otra sesión u otro día).
 - sesion: una ficha es el festival, ciclo o programa y la otra una sesión dentro de él.
-Usa solo los datos. Confianza entre 0 y 1; por encima de 0.85 solo si es inequívoco. Motivo, una frase corta en castellano.
+Usa solo los datos. Confianza entre 0 y 1; por encima de 0.85 solo si es inequívoco. Motivo, como máximo 12 palabras.
 Recibes una lista JSON de pares (n, a, b). Responde con la herramienta comparar, una entrada por par."""
 
 TOOL_CATEGORY = {'name': 'clasificar', 'description': 'Devuelve la categoría de cada ficha.',
@@ -181,7 +181,8 @@ def category_candidates(conn, events, today):
     from src import taxonomy
     current = suggestions(conn); out = []
     for e in events:
-        if e.get('rule_status') not in ('pendiente', 'probable') and not e.get('rule_ambiguous'): continue
+        # Pendientes (la IA decide) y ambiguas (la IA solo señala discrepancias para revisión).
+        if e.get('rule_status') != 'pendiente' and not e.get('rule_ambiguous'): continue
         if not taxonomy.eligible(e, today) or e.get('category_status') == 'editorial': continue
         payload = category_payload(e); s = current.get(('categoria', e['key']))
         if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['categoria']: continue

@@ -76,6 +76,7 @@ function renderClass(r){
  <h3>Fuera de la agenda por regla editorial (${r.excluded})</h3>${table(Object.entries(r.excluded_reasons).map(([k,v])=>[esc(k),v]))}${table(r.excluded_examples.map(e=>[pubLink(e),esc(e.source),`<small>${esc(e.evidence)}</small>`,fixer(e)]),['Ficha','Fuente','Motivo','Devolver a una categoría'])}
  <h3>Casos recurrentes (pendientes y ambiguos, por inicio de título)</h3>${table(r.recurring.map(x=>[esc(x.pattern),x.count]))}
  <h3>Cola de revisión (${r.pending})</h3>${table(r.queue.map(e=>[esc(e.start),pubLink(e),esc(e.source),esc(e.venue),`<small>${esc(e.evidence)}</small>`,fixer(e)]),['Inicio','Ficha','Fuente','Sala','Motivo','Corregir'])}
+ <h3>La IA no está de acuerdo (${(r.ai_disagreements||[]).length})</h3><p class="msg">Manda la regla; revisa y corrige si la IA tiene razón.</p>${table((r.ai_disagreements||[]).map(e=>[pubLink(e),esc(CATS[e.category]||e.category),`<small>IA: ${esc(e.ai)}</small>`,fixer(e)]),['Ficha','Categoría (regla)','IA','Corregir'])}
  <h3>Posiblemente mal clasificadas: señales en conflicto (${r.ambiguous.count})</h3>${table(ex(r.ambiguous.examples),['Ficha','Categoría','Método','Evidencia','Corregir'])}
  <h3>Sin confirmar: solo señales débiles (${r.probable.count})</h3>${table(ex(r.probable.examples),['Ficha','Categoría','Método','Evidencia','Corregir'])}
  <h3>Cambios tras sincronizar (últimos ${r.changes.length})</h3>${table(r.changes.map(c=>[esc(c.changed_at),esc(c.source+':'+c.id),esc(c.old_category)+' → '+esc(c.new_category),esc(c.old_channels)+' → '+esc(c.new_channels)]))}

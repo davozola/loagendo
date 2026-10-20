@@ -24,6 +24,8 @@ class ApplyTests(unittest.TestCase):
         self.assertIn('Conferencia del CCCB', out['evidence'])
         self.assertEqual(taxonomy.classify(ev('Grabada'), None, {**ai, 'confidence': 0.6})['category'], 'pendiente')  # poca confianza
         self.assertEqual(taxonomy.classify(ev("Concert 'Trio'"), None, ai)['category'], 'musica')                    # regla fuerte
+        weak = taxonomy.classify(ev('L.E.O. + CHICO JORGE', source='venue_songkick'), None, {**ai, 'answer': 'escena'})  # regla débil
+        self.assertEqual(weak['category'], 'musica'); self.assertIn('escena', weak['ai_disagrees'])
         self.assertEqual(taxonomy.classify(ev('Grabada'), {'category': 'cine'}, ai)['category'], 'cine')              # editorial
         self.assertEqual(taxonomy.classify(ev('Campanya de donació de sang'), None, ai)['category'], 'excluida')       # exclusión por regla
         out = taxonomy.classify(ev('Singles?'), None, {**ai, 'answer': 'excluida'})

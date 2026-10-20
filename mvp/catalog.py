@@ -1128,7 +1128,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['legacy_category']=events.get('public_category')
     events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
                    'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous'],
-                   'rule_status':verdict['rule_status'],'rule_ambiguous':verdict['rule_ambiguous']})
+                   'rule_status':verdict['rule_status'],'rule_ambiguous':verdict['rule_ambiguous'],'ai_disagrees':verdict.get('ai_disagrees','')})
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])
