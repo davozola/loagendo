@@ -762,6 +762,8 @@ class Prefetch:
             self.venues.setdefault((s,i),[]).append((v,a,lat,lon))
         from src.venue_places import known_places
         self.known_places=known_places(conn)
+        from src.venue_rooms import rooms
+        self.rooms=rooms(conn)
         if 'media_assets' in tables:
             # Local previews first; an authorised asset not yet on disk is still
             # listed, and /media/<id> fetches it on first use.
@@ -827,7 +829,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=29  # 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=29  # (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1127,6 +1129,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         district,coords,how=gazetteer(conn).resolve(events['venue_names'],events['coordinates'])
         if district and not events['district']: events['district']=district; events['district_evidence']=how
         if coords and not events['coordinates']: events['coordinates']=coords
+    # Sala sin su recinto («Sala 1 Pau Casals»): se antepone el recinto que otras fichas de la misma
+    # dirección escriben completo (src/venue_rooms.py). La fuente se conserva en 'venues'.
+    if place:
+        from src.venue_rooms import rooms as _rooms
+        room_map=prefetch.rooms if prefetch is not None and getattr(prefetch,'rooms',None) else _rooms(conn)
+        events['venue_names']=[room_map.full_name(v[0],v[1]) for v in place if v[0]]
     # Texto de la fuente (para la IA) y lo extraído de él con cita comprobada (src/ai_extract.py).
     events['source_text']='\n\n'.join(x for x in ((projection.get('ai_text') or '').strip(),(archived_description or '').strip()) if x)[:3000]
     from src import ai_assist, ai_extract
