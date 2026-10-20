@@ -9,7 +9,7 @@
       "urls": [
         "https://luzdegas.com/es/calendar/"
       ],
-      "activa": false,
+      "activa": true,
       "salas": [
         {
           "name": "Luz de Gas",
@@ -29,7 +29,7 @@
       "urls": [
         "https://marulacafe.com/agenda/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "tradicionarius",
@@ -39,7 +39,7 @@
       "urls": [
         "https://www.tradicionarius.cat/ca/programacio"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "conservatori_liceu",
@@ -60,7 +60,7 @@
       "urls": [
         "https://almo2bar.com/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "filmoteca",
@@ -72,7 +72,7 @@
         "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+7}",
         "https://www.filmoteca.cat/web/ca/view-agenda-setmanal?w={lunes+14}"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "zumzeig",
@@ -82,7 +82,7 @@
       "urls": [
         "https://zumzeigcine.coop/"
       ],
-      "activa": false,
+      "activa": true,
       "nota": "La portada da cada película con su próxima sesión («Dimecres 21.10.26 (19:00)»); el calendario parte el día en otra línea y no se puede citar."
     },
     {
@@ -93,7 +93,7 @@
       "urls": [
         "https://phenomena-experience.com/index?pag=cartelera"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "beckett",
@@ -103,7 +103,7 @@
       "urls": [
         "https://www.salabeckett.cat/espectacles/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "antic_teatre",
@@ -113,7 +113,7 @@
       "urls": [
         "https://www.anticteatre.com/programacio/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "teatreneu",
@@ -123,7 +123,7 @@
       "urls": [
         "https://www.teatreneu.com/ca/cartellera.html"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "teatre_victoria",
@@ -133,7 +133,7 @@
       "urls": [
         "https://www.teatrevictoria.com/ca/cartellera.html"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "teatre_gaudi",
@@ -143,7 +143,7 @@
       "urls": [
         "https://teatregaudibarcelona.com/cartellera/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "tantarantana",
@@ -153,7 +153,7 @@
       "urls": [
         "https://tantarantana.com/programacio/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "akademia",
@@ -206,7 +206,7 @@
       "urls": [
         "https://www.fmirobcn.org/ca/totes-les-activitats/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "ateneu",
@@ -216,7 +216,7 @@
       "urls": [
         "https://ateneubcn.cat/programacio/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "la_pedrera",
@@ -226,7 +226,7 @@
       "urls": [
         "https://www.lapedrera.com/ca/activitats/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "caixaforum",
@@ -236,7 +236,7 @@
       "urls": [
         "https://caixaforum.org/ca/barcelona/activitats"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "institut_francais",
@@ -247,7 +247,7 @@
         "https://www.institutfrancais.es/barcelona/eventos/nuestros-eventos/"
       ],
       "otros_lugares": true,
-      "activa": false
+      "activa": true
     },
     {
       "slug": "goethe",
@@ -282,7 +282,7 @@
         "https://www.americat.barcelona/ca/agenda"
       ],
       "otros_lugares": true,
-      "activa": false
+      "activa": true
     },
     {
       "slug": "hangar",
@@ -292,7 +292,7 @@
       "urls": [
         "https://hangar.org/ca/category/agenda-hangar/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "sala_fenix",
@@ -302,7 +302,7 @@
       "urls": [
         "https://salafenix.com/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "el_malda",
@@ -312,7 +312,7 @@
       "urls": [
         "https://elmalda.cat/calendari/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "la_bonne",
@@ -322,7 +322,7 @@
       "urls": [
         "https://labonne.org/temes/activitats/"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "ateneu_9barris",
@@ -332,7 +332,7 @@
       "urls": [
         "https://ateneu9b.net/ca/programacions"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "disseny_hub",
@@ -343,7 +343,7 @@
         "https://www.dissenyhub.barcelona/ca/activitats/per-a-tothom",
         "https://www.dissenyhub.barcelona/ca/activitats/families"
       ],
-      "activa": false
+      "activa": true
     },
     {
       "slug": "palau_robert",

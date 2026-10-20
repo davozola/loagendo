@@ -1,6 +1,6 @@
 #!/bin/bash
-# Pasada forzada: resincroniza las fuentes con conectores cambiados y publica (actualizado 19-10-2026).
-# Uso: bash scripts/publicar_ahora.sh   (desde la carpeta del proyecto; tarda ~30-40 min)
+# Pasada forzada: resincroniza todas las fuentes, IA incluida, y publica (actualizado 20-10-2026).
+# Uso: bash scripts/publicar_ahora.sh   (desde la carpeta del proyecto; tarda ~45-60 min)
 cd "$(dirname "$0")/.." || exit 1
 
 job() {  # ejecuta un trabajo; si el motor automático está ocupado, espera y reintenta (máx. 20 min)
@@ -16,15 +16,19 @@ job() {  # ejecuta un trabajo; si el motor automático está ocupado, espera y r
   echo "   sigue ocupado tras 20 minutos; lo dejo para el motor automático"
 }
 
-echo "1/6 · Salas con schema.org (Sala Apolo con hora, Ticketmaster aparte)"
+echo "1/8 · Salas con schema.org (Jamboree, Apolo completo, Harlem, Sidecar, Heliogabal, Vol…)"
 job recintos-schema-org
-echo "2/6 · Ticketmaster (apertura de puertas, sin eventos de prueba)"
-job api-ticketmaster
-echo "3/6 · CCCB, MACBA, centres cívics y GRAF (galerías) (periodos de exposición, horas y sesiones; ~3 min)"
+echo "2/8 · Ticketmaster y Eventbrite"
+job api-ticketmaster; job eventbrite-api
+echo "3/8 · Agendas web: CCCB, MACBA, centres cívics, conciertos.club, GRAF (con horario de los espacios)"
 job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club; job web-graf
-echo "4/6 · Eventbrite: hora y traslados desde su API"
-job eventbrite-api
-echo "5/6 · Duplicados entre fuentes"
+echo "4/8 · Agendas de sala leídas con IA (25 salas; la primera vez lee todas, ~10 min)"
+job agendas-ia
+echo "5/8 · Horario de la página de cada acto (CCCB, Lliure, Diputació, MACBA…)"
+job enriquecer-fichas
+echo "6/8 · IA: categorías pendientes, datos que faltan, familia en exposiciones, duplicados y selección de la semana"
+job ia-asistente
+echo "7/8 · Duplicados entre fuentes"
 job duplicados-entre-fuentes
-echo "6/6 · Publicar la web (~25-30 min: se recalculan todas las fichas)"
+echo "8/8 · Publicar la web (~25-30 min: se recalculan todas las fichas)"
 python3 run.py --publish | grep -E '"(status|events|deployed|url|error)"' | tr -s ' \n' ' '; echo
