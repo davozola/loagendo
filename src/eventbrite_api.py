@@ -139,7 +139,7 @@ def enrich_eventbrite(conn, limit=300, *, token=None, fetcher=None, today=None, 
     token = token if token is not None else load_token()
     if not token: return {"status": "skipped", "reason": "Falta EVENTBRITE_TOKEN en .env"}
     fetch = fetcher or (lambda eid: fetch_event(eid, token, timeout))
-    done = failed = timed = priced = mismatched = 0; errors = {}
+    done = failed = timed = priced = mismatched = denied = 0; errors = {}
     for n, (record_id, url, start_date) in enumerate(records_due(conn, today, limit)):
         eid = event_id(url)
         now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -149,7 +149,14 @@ def enrich_eventbrite(conn, limit=300, *, token=None, fetcher=None, today=None, 
             body = fetch(eid)
             facts = facts_from_event(json.loads(body), start_date)
         except AccessDenied as err:
-            return {"status": "failed", "error": str(err), "attempted": done + failed, "enriched": done, "with_time": timed, "with_price": priced}
+            # Un 403 suelto es un evento privado o retirado: se anota y se sigue (antes paraba toda
+            # la pasada y el mismo evento la bloqueaba siempre). Solo si los primeros fallan seguidos
+            # es el token.
+            denied += 1
+            if '401' in str(err) or (denied >= 3 and done == 0):
+                return {"status": "failed", "error": str(err), "attempted": done + failed, "enriched": done, "with_time": timed, "with_price": priced}
+            failed += 1; key = "AccessDenied: evento no accesible"; errors[key] = errors.get(key, 0) + 1
+            body, facts = "", {"time": "", "time_text": "", "price_text": "", "error": str(err)[:200]}
         except Exception as err:  # el evento puede haber desaparecido: se anota y no se reintenta hasta RECHECK_DAYS
             failed += 1; key = f"{type(err).__name__}: {str(err)[:60]}"; errors[key] = errors.get(key, 0) + 1
             body, facts = "", {"time": "", "time_text": "", "price_text": "", "error": str(err)[:200]}

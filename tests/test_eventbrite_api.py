@@ -85,6 +85,15 @@ class JobTests(unittest.TestCase):
         def denied(eid): raise AccessDenied('API de Eventbrite: acceso denegado (401)')
         out = enrich_eventbrite(conn, token='t', fetcher=denied)
         self.assertEqual(out['status'], 'failed'); self.assertIn('401', out['error'])
+        # Un 403 de un evento concreto (privado o retirado) no para la pasada.
+        conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('venue_eventbrite', 'e3', 'y', day, day, 'single', 'review', 'x', 'https://www.eventbrite.es/e/y-tickets-1986216550170', 'h', '{}'))
+        conn.commit()
+        body = json.dumps({'start': {'local': day + 'T20:00:00', 'timezone': 'Europe/Madrid'}, 'end': {'local': day + 'T22:00:00', 'timezone': 'Europe/Madrid'}})
+        def mixed(eid):
+            if eid == '1986216550169': raise AccessDenied('API de Eventbrite: acceso denegado (403)')
+            return body
+        out = enrich_eventbrite(conn, token='t', fetcher=mixed)
+        self.assertEqual((out['status'], out['enriched'], out['failed']), ('completed', 1, 1))
 
 
 if __name__ == '__main__': unittest.main()
