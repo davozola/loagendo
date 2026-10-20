@@ -90,3 +90,16 @@ class DescribeTests(unittest.TestCase):
             self.assertIsNone(publish_static.public_detail(detail, None)['ai_summary'])
         with mock.patch.object(ai_describe, 'public_enabled', return_value=True):
             self.assertEqual(publish_static.public_detail(detail, None)['ai_summary']['es'], 'x')
+
+
+class NeedsTests(unittest.TestCase):
+    def test_only_asks_what_the_source_lacks(self):
+        from src.ai_extract import needs
+        text = 'x' * 60
+        one_day = {'start': '2026-10-22', 'end': '2026-10-22', 'source_text': text}
+        self.assertTrue(needs(one_day))                                                         # sin hora ni precio
+        self.assertFalse(needs({**one_day, 'time': '19:00', 'time_source': 'official_detail_page', 'price_label': '10 €'}))
+        self.assertTrue(needs({**one_day, 'time': '19:00', 'time_source': 'ia_texto', 'price_label': '10 €'}))  # la hora la puso la IA: se mantiene
+        expo = {'start': '2026-10-01', 'end': '2027-01-10', 'source_text': text, 'is_free': True}
+        self.assertFalse(needs(expo))                                                           # exposición gratis: nada que pedir
+        self.assertFalse(needs({**one_day, 'source_text': 'corto'}))

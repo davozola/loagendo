@@ -40,7 +40,7 @@ TOOL = {'name': 'valorar_familia', 'description': 'Valoraci√≥n de cada exposici√
 
 
 def payload(ev):
-    return {'titulo': (ev.get('title') or '')[:200], 'sala': ((ev.get('venue_names') or [''])[0] or '')[:100],
+    return {'titulo': (ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
             'texto': (ev.get('source_text') or '')[:1500]}
 
 

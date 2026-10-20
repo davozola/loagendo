@@ -1131,6 +1131,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if coords and not events['coordinates']: events['coordinates']=coords
     # Sala sin su recinto («Sala 1 Pau Casals»): se antepone el recinto que otras fichas de la misma
     # dirección escriben completo (src/venue_rooms.py). La fuente se conserva en 'venues'.
+    # Nombre tal como lo da la fuente: las peticiones a la IA lo usan para que un cambio de
+    # presentación (recinto delante de la sala) no invalide lo ya respondido.
+    events['source_venue']=next((v[0] for v in place if v[0]),'')
     if place:
         from src.venue_rooms import rooms as _rooms
         room_map=prefetch.rooms if prefetch is not None and getattr(prefetch,'rooms',None) else _rooms(conn)

@@ -52,7 +52,7 @@ TOOL = {'name': 'describir', 'description': 'Descripción breve de cada ficha en
 
 
 def payload(ev):
-    return {'titulo': (ev.get('title') or '')[:200], 'categoria': ev.get('category') or '', 'sala': ((ev.get('venue_names') or [''])[0] or '')[:100],
+    return {'titulo': (ev.get('title') or '')[:200], 'categoria': ev.get('category') or '', 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
             'barrio': ev.get('district') or '', 'artistas': (ev.get('lineup') or [])[:8], 'texto': (ev.get('source_text') or '')[:1500]}
 
 

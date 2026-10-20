@@ -136,14 +136,14 @@ def _hash(payload): return hashlib.sha256(json.dumps(payload, ensure_ascii=False
 
 # ---------- lo que se le enseña ----------
 def category_payload(ev):
-    return {'titulo': (ev.get('title') or '')[:200], 'sala': ((ev.get('venue_names') or [''])[0] or '')[:100],
+    return {'titulo': (ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
             'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('format') or ev.get('kind') or '',
             'extracto': (ev.get('summary') or '')[:300]}
 
 
 def pair_payload(a, b):
     side = lambda e: {'fuente': e['source'], 'titulo': (e.get('title') or '')[:200], 'fechas': [e.get('start'), e.get('end')],
-                      'hora': e.get('time') or '', 'sala': ((e.get('venue_names') or [''])[0] or '')[:100]}
+                      'hora': e.get('time') or '', 'sala': (e.get('source_venue') or (e.get('venue_names') or [''])[0] or '')[:100]}
     return {'a': side(a), 'b': side(b)}
 
 

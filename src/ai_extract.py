@@ -166,9 +166,17 @@ TOOL = {'name': 'extraer', 'description': 'Datos extraídos de cada ficha, con s
 
 def payload(ev):
     return {'titulo': (ev.get('title') or '')[:200], 'fechas': [ev.get('start'), ev.get('end')],
-            'sala': ((ev.get('venue_names') or [''])[0] or '')[:100], 'texto': (ev.get('source_text') or '')[:MAX_TEXT]}
+            'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100], 'texto': (ev.get('source_text') or '')[:MAX_TEXT]}
 
 
 def needs(ev):
-    """Se pregunta por toda ficha con texto propio (≥ 40 caracteres); lo ya respondido no se repite."""
-    return len((ev.get('source_text') or '').strip()) >= 40
+    """Solo fichas con texto propio (≥ 40 caracteres) a las que les falta algo que la IA puede
+    aportar (20-10-2026): la hora de un acto de un día o de pocos días, o el precio. Lo que ya da la
+    fuente no se pregunta; lo ya respondido no se repite (huella de la entrada)."""
+    if len((ev.get('source_text') or '').strip()) < 40: return False
+    import datetime as _dt
+    try: span = (_dt.date.fromisoformat(str(ev.get('end'))[:10]) - _dt.date.fromisoformat(str(ev.get('start'))[:10])).days
+    except ValueError: span = 0
+    own_time = bool(ev.get('time')) and ev.get('time_source') != 'ia_texto'
+    own_price = bool(ev.get('price_label') or ev.get('price_text') or ev.get('is_free')) and ev.get('price_source') != 'ia_texto'
+    return (span <= 4 and not own_time) or not own_price
