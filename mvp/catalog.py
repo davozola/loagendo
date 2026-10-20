@@ -1111,6 +1111,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['price_label']=price['label']; events['is_free']=bool(price['free']); events['price_source']='ia_texto'; events['ai_quotes']['price']=price['quote']
     if ai_data.get('registration'): events['ai_quotes']['registration']=ai_data['registration']['quote']
     if ai_data.get('place'): events['ai_place']=ai_data['place']
+    events['ai_summary']=ai_assist.description_for(conn,source+':'+id,events)  # descripción breve (src/ai_describe.py)
     # Franja de edad: la regla (título o texto) primero; la IA solo si la regla no la ve.
     by_rule=ai_extract.ages_by_rule(title,events['source_text'])
     if by_rule: events.update(age_min=by_rule[0],age_max=by_rule[1],age_evidence=by_rule[2],age_source='fuente')

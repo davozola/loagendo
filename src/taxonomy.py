@@ -503,7 +503,9 @@ def _ai_stats(conn, base):
     """Uso y efecto de la IA: sugerencias, aplicadas, lotes y tokens (para vigilar el gasto)."""
     import json
     try:
-        rows = conn.execute("SELECT task, answer, COUNT(*) FROM ai_suggestions GROUP BY 1,2").fetchall()
+        rows = conn.execute("""SELECT task, CASE WHEN task IN ('categoria','duplicado') THEN answer
+              WHEN task='descripcion' THEN CASE WHEN answer LIKE '%"ok": true%' THEN 'aceptada' ELSE 'rechazada' END
+              ELSE CASE WHEN answer='{}' THEN 'sin datos comprobados' ELSE 'con datos comprobados' END END, COUNT(*) FROM ai_suggestions GROUP BY 1,2""").fetchall()
         batches = conn.execute("SELECT status, usage_json FROM ai_batches").fetchall()
     except sqlite3.DatabaseError:
         return {'enabled': False}

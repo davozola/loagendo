@@ -76,3 +76,14 @@ Código: `src/ai_assist.py`; trabajo automático `ia-asistente` (cada 3 h) en `c
   sin repetir lo ya respondido. Uso por lote en `ai_batches`; resumen en /admin → Clasificación → IA.
 - **Clave:** `ANTHROPIC_API_KEY=...` en `.env` (no se versiona). Sin clave el trabajo no hace nada.
 - **Medir:** `python3 scripts/evaluar_ia.py` compara reglas, IA y combinación con la muestra etiquetada.
+
+### Extracción, edades y descripciones (20-10-2026)
+- **Datos** (`src/ai_extract.py`): sesiones, precio, lugar, inscripción, familia, aire libre y edades leídos
+  del texto de la fuente; cada dato con cita literal que se comprueba (la cita está en el texto y el dato se
+  lee en la cita). Solo rellena huecos; la web marca «Hora/precio leído del texto de la fuente: «cita»».
+- **Edades**: reglas primero (título y texto; fórmulas sueltas como «+18» solo en el título), IA después.
+  Canal En familia con franjas 0–3, 4–6, 7–12, 13–17 y «Edad no indicada» (parámetro `edad`).
+- **Descripciones** (`src/ai_describe.py`): una o dos frases en castellano y catalán solo con los datos de la
+  ficha; se rechazan si mencionan un nombre o número que no esté en los datos o usan lenguaje promocional.
+  Se muestran encima del texto original (que no se toca). Públicas solo con `config/ia.json` →
+  `descripciones_publicas: true`, tras revisar `python3 scripts/muestra_descripciones.py`.

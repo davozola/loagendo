@@ -30,7 +30,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 1, 'duplicado': 1, 'datos': 1}
+PROMPT_VERSION = {'categoria': 1, 'duplicado': 1, 'datos': 1, 'descripcion': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -93,10 +93,11 @@ def _conf(row):
 
 
 def _tasks():
-    from src import ai_extract
+    from src import ai_extract, ai_describe
     return {'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
             'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
-            'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos)}
+            'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos),
+            'descripcion': (ai_describe.SYSTEM, ai_describe.TOOL, 'fichas', ai_describe.parse)}
 
 
 def load_key(env_path=None):
@@ -208,6 +209,27 @@ def data_for(conn, key, ev):
     except ValueError: return None
 
 
+def description_candidates(conn, events, today):
+    from src import ai_describe, taxonomy
+    current = suggestions(conn); out = []
+    for e in events:
+        if not taxonomy.eligible(e, today) or not ai_describe.needs(e): continue
+        payload = ai_describe.payload(e); s = current.get(('descripcion', e['key']))
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == PROMPT_VERSION['descripcion']: continue
+        out.append((e['key'], payload))
+    return out
+
+
+def description_for(conn, key, ev):
+    """Descripción breve vigente y aceptada ({es, ca, model}) o None."""
+    from src import ai_describe
+    s = suggestions(conn).get(('descripcion', key))
+    if not s or s['prompt_version'] != PROMPT_VERSION['descripcion'] or s['input_hash'] != _hash(ai_describe.payload(ev)): return None
+    try: d = json.loads(s['answer'])
+    except ValueError: return None
+    return {'es': d.get('es', ''), 'ca': d.get('ca', ''), 'model': s['model']} if d.get('ok') else None
+
+
 def duplicate_candidates(conn, events, today):
     from src import dedupe
     by_key = {e['key']: e for e in events}; current = suggestions(conn); out = []
@@ -237,7 +259,8 @@ def _request(method, url, key, body=None, timeout=60, raw=False):
 def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    return {'model': model, 'max_tokens': 120 + 90 * len(chunk),
+    per_item = {'datos': 400, 'descripcion': 260}.get(task, 90)
+    return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},
             'messages': [{'role': 'user', 'content': json.dumps(listing, ensure_ascii=False)}]}
@@ -336,7 +359,7 @@ def run(conn, job=None, requester=_request, today=None):
         if stored: catalog.invalidate_cache()
         events = catalog.all_events(conn)
         sent = {}
-        for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('duplicado', duplicate_candidates)):
+        for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
         return {'status': 'completed', 'stored': stored, 'usage': usage, 'submitted': sent}
     except urllib.error.HTTPError as err:

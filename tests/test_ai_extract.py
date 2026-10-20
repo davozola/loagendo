@@ -61,3 +61,26 @@ class ApplyTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DescribeTests(unittest.TestCase):
+    def test_grounding_check_rejects_invented_names_numbers_and_promotion(self):
+        from src import ai_describe
+        p = {'titulo': "Concert 'Andrea Motis + Yamandu Costa'", 'categoria': 'Música y vida nocturna', 'sala': 'Palau de la Música Catalana', 'barrio': 'Ciutat Vella',
+             'artistas': ['Andrea Motis', 'Yamandu Costa'], 'texto': 'La trompetista Andrea Motis comparteix escenari amb el guitarrista brasiler Yamandu Costa.'}
+        self.assertEqual(ai_describe.check('La trompetista Andrea Motis comparte escenario con el guitarrista brasileño Yamandu Costa.', p), [])
+        problems = ai_describe.check('Un concierto imprescindible de Andrea Motis con Hamilton de Holanda en 2026.', p)
+        self.assertTrue(any('promocional' in x for x in problems) and any('2026' in x for x in problems) and any('hamilton' in x for x in problems))
+        answer, confidence, _ = ai_describe.parse({'es': 'La trompetista Andrea Motis toca con Yamandu Costa.', 'ca': 'La trompetista Andrea Motis toca amb Yamandu Costa.'}, p)
+        self.assertEqual((json.loads(answer)['ok'], confidence), (True, 1.0))
+        answer, _, reason = ai_describe.parse({'es': 'Andrea Motis con Hamilton de Holanda.', 'ca': 'Andrea Motis amb Yamandu Costa.'}, p)
+        self.assertFalse(json.loads(answer)['ok']); self.assertIn('hamilton', reason)
+
+    def test_summary_is_hidden_from_the_public_site_until_enabled(self):
+        from src import publish_static, ai_describe
+        from unittest import mock
+        detail = {'ai_summary': {'es': 'x', 'ca': 'y', 'model': 'm'}, 'media': [], 'links': [], 'hours_by_day': {}, 'notes_by_day': {}}
+        with mock.patch.object(ai_describe, 'public_enabled', return_value=False):
+            self.assertIsNone(publish_static.public_detail(detail, None)['ai_summary'])
+        with mock.patch.object(ai_describe, 'public_enabled', return_value=True):
+            self.assertEqual(publish_static.public_detail(detail, None)['ai_summary']['es'], 'x')

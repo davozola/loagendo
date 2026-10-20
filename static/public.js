@@ -797,7 +797,9 @@ async function openDetail(k, focus, opts = {}) {
     // kept), otherwise a single factual sentence built from the record.
     const text = (e.description || '').trim();
     const paragraphs = text ? text.slice(0, 3000).split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('') : `<p>${esc(e.editorial_summary || '')}</p>`;
-    const description = `<section class="sheet-copy">${paragraphs}${text ? `<small class="copy-credit">${t('Texto de')} ${esc(e.description_credit || e.source_label)}</small>` : ''}</section>`;
+    // Descripción breve automática (IA) encima del texto original, para comparar; nunca lo sustituye.
+    const brief = e.ai_summary && (e.ai_summary[LANG] || e.ai_summary.es) ? `<section class="sheet-brief"><p>${esc(e.ai_summary[LANG] || e.ai_summary.es)}</p><small class="copy-credit">${esc(L('Resumen automático (IA) a partir de los datos de la fuente', 'Resum automàtic (IA) a partir de les dades de la font'))}</small></section>` : '';
+    const description = `${brief}<section class="sheet-copy">${brief && text ? `<small class="copy-credit copy-original">${esc(L('Texto original', 'Text original'))}</small>` : ''}${paragraphs}${text ? `<small class="copy-credit">${t('Texto de')} ${esc(e.description_credit || e.source_label)}</small>` : ''}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     const scheduleBits = [conflict ? `${t('Horas publicadas')}: ${conflict.join(LANG === 'ca' ? ' i ' : ' y ')} (${t('las fuentes no coinciden; confirma en la sala')})` : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
