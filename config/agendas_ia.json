@@ -647,6 +647,21 @@
       ],
       "activa": true,
       "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "zoo",
+      "name": "Zoo de Barcelona",
+      "address": "Parc de la Ciutadella s/n, 08003 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://zoobarcelona.cat/ca"
+      ],
+      "seguir": {
+        "patron": "/ca/noticies/",
+        "max": 4
+      },
+      "activa": true,
+      "nota": "Añadida el 21-10-2026 (aviso de David: la 1a Festa del Cor del 25-10 no salía). El Zoo anuncia sus jornadas como noticias enlazadas desde la portada: se leen las 4 primeras."
     }
   ]
 }

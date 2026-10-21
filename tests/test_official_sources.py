@@ -72,3 +72,19 @@ class VenueJsonFeedTests(unittest.TestCase):
         v = {'slug': 'liceu', 'name': 'Gran Teatre del Liceu', 'site': 'https://www.liceubarcelona.cat/', 'feed': {'url': 'x'}}
         (url, node), = liceu_json_nodes(v, lambda u, t: (200, u, json.dumps(data)), today=dt.date(2026, 10, 21))[0]
         self.assertEqual((node['startDate'], url), ('2026-11-25T18:30', 'https://www.liceubarcelona.cat/ca/clemenza-tito'))
+
+
+class FollowLinksTests(unittest.TestCase):
+    def test_news_linked_from_the_home_are_read(self):
+        pages = {'https://zoo.example/ca': '<html><body><a href="/ca/noticies/festa-del-cor">1a Festa del Cor</a><a href="/ca/altres">x</a></body></html>',
+                 'https://zoo.example/ca/noticies/festa-del-cor': '<html><body><h1>1a Festa del Cor al Zoo</h1><p>21 octubre 2026</p><p>El diumenge 25 d\'octubre, de 10:00 h a 16:30 h</p></body></html>'}
+        seen = []
+        def fetcher(url, timeout): seen.append(url); return (200, url, pages.get(url, '<html></html>'))
+        def requester(method, url, key, body, timeout=0):
+            text = json.loads(body['messages'][0]['content'])['texto']
+            actos = [{'titulo': '1a Festa del Cor al Zoo', 'sesiones': [{'fecha': '2026-10-25', 'cita_fecha': "diumenge 25 d'octubre", 'hora': '10:00', 'cita_hora': 'de 10:00 h a 16:30 h'}]}] if 'Festa del Cor al Zoo' in text else []
+            return {'content': [{'type': 'tool_use', 'name': 'actos', 'input': {'actos': actos}}]}
+        agenda = {'slug': 'zoo', 'name': 'Zoo', 'urls': ['https://zoo.example/ca'], 'seguir': {'patron': '/ca/noticies/', 'max': 4}}
+        res = ai_agenda.read_agenda(agenda, dt.date(2026, 10, 21), 'k', fetcher=fetcher, requester=requester)
+        self.assertEqual(seen, ['https://zoo.example/ca', 'https://zoo.example/ca/noticies/festa-del-cor'])
+        self.assertEqual([(a['titulo'], a['sesiones']) for a in res['accepted']], [('1a Festa del Cor al Zoo', [('2026-10-25', '10:00')])])

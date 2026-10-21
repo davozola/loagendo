@@ -65,6 +65,7 @@ Reglas estrictas:
 - precio y cita_precio solo si la página lo escribe para ese acto.
 - enlace: la marca [Ln] que va justo con ese acto en el texto, si la hay (por ejemplo L12); si no, vacío.
 - No incluyas actos ya pasados respecto a la fecha de hoy.
+- En una noticia, la fecha de publicación no es la del acto: usa solo la fecha en que el acto ocurre, tal como la escribe el texto.
 Responde con la herramienta actos."""
 
 TOOL = {'name': 'actos', 'description': 'Actos que anuncia la página, con citas literales.',
@@ -348,7 +349,14 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
     fetcher = fetcher or fetch
     result = {'pages': [], 'accepted': [], 'rejected': [], 'unchanged': True, 'text_chars': 0}
     fetched = []
-    for url in expand_urls(agenda, today):
+    # «seguir»: noticias o fichas enlazadas desde la página (el Zoo anuncia su Festa del Cor como noticia):
+    # se leen también las primeras «max» cuyo enlace cumple «patron».
+    follow = agenda.get('seguir') or {}
+    queue, seen = list(expand_urls(agenda, today)), set()
+    while queue:
+        url = queue.pop(0)
+        if url in seen: continue
+        seen.add(url)
         if fetcher is fetch and not robots_allows(url): result['pages'].append({'url': url, 'error': 'robots.txt no lo permite'}); continue
         status, final_url, body = fetcher(url, timeout)
         if status != 200: result['pages'].append({'url': url, 'error': f'HTTP {status}'}); continue
@@ -361,6 +369,9 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             if not (row and row[0] == digest): result['unchanged'] = False
         else: result['unchanged'] = False
         fetched.append((page, text, links, final_url or url, body)); result['pages'].append(page)
+        if follow.get('patron') and url in expand_urls(agenda, today):
+            extra = [l for l in dict.fromkeys(links) if re.search(follow['patron'], l) and l not in seen][:int(follow.get('max', 8))]
+            queue.extend(extra)
     # Sin cambios en ninguna página: no se llama a la IA. Si cambia una, se leen todas (las fichas de la
     # agenda se recalculan juntas y lo que falte deja de publicarse).
     if result['unchanged']: return result
