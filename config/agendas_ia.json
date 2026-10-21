@@ -662,6 +662,17 @@
       },
       "activa": true,
       "nota": "Añadida el 21-10-2026 (aviso de David: la 1a Festa del Cor del 25-10 no salía). El Zoo anuncia sus jornadas como noticias enlazadas desde la portada: se leen las 4 primeras."
+    },
+    {
+      "slug": "casa_seat",
+      "name": "CASA SEAT",
+      "address": "Passeig de Gràcia 109, 08008 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.casa.seat/es/agenda"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026 (aviso de David: faltaba «BULTACO: pasión por la moto»). Agenda en HTML con fecha y hora de cada acto; robots.txt lo permite."
     }
   ]
 }
