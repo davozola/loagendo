@@ -747,9 +747,21 @@ function collectStatic(all, win, p) {
     if (filters.district && base.district !== filters.district) continue;
     const e = {...base, base_time: base.time};
     if (filters.hourFrom !== null || filters.hourTo !== null) {
-      const occ = (e.occurrences || []).filter(o => (win || o.date === state.day) && o.time).map(o => o.time);
-      const hs = (occ.length ? occ : timesIn(e.time_label + ' ' + (e.time || ''))).map(x => Number(String(x).slice(0, 2)));
-      if (!hs.some(h => h >= (filters.hourFrom ?? 0) && h <= (filters.hourTo ?? 23))) continue;
+      const inRange = x => { const h = Number(String(x).slice(0, 2)); return h >= (filters.hourFrom ?? 0) && h <= (filters.hourTo ?? 23) };
+      const inWindow = o => win || o.date === state.day;
+      const occ = (e.occurrences || []).filter(o => inWindow(o) && o.time);
+      if (occ.length) {
+        if (!occ.some(o => inRange(o.time))) continue;
+        // Varios pases: se muestra el primero dentro de la franja elegida, no el primero del día.
+        e.occurrences = (e.occurrences || []).filter(o => !o.time || !inWindow(o) || inRange(o.time));
+        const first = e.occurrences.find(o => inWindow(o) && o.time);
+        if (first && !win) { e.time = first.time; e.base_time = first.time }
+      } else {
+        const label = String(e.time_label || '') + ' ' + String(e.time || ''), ts = timesIn(label);
+        if (!ts.some(inRange)) continue;
+        // Pases en texto («20:30 · 22:30»): el primero de la franja. Un horario de apertura («12:00–21:00») no se toca.
+        if (ts.length > 1 && !/[–-]/.test(label)) { const kept = ts.filter(inRange); e.time = kept[0]; e.base_time = kept.join(' · ') }
+      }
     }
     out.push(e);
   }
