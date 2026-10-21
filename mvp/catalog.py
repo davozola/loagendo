@@ -998,6 +998,23 @@ def place_media_item(place):
             'rights_status':'authorized','fallback':True,'credit':'Ajuntament de Barcelona'}
 
 
+OPEN_ENROLLMENT=re.compile(r"inscripci(?:[oó]n|ó) (?:abierta|oberta) (?:todo el año|tot l'any|durant tot el curs|todo el curso|en qualsevol moment|en cualquier momento|permanent|permanente)"
+    r"|matr[ií]cula (?:oberta|abierta) (?:todo el año|tot l'any|tot el curs|todo el curso|permanent|permanente)"
+    r"|inscripcions? obertes? (?:tot l'any|durant tot el curs|en qualsevol moment)"
+    r"|(?:pots|podeu|puedes|podéis|es pot|se puede) (?:incorporar-?(?:te|vos|se)?|incorporarte|incorporaros|incorporarse|apuntar-?(?:te|vos)?|apuntarte|inscriure['’]?(?:t|us)?|inscribirte) (?:\w+ )?(?:en )?(?:qualsevol|cualquier) moment"
+    r"|incorporaci[oó]n? (?:en|a) (?:qualsevol|cualquier) moment"
+    r"|sense inscripci[oó] pr[eè]via|sin inscripci[oó]n previa|no cal inscripci[oó]|no es necesaria (?:la )?inscripci[oó]n|no cal inscriure['’]?s",re.I)
+
+
+def open_enrollment(title, text, price=''):
+    """Cita de la fuente que dice que te puedes apuntar en cualquier momento
+    (o que no hace falta inscribirse); vacío si no lo dice. Sin inventar: solo regla."""
+    m=OPEN_ENROLLMENT.search(f'{title}\n{price}\n{text or ""}')
+    if not m: return ''
+    blob=f'{title}\n{price}\n{text or ""}'; a=max(0,m.start()-60); b=min(len(blob),m.end()+60)
+    return ' '.join(blob[a:b].split())
+
+
 def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, projection=None):
     source,id,title,start,end,kind,eligibility,evidence_level,url,raw_text,status,note,updated = row
     if projection is None:
@@ -1232,6 +1249,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if ai_data.get('registration'): events['ai_quotes']['registration']=ai_data['registration']['quote']
     if ai_data.get('place'): events['ai_place']=ai_data['place']
     events['ai_summary']=ai_assist.description_for(conn,source+':'+id,events)  # descripción breve (src/ai_describe.py)
+    # Inscripción abierta (te puedes apuntar con el curso empezado): solo si la fuente lo dice; se guarda la cita.
+    events['open_enrollment']=open_enrollment(title,events['source_text'],events.get('price_label') or '')
     # Franja de edad: la regla (título o texto) primero; la IA solo si la regla no la ve.
     by_rule=ai_extract.ages_by_rule(title,events['source_text'])
     if by_rule: events.update(age_min=by_rule[0],age_max=by_rule[1],age_evidence=by_rule[2],age_source='fuente')
@@ -1674,7 +1693,7 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
         # A course or programme that began more than STARTED_GRACE_DAYS ago
         # usually cannot be joined any more; the public default hides it and a
         # switch brings it back. Exhibitions and one-day acts are unaffected.
-        if not include_started and e['kind'] in ('course','program') and e['start']<started_cutoff:continue
+        if not include_started and e['kind'] in ('course','program') and e['start']<started_cutoff and not e.get('open_enrollment'):continue
         if only_sessions:
             if not e['occurrences']:
                 continue

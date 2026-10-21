@@ -130,7 +130,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -199,7 +199,7 @@ async function staticEvents(p) {
       const inside = e.occurrences.filter(o => from <= o.date && o.date <= to);
       if (inside.length || !e.occurrence_date) e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
     }
-    if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff) continue;
+    if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff && !e.open_enrollment) continue;  // los de inscripción abierta siguen
     if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
     if (!catMatch(e, filters.cat) || !chanMatch(e, filters.chans) || !ageMatch(e, filters.ages)) continue;
     if (filters.format && e.format !== filters.format) continue;
@@ -291,7 +291,7 @@ function clearFilter(k) {
   if (k === 'query') { state.query = ''; $('searchInput').value = '' }
   if (k === 'cat') state.cats = []; if (k === 'ch') { state.chans = []; state.ages = [] } if (k === 'edad') state.ages = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
   if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
-  if (k === 'started') { state.started = false; $('includeStarted').checked = false }
+  if (k === 'started') state.started = false
 }
 function renderActive() {
   const list = activeFilterList();
@@ -343,7 +343,7 @@ function days() {
   const current = win ? state.range : state.day === today ? 'today' : 'date';
   document.querySelectorAll('#periods .period-tab').forEach(tab => { const on = tab.dataset.period ? tab.dataset.period === current : current === 'date'; tab.classList.toggle('active', on); tab.setAttribute('aria-selected', String(on)) });
   $('pickDateLabel').textContent = current === 'date' ? labelDate(state.day) : t('Fecha');
-  $('includeStarted').checked = state.started; const picker = $('dayPicker'); picker.min = today; picker.max = addDays(today, MAX_DAYS); picker.value = win ? '' : state.day;
+  const picker = $('dayPicker'); picker.min = today; picker.max = addDays(today, MAX_DAYS); picker.value = win ? '' : state.day;
 }
 
 /* ---------- selection ---------- */
@@ -783,7 +783,6 @@ function renderAgenda() {
   if (group && !group.dataset.v3) {
     group.dataset.v3 = '1'; fmt.hidden = true; fmt.value = '';
     const legend = group.querySelector('legend'); if (legend) legend.textContent = L('Talleres y cursos', 'Tallers i cursos');
-    const lbl = $('includeStarted')?.parentElement?.querySelector('span'); if (lbl) lbl.textContent = L('Incluir los ya empezados', 'Inclou els ja començats');
   }
   if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
   else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
@@ -961,7 +960,7 @@ async function openDetail(k, focus, opts = {}) {
     const brief = e.ai_summary && (e.ai_summary[LANG] || e.ai_summary.es) ? `<section class="sheet-brief"><p>${esc(e.ai_summary[LANG] || e.ai_summary.es)}</p><small class="copy-credit">${esc(L('Resumen automático', 'Resum automàtic'))}</small></section>` : '';
     const description = `${brief}<section class="sheet-copy">${brief && text ? `<small class="copy-credit copy-original">${esc(L('Texto original', 'Text original'))}</small>` : ''}${paragraphs}${text ? `<small class="copy-credit">${t('Texto de')} ${esc(e.description_credit || e.source_label)}</small>` : ''}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
-    const scheduleBits = [conflict ? `${t('Horas publicadas')}: ${conflict.join(LANG === 'ca' ? ' i ' : ' y ')} (${t('las fuentes no coinciden; confirma en la sala')})` : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.official_page && e.official_page.applied.length ? L(`${e.official_page.applied.includes('hora') && e.official_page.applied.includes('precio') ? 'Hora y precio' : e.official_page.applied.includes('hora') ? 'Hora' : 'Precio'} de la web oficial del acto (${e.official_page.host})`, `${e.official_page.applied.includes('hora') && e.official_page.applied.includes('precio') ? 'Hora i preu' : e.official_page.applied.includes('hora') ? 'Hora' : 'Preu'} de la web oficial de l'acte (${e.official_page.host})`) : '', e.official_dates ? L(`Fechas de la web oficial (${e.official_dates.host}): «${e.official_dates.quote}»`, `Dates de la web oficial (${e.official_dates.host}): «${e.official_dates.quote}»`) : '', e.venue_unconfirmed ? L(`Fecha no confirmada por la sala: no aparece en la agenda de ${e.venue_unconfirmed}`, `Data no confirmada per la sala: no surt a l'agenda de ${e.venue_unconfirmed}`) : ''].filter(Boolean);
+    const scheduleBits = [conflict ? `${t('Horas publicadas')}: ${conflict.join(LANG === 'ca' ? ' i ' : ' y ')} (${t('las fuentes no coinciden; confirma en la sala')})` : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', typeof e.open_enrollment === 'string' && e.open_enrollment ? L(`Inscripción abierta: «${e.open_enrollment}»`, `Inscripció oberta: «${e.open_enrollment}»`) : '', e.official_page && e.official_page.applied.length ? L(`${e.official_page.applied.includes('hora') && e.official_page.applied.includes('precio') ? 'Hora y precio' : e.official_page.applied.includes('hora') ? 'Hora' : 'Precio'} de la web oficial del acto (${e.official_page.host})`, `${e.official_page.applied.includes('hora') && e.official_page.applied.includes('precio') ? 'Hora i preu' : e.official_page.applied.includes('hora') ? 'Hora' : 'Preu'} de la web oficial de l'acte (${e.official_page.host})`) : '', e.official_dates ? L(`Fechas de la web oficial (${e.official_dates.host}): «${e.official_dates.quote}»`, `Dates de la web oficial (${e.official_dates.host}): «${e.official_dates.quote}»`) : '', e.venue_unconfirmed ? L(`Fecha no confirmada por la sala: no aparece en la agenda de ${e.venue_unconfirmed}`, `Data no confirmada per la sala: no surt a l'agenda de ${e.venue_unconfirmed}`) : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
     // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
     const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));
@@ -1083,7 +1082,6 @@ function setHours(changed) {
 }
 $('hourFrom').addEventListener('change', () => setHours('from')); $('hourTo').addEventListener('change', () => setHours('to'));
 $('hourFrom').addEventListener('input', e => { $('hourFromLabel').textContent = hourLabel(e.target.value) }); $('hourTo').addEventListener('input', e => { $('hourToLabel').textContent = hourLabel(e.target.value) });
-$('includeStarted').addEventListener('change', e => { state.started = e.target.checked; refresh() });
 $('clearHours').addEventListener('click', () => { state.hourFrom = null; state.hourTo = null; refresh() });
 
 // Hero: the last word is retyped every few seconds (hoy → mañana → este fin de
