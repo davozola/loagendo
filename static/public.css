@@ -407,3 +407,5 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .hl-img img{width:100%;height:100%;object-fit:cover;display:block}
 .hl-tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accentText);margin:0 0 3px}
 .hl-tag.hl-last,.hl-tag.hl-lastday{color:#f5b84a}
+.hl-tag.hl-premiere{color:#7ee0c3}
+.hl-tag.hl-onlytoday{color:#f59ac0}

@@ -130,7 +130,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -603,18 +603,32 @@ function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>
 // día y nunca dos seguidas.
 state.picks = new Set();
 function hlReason(e, day) {
-  if (state.picks.has(key(e))) return 'pick';
-  if (day && e.start !== e.end && daysBetween(e.start, e.end) >= 14 && e.end >= day && daysBetween(day, e.end) <= 6 && (e.kind === 'exhibition' || (e.public_category || e.category) === 'arte' || (e.public_category === 'escena' && e.kind !== 'course'))) return e.end === day ? 'lastday' : 'last';
+  // Selección Brollant: la de la portada, o lo que anuncian tres fuentes o más.
+  if (state.picks.has(key(e)) || (e.confirmations || 1) >= 3) return 'pick';
+  if (!e.relevant || !day) return '';  // el resto, solo en salas y centros de referencia
+  const cat = e.public_category || e.category;
+  const runs = e.start !== e.end, longRun = runs && daysBetween(e.start, e.end) >= 14;
+  // Estreno: primer día de una obra o espectáculo con varias funciones.
+  const firstDay = (e.occurrences || []).map(o => o.date).sort()[0] || e.start;
+  if (runs && cat === 'escena' && e.kind !== 'exhibition' && day === firstDay) return 'premiere';
+  // Últimos días: exposiciones y obras que cierran en una semana.
+  if (longRun && e.end >= day && daysBetween(day, e.end) <= 6 && (e.kind === 'exhibition' || cat === 'arte' || (cat === 'escena' && e.kind !== 'course'))) return e.end === day ? 'lastday' : 'last';
+  // («Solo hoy» se descartó: muchas salas publican cada función como ficha de un día y no podemos asegurar que sea única.)
   return '';
 }
-const HL_LABEL = {pick: () => L('Selección Brollant', 'Selecció Brollant'), last: () => L('Últimos días', 'Últims dies'), lastday: () => L('Último día', 'Últim dia')};
+const HL_LABEL = {pick: () => L('Selección Brollant', 'Selecció Brollant'), premiere: () => L('Estreno', 'Estrena'), last: () => L('Últimos días', 'Últims dies'), lastday: () => L('Último día', 'Últim dia'), onlytoday: () => L('Solo hoy', 'Només avui')};
+const HL_ORDER = {pick: 0, premiere: 1, lastday: 2, last: 3, onlytoday: 4};
 function markHighlights(list, day) {
   list.forEach(e => { e._hl = '' });
-  const cands = list.filter(e => !e._inFest && hlReason(e, day)).sort((a, b) => (hlReason(a, day) === 'pick' ? 0 : 1) - (hlReason(b, day) === 'pick' ? 0 : 1));
-  const cap = Math.max(1, Math.floor(list.length / 10)), chosen = new Set(cands.slice(0, cap * 2));
-  let used = 0, prev = false;
-  for (const e of list) {
-    if (used < cap && chosen.has(e) && !prev) { e._hl = hlReason(e, day); used++; prev = true } else prev = false;
+  const cands = list.filter(e => !e._inFest && hlReason(e, day)).sort((a, b) => HL_ORDER[hlReason(a, day)] - HL_ORDER[hlReason(b, day)] || (b.confirmations || 1) - (a.confirmations || 1));
+  // Por orden de motivo (Selección, Estreno, Último día…), sin dos filas destacadas seguidas.
+  const cap = Math.max(1, Math.floor(list.length / 10)), pos = new Map(list.map((e, i) => [e, i]));
+  let used = 0;
+  for (const e of cands) {
+    if (used >= cap) break;
+    const i = pos.get(e);
+    if (list[i - 1]?._hl || list[i + 1]?._hl) continue;
+    e._hl = hlReason(e, day); used++;
   }
 }
 function hlHead(e) {

@@ -1,0 +1,13 @@
+{
+  "nota": "Salas y centros de referencia (21-10-2026): sus actos pueden destacarse en la lista como «Estreno», «Solo hoy» o «Últimos días». Patrones sobre el nombre del lugar (sin acentos, minúsculas).",
+  "patrones": [
+    "liceu", "palau de la musica", "petit palau", "auditori de barcelona", "l'auditori", "teatre nacional de catalunya", "\\btnc\\b", "teatre lliure", "espai lliure",
+    "mercat de les flors", "teatre romea", "teatre goya", "teatre condal", "la villarroel", "sala beckett", "teatre victoria", "teatre poliorama", "teatre tivoli",
+    "teatre coliseum", "teatre borras", "teatre apolo", "\\bmacba\\b", "museu d'art contemporani", "\\bcccb\\b", "centre de cultura contemporania", "fundacio joan miro",
+    "museu picasso", "\\bmnac\\b", "museu nacional d'art de catalunya", "caixaforum", "cosmocaixa", "disseny hub", "museu del disseny", "la virreina", "santa monica",
+    "la pedrera", "fundacio tapies", "museu tapies", "fundacio mies van der rohe", "pavello mies", "museu d'historia de catalunya", "museu d'historia de barcelona", "muhba",
+    "fabra i coats", "hangar", "filmoteca de catalunya", "sala apolo", "razzmatazz", "paral.lel 62", "jamboree", "luz de gas", "sala upload", "la nau", "sant jordi club",
+    "palau sant jordi", "teatre grec", "sala barts", "barts", "teatre gaudi", "teatreneu", "antic teatre", "la seca", "nau ivanow", "sala fenix", "el molino", "conservatori del liceu",
+    "casa batllo", "casa amatller", "museu egipci", "museu maritim", "museu etnologic", "museu de cultures del mon", "museu de ciencies naturals", "museu olimpic"
+  ]
+}

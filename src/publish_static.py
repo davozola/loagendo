@@ -164,6 +164,21 @@ def packed_hours(event, field='hours_by_day'):
     return out
 
 
+_RELEVANT = {'rx': None}
+
+
+def relevant_venue(event):
+    """¿Es en una sala o centro de referencia? (config/salas_relevantes.json)."""
+    import unicodedata
+    if _RELEVANT['rx'] is None:
+        try: pats = json.loads((ROOT / 'config' / 'salas_relevantes.json').read_text(encoding='utf-8')).get('patrones', [])
+        except (OSError, ValueError): pats = []
+        _RELEVANT['rx'] = re.compile('|'.join(pats)) if pats else re.compile(r'(?!x)x')
+    name = ' '.join(event.get('venue_names') or []).replace('·', '.').replace('’', "'")
+    name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode().lower()
+    return bool(_RELEVANT['rx'].search(name))
+
+
 def compact(event, images, full=True):
     """The listing record the browser needs, with short keys to keep files small.
 
@@ -183,9 +198,12 @@ def compact(event, images, full=True):
     if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0]  # festival (src/festivals.py)
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
+    if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse
+    if (event.get('confirmations') or 1) >= 3: out['cf'] = event['confirmations']  # lo anuncian tres fuentes o más
     if not full:
-        # Imagen de las exposiciones y programas largos: la lista la muestra cuando los destaca («Últimos días»).
-        if event['start'] != event['end'] and event['kind'] in ('exhibition', 'program'):
+        # Imagen de lo que la lista puede destacar (exposiciones y programas largos, salas de referencia,
+        # actos que confirman varias fuentes): se muestra solo en las filas destacadas.
+        if (event['start'] != event['end'] and event['kind'] in ('exhibition', 'program')) or out.get('rv') or out.get('cf'):
             first = next((i for i in event.get('media', []) if not i.get('fallback')), None)
             exported = images.item(first) if first else None
             if exported: out['mi'] = exported['url']
