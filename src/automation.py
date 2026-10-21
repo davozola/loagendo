@@ -138,8 +138,8 @@ def execute(conn, job, media_root):
         from src.organizer_text import run as run_organizer
         return run_organizer(conn, job.get("limit", 150), timeout=job.get("timeout_seconds", 15))
     if kind == "official_dates":
-        from src.official_dates import run as run_official
-        return run_official(conn, job.get("limit", 200), timeout=job.get("timeout_seconds", 15))
+        from src.official_dates import run_all
+        return run_all(conn, job)
     if kind == "ai_agenda":
         from src.ai_agenda import run as run_agendas
         return run_agendas(conn, job)

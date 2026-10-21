@@ -22,7 +22,7 @@ echo "2/8 · Ticketmaster y Eventbrite"
 job api-ticketmaster; job eventbrite-api
 echo "3/8 · Agendas web: CCCB, MACBA, centres cívics, conciertos.club, GRAF (con horario de los espacios)"
 job web-cccb; job web-macba; job web-centres-civics; job web-conciertos-club; job web-graf
-echo "4/8 · Agendas de sala leídas con IA (25 salas; la primera vez lee todas, ~10 min)"
+echo "4/8 · Agendas de sala (47 salas: schema.org con reglas, el resto con IA; la primera vez lee todas, ~20 min)"
 job agendas-ia
 echo "5/8 · Horario de la página de cada acto, texto de la web del organizador y fechas oficiales de las exposiciones"
 job enriquecer-fichas; job textos-organizador; job fechas-oficiales

@@ -360,11 +360,18 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             row = conn.execute('SELECT text_hash FROM ai_agenda_pages WHERE slug=? AND url=?', (agenda['slug'], url)).fetchone()
             if not (row and row[0] == digest): result['unchanged'] = False
         else: result['unchanged'] = False
-        fetched.append((page, text, links, final_url or url)); result['pages'].append(page)
+        fetched.append((page, text, links, final_url or url, body)); result['pages'].append(page)
     # Sin cambios en ninguna página: no se llama a la IA. Si cambia una, se leen todas (las fichas de la
     # agenda se recalculan juntas y lo que falte deja de publicarse).
     if result['unchanged']: return result
-    for page, text, links, page_url in fetched:
+    for page, text, links, page_url, body in fetched:
+        # Reglas antes que IA: si la página publica sus actos en schema.org, se toman de ahí (sin tokens).
+        nodes = schema_nodes(body, agenda, today)
+        if nodes:
+            result.setdefault('rules_nodes', []).extend((n, page_url, page['hash']) for n in nodes)
+            page['events'] = len(nodes); page['via'] = 'schema.org'
+            continue
+        page['via'] = 'IA'
         items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
@@ -384,6 +391,42 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         m['quotes'] = {**act['quotes'], **m['quotes']}
     result['accepted'] = list(merged.values())
     return result
+
+
+def schema_nodes(body, agenda, today):
+    """Actos schema.org (Event…) de la página, en Barcelona y de hoy en adelante; en agendas de varias salas,
+    solo los de una sala configurada (el nombre del lugar del acto la contiene)."""
+    from src.venue_feeds import jsonld_events, _date
+    out = []
+    for node in jsonld_events(body or ''):
+        end = _date(node.get('endDate')) or _date(node.get('startDate'))
+        if not end or end < today.isoformat(): continue
+        loc = node.get('location') or {}
+        if isinstance(loc, list): loc = loc[0] if loc else {}
+        addr = loc.get('address') if isinstance(loc, dict) else None
+        town = fold(addr.get('addressLocality') or '') if isinstance(addr, dict) else ''
+        if town and 'barcelona' not in town: continue
+        if agenda.get('salas'):
+            where = fold(loc.get('name') or '') if isinstance(loc, dict) else ''
+            if not any(fold(s['name']) in where or where in fold(s['name']) for s in agenda['salas'] if where): continue
+        out.append(node)
+    return out
+
+
+def rules_records(agenda, nodes):
+    """Fichas de los actos schema.org de la agenda (fuente venue_ia_<slug>, etiqueta «Datos de la sala»)."""
+    from src.venue_feeds import record_from_jsonld
+    venue = {'slug': 'ia_' + agenda['slug'], 'name': agenda['name'], 'type': agenda.get('type', 'culture'),
+             'address': agenda.get('address') or ''}
+    out = []
+    for node, page_url, page_hash in nodes:
+        record = record_from_jsonld(venue, node, page_url)
+        if not record: continue
+        record['raw'].setdefault('loagendo', {})['source_label'] = LABEL
+        record['raw']['ai_agenda'] = {'page': page_url, 'page_hash': page_hash, 'model': 'reglas: schema.org', 'prompt_version': PROMPT_VERSION}
+        record['evidence_level'] = 'venue_page_schema_org'
+        out.append(record)
+    return out
 
 
 def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, timeout=30):
@@ -422,6 +465,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
         page_hash = ','.join(sorted({p.get('hash', '') for p in res['pages'] if p.get('hash')}))
         records = []
         for act in res['accepted']: records += records_for(agenda, [act], act['page'], act['page_hash'], model)
+        records += rules_records(agenda, res.get('rules_nodes') or [])
         seen = set(); records = [r for r in records if not (r['id'] in seen or seen.add(r['id']))]
         mutated = 0; now = now_utc()
         with conn:

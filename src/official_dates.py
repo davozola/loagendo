@@ -241,3 +241,126 @@ def official(conn):
                 for s, i, a, b, p, u, q in conn.execute("SELECT source,id,start_date,end_date,end_precision,url,quote FROM official_dates WHERE status='ok' AND start_date<>''")}
     except sqlite3.DatabaseError:
         return {}
+
+
+# ---------- página oficial de cada acto (hora y precio), 21-10-2026 ----------
+# Para los actos que solo llegan por agregadores (Ajuntament, Generalitat, GRAF) y traen el enlace a la
+# página del propio acto: de esa página se toman con reglas la hora y el precio que publica en schema.org
+# (mandan sobre los del agregador) y un extracto del texto, que se añade al texto de la ficha para que la
+# extracción con IA (src/ai_extract.py, cita literal comprobada) complete lo que falte.
+AGGREGATOR_SOURCES = ("opendatabcn_agenda", "guiabcn", "generalitat", "web_graf", "diba_turismo")
+AHEAD_DAYS = 60
+EXCERPT = 1800
+
+
+def initialize_pages(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS official_pages (source TEXT NOT NULL, id TEXT NOT NULL, url TEXT NOT NULL DEFAULT '',
+      times_json TEXT NOT NULL DEFAULT '{}', price TEXT NOT NULL DEFAULT '', free INTEGER NOT NULL DEFAULT 0, excerpt TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL, checked_at TEXT NOT NULL, PRIMARY KEY(source, id))""")
+
+
+def page_candidates(conn, limit, today=None):
+    today = today or dt.date.today()
+    retry = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=RECHECK_DAYS)).isoformat(timespec="seconds")
+    marks = ",".join("?" * len(AGGREGATOR_SOURCES))
+    rows = conn.execute(f"""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.raw_json FROM source_records r
+        LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
+        WHERE r.source IN ({marks}) AND r.kind<>'exhibition' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude'
+          AND NOT (r.source='guiabcn' AND EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id))
+          AND (o.id IS NULL OR o.checked_at<?)
+        ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (*AGGREGATOR_SOURCES, today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit * 3)).fetchall()
+    out = []
+    for source, rid, title, start, end, raw in rows:
+        words = _words(title)
+        # Solo un enlace a la página de ESTE acto: su ruta comparte palabras propias con el título.
+        url = next((u for u in links_of(raw, title) if words & _words(urlsplit(u).path.replace("-", " ").replace("_", " "))), "")
+        if url: out.append((source, rid, title, start, end, url))
+        if len(out) >= limit: break
+    return out
+
+
+def _price_of(offers):
+    offers = offers if isinstance(offers, list) else [offers]
+    values = []
+    for o in offers:
+        if not isinstance(o, dict): continue
+        for k in ("price", "lowPrice", "highPrice"):
+            try:
+                v = float(str(o.get(k)).replace(",", "."))
+                values.append(v)
+            except (TypeError, ValueError): pass
+    if not values: return "", False
+    lo, hi = min(values), max(values)
+    if hi == 0: return "Gratis", True
+    fmt = lambda v: (f"{v:.2f}".rstrip("0").rstrip(".").replace(".", ",")) + " €"
+    return (fmt(lo) if lo == hi else f"{fmt(lo)} – {fmt(hi)}"), False
+
+
+def page_facts(page, title, start, end):
+    """Hora por día y precio de los actos schema.org de la página que son este acto."""
+    from src.venue_feeds import jsonld_events, _date, _time
+    words = _words(title); times, price, free = {}, "", False
+    for node in jsonld_events(page or ""):
+        if not (words & _words(str(node.get("name") or ""))): continue
+        day, hour = _date(node.get("startDate")), _time(node.get("startDate"))
+        if day and start <= day <= end and hour and hour != "00:00": times.setdefault(day, hour)
+        if not price and node.get("offers"): price, free = _price_of(node.get("offers"))
+        if node.get("isAccessibleForFree") in (True, "true", "True") and not price: price, free = "Gratis", True
+    return times, price, free
+
+
+def excerpt_of(text, title):
+    """El trozo del texto de la página que habla del acto: desde la primera línea que comparte palabras con el título."""
+    words = _words(title); lines = text.split("\n")
+    first = next((i for i, l in enumerate(lines) if words & _words(l)), None)
+    return "\n".join(lines[first:])[:EXCERPT] if first is not None else ""
+
+
+def read_page(url, title, start, end, fetcher, timeout):
+    status, final, page = fetcher(url, timeout)
+    if status != 200: return {"status": f"http_{status}"}
+    m = re.search(r"<title>(.*?)</title>", page or "", re.I | re.S)
+    ptitle = html.unescape(m.group(1)) if m else ""
+    words = _words(title)
+    if not (words & (_words(ptitle) | _words(urlsplit(final or url).path.replace("-", " ")))): return {"status": "no_es_del_acto"}
+    times, price, free = page_facts(page, title, start, end)
+    return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(page_text(page), title)}
+
+
+def run_pages(conn, limit=300, fetcher=None, timeout=15, today=None):
+    from src.venue_feeds import fetch, robots_allows
+    import time
+    initialize_pages(conn); fetcher = fetcher or fetch
+    done = ok = facts = 0
+    for source, rid, title, start, end, url in page_candidates(conn, limit, today):
+        try:
+            if fetcher is fetch and not robots_allows(url): res = {"status": "robots"}
+            else:
+                res = read_page(url, title, start, end, fetcher, timeout)
+                if fetcher is fetch: time.sleep(0.5)
+        except Exception as error:
+            res = {"status": "error: " + type(error).__name__}
+        done += 1; ok += res["status"] == "ok"; facts += bool(res.get("times") or res.get("price"))
+        with conn:
+            conn.execute("""INSERT INTO official_pages(source,id,url,times_json,price,free,excerpt,status,checked_at) VALUES(?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(source,id) DO UPDATE SET url=excluded.url,times_json=excluded.times_json,price=excluded.price,free=excluded.free,
+                excerpt=excluded.excerpt,status=excluded.status,checked_at=excluded.checked_at""",
+                         (source, rid, url, json.dumps(res.get("times") or {}), res.get("price") or "", int(bool(res.get("free"))), res.get("excerpt") or "",
+                          res["status"], dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")))
+    return {"checked": done, "pages_ok": ok, "with_time_or_price": facts}
+
+
+def pages(conn):
+    """{(source, id): {url, times, price, free, excerpt}} de páginas oficiales leídas."""
+    try:
+        return {(s, i): {"url": u, "times": json.loads(t or "{}"), "price": p, "free": bool(f), "excerpt": x}
+                for s, i, u, t, p, f, x in conn.execute("SELECT source,id,url,times_json,price,free,excerpt FROM official_pages WHERE status='ok'")}
+    except sqlite3.DatabaseError:
+        return {}
+
+
+def run_all(conn, job=None, fetcher=None, today=None):
+    job = job or {}
+    dates = run(conn, job.get("limit", 300), fetcher=fetcher, timeout=job.get("timeout_seconds", 15), today=today)
+    acts = run_pages(conn, job.get("limit_pages", 300), fetcher=fetcher, timeout=job.get("timeout_seconds", 15), today=today)
+    return {"status": "completed", "exposiciones": dates, "actos": acts}

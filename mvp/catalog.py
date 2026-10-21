@@ -781,8 +781,8 @@ class Prefetch:
                 self.enrichment[(s,i)]=(desc if usable_description(desc) else '',st or '',stx or '',parsed if isinstance(parsed,list) else [])
         from src.organizer_text import texts as _organizer_texts
         self.organizer=_organizer_texts(conn)
-        from src.official_dates import official as _official_dates
-        self.official=_official_dates(conn)
+        from src.official_dates import official as _official_dates, pages as _official_pages
+        self.official=_official_dates(conn); self.official_pages=_official_pages(conn)
         if 'source_detail_facts' in tables:
             for s,i,facts in conn.execute('SELECT source,id,facts_json FROM source_detail_facts'):
                 try: self.facts[(s,i)]=json.loads(facts) or {}
@@ -1104,6 +1104,24 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 official_dates={**best,'host':re.sub(r'^www\.','',urlsplit(best['url']).netloc),'source_start':str(start)[:10],'source_end':str(end)[:10]}
                 start,end=best['start'],best['end']
                 occurrences=[o for o in occurrences if start<=o['date']<=end]
+    # Página oficial del acto (actos que solo llegan por agregadores): su hora en schema.org manda sobre la
+    # del agregador; su precio, más abajo; su texto se añade al de la ficha para la extracción con IA.
+    official_page=None
+    from src.dedupe import first_party as _first_party
+    if not _first_party(source):
+        from src.official_dates import pages as _pages
+        ptable=prefetch.official_pages if prefetch is not None else _pages(conn)
+        for k in [key,twin or '']+list(collapsed_members):
+            if k and tuple(k.split(':',1)) in ptable:
+                found=ptable[tuple(k.split(':',1))]
+                official_page={**found,'host':re.sub(r'^www\.','',urlsplit(found['url']).netloc),'applied':[]}; break
+    if official_page and official_page['times']:
+        for day,hour in official_page['times'].items():
+            same=[o for o in occurrences if o['date']==day]
+            if len(same)==1 and same[0].get('time')!=hour:
+                same[0]['time']=hour; same[0]['evidence_field']='web_oficial'; official_page['applied'].append('hora')
+            elif not same and start<=day<=end and str(start)[:10]==str(end)[:10]:
+                occurrences.append({'date':day,'time':hour,'evidence_field':'web_oficial','verified':False}); official_page['applied'].append('hora')
     # Two directories often publish different times for the same concert
     # (doors vs. show, or a plain error). When the canonical record is itself a
     # directory, every published time is shown and the reader is told to
@@ -1172,6 +1190,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['venue_names']=[room_map.full_name(v[0],v[1]) for v in place if v[0]]
     # Texto de la fuente (para la IA) y lo extraído de él con cita comprobada (src/ai_extract.py).
     events['source_text']='\n\n'.join(x for x in ((projection.get('ai_text') or '').strip(),(archived_description or '').strip()) if x)[:3000]
+    if official_page and official_page.get('excerpt'):  # cabe en lo que lee la IA (ai_extract.MAX_TEXT)
+        events['source_text']=events['source_text'][:1500]+'\n\n[Web oficial del acto] '+official_page['excerpt'].strip()[:950]
     from src import ai_assist, ai_extract
     ai_data=ai_assist.data_for(conn,source+':'+id,events) or {}
     # Horario en líneas de la página de la sala (Teatre Lliure): días, pases, días sin función y funciones sueltas.
@@ -1195,6 +1215,16 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     price=ai_data.get('price')
     if price and not events.get('is_free') and not events.get('price_label'):
         events['price_label']=price['label']; events['is_free']=bool(price['free']); events['price_source']='ia_texto'; events['ai_quotes']['price']=price['quote']
+    if official_page and official_page.get('price'):
+        if official_page['price']!=events.get('price_label') or bool(official_page['free'])!=bool(events.get('is_free')):
+            events['price_label']=None if official_page['free'] else official_page['price']; events['is_free']=bool(official_page['free'])
+            events['price_source']='web_oficial'; official_page['applied'].append('precio')
+    events['official_page']={'host':official_page['host'],'url':official_page['url'],'applied':sorted(set(official_page['applied']))} if official_page else None
+    # De dónde salen los datos (src/data_origin.py): lo mejor entre esta ficha y sus gemelas.
+    from src import data_origin
+    origins=[data_origin.of_source(source,(events.get('venue_names') or [''])[0])]+[data_origin.of_source(m.split(':',1)[0],'') for m in collapsed_members]
+    if official_dates or (official_page and official_page['applied']): origins.append('web_oficial')
+    events['data_origin']=data_origin.best(origins)
     if ai_data.get('registration'): events['ai_quotes']['registration']=ai_data['registration']['quote']
     if ai_data.get('place'): events['ai_place']=ai_data['place']
     events['ai_summary']=ai_assist.description_for(conn,source+':'+id,events)  # descripción breve (src/ai_describe.py)

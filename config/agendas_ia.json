@@ -235,7 +235,8 @@
       "address": "Avinguda de Francesc Ferrer i Guàrdia 6-8, 08004 Barcelona",
       "type": "culture",
       "urls": [
-        "https://caixaforum.org/ca/barcelona/activitats"
+        "https://caixaforum.org/ca/barcelona/activitats",
+        "https://caixaforum.org/ca/barcelona/exposicions"
       ],
       "activa": true
     },
@@ -356,6 +357,289 @@
       ],
       "activa": false,
       "descartada": "Su robots.txt no permite leer la agenda; 20-10-2026"
+    },
+    {
+      "slug": "palau_musica",
+      "name": "Palau de la Música Catalana",
+      "address": "Carrer del Palau de la Música 4-6, 08003 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.palaumusica.cat/ca/agenda"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "liceu",
+      "name": "Gran Teatre del Liceu",
+      "address": "La Rambla 51-59, 08002 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.liceubarcelona.cat/ca/temporada-2026-2027"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "mercat_flors",
+      "name": "Mercat de les Flors",
+      "address": "Carrer de Lleida 59, 08004 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://mercatflors.cat/es/programacion/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "poliorama",
+      "name": "Teatre Poliorama",
+      "address": "La Rambla 115, 08002 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatrepoliorama.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "balana",
+      "name": "Grup Balañà (Tívoli, Coliseum, Borràs)",
+      "address": "",
+      "type": "theatre",
+      "urls": [
+        "https://www.balanaenviu.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "salas": [
+        {
+          "name": "Teatre Tívoli",
+          "address": "Carrer de Casp 8-10, 08010 Barcelona"
+        },
+        {
+          "name": "Teatre Coliseum",
+          "address": "Gran Via de les Corts Catalanes 595, 08007 Barcelona"
+        },
+        {
+          "name": "Teatre Borràs",
+          "address": "Plaça d'Urquinaona 9, 08010 Barcelona"
+        }
+      ]
+    },
+    {
+      "slug": "parallel_62",
+      "name": "Sala Paral·lel 62",
+      "address": "Avinguda del Paral·lel 62, 08001 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://paral-lel62.cat/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "mhc",
+      "name": "Museu d'Història de Catalunya",
+      "address": "Plaça de Pau Vila 3, 08039 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.mhcat.cat/exposicions/exposicions_en_curs",
+        "https://www.mhcat.cat/activitats"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "teatre_muntaner",
+      "name": "Teatre Muntaner",
+      "address": "Carrer de Muntaner 4, 08011 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://cat.teatremuntaner.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "teatre_apolo",
+      "name": "Teatre Apolo",
+      "address": "Avinguda del Paral·lel 59, 08004 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://teatreapolo.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "teatre_balmes",
+      "name": "Teatre Balmes",
+      "address": "Carrer de Balmes 137, 08008 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://teatrebalmes.com/ca/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "santa_monica",
+      "name": "Arts Santa Mònica",
+      "address": "La Rambla 7, 08002 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.santamonica.cat/ca/exposicions-i-activitats"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "cosmocaixa",
+      "name": "CosmoCaixa",
+      "address": "Carrer d'Isaac Newton 26, 08022 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://cosmocaixa.org/ca/activitats"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "city_hall",
+      "name": "City Hall",
+      "address": "Rambla de Catalunya 2-4, 08007 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.cityhallbarcelona.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "la_nau",
+      "name": "La Nau",
+      "address": "Carrer d'Àlaba 30, 08005 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.lanaubarcelona.es/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "upload",
+      "name": "Sala Upload",
+      "address": "Avinguda de Francesc Ferrer i Guàrdia 13, 08038 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://sala-upload.com/conciertos/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "razzmatazz",
+      "name": "Razzmatazz",
+      "address": "Carrer dels Almogàvers 122, 08018 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://www.salarazzmatazz.com/agenda/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "salas": [
+        {
+          "name": "Razzmatazz 1",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        },
+        {
+          "name": "Razzmatazz 2",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        },
+        {
+          "name": "Razzmatazz 3",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        },
+        {
+          "name": "Lolita",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        },
+        {
+          "name": "Pop Bar",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        },
+        {
+          "name": "Razzmatazz",
+          "address": "Carrer dels Almogàvers 122, 08018 Barcelona"
+        }
+      ]
+    },
+    {
+      "slug": "moog",
+      "name": "Moog",
+      "address": "Carrer de l'Arc del Teatre 3, 08002 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://moogbarcelona.com/agenda/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "laut",
+      "name": "Laut",
+      "address": "Carrer de Vila i Vilà 61, 08004 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://laut.es/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "lleialtat",
+      "name": "La Lleialtat Santsenca",
+      "address": "Carrer d'Olzinelles 31, 08014 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://lleialtat.cat/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "espai_texas",
+      "name": "Espai Texas",
+      "address": "Carrer de Bailèn 205, 08037 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://espaitexas.cat/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "pangoli",
+      "name": "Teatre Sala Pangolí",
+      "address": "Carrer de Bailèn 194-196, 08037 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.salapangoli.com/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+    },
+    {
+      "slug": "casino_alianca",
+      "name": "Casino de l'Aliança del Poblenou",
+      "address": "Rambla del Poblenou 42, 08005 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://casinoalianca.cat/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
     }
   ]
 }
