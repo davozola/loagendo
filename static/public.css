@@ -367,6 +367,6 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
   .agenda-head .filters-toggle{display:none}
   .filter-bar{display:block;position:sticky;top:var(--stick,0px);z-index:30;margin:0 calc(-1 * var(--gutter)) 12px;padding:8px var(--gutter);background:var(--bg);border-bottom:1px solid var(--line)}
   .filter-bar .filters-toggle{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid var(--accent);border-radius:999px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
-  .content .active-filters{display:none}
+  .content .active-filters{margin:0 0 12px}
   .fab-filters{display:none!important}
 }
