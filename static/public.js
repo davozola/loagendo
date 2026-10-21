@@ -189,8 +189,15 @@ async function staticEvents(p) {
       e = atDay(e, day);
     } else if (from) {
       if (!(e.start <= to && e.end >= from)) continue;
+      // Con horario por día (feria de unos días al mes), solo si alguno de esos días cae en el periodo.
+      const byDay = e.start !== e.end ? hoursByDay(e) : null;
+      if (byDay && Object.keys(byDay).length) {
+        const first = Object.keys(byDay).sort().find(d => from <= d && d <= to);
+        if (!first) continue;
+        if (!e.occurrences.some(o => from <= o.date && o.date <= to)) { e = {...atDay(e, first), occurrence_date: first}; }
+      }
       const inside = e.occurrences.filter(o => from <= o.date && o.date <= to);
-      e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
+      if (inside.length || !e.occurrence_date) e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
     }
     if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff) continue;
     if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
@@ -813,6 +820,13 @@ function detailWhen(e) {
   const byDay = hoursByDay(e) || {}, rawDay = e.occurrence_date ? null : byDay[day], dayHours = PARTS[rawDay] ? PARTS[rawDay]().toLowerCase() : rawDay;
   const t = dayHours || (e.time ? e.time : (e.time_label && !/^(Hora no indicada|Varios días|Exposición)$/.test(e.time_label) ? e.time_label : ''));
   if (e.start !== e.end && dayHours && new Set(Object.values(byDay)).size > 1) return `${when} · ${labelDay(day)} ${dayHours}`;
+  // Programa de días sueltos (una feria tres días al mes): se dicen los próximos días, no «10 abr – 21 dic».
+  const days = Object.keys(byDay).sort(), span = (new Date(e.end + 'T12:00:00') - new Date(e.start + 'T12:00:00')) / 86400000 + 1;
+  if (e.start !== e.end && days.length && days.length < span) {
+    if (!e.occurrence_date && byDay[day]) return `${labelDay(day)}${t ? ' · ' + showTime(t) : ''}`;
+    const next = days.filter(d => d >= today).slice(0, 3);
+    if (next.length) return `${L('Próximos días', 'Propers dies')}: ${next.map(labelDay).join(', ')}${t ? ' · ' + showTime(t) : ''}`;
+  }
   if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + showTime(t) : ''}`;
   return t ? `${when} · ${showTime(t)}` : when;
 }
