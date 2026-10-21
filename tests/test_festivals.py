@@ -39,3 +39,19 @@ class FestivalTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TribeRestTests(unittest.TestCase):
+    def test_events_calendar_api(self):
+        import datetime as dt
+        from src.venue_feeds import tribe_rest_nodes
+        data = {"total_pages": 1, "events": [
+            {"title": "AR-DE", "url": "https://p/ar-de", "start_date": "2026-10-23 00:00:00", "end_date": "2026-10-25 23:59:59", "all_day": True, "venue": []},
+            {"title": "Piramidón: Teresa Camacho &#8211; Punt i Coma", "url": "https://p/x", "start_date": "2026-09-18 13:57:00", "end_date": "2026-11-17 13:57:00", "venue": {"venue": "Piramidón", "city": "Barcelona"}},
+            {"title": "URBAN TALKS", "url": "https://p/u", "start_date": "2026-10-24 11:00:00", "end_date": "2026-10-24 19:00:00", "venue": {"venue": "Museu del Disseny"}},
+            {"title": "Vell", "url": "https://p/v", "start_date": "2026-01-01 10:00:00", "end_date": "2026-01-02 10:00:00"}]}
+        v = {'slug': 'pud', 'name': 'Poblenou Urban District', 'type': 'culture', 'feed': {'url': 'x', 'lugar': 'Diversos espais del Poblenou'}}
+        recs = [record_from_jsonld(v, n, u) for u, n in tribe_rest_nodes(v, lambda u, t: (200, u, json.dumps(data)), today=dt.date(2026, 10, 21))[0]]
+        self.assertEqual([(r['title'], r['start'], r['time_text'], r['venues'][0]['name']) for r in recs],
+                         [('AR-DE', '2026-10-23', '', 'Diversos espais del Poblenou'), ('Piramidón: Teresa Camacho – Punt i Coma', '2026-09-18', '', 'Piramidón'),
+                          ('URBAN TALKS', '2026-10-24', '11:00', 'Museu del Disseny')])

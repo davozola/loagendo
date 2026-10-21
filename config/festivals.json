@@ -1,21 +1,98 @@
 {
   "nota": "Festivales y eventos paraguas (21-10-2026). «patron»: expresión que reconoce el festival en el título de cualquier fuente (sin acentos, minúsculas). Los que no están aquí se detectan solos por el prefijo de sus títulos («58è Festival Internacional de Jazz de Barcelona: Concert …»). La ficha paraguas es la del festival entero; cada actividad conserva su ficha y en la lista se agrupan.",
   "festivales": [
-    {"slug": "48h-open-house-bcn", "nombre": "48h Open House BCN", "patron": "48\\s*h\\.?\\s*open\\s*house", "web": "https://www.48hopenhousebarcelona.org/"},
-    {"slug": "mira-festival", "nombre": "MIRA Festival", "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b", "web": "https://mirafestival.com/"},
-    {"slug": "festival-jazz-barcelona", "nombre": "Festival Internacional de Jazz de Barcelona", "patron": "festival (internacional )?de jazz de barcelona"},
-    {"slug": "in-edit", "nombre": "In-Edit Barcelona", "patron": "\\bin-edit\\b"},
-    {"slug": "salmon", "nombre": "Festival Sâlmon", "patron": "\\bsalmon\\b"},
-    {"slug": "biennal-arts-digitals", "nombre": "Biennal d'Arts Digitals", "patron": "biennal d.arts digitals"},
-    {"slug": "llum-bcn", "nombre": "Llum BCN", "patron": "\\bllum bcn\\b"},
-    {"slug": "la-merce", "nombre": "La Mercè", "patron": "\\bfestes de la merce\\b|\\bla merce 20\\d\\d\\b"},
-    {"slug": "nit-dels-museus", "nombre": "La Nit dels Museus", "patron": "\\bnit dels museus\\b"},
-    {"slug": "gallery-weekend", "nombre": "Barcelona Gallery Weekend", "patron": "\\bgallery weekend\\b"},
-    {"slug": "festival-grec", "nombre": "Festival Grec", "patron": "\\bfestival grec\\b|\\bgrec 20\\d\\d\\b"},
-    {"slug": "docsbarcelona", "nombre": "DocsBarcelona", "patron": "\\bdocsbarcelona\\b"},
-    {"slug": "primavera-sound", "nombre": "Primavera Sound", "patron": "\\bprimavera sound\\b"},
-    {"slug": "sonar", "nombre": "Sónar", "patron": "\\bsonar (barcelona|20\\d\\d|by day|by night)\\b"},
-    {"slug": "cruilla", "nombre": "Cruïlla", "patron": "\\bcruilla (barcelona|20\\d\\d)\\b|\\bfestival cruilla\\b"},
-    {"slug": "festival-guitarra", "nombre": "Festival de Guitarra de Barcelona", "patron": "festival (internacional )?de guitarra de barcelona"}
+    {
+      "slug": "48h-open-house-bcn",
+      "nombre": "48h Open House BCN",
+      "patron": "48\\s*h\\.?\\s*open\\s*house",
+      "web": "https://www.48hopenhousebarcelona.org/"
+    },
+    {
+      "slug": "mira-festival",
+      "nombre": "MIRA Festival",
+      "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b",
+      "web": "https://mirafestival.com/"
+    },
+    {
+      "slug": "festival-jazz-barcelona",
+      "nombre": "Festival Internacional de Jazz de Barcelona",
+      "patron": "festival (internacional )?de jazz de barcelona"
+    },
+    {
+      "slug": "in-edit",
+      "nombre": "In-Edit Barcelona",
+      "patron": "\\bin-edit\\b"
+    },
+    {
+      "slug": "salmon",
+      "nombre": "Festival Sâlmon",
+      "patron": "\\bsalmon\\b"
+    },
+    {
+      "slug": "biennal-arts-digitals",
+      "nombre": "Biennal d'Arts Digitals",
+      "patron": "biennal d.arts digitals"
+    },
+    {
+      "slug": "llum-bcn",
+      "nombre": "Llum BCN",
+      "patron": "\\bllum bcn\\b"
+    },
+    {
+      "slug": "la-merce",
+      "nombre": "La Mercè",
+      "patron": "\\bfestes de la merce\\b|\\bla merce 20\\d\\d\\b"
+    },
+    {
+      "slug": "nit-dels-museus",
+      "nombre": "La Nit dels Museus",
+      "patron": "\\bnit dels museus\\b"
+    },
+    {
+      "slug": "gallery-weekend",
+      "nombre": "Barcelona Gallery Weekend",
+      "patron": "\\bgallery weekend\\b"
+    },
+    {
+      "slug": "festival-grec",
+      "nombre": "Festival Grec",
+      "patron": "\\bfestival grec\\b|\\bgrec 20\\d\\d\\b"
+    },
+    {
+      "slug": "docsbarcelona",
+      "nombre": "DocsBarcelona",
+      "patron": "\\bdocsbarcelona\\b"
+    },
+    {
+      "slug": "primavera-sound",
+      "nombre": "Primavera Sound",
+      "patron": "\\bprimavera sound\\b"
+    },
+    {
+      "slug": "sonar",
+      "nombre": "Sónar",
+      "patron": "\\bsonar (barcelona|20\\d\\d|by day|by night)\\b"
+    },
+    {
+      "slug": "cruilla",
+      "nombre": "Cruïlla",
+      "patron": "\\bcruilla (barcelona|20\\d\\d)\\b|\\bfestival cruilla\\b"
+    },
+    {
+      "slug": "festival-guitarra",
+      "nombre": "Festival de Guitarra de Barcelona",
+      "patron": "festival (internacional )?de guitarra de barcelona"
+    },
+    {
+      "slug": "ar-de",
+      "nombre": "AR-DE",
+      "patron": "\\bar-de\\b",
+      "web": "https://poblenouurbandistrict.com/es/category/ar-de/"
+    },
+    {
+      "slug": "urban-talks",
+      "nombre": "Urban Talks",
+      "patron": "\\burban talks\\b"
+    }
   ]
 }

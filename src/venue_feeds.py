@@ -591,6 +591,46 @@ def wp_openhouse_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+def tribe_rest_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Webs WordPress con The Events Calendar (21-10-2026): su API pública
+    ``/wp-json/tribe/events/v1/events`` da cada acto con fechas, sala, dirección, coordenadas, precio,
+    imagen y enlace. Se piden los actos desde hace un año (para las exposiciones en curso) y se quedan
+    los que no han terminado. Un acto sin sala usa ``feed.lugar`` (lo que la propia web dice que es el
+    ámbito, p. ej. «Diversos espais del Poblenou»)."""
+    feed = venue["feed"]; base = feed["url"]
+    today = today or dt.date.today(); since = (today - dt.timedelta(days=365)).isoformat()
+    strip = lambda v: " ".join(html.unescape(re.sub(r"<[^>]+>", " ", str(v or ""))).split())
+    nodes, fetched = [], 0
+    for page in range(1, 21):
+        url = f"{base}{'&' if '?' in base else '?'}per_page=50&start_date={since}&page={page}"
+        status, final_url, body = fetcher(url, timeout); fetched += 1
+        if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+        try: data = json.loads(body)
+        except json.JSONDecodeError: raise RuntimeError("La respuesta de %s no es JSON" % url)
+        for e in data.get("events") or []:
+            end = str(e.get("end_date") or e.get("start_date") or "")[:10]
+            if not end or end < today.isoformat() or not strip(e.get("title")): continue
+            start = str(e.get("start_date") or "")
+            v = e.get("venue") if isinstance(e.get("venue"), dict) else {}
+            place = strip(v.get("venue")) or feed.get("lugar") or venue["name"]
+            address = {"@type": "PostalAddress", "streetAddress": strip(v.get("address")), "postalCode": strip(v.get("zip")), "addressLocality": strip(v.get("city")) or "Barcelona"}
+            node = {"@type": "Event", "name": strip(e.get("title")), "url": str(e.get("url") or ""),
+                    # Varios días (exposiciones): sin hora; la de la API suele ser la de alta de la ficha («13:57»).
+                    "startDate": start[:10] if (e.get("all_day") or start[:10] != end) else start[:16].replace(" ", "T"), "endDate": end,
+                    "description": strip(e.get("excerpt") or e.get("description"))[:900],
+                    "keywords": [strip(c.get("name")) for c in e.get("categories") or [] if isinstance(c, dict)],
+                    "location": {"@type": "Place", "name": place, "address": address}}
+            try:
+                if v.get("geo_lat") and v.get("geo_lng"): node["location"]["geo"] = {"latitude": float(v["geo_lat"]), "longitude": float(v["geo_lng"])}
+            except (TypeError, ValueError): pass
+            if strip(e.get("cost")): node["offers"] = {"@type": "Offer", "price": strip(e.get("cost"))}
+            image = (e.get("image") or {}).get("url") if isinstance(e.get("image"), dict) else ""
+            if image: node["image"] = image
+            nodes.append((node["url"] or base, node))
+        if page >= int(data.get("total_pages") or 1): break
+    return nodes, fetched
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -600,7 +640,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -610,7 +650,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)

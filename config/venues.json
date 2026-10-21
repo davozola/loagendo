@@ -708,6 +708,20 @@
         }
       },
       "note": "21-10-2026: programa oficial del festival desde la API de su web (edificios de Barcelona con su franja de apertura). Actualizar «dias» en cada edición."
+    },
+    {
+      "slug": "poblenou_urban_district",
+      "name": "Poblenou Urban District",
+      "type": "culture",
+      "url": "https://poblenouurbandistrict.com/es/agenda/",
+      "site": "https://poblenouurbandistrict.com/",
+      "enabled": true,
+      "feed": {
+        "kind": "tribe_rest",
+        "url": "https://poblenouurbandistrict.com/es/wp-json/tribe/events/v1/events",
+        "lugar": "Diversos espais del Poblenou"
+      },
+      "note": "21-10-2026 (aviso de David): agenda del distrito creativo del Poblenou y de su festival AR-DE, desde la API pública de The Events Calendar de su web (reglas, sin IA)."
     }
   ]
 }
