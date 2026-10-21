@@ -32,6 +32,7 @@ REGISTRY_PATH = ROOT / 'docs' / 'source_registry.json'
 HORIZON_DAYS = catalog.MAX_RANGE_DAYS
 PAGE_SIZE = 50
 FEATURED_SIZE = 12
+HIGHLIGHT_SIZE = 40  # «Selección Brollant» en la lista de cada día (además de la de portada)
 DETAIL_SHARDS = 256
 MAX_IMAGES_PER_EVENT = 3
 MAX_ASSET_BYTES = 25 * 1024 * 1024  # Cloudflare Pages limit per file
@@ -178,6 +179,19 @@ def relevant_venue(event):
     name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode().lower()
     return bool(_RELEVANT['rx'].search(name))
 
+
+def day_highlights(items, day, size=None, floor=60):
+    """Claves a destacar en la lista del día: actos con hora ese día (no exposiciones ni
+    cursos), puntuados con catalog.featured_score; uno por obra y repartidos por sala."""
+    size = size or HIGHLIGHT_SIZE
+    pool = []
+    for e in items:
+        if e.get('eligibility') == 'exclude' or e.get('kind') in ('exhibition', 'course') or not e.get('time'): continue
+        if e['start'] != e['end'] and e['occurrences'] and not any(o['date'] == day for o in e['occurrences']): continue
+        x = dict(e, featured_date=day); score, _ = catalog.featured_score(x, day)
+        if score >= floor: x['featured_score'] = score; pool.append(x)
+    pool.sort(key=lambda e: (-e['featured_score'], catalog.featured_rotation(e, day)))
+    return [e['key'] for e in catalog.spread_venues(catalog.one_per_title(pool))][:size]
 
 def compact(event, images, full=True):
     """The listing record the browser needs, with short keys to keep files small.
@@ -352,8 +366,17 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             if len(first) >= 5:
                 picks = first + [e for e in picks if e['key'] not in set(chosen)]
                 picks = picks[:FEATURED_SIZE]; ai_pick = True
+        # Más «Selección Brollant» para la lista de ese día: los actos de ese día mejor
+        # puntuados con las mismas reglas explicables de la portada (featured_score).
+        whole = [e for e in events if e['start'] <= day <= e['end'] and (e['start'] == e['end'] or not e.get('hours_by_day') or day in e['hours_by_day'])]
+        chosen_hl = day_highlights(whole, day); by_key = {e['key']: e for e in whole}
+        highlight, highlight_media = chosen_hl, {}
+        for k in chosen_hl:  # imagen de la fuente para la fila destacada (si la hay)
+            first = next((i for i in by_key[k].get('media', []) if not i.get('fallback')), None)
+            exported = images.item(first) if first else None
+            if exported: highlight_media[k] = exported['url']
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images) for e in page['items']],
-                     'featured': [compact(e, images) for e in picks], 'featured_ai': ai_pick, 'districts': catalog.districts(conn, day)}
+                     'featured': [compact(e, images) for e in picks], 'featured_ai': ai_pick, 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:

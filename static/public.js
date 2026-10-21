@@ -602,6 +602,21 @@ function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>
 // «Últimos días» (exposiciones y obras que cierran en una semana). Como mucho una de cada diez filas del
 // día y nunca dos seguidas.
 state.picks = new Set();
+// Funciones que la sala publica una a una (cada día una ficha): mismo título y sala → primera y última fecha.
+let runsIndex = null;
+function runOf(e) {
+  if (!store.catalog) return null;  // sin catálogo completo cargado no se puede saber la primera/última función
+  if (!runsIndex) {
+    runsIndex = new Map();
+    for (const x of store.catalog || []) {
+      if (x.start !== x.end) continue;
+      const k = fold(x.title) + '|' + fold(x.venue_names?.[0] || ''), r = runsIndex.get(k);
+      if (r) { r.n++; if (x.start < r.first) r.first = x.start; if (x.start > r.last) r.last = x.start } else runsIndex.set(k, {n: 1, first: x.start, last: x.start});
+    }
+  }
+  const r = runsIndex.get(fold(e.title) + '|' + fold(e.venue_names?.[0] || ''));
+  return r && r.n >= 3 ? r : null;
+}
 function hlReason(e, day) {
   // Selección Brollant: la de la portada, o lo que anuncian tres fuentes o más.
   if (state.picks.has(key(e)) || (e.confirmations || 1) >= 3) return 'pick';
@@ -611,6 +626,9 @@ function hlReason(e, day) {
   // Estreno: primer día de una obra o espectáculo con varias funciones.
   const firstDay = (e.occurrences || []).map(o => o.date).sort()[0] || e.start;
   if (runs && cat === 'escena' && e.kind !== 'exhibition' && day === firstDay) return 'premiere';
+  const run = !runs && (cat === 'escena' || cat === 'arte') ? runOf(e) : null;
+  if (run && day === run.first && run.first > today) return 'premiere';
+  if (run && day >= addDays(run.last, -6) && day <= run.last && daysBetween(run.first, run.last) >= 14) return day === run.last ? 'lastday' : 'last';
   // Últimos días: exposiciones y obras que cierran en una semana.
   if (longRun && e.end >= day && daysBetween(day, e.end) <= 6 && (e.kind === 'exhibition' || cat === 'arte' || (cat === 'escena' && e.kind !== 'course'))) return e.end === day ? 'lastday' : 'last';
   // («Solo hoy» se descartó: muchas salas publican cada función como ficha de un día y no podemos asegurar que sea única.)
@@ -860,7 +878,7 @@ async function agenda(append = false) {
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
         // Selección Brollant de ese día (la de la portada): se destaca también en la lista.
-        try { const df = await dayFile(win ? today : state.day); state.picks = new Set((df.featured || []).map(c => `${c.s}:${c.i}`)); state.pickMedia = Object.fromEntries((df.featured || []).filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])) } catch (_) { state.picks = new Set() }
+        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set() }
         if (request !== agendaRequest) return;
       } else {
         const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
