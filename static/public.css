@@ -384,3 +384,18 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .mini-chip.c-soon.on{border-color:var(--fg);background:var(--hover)}
 .mini-chip:not(.on) i{opacity:.45}
 @media(max-width:960px){.filter-bar.compact .filters-toggle{min-height:40px;font-size:15px}}
+
+/* Festivales y eventos paraguas (21-10-2026): bloque plegado en la lista y línea en la ficha */
+.ev-fest-group{border-bottom:1px solid var(--line)}
+.ev-fest-group>summary{display:flex;align-items:center;gap:10px;min-height:56px;padding:12px 0;cursor:pointer;list-style:none}
+.ev-fest-group>summary::-webkit-details-marker{display:none}
+.ev-fest-group .fest-text{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.ev-fest-group .fest-name{font-weight:700;font-size:16px;line-height:1.25;color:var(--fg)}
+.ev-fest-group .fest-count{font-size:13px;color:var(--accentText)}
+.ev-fest-group>summary i{flex:none;margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line2);border-radius:50%;font-style:normal;color:var(--muted)}
+.ev-fest-group[open]>summary i{transform:rotate(45deg)}
+.ev-fest-group[open]>summary{border-bottom:1px dashed var(--line)}
+.ev-fest-group>.ev{padding-left:12px;border-left:2px solid var(--accent)}
+.ev-hit.ev-fest{color:var(--accentText)}
+.sheet-fest{margin:-4px 0 12px;font-size:14px;color:var(--muted)}
+.sheet-fest b{color:var(--fg)}

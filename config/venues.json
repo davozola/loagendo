@@ -686,6 +686,28 @@
       "url": "https://ra.co/events/es/barcelona",
       "enabled": false,
       "note": "Devuelve 403 a clientes automáticos (12-10-2026); activar cuando responda."
+    },
+    {
+      "slug": "openhouse_bcn",
+      "name": "48h Open House BCN",
+      "type": "festival",
+      "url": "https://www.48hopenhousebarcelona.org/es/barcelona-26/",
+      "site": "https://www.48hopenhousebarcelona.org/",
+      "enabled": true,
+      "feed": {
+        "kind": "wp_openhouse",
+        "url": "https://www.48hopenhousebarcelona.org/es/wp-json/wp/v2/edificis",
+        "zona": "barcelona-es",
+        "dias": {
+          "sabado": "2026-10-24",
+          "domingo": "2026-10-25"
+        },
+        "festival": {
+          "slug": "48h-open-house-bcn",
+          "name": "48h Open House BCN"
+        }
+      },
+      "note": "21-10-2026: programa oficial del festival desde la API de su web (edificios de Barcelona con su franja de apertura). Actualizar «dias» en cada edición."
     }
   ]
 }

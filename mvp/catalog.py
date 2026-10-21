@@ -193,6 +193,7 @@ def district_of(raw, source):
     if source=='guiabcn':
         d=raw.get('district','')
         return d if d in DISTRICTS else None
+    if (raw.get('item') or {}).get('x_district') in DISTRICTS: return raw['item']['x_district']
     if source.startswith('diba_'):
         location=(raw.get('grup_adreca') or {}).get('municipi_nom','')
         if location.startswith('Barcelona - '):
@@ -842,7 +843,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=29  # (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=30  # 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -906,6 +907,9 @@ def project_raw(source, id, title, start, end, kind, url, raw):
     elif source=='web_centres_civics' and listed_dates((raw.get('item') or {}).get('when')):
         # «30/10, 06, 13, 20 i 27/11/2026»: solo esos días (sin hora en el listado).
         hours_by_day={d:'' for d in listed_dates(raw['item']['when']) if str(start)[:10]<=d<=str(end)[:10]}
+    elif isinstance((raw.get('item') or {}).get('x_parts'),dict):
+        # Programa de festival por franjas («sábado mañana», 48h Open House): parte del día de cada día.
+        hours_by_day={d:v for d,v in raw['item']['x_parts'].items() if str(start)[:10]<=d<=str(end)[:10]}
     elif str(start)[:10]!=str(end)[:10]:
         # Horario semanal en texto («Dimarts: 20.30 h Dimecres i dijous: 20 h …», Generalitat y salas):
         # hora de cada día; los días sin función no salen en la agenda.
@@ -1253,6 +1257,16 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])
+    # Festival o evento paraguas (src/festivals.py): la ficha dice de cuál forma parte y, en la lista, las
+    # actividades del mismo festival se agrupan como una serie.
+    from src.festivals import for_conn as _festivals
+    raw_fest=None
+    if '"x_festival"' in (raw_text or ''):
+        try: raw_fest=(json.loads(raw_text).get('item') or {}).get('x_festival')
+        except ValueError: raw_fest=None
+    fest=_festivals(conn).of(title,raw_fest,venue=(place[0][0] if place and place[0][0] else ''))
+    events['festival']=fest
+    if fest and not fest['umbrella']: events['series']='festival:'+fest['slug']
     # Anuncio de una ticketera que la agenda propia de la sala no recoge (src/dedupe.unconfirmed_by_venue).
     events['official_dates']=official_dates
     events['venue_unconfirmed']=venue_unconfirmed(conn,prefetch.collapsed if prefetch is not None else _collapse_groups(conn)).get(source+':'+id,'')

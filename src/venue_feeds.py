@@ -541,6 +541,56 @@ def liceu_json_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, 1
 
 
+OPEN_HOUSE_DISTRICTS = {"centre": "Ciutat Vella", "dreta-de-leixample": "Eixample", "esquerra-de-leixample-es": "Eixample", "gracia-es": "Gràcia",
+                        "vallcarca": "Gràcia", "guinardo-es": "Horta-Guinardó", "horta-es": "Horta-Guinardó", "les-corts-es": "Les Corts",
+                        "montjuic": "Sants-Montjuïc", "sants-es": "Sants-Montjuïc", "nou-barris-es": "Nou Barris", "sant-andreu-es": "Sant Andreu",
+                        "sarria-sant-gervasi-es": "Sarrià-Sant Gervasi", "poblenou": "Sant Martí", "forum": "Sant Martí"}
+PARTICLES = {"de", "del", "la", "les", "el", "els", "i", "y", "d", "l", "a", "al", "en", "per", "dels"}
+
+
+def _soft_case(text):
+    """«MONESTIR BENEDICTINES DE SANT PERE» → «Monestir Benedictines de Sant Pere» (solo si viene todo en mayúsculas)."""
+    if text != text.upper(): return text
+    words = re.split(r"(\s+|['’])", text.lower())
+    return "".join(w if (w.strip() == "" or w in ("'", "’") or (i and w in PARTICLES)) else w[:1].upper() + w[1:] for i, w in enumerate(words))
+
+
+def wp_openhouse_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Programa oficial de 48h Open House BCN (21-10-2026): la API de su web (WordPress) da cada edificio
+    con su zona y su franja de apertura («sábado mañana», «domingo tarde»); no da la hora exacta. Cada
+    edificio de Barcelona es una ficha con sus días y franjas, enlazada a su página y marcada como parte
+    del festival. Las fechas de cada día salen de config (feed.dias)."""
+    feed = venue["feed"]; base = feed["url"]; days = feed.get("dias") or {}
+    parts = {"manana": "mañana", "tarde": "tarde"}
+    nodes, fetched = [], 0
+    for page in range(1, 10):
+        url = f"{base}{'&' if '?' in base else '?'}per_page=100&page={page}&_fields=title,link,content,class_list"
+        status, final_url, body = fetcher(url, timeout); fetched += 1
+        if status == 400 and page > 1: break
+        if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+        try: items = json.loads(body)
+        except json.JSONDecodeError: raise RuntimeError("La respuesta de %s no es JSON" % url)
+        for item in items:
+            cls = item.get("class_list") or []
+            if feed.get("zona") and f"zones-{feed['zona']}" not in cls: continue
+            by_day = {}
+            for c in cls:
+                m = re.match(r"obert_per-([a-z]+)-([a-z]+)$", c)
+                if m and m.group(1) in days: by_day.setdefault(days[m.group(1)], []).append(parts.get(m.group(2), ""))
+            if not by_day: continue
+            x_parts = {d: (" y ".join(p for p in ("mañana", "tarde") if p in v) or "") for d, v in by_day.items()}
+            district = next((OPEN_HOUSE_DISTRICTS[c[6:]] for c in cls if c.startswith("zones-") and c[6:] in OPEN_HOUSE_DISTRICTS), "")
+            title = _soft_case(" ".join(html.unescape(re.sub(r"<[^>]+>", " ", str((item.get("title") or {}).get("rendered") or ""))).split()))
+            text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", str((item.get("content") or {}).get("rendered") or ""))).split())
+            first, last = min(x_parts), max(x_parts)
+            node = {"@type": "Event", "name": title, "startDate": first, "endDate": last, "url": str(item.get("link") or ""),
+                    "description": text[:900], "x_parts": x_parts, "x_district": district, "x_festival": feed.get("festival"),
+                    "location": {"@type": "Place", "name": title, "address": {"@type": "PostalAddress", "addressLocality": "Barcelona"}}}
+            nodes.append((node["url"] or base, node))
+        if len(items) < 100: break
+    return nodes, fetched
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -550,7 +600,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -560,7 +610,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)

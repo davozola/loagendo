@@ -273,7 +273,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -549,6 +549,31 @@ def contained_pairs(conn):
 
 
 # Actividades sobre una exposición (visitas, inauguraciones): no son la exposición.
+def umbrella_pairs(conn):
+    """La ficha paraguas de un mismo festival en varias fuentes es una sola: «Festival 48h Open House BCN»
+    (Generalitat) y «Festival d'Arquitectura "48h Open House BCN". Cap de setmana de visites…» (GuiaBCN),
+    las dos en «diferents espais» (src/festivals.py, 21-10-2026). Fechas que se solapan."""
+    import datetime as dt
+    from src.festivals import for_conn
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    fest = for_conn(conn); by = {}
+    for source, rid, title, start, end, venue in rows:
+        f = fest.of(title, venue=venue or "")
+        if f and f["umbrella"]: by.setdefault(f["slug"], []).append((f"{source}:{rid}", start, end))
+    pairs = []
+    for items in by.values():
+        for i, (ka, a1, a2) in enumerate(items):
+            for kb, b1, b2 in items[i + 1:]:
+                if a1 <= b2 and b1 <= a2: pairs.append((ka, kb))
+    return pairs
+
+
 EXHIBITION_ACTIVITY = re.compile(r"^(?:.*\b)?(?:visita|visites|visitas|inaugur\w*|presentacio|presentacion|taller|tallers|conferencia|xerrada)\b")
 EXHIBITION_GENERIC = re.compile(r"^(?:col.leccio|coleccion|collection|exposicio permanent|exposicion permanente|fons|obres|obra|retrats?|fotografies|pintura|escultura)\b")
 
