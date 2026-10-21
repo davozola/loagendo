@@ -274,25 +274,41 @@
       "slug": "palau_musica",
       "name": "Palau de la Música Catalana",
       "type": "music",
-      "url": "https://www.palaumusica.cat/ca/agenda",
-      "enabled": false,
+      "url": "https://www.palaumusica.cat/ca/programacio_1158636",
+      "enabled": true,
       "aliases": [
         "Palau de la Musica Catalana",
         "Palau de la Música",
         "Petit Palau",
         "Sala de Concerts del Palau de la Música"
-      ]
+      ],
+      "site": "https://www.palaumusica.cat/",
+      "address": "Carrer del Palau de la Música 4-6, 08003 Barcelona",
+      "feed": {
+        "kind": "palau_json",
+        "url": "https://www.palaumusica.cat/ca/programming_data_json?palau_productions=1&orfeo_productions=0&espaisoci_productions=0&sessions_as_dict=1"
+      },
+      "agenda_completa": true,
+      "note": "21-10-2026: la propia web carga su programación de /ca/programming_data_json (producciones, sesiones y salas); se lee con reglas, sin IA."
     },
     {
       "slug": "liceu",
       "name": "Gran Teatre del Liceu",
       "type": "music",
-      "url": "https://www.liceubarcelona.cat/ca/temporada-2026-2027",
-      "enabled": false,
+      "url": "https://www.liceubarcelona.cat/ca/programacio",
+      "enabled": true,
       "aliases": [
         "Liceu",
         "Gran Teatre del Liceu"
-      ]
+      ],
+      "site": "https://www.liceubarcelona.cat/",
+      "address": "La Rambla 51-59, 08002 Barcelona",
+      "feed": {
+        "kind": "liceu_json",
+        "url": "https://www.liceubarcelona.cat/sites/default/files/programme.json"
+      },
+      "agenda_completa": true,
+      "note": "21-10-2026: la propia web carga su programación de /sites/default/files/programme.json (producciones y funciones); se lee con reglas, sin IA."
     },
     {
       "slug": "sant_jordi_club",

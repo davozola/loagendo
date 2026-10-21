@@ -466,6 +466,81 @@ def wp_fullcalendar_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+def palau_json_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Palau de la Música Catalana (21-10-2026): su propia web carga la programación de
+    ``/ca/programming_data_json`` (producciones, sesiones, salas). Cada producción y día es un
+    acto con sus pases, sala, precio, imagen y enlace a su ficha; nada se deduce."""
+    feed = venue["feed"]; url = feed["url"]
+    status, final_url, body = fetcher(url, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+    try: data = json.loads(body)
+    except json.JSONDecodeError: raise RuntimeError("La respuesta de %s no es JSON" % url)
+    today = (today or dt.date.today()).isoformat()
+    strip = lambda v: " ".join(html.unescape(re.sub(r"<[^>]+>", " ", str(v or ""))).split())
+    productions, stages = data.get("productions") or {}, data.get("stages") or {}
+    groups = {}
+    for sid, ses in (data.get("sessions") or {}).items():
+        if not isinstance(ses, dict) or ses.get("hidden") or ses.get("expired"): continue
+        value = str((ses.get("start_date") or {}).get("value") or "")
+        if not re.match(r"\d{4}-\d{2}-\d{2}", value) or value[:10] < today: continue
+        prod = productions.get(str(ses.get("production"))) or {}
+        if not prod or prod.get("hidden") or not strip(prod.get("title")): continue
+        stage = strip((stages.get(str(ses.get("stage"))) or {}).get("title"))
+        key = (str(ses.get("production")), value[:10], stage)
+        g = groups.setdefault(key, {"prod": prod, "stage": stage, "times": set()})
+        if not ses.get("uncertain_start_time") and re.fullmatch(r"\d{2}:\d{2}", value[11:16]): g["times"].add(value[11:16])
+    nodes = []
+    for (pid, day, stage), g in sorted(groups.items(), key=lambda x: (x[0][1], x[0][0])):
+        prod = g["prod"]; times = sorted(g["times"])
+        node = {"@type": "MusicEvent", "name": strip(prod.get("title")), "startDate": day + ("T" + times[0] if times else ""), "endDate": day,
+                "url": str(prod.get("url") or final_url or url), "x_sessions": times, "x_room": "" if stage in ("", "Sala de Concerts") else stage,
+                "location": {"@type": "Place", "name": venue["name"] + (f" · {stage}" if stage and stage != "Sala de Concerts" else ""), "address": {"@type": "PostalAddress", "streetAddress": venue.get("address", ""), "addressLocality": "Barcelona"}},
+                "description": " — ".join(x for x in (strip(prod.get("subtitle")), strip(prod.get("performers"))) if x)}
+        if prod.get("gratis"): node["isAccessibleForFree"] = True; node["offers"] = {"@type": "Offer", "price": "0"}
+        elif strip(prod.get("price")): node["offers"] = {"@type": "Offer", "price": strip(prod.get("price"))}
+        if prod.get("listing_image"): node["image"] = f"https://www.palaumusica.cat/images/{prod['listing_image']}/production_listing{prod.get('listing_image_ext') or '.jpg'}"
+        nodes.append((node["url"], node))
+    return nodes, 1
+
+
+def liceu_json_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Gran Teatre del Liceu (21-10-2026): su web carga la programación de
+    ``/sites/default/files/programme.json`` (producciones con sus funciones en hora Unix). Cada
+    producción y día es un acto con sus pases, imagen, enlace y venta; hora local de Barcelona."""
+    import zoneinfo
+    feed = venue["feed"]; url = feed["url"]; base = venue.get("site") or "https://www.liceubarcelona.cat/"
+    status, final_url, body = fetcher(url, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+    try: data = json.loads(body)
+    except json.JSONDecodeError: raise RuntimeError("La respuesta de %s no es JSON" % url)
+    tz = zoneinfo.ZoneInfo("Europe/Madrid"); today = (today or dt.date.today()).isoformat()
+    pick = lambda v: (v.get("ca") or v.get("es") or "") if isinstance(v, dict) else str(v or "")
+    strip = lambda v: " ".join(html.unescape(re.sub(r"<[^>]+>", " ", str(v or ""))).split())
+    nodes = []
+    for prod in (data.get("productions") or {}).values():
+        if not isinstance(prod, dict) or not strip(pick(prod.get("title"))): continue
+        days = {}
+        for ses in prod.get("sessions") or []:
+            try: when = dt.datetime.fromtimestamp(int(ses.get("date")), tz)
+            except (TypeError, ValueError, OSError): continue
+            if when.date().isoformat() < today: continue
+            days.setdefault(when.date().isoformat(), {"times": set(), "sale": ""})
+            days[when.date().isoformat()]["times"].add(when.strftime("%H:%M"))
+            if ses.get("sale_link") and not days[when.date().isoformat()]["sale"]: days[when.date().isoformat()]["sale"] = ses["sale_link"]
+        page = urljoin(base, pick(prod.get("url")))
+        for day, info in sorted(days.items()):
+            times = sorted(t for t in info["times"] if t != "00:00")
+            node = {"@type": "Event", "name": strip(pick(prod.get("title"))), "startDate": day + ("T" + times[0] if times else ""), "endDate": day,
+                    "url": page, "x_sessions": times, "description": strip(pick(prod.get("subtitle"))),
+                    "keywords": [pick(c) for c in (prod.get("categories") or {}).values()],
+                    "location": {"@type": "Place", "name": venue["name"], "address": {"@type": "PostalAddress", "streetAddress": venue.get("address", ""), "addressLocality": "Barcelona"}}}
+            sale = info["sale"] or pick(prod.get("sale_url"))
+            if sale: node["offers"] = {"@type": "Offer", "url": sale}
+            if prod.get("main_image"): node["image"] = urljoin(base, prod["main_image"])
+            nodes.append((page, node))
+    return nodes, 1
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -475,7 +550,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -485,7 +560,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)

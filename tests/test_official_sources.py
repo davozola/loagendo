@@ -50,3 +50,25 @@ class OriginTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class VenueJsonFeedTests(unittest.TestCase):
+    def test_palau_programme_json(self):
+        from src.venue_feeds import palau_json_nodes, record_from_jsonld
+        data = {"productions": {"1": {"title": "<p>Buhos</p>", "url": "https://www.palaumusica.cat/ca/buhos_1", "price": "32 €", "listing_image": 9}},
+                "stages": {"1272": {"title": "Sala de Concerts"}, "5": {"title": "Sala Petit Palau"}},
+                "sessions": {"a": {"production": 1, "start_date": {"value": "2099-11-14 20:30"}, "stage": 1272},
+                             "b": {"production": 1, "start_date": {"value": "2099-11-14 22:30"}, "stage": 1272},
+                             "c": {"production": 1, "start_date": {"value": "2099-11-15 19:00"}, "stage": 5},
+                             "d": {"production": 1, "expired": True, "start_date": {"value": "2020-01-01 19:00"}, "stage": 5}}}
+        v = {'slug': 'palau_musica', 'name': 'Palau de la Música Catalana', 'type': 'music', 'feed': {'url': 'x'}}
+        recs = [record_from_jsonld(v, n, u) for u, n in palau_json_nodes(v, lambda u, t: (200, u, json.dumps(data)))[0]]
+        self.assertEqual([(r['start'], r['time_text'], r['price_text'], r['venues'][0]['name']) for r in recs],
+                         [('2099-11-14', '20:30 · 22:30', '32 €', 'Palau de la Música Catalana'), ('2099-11-15', '19:00', '32 €', 'Palau de la Música Catalana · Sala Petit Palau')])
+
+    def test_liceu_programme_json_in_barcelona_time(self):
+        from src.venue_feeds import liceu_json_nodes
+        data = {"productions": {"1": {"title": {"ca": "La clemenza di Tito"}, "url": {"ca": "/ca/clemenza-tito"}, "sessions": [{"date": 1795627800}]}}}
+        v = {'slug': 'liceu', 'name': 'Gran Teatre del Liceu', 'site': 'https://www.liceubarcelona.cat/', 'feed': {'url': 'x'}}
+        (url, node), = liceu_json_nodes(v, lambda u, t: (200, u, json.dumps(data)), today=dt.date(2026, 10, 21))[0]
+        self.assertEqual((node['startDate'], url), ('2026-11-25T18:30', 'https://www.liceubarcelona.cat/ca/clemenza-tito'))

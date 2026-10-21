@@ -366,8 +366,9 @@
       "urls": [
         "https://www.palaumusica.cat/ca/agenda"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "Cubierta por su programación en JSON (config/venues.json, feed palau_json), leída con reglas; 21-10-2026"
     },
     {
       "slug": "liceu",
@@ -377,8 +378,9 @@
       "urls": [
         "https://www.liceubarcelona.cat/ca/temporada-2026-2027"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "Cubierta por su programación en JSON (config/venues.json, feed liceu_json), leída con reglas; 21-10-2026"
     },
     {
       "slug": "mercat_flors",
@@ -388,8 +390,9 @@
       "urls": [
         "https://mercatflors.cat/es/programacion/"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "Su programación se carga con JavaScript y la portada solo da el menú; sus actos llegan por GuiaBCN con el enlace a su ficha, que se lee con «fechas-oficiales»; 21-10-2026"
     },
     {
       "slug": "poliorama",
@@ -480,8 +483,9 @@
       "urls": [
         "https://teatrebalmes.com/ca/"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "La portada no da actos con fecha legibles (0 en la primera lectura); se cubre con la página oficial de cada acto; 21-10-2026"
     },
     {
       "slug": "santa_monica",
@@ -502,8 +506,9 @@
       "urls": [
         "https://cosmocaixa.org/ca/activitats"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "La URL de actividades no da contenido legible (0 en la primera lectura); falta encontrar su agenda; 21-10-2026"
     },
     {
       "slug": "city_hall",
@@ -524,8 +529,9 @@
       "urls": [
         "https://www.lanaubarcelona.es/"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "Su robots.txt no permite leer la web; 21-10-2026"
     },
     {
       "slug": "upload",
@@ -627,8 +633,9 @@
       "urls": [
         "https://www.salapangoli.com/"
       ],
-      "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "activa": false,
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
+      "descartada": "La portada no da actos con fecha legibles (0 en la primera lectura); se cubre con la página oficial de cada acto; 21-10-2026"
     },
     {
       "slug": "casino_alianca",

@@ -486,7 +486,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
             warn = [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=?,rows_received=?,rows_mutated=?,warning_json=? WHERE id=?",
                          (now, len(res['pages']) + images, len(records), mutated, json.dumps(warn), run_id))
-        return {'source': source, 'status': 'completed', 'rows_received': len(records), 'rows_mutated': mutated,
+        return {'source': source, 'status': 'completed', 'via': sorted({p.get('via') for p in res['pages'] if p.get('via')}), 'rows_received': len(records), 'rows_mutated': mutated,
                 'rejected': len(res['rejected']), 'images_fetched': images, 'usage': usage}
     except Exception as error:
         with conn: conn.execute("UPDATE sync_runs SET finished_at=?,status='failed',warning_json=?,error=? WHERE id=?", (now_utc(), json.dumps([str(error)]), str(error)[:500], run_id))
