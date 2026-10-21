@@ -781,6 +781,8 @@ class Prefetch:
                 self.enrichment[(s,i)]=(desc if usable_description(desc) else '',st or '',stx or '',parsed if isinstance(parsed,list) else [])
         from src.organizer_text import texts as _organizer_texts
         self.organizer=_organizer_texts(conn)
+        from src.official_dates import official as _official_dates
+        self.official=_official_dates(conn)
         if 'source_detail_facts' in tables:
             for s,i,facts in conn.execute('SELECT source,id,facts_json FROM source_detail_facts'):
                 try: self.facts[(s,i)]=json.loads(facts) or {}
@@ -1087,6 +1089,21 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if prefetch is not None: collapsed_into=prefetch.collapsed.get(key); collapsed_members=prefetch.collapsed_members.get(key,[])
     else:
         groups=_collapse_groups(conn); collapsed_into=groups.get(key); collapsed_members=[m for m,c in groups.items() if c==key]
+    # Manda la web oficial: fechas leídas en la página del propio centro (src/official_dates.py), de esta
+    # ficha o de cualquiera de sus gemelas. Las de la fuente se conservan en 'official_dates'.
+    official_dates=None
+    if kind=='exhibition':
+        from src.official_dates import official as _official
+        table=prefetch.official if prefetch is not None else _official(conn)
+        found=[table[tuple(k.split(':',1))] for k in [key,twin or '']+list(collapsed_members) if k and tuple(k.split(':',1)) in table]
+        if found:
+            counts={}
+            for f in found: counts[(f['start'],f['end'])]=counts.get((f['start'],f['end']),0)+1
+            best=max(found,key=lambda f:counts[(f['start'],f['end'])])
+            if (best['start'],best['end'])!=(str(start)[:10],str(end)[:10]):
+                official_dates={**best,'host':re.sub(r'^www\.','',urlsplit(best['url']).netloc),'source_start':str(start)[:10],'source_end':str(end)[:10]}
+                start,end=best['start'],best['end']
+                occurrences=[o for o in occurrences if start<=o['date']<=end]
     # Two directories often publish different times for the same concert
     # (doors vs. show, or a plain error). When the canonical record is itself a
     # directory, every published time is shown and the reader is told to
@@ -1207,6 +1224,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])
     # Anuncio de una ticketera que la agenda propia de la sala no recoge (src/dedupe.unconfirmed_by_venue).
+    events['official_dates']=official_dates
     events['venue_unconfirmed']=venue_unconfirmed(conn,prefetch.collapsed if prefetch is not None else _collapse_groups(conn)).get(source+':'+id,'')
     # Precio del detalle oficial (GuiaBCN «Entrada Gratuïta»): gratis solo si lo dice y no da ningún importe.
     detail_price=str(facts.get('price_text') or '')

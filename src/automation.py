@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 120
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -137,6 +137,9 @@ def execute(conn, job, media_root):
     if kind == "organizer_text":
         from src.organizer_text import run as run_organizer
         return run_organizer(conn, job.get("limit", 150), timeout=job.get("timeout_seconds", 15))
+    if kind == "official_dates":
+        from src.official_dates import run as run_official
+        return run_official(conn, job.get("limit", 200), timeout=job.get("timeout_seconds", 15))
     if kind == "ai_agenda":
         from src.ai_agenda import run as run_agendas
         return run_agendas(conn, job)
