@@ -183,7 +183,13 @@ def compact(event, images, full=True):
     if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0]  # festival (src/festivals.py)
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
-    if not full: return out
+    if not full:
+        # Imagen de las exposiciones y programas largos: la lista la muestra cuando los destaca («Últimos días»).
+        if event['start'] != event['end'] and event['kind'] in ('exhibition', 'program'):
+            first = next((i for i in event.get('media', []) if not i.get('fallback')), None)
+            exported = images.item(first) if first else None
+            if exported: out['mi'] = exported['url']
+        return out
     media = []
     for item in event.get('media', [])[:MAX_IMAGES_PER_EVENT]:
         exported = images.item(item)

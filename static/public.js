@@ -130,7 +130,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -591,13 +591,38 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body"><h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
 const hourKey = (e, live) => (live && (e._st.state === 'started' || e._st.state === 'open')) ? 'now' : String(Math.floor(e._st.sort / 60)).padStart(2, '0');
 function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>${esc(label)}</span></div>` }
 // Series de fichas casi iguales (p. ej. un patio escolar abierto por escuela): una fila y el resto plegado.
+// Destacados (21-10-2026): pocas filas, con motivo visible. «Selección Brollant» (la de la portada) y
+// «Últimos días» (exposiciones y obras que cierran en una semana). Como mucho una de cada diez filas del
+// día y nunca dos seguidas.
+state.picks = new Set();
+function hlReason(e, day) {
+  if (state.picks.has(key(e))) return 'pick';
+  if (day && e.start !== e.end && daysBetween(e.start, e.end) >= 14 && e.end >= day && daysBetween(day, e.end) <= 6 && (e.kind === 'exhibition' || (e.public_category || e.category) === 'arte' || (e.public_category === 'escena' && e.kind !== 'course'))) return e.end === day ? 'lastday' : 'last';
+  return '';
+}
+const HL_LABEL = {pick: () => L('Selección Brollant', 'Selecció Brollant'), last: () => L('Últimos días', 'Últims dies'), lastday: () => L('Último día', 'Últim dia')};
+function markHighlights(list, day) {
+  list.forEach(e => { e._hl = '' });
+  const cands = list.filter(e => !e._inFest && hlReason(e, day)).sort((a, b) => (hlReason(a, day) === 'pick' ? 0 : 1) - (hlReason(b, day) === 'pick' ? 0 : 1));
+  const cap = Math.max(1, Math.floor(list.length / 10)), chosen = new Set(cands.slice(0, cap * 2));
+  let used = 0, prev = false;
+  for (const e of list) {
+    if (used < cap && chosen.has(e) && !prev) { e._hl = hlReason(e, day); used++; prev = true } else prev = false;
+  }
+}
+function hlHead(e) {
+  if (!e._hl) return '';
+  const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
+  return `${url ? `<span class="hl-img"><img src="${esc(url)}" alt="" loading="lazy"></span>` : ''}<span class="hl-tag hl-${e._hl}">${esc(HL_LABEL[e._hl]())}</span>`;
+}
+
 // Festival: las actividades del mismo festival en un bloque plegado con su nombre y cuántas hay
 // (48h Open House: decenas de edificios el mismo día); con una o dos, filas normales con la etiqueta.
 const FEST_FOLD = 3;
@@ -659,6 +684,7 @@ function renderDay(m) {
   const bigFest = Object.values(festMembers).filter(l => l.length >= FEST_FOLD), inFest = new Set(bigFest.flat());
   timeline = timeline.filter(e => !inFest.has(e));
   const tbcList = s.tbc.filter(e => !inFest.has(e)), wideNoHoursList = s.wideNoHours.filter(e => !inFest.has(e));
+  markHighlights([...timeline, ...(show.wide ? wideNoHoursList : []), ...(show.tbc ? tbcList : [])], state.day);
   // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
   const nowTimed = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'timed');
   const nowOpen = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'wide').sort((a, b) => (a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4) || byTitle(a, b));
@@ -699,6 +725,7 @@ function renderRange(m) {
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(visible)]).filter(([, l]) => l.length);
   const days = buckets.slice(0, state.shown).map(([d, list]) => {
     const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
+    markHighlights(shown, d);
     return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia')}</button>`}</div>`;
   }).join('');
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
@@ -818,6 +845,9 @@ async function agenda(append = false) {
         const all = await loadCatalog();
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
+        // Selección Brollant de ese día (la de la portada): se destaca también en la lista.
+        try { const df = await dayFile(win ? today : state.day); state.picks = new Set((df.featured || []).map(c => `${c.s}:${c.i}`)); state.pickMedia = Object.fromEntries((df.featured || []).filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])) } catch (_) { state.picks = new Set() }
+        if (request !== agendaRequest) return;
       } else {
         const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
         const d = await get('/api/events?' + p);

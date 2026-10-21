@@ -399,3 +399,11 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ev-hit.ev-fest{color:var(--accentText)}
 .sheet-fest{margin:-4px 0 12px;font-size:14px;color:var(--muted)}
 .sheet-fest b{color:var(--fg)}
+
+/* Destacados (21-10-2026): fila con imagen y motivo; pocas por día */
+.ev.ev-hl{background:linear-gradient(90deg,var(--accentSoft),transparent 70%);border-radius:14px;margin:4px 0;padding:0 8px}
+.ev.ev-hl .ev-title{font-size:1.08em}
+.hl-img{display:block;width:100%;max-width:420px;aspect-ratio:16/8;border-radius:10px;overflow:hidden;margin:2px 0 8px;background:var(--surface2)}
+.hl-img img{width:100%;height:100%;object-fit:cover;display:block}
+.hl-tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accentText);margin:0 0 3px}
+.hl-tag.hl-last,.hl-tag.hl-lastday{color:#f5b84a}
