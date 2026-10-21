@@ -566,7 +566,7 @@ function whenCell(e) {
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia'); cls = 'hint' }
     else if (a.endsAt) note = `${L('hasta las', 'fins a les')} ${clock(a.endsAt)}`;
     else if ((st.rest || []).length) note = `${L('después', 'després')} ${st.rest.slice(0, 2).map(clock).join(' · ')}${st.rest.length > 2 ? '…' : ''}`;
-    return `<div class="when w-timed"><span class="w-line"><i class="${multi ? 'm-dots' : 'm-dot'}" aria-hidden="true"></i><time class="w-big">${(m => m === 1439 ? L('Medianoche', 'Mitjanit') : clock(m))(st.next ?? minutesOf(a.times[0]))}</time></span>${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
+    return `<div class="when w-timed"><span class="w-line"><i class="${multi ? 'm-dots' : 'm-dot'}" aria-hidden="true"></i><time class="w-big">${(m => m === 1439 ? '00:00' : clock(m))(st.next ?? minutesOf(a.times[0]))}</time></span>${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
   }
   if (a.kind === 'wide') {
     const last = daysBetween(e._day || today, a.until) <= 1;
