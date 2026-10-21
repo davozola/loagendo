@@ -58,6 +58,12 @@ class StaticExportTests(unittest.TestCase):
         concert = next(c for c in cat['items'] if c['i'] == '1')
         self.assertEqual((concert['tm'], concert['fr'], concert['o'], concert['g']), ('19:00', 1, [['2026-10-12', '19:00']], [41.4, 2.17]))
         self.assertNotIn('m', concert)  # images, summaries and links travel in the day files and detail shards
+        # Versión 2 del estilo en /v2/: misma app, hoja propia encima y solo modo claro; la 1 no cambia.
+        v1, v2 = (dist / 'index.html').read_text(encoding='utf-8'), (dist / 'v2' / 'index.html').read_text(encoding='utf-8')
+        self.assertNotIn('public-v2.css', v1)
+        self.assertIn('data-skin="v2"', v2); self.assertIn('data-theme="light"', v2)
+        self.assertRegex(v2, r'href="/public\.css\?v=[0-9a-f]+"><link rel="stylesheet" href="/public-v2\.css\?v=[0-9a-f]+">')
+        self.assertTrue((dist / 'fonts' / 'inter-tight-latin-400-normal.woff2').exists())
         self.assertTrue((dist / 'img' / '1.png').is_file()); self.assertFalse((dist / 'img' / '3.png').exists())
         day = json.loads((dist / 'data' / 'day' / '2026-10-12.json').read_text(encoding='utf-8'))
         self.assertEqual([c['i'] for c in day['items']], ['1', '2'])  # dated act ranks above the exhibition

@@ -1,0 +1,169 @@
+/* Ontoca · versión 2 del estilo (22-10-2026)
+   Se carga DESPUÉS de public.css solo en /v2/ (publish_static.py genera v2/index.html).
+   Blanco y negro, grotesca grande (Inter Tight, OFL, servida desde /fonts), esquinas rectas
+   y cinco colores planos: arena, turquesa, coral, petróleo y salvia. Solo modo claro. */
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/inter-tight-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/inter-tight-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/inter-tight-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/inter-tight-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter Tight';font-style:italic;font-weight:500;font-display:swap;src:url(/fonts/inter-tight-latin-500-italic.woff2) format('woff2')}
+
+:root,html[data-theme=light],html[data-theme=dark]{
+  --sand:#F9D779;--turq:#23CED9;--coral:#FCA47C;--petrol:#097C87;--sage:#A1CCA6;
+  --bg:#fff;--surface:#fff;--surface2:#f4f4f1;--fg:#000;--muted:#2b2b2b;--soft:#555;--line:#e3e3e3;--line2:#000;
+  --hover:rgba(0,0,0,.05);--header:#fff;--accent:#000;--accentText:#097C87;--accentSoft:rgba(9,124,135,.10);--onAccent:#fff;--radius:0px;
+  --fixed:#097C87;--fixedSoft:#097C87;--fixedLine:#000;--wide:#0a6f78;--wideSoft:#23CED9;--wideLine:#000;--now:#b4400f;--nowLine:#b4400f}
+body{font-family:'Inter Tight','Helvetica Neue',Arial,sans-serif;background:#fff;color:#000}
+#theme{display:none}
+
+/* cabecera */
+.site-header{background:#fff;backdrop-filter:none;border-bottom:1px solid #000}
+.logo{font-size:28px;font-weight:700;letter-spacing:-.045em}.logo span{color:var(--petrol)}
+nav a{border-radius:0;color:#000;font-size:15px;font-weight:600}nav a:hover{background:transparent;text-decoration:underline;text-underline-offset:4px}
+.pill-button,.filter-chip,.channel-chip,.age-chip{border-radius:0;border-color:#000}
+.pill-button .count{border-radius:0;background:var(--petrol)}
+.pill-button.active{background:#000;border-color:#000}
+
+/* portada */
+.hero{color:#000;min-height:0;padding:clamp(36px,6vw,80px) 0 clamp(28px,4vw,48px);margin-bottom:0}
+.hero-bg{display:none}
+.hero h1{max-width:1100px;font-size:clamp(44px,7.4vw,112px);font-weight:500;letter-spacing:-.045em;line-height:.97}
+.hero h1 em{color:#000;font-weight:700}.hero h1 em.typing:after{background:#000}
+.hero-copy{color:#000;font-size:clamp(20px,2vw,30px);font-style:italic;font-weight:500;max-width:none}
+
+/* periodo y días: banda arena */
+.panel-wrap{margin:0 calc(50% - 50vw) 0;width:100vw}
+.panel{border-radius:0;box-shadow:none;border:0;border-top:1px solid #000;border-bottom:1px solid #000;background:var(--sand);padding:14px var(--gutter);max-width:none}
+.search-box{border-radius:0;border-color:#000;background:#fff}
+.search-box:focus-within{box-shadow:none;border-color:#000;outline:2px solid #000}
+.period-tabs{background:transparent;border-radius:0;padding:0;gap:2px}
+.period-tab{border-radius:0;color:#000;font-weight:600}.period-tab:hover{background:rgba(0,0,0,.06);color:#000}.period-tab.active{background:#000;color:#fff}
+.days-arrow{border-radius:0;border-color:#000;background:#fff}
+.day{border-radius:0;border-color:#000;background:#fff}
+.day.weekend{background:var(--coral);border-color:#000}.day.weekend span,.day.weekend small{color:#000}
+.day.active{background:#000;border-color:#000;color:#fff}
+@media(max-width:760px){.period-tabs{border-radius:0}}
+
+/* selección de la semana: banda turquesa */
+#seleccion{margin:0 calc(50% - 50vw) clamp(32px,5vw,56px);width:100vw;padding:clamp(28px,4vw,44px) var(--gutter);background:var(--turq);border-bottom:1px solid #000;box-sizing:border-box}
+#seleccion .section-head{max-width:1360px;margin:0 auto 18px}
+#seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
+#seleccion .section-head p{color:#000}
+.curated{max-width:1360px;margin:0 auto}
+.curated button{border:1px solid #000;border-radius:0}
+.curated button:hover{transform:none;box-shadow:none;border-color:#000}
+.pick-large,.pick-small{border-radius:0;padding:0;background:#fff}
+.pick-media{border-radius:0;margin:0 0 12px}
+.pick-meta,.pick-date,.pick-title,.place,.pick-summary{padding:0 14px}
+.pick-meta{color:#000;font-size:11px;letter-spacing:.08em}
+.pick-title{font-weight:700}
+.place{margin-bottom:14px;color:#444}
+.free{border-radius:0;background:var(--turq);color:#000;border:1px solid #000;margin-left:14px;margin-bottom:12px}
+
+/* filtros */
+.filters-panel{border-radius:0;border:0;border-right:1px solid #000;background:#fff;padding-left:0}
+.filters-head h2{font-size:28px;font-weight:700;letter-spacing:-.03em}
+.group{border-top:1px solid #000;padding:16px 0}
+.group legend{font-size:20px;font-weight:700;color:#000;text-transform:none;letter-spacing:-.01em;margin-bottom:12px}
+.filter-chip,.channel-chip,.age-chip{min-height:38px;background:#fff;font-size:14px}
+.filter-chip.active,.channel-chip.active,.age-chip.active,#hourPresets .filter-chip[aria-pressed=true]{background:#000;border-color:#000;color:#fff}
+.field input,.select{border-radius:0;border-color:#000;background:#fff}
+.seg{border-radius:0;border-color:#000}.seg button+button{border-color:#000}.seg button[aria-pressed=true]{background:#000;color:#fff}
+.switch input,.hour-filter input{accent-color:#000}
+.hour-filter output{color:var(--petrol)}
+.active-chip{border-radius:0;border-color:#000;background:#fff}.active-chip span{color:#000}
+.linklike{color:#000}
+@media(max-width:960px){
+  .filters-panel{border-radius:0;border-right:1px solid #000;padding-left:18px}
+  .filter-bar{border-bottom:1px solid #000;background:#fff}
+  .filter-bar .filters-toggle,.filters-toggle{background:#000;border-color:#000;color:#fff;border-radius:0}
+  .filters-toggle b{background:#fff;color:#000;border-radius:0}
+  .filters-apply{border-radius:0;background:#000}
+  .filters-clear{border-radius:0;border-color:#000}
+  .close.small{border-radius:0;border-color:#000}
+}
+
+/* tipos de plan */
+.ag-chip,.mini-chip{border-radius:0;border-color:#000;color:#000;background:#fff}
+.ag-chip-desc,.ag-chip-top b,.mini-chip b{color:inherit;opacity:.8}
+.ag-chip.c-fixed.on,.mini-chip.c-fixed.on{background:var(--petrol);border-color:#000;color:#fff}
+.ag-chip.c-wide.on,.mini-chip.c-wide.on{background:var(--turq);border-color:#000;color:#000}
+.ag-chip.c-soon.on,.mini-chip.c-soon.on{background:var(--sage);border-color:#000;color:#000}
+.ag-chip.c-tbc.on,.mini-chip.c-tbc.on{border-color:#000;background:#fff}
+.ag-chip .m-dot,.mini-chip .m-dot{background:currentColor}.ag-chip .m-dots,.mini-chip .m-dots{background:radial-gradient(circle,currentColor 2.6px,transparent 3px) 0 50%/6px 6px repeat-x}
+.ag-chip .m-bar,.mini-chip .m-bar{background:currentColor;border-radius:0}
+
+/* lista: marcas de hora finas en lugar de bandas */
+.ag-stick{background:#fff;color:#000;font-size:14px;letter-spacing:0;text-transform:none;font-weight:700;padding:16px 0 6px}
+.ag-stick:after{background:#000}
+.ag-stick.is-now{color:var(--now)}.ag-stick.is-now:after{background:var(--now)}
+.ag-daystick{font-size:18px;font-weight:600}.ag-daystick em{color:var(--petrol)}
+.ev{border-bottom-color:var(--line)}
+.ev-main:hover .ev-title{color:#000;text-decoration:underline;text-underline-offset:3px}
+.w-big{font-weight:700;letter-spacing:-.02em}
+.w-mid{font-weight:600}
+.ev-title{font-weight:600;font-size:clamp(16px,1.5vw,18px)}
+.ev-meta{color:#444;font-size:13.5px}
+.ev-free{display:inline-block;background:var(--turq);border:1px solid #000;color:#000;padding:0 6px;line-height:1.35;font-size:12px;font-weight:700}
+.w-fill,.m-bar{border-radius:0}.w-bar{border-radius:0;background:#e3e3e3}
+
+/* cuadradito de color por categoría, en lugar del punto separador */
+.ev[data-cat] .ev-meta>span:nth-child(2):before{content:'';display:inline-block;width:9px;height:9px;margin:0 7px 0 9px;border:1px solid #000;background:var(--cat,#fff);opacity:1;vertical-align:0}
+.ev[data-cat=musica]{--cat:var(--petrol)}.ev[data-cat=escena]{--cat:var(--coral)}.ev[data-cat=arte]{--cat:var(--sage)}
+.ev[data-cat=charlas]{--cat:var(--turq)}.ev[data-cat=fiestas]{--cat:var(--sand)}.ev[data-cat=cine]{--cat:#000}
+.ev[data-cat=deporte]{--cat:#000}.ev[data-cat=talleres]{--cat:#fff}
+
+/* guardar: una cruz; guardado, en petróleo */
+.ev .save{border:0;border-radius:0;font-size:0;background:transparent}
+.ev .save:before{content:'+';font-size:30px;font-weight:300;line-height:1;color:#000}
+.ev .save.active{background:var(--petrol)}.ev .save.active:before{content:'✓';font-size:18px;font-weight:700;color:#fff}
+
+/* destacados: fila entera en coral con la foto a todo el ancho */
+.ev.ev-hl{background:var(--coral);border-radius:0;margin:8px 0;padding:0 12px;border:1px solid #000}
+.ev.ev-hl .ev-title{font-size:clamp(19px,1.9vw,22px);font-weight:700;letter-spacing:-.02em}
+.ev.ev-hl .ev-meta{color:#000}
+.hl-img{max-width:none;border-radius:0;aspect-ratio:16/8;margin:2px 0 10px;border:1px solid #000}
+.hl-tag,.hl-tag.hl-last,.hl-tag.hl-lastday,.hl-tag.hl-premiere,.hl-tag.hl-onlytoday{display:inline-block;background:#000;color:#fff;padding:4px 8px 3px;font-size:11px;letter-spacing:.08em;margin:0 0 6px}
+
+/* festivales: bloque salvia */
+.ev-fest-group{background:var(--sage);border:1px solid #000;margin:8px 0;padding:0 12px}
+.ev-fest-group .fest-name{font-size:19px;color:#000}
+.ev-fest-group .fest-count{color:#000}
+.ev-fest-group>summary i{border-radius:0;border:0;font-size:28px;font-weight:300;color:#000}
+.ev-fest-group>.ev{border-left:0;padding-left:0;background:#fff;margin:0 -12px;padding:0 12px}
+.ev-more>summary{color:#000}
+
+/* pliegues y botones */
+.ag-toggle{border-radius:0;border-color:#000}
+.ag-fold{border-radius:0;border-color:#000}
+.agenda-more button,.agenda-more a{border-radius:0}
+.empty{border-radius:0;border-color:#000}
+.event-map,.venue-groups details{border-radius:0;border-color:#000}
+.districts{border-radius:0;border-color:#000;background:#000}
+.district span{color:var(--petrol);font-weight:500}
+.district.active{background:var(--sand)}
+
+/* ficha */
+.overlay{background:rgba(0,0,0,.55);backdrop-filter:none}
+.sheet{border-radius:0;border:1px solid #000;background:#fff}
+@media(max-width:620px){.sheet{border-radius:0}}
+.sheet-top{color:#000;letter-spacing:.08em}
+.close{border-radius:0;border-color:#000}
+.sheet h2{font-size:clamp(32px,4.4vw,44px);font-weight:700;letter-spacing:-.035em;line-height:1.02}
+.detail-hero{border-radius:0;border:0}.detail-hero img{border-bottom:1px solid #000}
+.detail-poster{border-radius:0;background:var(--sand);color:#000;border-color:#000}.detail-poster span{color:#000}
+.sheet-cta .source-link,.source-link{border-radius:0;background:#000;border-color:#000;color:#fff}
+.sheet-cta .cta-secondary,.sheet .save-link,.sheet-link{border-radius:0;border-color:#000}
+.facts{border-radius:0;border-color:#000;background:#000}
+.facts div:first-child{background:var(--sand)}
+.facts small{color:#000;text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:11px}
+.sheet-schedule span{border-radius:0;background:#000;color:#fff}
+.sheet-place{border-radius:0;border-color:#000}
+.sheet-place-caption span{color:var(--petrol)}
+.sheet-copy p{font-size:17px}
+.sheet-venue h3{background:var(--turq);margin:0 0 10px;padding:12px 14px;font-size:20px;letter-spacing:-.02em;border:1px solid #000}
+.venue-item{border-radius:0;border-color:#000}.venue-item:hover{border-color:#000;background:var(--hover)}
+
+/* pie */
+footer{max-width:none;margin:0;background:#000;color:#fff;border-top:0;padding:36px var(--gutter) 44px;font-size:14px}
+footer a{color:#fff;text-decoration:underline}

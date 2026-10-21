@@ -240,8 +240,10 @@ const get = async path => {
   throw Error('Ruta no disponible en la web estática');
 };
 const key = e => `${e.source}:${e.id}`;
-const eventPath = k => { const [source, ...rest] = k.split(':'); return `/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
-const eventFromPath = () => { const m = location.pathname.match(/^\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
+// Versión 2 del estilo (22-10-2026): la misma app en /v2/ con otra hoja de estilo; las direcciones llevan /v2 delante.
+const SKIN = document.documentElement.dataset.skin || '', BASE = SKIN === 'v2' ? '/v2' : '';
+const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
+const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
 function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate()} ${months[d.getMonth()]}` }
 function labelDay(v) { if (v === today) return t('Hoy'); const d = new Date(v + 'T12:00:00'); return `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` }
 function timeLabel(e) { return t(e.time_label) || e.time || (e.start !== e.end ? t('Varios días') : t('Hora no indicada')) }
@@ -264,10 +266,10 @@ function syncUrl(push) {
   if (state.free) p.set('free', '1'); if (state.query) p.set('q', state.query);
   if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
   if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
-  const q = p.toString(), path = state.detail ? eventPath(state.detail) : '/', url = path + (q ? '?' + q : '');
+  const q = p.toString(), path = state.detail ? eventPath(state.detail) : BASE + '/', url = path + (q ? '?' + q : '');
   if (push) history.pushState({sheet: state.detail, depth: (history.state?.depth || 0) + 1}, '', url); else history.replaceState(history.state, '', url);
 }
-const detailFromLocation = () => { const m = location.pathname.match(/^\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
+const detailFromLocation = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
 function scrollToId(id) { const el = $(id); if (el) window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth'}) }
 function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
 
@@ -591,7 +593,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1129,7 +1131,8 @@ function typeHero() {
 }
 
 (async () => {
-  let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
+  let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}
+  if (SKIN === 'v2') theme = 'light';  // la versión 2 solo tiene modo claro  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();

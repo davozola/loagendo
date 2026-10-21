@@ -39,7 +39,9 @@ MAX_ASSET_BYTES = 25 * 1024 * 1024  # Cloudflare Pages limit per file
 MAX_FILES = 20000                   # Cloudflare Pages limit per deployment
 THUMBNAIL_MAX_PX = 1200
 GATE_MIN_EVENTS_14_DAYS = 300
-STATIC_FILES = ('public.css', 'public.js', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp')
+STATIC_FILES = ('public.css', 'public.js', 'public-v2.css',
+                'fonts/inter-tight-latin-400-normal.woff2', 'fonts/inter-tight-latin-500-normal.woff2', 'fonts/inter-tight-latin-600-normal.woff2',
+                'fonts/inter-tight-latin-700-normal.woff2', 'fonts/inter-tight-latin-500-italic.woff2', 'fonts/OFL-inter-tight.txt', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp')
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
@@ -317,10 +319,20 @@ def credits_html(registry, generated_at='', counts=None):
             '</main></body></html>')
 
 
+def v2_index(index, version):
+    """Versión 2 del estilo en /v2/: la misma app y los mismos datos, con public-v2.css encima
+    de public.css y solo modo claro. Para volver a la versión 1 basta con no enlazar /v2/."""
+    v2 = index.replace('data-static="1"', 'data-static="1" data-skin="v2"', 1).replace('data-theme="dark"', 'data-theme="light"', 1)
+    link = f'<link rel="stylesheet" href="/public-v2.css?v={version}">'
+    v2 = re.sub(r'(<link rel="stylesheet" href="/public\.css[^"]*">)', lambda m: m.group(1) + link, v2, count=1)
+    if link not in v2: v2 = v2.replace('</head>', link + '</head>', 1)
+    return v2.replace('<a class="logo" href="/">', '<a class="logo" href="/v2/">', 1)
+
+
 def headers_file():
     return ('/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n'
             "  Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' https://tile.openstreetmap.org; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-src https://www.openstreetmap.org; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'\n"
-            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
+            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
 
 
 def _content_hash(out):
@@ -404,10 +416,12 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     # Browsers keep /public.js and /public.css across deploys unless their address
     # changes: the shell references them by content version, so a new app is seen
     # on the next load, while the shell itself is always revalidated (_headers).
+    versions = {name: hashlib.sha256((out / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
     for name in ('public.css', 'public.js'):
-        version = hashlib.sha256((out / name).read_bytes()).hexdigest()[:10]
-        index = index.replace(f'"/{name}"', f'"/{name}?v={version}"')
+        index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
     (out / 'index.html').write_text(index, encoding='utf-8')
+    (out / 'v2').mkdir(exist_ok=True)
+    (out / 'v2' / 'index.html').write_text(v2_index(index, versions['public-v2.css']), encoding='utf-8')
     (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts), encoding='utf-8')
     (out / '_headers').write_text(headers_file(), encoding='utf-8')
     # Every record has its own address (/e/<source>/<id>); the static host serves the app for it.

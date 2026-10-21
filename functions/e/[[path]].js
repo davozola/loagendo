@@ -10,7 +10,8 @@ async function shardOf(key) {
 
 export async function onRequest({request, env, params}) {
   const url = new URL(request.url);
-  const page = await env.ASSETS.fetch(new URL('/', url.origin));   // la app (index.html)
+  const base = url.pathname.startsWith('/v2/') ? '/v2/' : '/';     // /v2/e/… es la versión 2 del estilo
+  const page = await env.ASSETS.fetch(new URL(base, url.origin));   // la app (index.html)
   const parts = Array.isArray(params.path) ? params.path : String(params.path || '').split('/');
   if (parts.length < 2) return page;
   const key = `${decodeURIComponent(parts[0])}:${decodeURIComponent(parts.slice(1).join('/'))}`;
