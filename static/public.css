@@ -370,3 +370,17 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
   .content .active-filters{margin:0 0 12px}
   .fab-filters{display:none!important}
 }
+
+/* Tipos de plan en versión corta, fijos bajo «Filtros» al bajar por la lista (21-10-2026) */
+.type-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0 0}
+.type-mini::-webkit-scrollbar{display:none}
+.type-mini[hidden]{display:none}
+.mini-chip{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;min-height:32px;padding:0 4px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.mini-chip b{font-weight:500;color:var(--soft);font-variant-numeric:tabular-nums}
+.mini-chip.on{color:var(--fg)}
+.mini-chip.c-fixed.on{border-color:var(--fixedLine);background:var(--fixedSoft)}
+.mini-chip.c-wide.on{border-color:var(--wideLine);background:var(--wideSoft)}
+.mini-chip.c-tbc{border-style:dashed}.mini-chip.c-tbc.on{border-color:var(--soft)}
+.mini-chip.c-soon.on{border-color:var(--fg);background:var(--hover)}
+.mini-chip:not(.on) i{opacity:.45}
+@media(max-width:960px){.filter-bar.compact .filters-toggle{min-height:40px;font-size:15px}}

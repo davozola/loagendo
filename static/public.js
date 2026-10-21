@@ -489,6 +489,10 @@ function chipsHtml(counts) {
   const html = `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
   // Los botones de tipo viven fuera de la lista (#typeTabs): al activarlos no se mueven de sitio.
   const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = html;
+  // Versión corta, fija bajo «Filtros» cuando las tarjetas grandes salen de la pantalla (móvil).
+  const mini = $('typeMini');
+  if (mini) mini.innerHTML = CHIPS.map(c => `<button type="button" class="mini-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.short())}</button>`).join('');
+  requestAnimationFrame(syncMini);
   return '';
 }
 
@@ -666,7 +670,7 @@ function venueView(items) {
 function renderAgenda() {
   const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
   const model = state.model = buildModel(items, win);
-  $('typeTabs').innerHTML = '';
+  $('typeTabs').innerHTML = ''; $('typeMini').innerHTML = '';
   // El filtro «Formato» se solapa con los botones de tipo: se retira y su apartado queda solo para los talleres ya empezados.
   const fmt = $('formatFilter'), group = fmt?.closest('fieldset');
   if (group && !group.dataset.v3) {
@@ -698,6 +702,12 @@ function mountFilterUi() {
   const n = state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
   $('filtersApply').textContent = `${L('Ver', 'Mostra')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans')}`;
 }
+function syncMini() {
+  const tabs = $('typeTabs'), mini = $('typeMini'), bar = $('filterBar'); if (!mini || !bar) return;
+  const r = tabs.getBoundingClientRect(), on = getComputedStyle(bar).position === 'sticky' && !!mini.innerHTML && r.height > 0 && r.bottom < bar.getBoundingClientRect().top + 60;
+  if (mini.hidden === on) { mini.hidden = !on; bar.classList.toggle('compact', on) }
+}
+document.addEventListener('scroll', () => requestAnimationFrame(syncMini), {passive: true});
 function stick() { const h = document.querySelector('.site-header'); if (h) document.documentElement.style.setProperty('--stick', h.getBoundingClientRect().height + 'px') }
 function stableRender() {
   const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
@@ -891,7 +901,7 @@ document.addEventListener('click', e => {
   if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }
   if (button.dataset.moredays) { state.shown += 7; stableRender(); return }
   if (button.dataset.dayall) { state.openDays.add(button.dataset.dayall); stableRender(); return }
-  if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
+  if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; if (button.closest('#typeMini')) { state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return } state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
   if (button.dataset.day) { state.day = button.dataset.day; state.range = ''; refresh(); return }
   if (button.dataset.period !== undefined) { if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
