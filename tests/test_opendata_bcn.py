@@ -26,7 +26,7 @@ class OpenDataParsingTests(unittest.TestCase):
         self.assertEqual(record['url'], 'https://guia.barcelona.cat/ca/detall/agenda_99400783090.html')
         self.assertEqual(record['category'], 'Música y vida nocturna')
         self.assertEqual(record['district'], 'Eixample'); self.assertEqual(record['neighborhood'], 'el Fort Pienc')
-        self.assertEqual(record['venues'][0]['name'], 'Sala 1 Pau Casals')
+        self.assertEqual(record['venues'][0]['name'], "L'Auditori de Barcelona · Sala 1 Pau Casals")  # sala con su recinto (21-10-2026)
         self.assertEqual(record['venues'][0]['address'], 'Carrer de Lepant 150, 08013 Barcelona')
         self.assertAlmostEqual(record['venues'][0]['coords'][0], 41.399, places=2)
         self.assertEqual(record['time_text'], 'a les 19.00 h')

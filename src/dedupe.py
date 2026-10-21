@@ -226,6 +226,15 @@ def source_rank(source):
     return base + 10
 
 
+def first_party(source):
+    """La sala o el centro publicando su propia agenda (lectura de su web o su feed), no una ticketera ni un directorio."""
+    if source.startswith("venue_ia_"): return True
+    if source.startswith("venue_"):
+        from src.venue_directory import venue_type
+        return venue_type(source[6:]) not in ("ticketing", "aggregator")
+    return False
+
+
 DIRECTORY_RANK = len(SOURCE_PRIORITY) + 20  # ticketing sites and private directories rank here or below
 COLLAPSE_MIN_SCORE = 0.95
 COLLAPSE_MIN_SCORE_SAME_SLOT = 0.6
@@ -264,7 +273,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -279,8 +288,11 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
                 try: spans[f"{src}:{rid}"] = (dt.date.fromisoformat(str(b)[:10]) - dt.date.fromisoformat(str(a)[:10])).days
                 except ValueError: pass
     except sqlite3.DatabaseError: pass
+    # Manda la fuente original: si el propio centro publica el acto, su ficha es la canónica (fechas,
+    # horas, sala) y las demás solo rellenan lo que le falte (texto, imagen, distrito…; borrow_from_twins).
     def rank(key):
-        return (source_rank(key.split(":", 1)[0]), -spans.get(key, 0), key)
+        src = key.split(":", 1)[0]
+        return (0 if first_party(src) else 1, source_rank(src), -spans.get(key, 0), key)
     out = {}
     for members in groups.values():
         canonical = min(members, key=rank)
@@ -533,6 +545,56 @@ def contained_pairs(conn):
             if b is a or kb == ka or f" {ka} " not in f" {kb} " or not _same_site(a, b): continue
             if a["end"] < b["start"] or b["end"] < a["start"]: continue
             if same_session(a, b): pairs.append((a["key"], b["key"]))
+    return list(dict.fromkeys(pairs))
+
+
+# Actividades sobre una exposición (visitas, inauguraciones): no son la exposición.
+EXHIBITION_ACTIVITY = re.compile(r"^(?:.*\b)?(?:visita|visites|visitas|inaugur\w*|presentacio|presentacion|taller|tallers|conferencia|xerrada)\b")
+EXHIBITION_GENERIC = re.compile(r"^(?:col.leccio|coleccion|collection|exposicio permanent|exposicion permanente|fons|obres|obra|retrats?|fotografies|pintura|escultura)\b")
+
+
+def exhibition_pairs(conn):
+    """La misma exposición en dos fuentes con fechas que no cuadran: «Exposició "Charlotte Perriand"»
+    (Ajuntament, 6-10 → 28-3) y «Exposició "Charlotte Perriand. La llibertat de repensar el món"»
+    (Generalitat, 9-10 → 28-2) en la Fundació Miró (21-10-2026). Un título dentro del otro (al menos dos
+    palabras propias), el mismo sitio, las dos de varias semanas, que empiezan con menos de un mes de
+    diferencia y se solapan. Las fechas que se muestran son las de la ficha canónica."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude' AND r.kind='exhibition' AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10)) >= 14""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    def day(v):
+        try: return dt.date.fromisoformat(v)
+        except (TypeError, ValueError): return None
+    items, by_word = [], {}
+    for source, rid, title, start, end, venue, lat, lon in rows:
+        key = _title_key(title)
+        a, b = day(start), day(end)
+        if not a or not b: continue
+        if EXHIBITION_ACTIVITY.match(_clean(title)): continue
+        it = {"key": f"{source}:{rid}", "source": source, "title_key": key, "start": a, "end": b, "venue": venue or "", "lat": lat, "lon": lon}
+        items.append(it)
+        for w in set(key.split()):
+            if len(w) >= 5: by_word.setdefault(w, []).append(it)
+    pairs = []
+    for a in items:
+        ka = a["title_key"]; words = [w for w in ka.split() if w not in CORE_STOP]
+        if len(words) < 2 or len(ka) < 10 or EXHIBITION_GENERIC.match(ka) or _generic_site(a): continue
+        if any(w in ka.split() for w in FESTIVAL_WORDS): continue
+        found = []
+        for b in by_word.get(max(words, key=len), []):
+            kb = b["title_key"]
+            if b is a or b["source"] == a["source"] or f" {ka} " not in f" {kb} " or len(kb.split()) > len(ka.split()) + 8: continue
+            if not _same_site(a, b, km=0.12): continue
+            if abs((a["start"] - b["start"]).days) > 31 or a["end"] < b["start"] or b["end"] < a["start"]: continue
+            found.append(b)
+        # «Aurèlia Muñoz» dentro de dos títulos distintos: ambiguo, no se junta con ninguno.
+        if len({b["title_key"] for b in found if b["title_key"] != ka}) > 1: continue
+        pairs += [(a["key"], b["key"]) for b in found]
     return list(dict.fromkeys(pairs))
 
 

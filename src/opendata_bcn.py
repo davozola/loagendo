@@ -206,6 +206,31 @@ def occurrences_for(item, kind, today=None):
     return out
 
 
+WHOLE_BUILDING = {"museu", "museo", "edifici", "edificio", "seu", "sede", "seu central", "equipament"}
+
+
+def _fold(text):
+    import unicodedata
+    text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode().lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
+
+
+def place_name(address, venue_entity=""):
+    """El sitio tal como lo da el registro municipal, con el recinto cuando es una parte de otro:
+    «Museu» (sección de la Fundació Joan Miró) → «Fundació Joan Miró»; «Sala 1 Pau Casals» →
+    «L'Auditori de Barcelona · Sala 1 Pau Casals» (21-10-2026). Solo con el dato del propio registro
+    (related_entity_data.is_section_of_name); no se deduce nada."""
+    place = str(address.get("place") or venue_entity or "").strip()
+    section = re.sub(r"\s*\*.*$", "", str(((address.get("related_entity_data") or {}).get("is_section_of_name")) or "")).strip()  # «*Tancat temporalment»
+    if not section or not place: return place or section
+    from src.venue_rooms import STANDALONE, _fold as room_fold
+    if _fold(place) in WHOLE_BUILDING: return section
+    if STANDALONE.match(room_fold(place)): return place  # «Museu Egipci de Barcelona», «Biblioteca …»: ya es un recinto
+    fp, fs = _fold(place), _fold(section)
+    if fs in fp or fp in fs: return place if len(fp) >= len(fs) else section
+    return section if fp in WHOLE_BUILDING else f"{section} · {place}"
+
+
 def slim_raw(item):
     """Archive the record minus redundant geometry variants and the attribute catalogue copy."""
     raw = dict(item)
@@ -254,7 +279,7 @@ def record_from_item(item, today=None):
     record = {"source": SOURCE, "id": register_id, "title": title, "start": start, "end": end,
               "time_text": facts.get("schedule_hours", ""), "price_text": "Entrada lliure" if "Lliure" in tickets and not facts.get("price_text") else facts.get("price_text", ""),
               "kind": kind, "eligibility": eligibility, "start_timestamp": "", "frequency": str(item.get("period_name") or ""),
-              "raw": slim_raw(item), "venues": [{"name": str(address.get("place") or venue_entity or ""), "address": full_address, "coords": coords}],
+              "raw": slim_raw(item), "venues": [{"name": place_name(address, venue_entity), "address": full_address, "coords": coords}],
               "organizers": sorted(set(organizers)), "url": DETAIL_URL.format(id=register_id), "alerts": flags, "evidence_level": "open_data_cc_by_unverified",
               "occurrences": occurrences_for(item, kind, today), "links": links, "images": [], "family_audience": family_audience(item),
               "category": category_for(item), "district": str(address.get("district_name") or ""), "neighborhood": str(address.get("neighborhood_name") or ""),

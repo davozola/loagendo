@@ -204,7 +204,8 @@
       "address": "Avinguda de Miramar 1, Barcelona",
       "type": "culture",
       "urls": [
-        "https://www.fmirobcn.org/ca/totes-les-activitats/"
+        "https://www.fmirobcn.org/ca/totes-les-activitats/",
+        "https://www.fmirobcn.org/ca/exposicions/"
       ],
       "activa": true
     },
