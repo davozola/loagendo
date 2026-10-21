@@ -598,7 +598,7 @@ function row(e) {
 const hourKey = (e, live) => (live && (e._st.state === 'started' || e._st.state === 'open')) ? 'now' : String(Math.floor(e._st.sort / 60)).padStart(2, '0');
 function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>${esc(label)}</span></div>` }
 // Series de fichas casi iguales (p. ej. un patio escolar abierto por escuela): una fila y el resto plegado.
-// Destacados (21-10-2026): pocas filas, con motivo visible. «Selección Brollant» (la de la portada) y
+// Destacados (21-10-2026): pocas filas, con motivo visible. «Selección Ontoca» (la de la portada) y
 // «Últimos días» (exposiciones y obras que cierran en una semana). Como mucho una de cada diez filas del
 // día y nunca dos seguidas.
 state.picks = new Set();
@@ -618,7 +618,7 @@ function runOf(e) {
   return r && r.n >= 3 ? r : null;
 }
 function hlReason(e, day) {
-  // Selección Brollant: la de la portada, o lo que anuncian tres fuentes o más.
+  // Selección Ontoca: la de la portada, o lo que anuncian tres fuentes o más.
   if (state.picks.has(key(e)) || (e.confirmations || 1) >= 3) return 'pick';
   if (!e.relevant || !day) return '';  // el resto, solo en salas y centros de referencia
   const cat = e.public_category || e.category;
@@ -634,7 +634,7 @@ function hlReason(e, day) {
   // («Solo hoy» se descartó: muchas salas publican cada función como ficha de un día y no podemos asegurar que sea única.)
   return '';
 }
-const HL_LABEL = {pick: () => L('Selección Brollant', 'Selecció Brollant'), premiere: () => L('Estreno', 'Estrena'), last: () => L('Últimos días', 'Últims dies'), lastday: () => L('Último día', 'Últim dia'), onlytoday: () => L('Solo hoy', 'Només avui')};
+const HL_LABEL = {pick: () => L('Selección Ontoca', 'Selecció Ontoca'), premiere: () => L('Estreno', 'Estrena'), last: () => L('Últimos días', 'Últims dies'), lastday: () => L('Último día', 'Últim dia'), onlytoday: () => L('Solo hoy', 'Només avui')};
 const HL_ORDER = {pick: 0, premiere: 1, lastday: 2, last: 3, onlytoday: 4};
 function markHighlights(list, day) {
   list.forEach(e => { e._hl = '' });
@@ -877,7 +877,7 @@ async function agenda(append = false) {
         const all = await loadCatalog();
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
-        // Selección Brollant de ese día (la de la portada): se destaca también en la lista.
+        // Selección Ontoca de ese día (la de la portada): se destaca también en la lista.
         try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set() }
         if (request !== agendaRequest) return;
       } else {
@@ -968,7 +968,7 @@ async function openDetail(k, focus, opts = {}) {
     const names = e.lineup || [];
     const lineup = timed.length ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${timed.map(x => `${esc(x.time)} ${esc(x.name)}`).join(' · ')}${names.length > timed.length ? ` · ${esc(names.filter(n => !timed.some(x => x.name === n)).join(' · '))}` : ''}</p>`
       : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
-    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Brollant · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
+    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${esc(e.media[0].alt || t('Imagen de la fuente'))}${e.media[0].credit ? ` · © ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Ontoca · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
     // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
     const osm = e.coordinates ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
@@ -999,7 +999,7 @@ function mountSheetMap(e) {
   setTimeout(() => sheetMap && sheetMap.invalidateSize(), 60);
 }
 async function shareEvent(k) {
-  const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Brollant';
+  const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Ontoca';
   // En WhatsApp el enlace ya trae foto, título, cuándo y dónde (vista previa); el texto lo resume por si no carga.
   const when = document.querySelector('.facts > div:first-child b')?.textContent || '', where = document.querySelector('.facts > div:nth-child(2) b')?.textContent || '';
   const text = [title, [when, where].filter(Boolean).join(' · ')].filter(Boolean).join('\n');

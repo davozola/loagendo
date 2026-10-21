@@ -20,7 +20,7 @@ export async function onRequest({request, env, params}) {
     if (res.ok) card = (await res.json())[key] || null;
   } catch (_) { card = null; }
   if (!card) return page;
-  const title = `${card.t} · Brollant`;
+  const title = `${card.t} · Ontoca`;
   const lines = [card.w, card.v].filter(Boolean).join(' · ');
   const description = [lines + (card.p ? ` · ${card.p}` : ''), card.d].filter(Boolean).join('. ').slice(0, 300);
   const image = card.i ? new URL(card.i, url.origin).href : '';
@@ -32,7 +32,7 @@ export async function onRequest({request, env, params}) {
     ...(image ? {image: [image]} : {}), ...(card.d ? {description: card.d} : {}),
     ...(card.p === 'Gratis' ? {isAccessibleForFree: true} : {})};
   const head = [
-    `<meta property="og:type" content="website">`, `<meta property="og:site_name" content="Brollant">`,
+    `<meta property="og:type" content="website">`, `<meta property="og:site_name" content="Ontoca">`,
     `<meta property="og:title" content="${esc(card.t)}">`, `<meta property="og:description" content="${esc(description)}">`,
     `<meta property="og:url" content="${esc(canonical)}">`, `<link rel="canonical" href="${esc(canonical)}">`,
     image ? `<meta property="og:image" content="${esc(image)}">` : '',

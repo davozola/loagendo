@@ -32,7 +32,7 @@ REGISTRY_PATH = ROOT / 'docs' / 'source_registry.json'
 HORIZON_DAYS = catalog.MAX_RANGE_DAYS
 PAGE_SIZE = 50
 FEATURED_SIZE = 12
-HIGHLIGHT_SIZE = 40  # «Selección Brollant» en la lista de cada día (además de la de portada)
+HIGHLIGHT_SIZE = 40  # «Selección Ontoca» en la lista de cada día (además de la de portada)
 DETAIL_SHARDS = 256
 MAX_IMAGES_PER_EVENT = 3
 MAX_ASSET_BYTES = 25 * 1024 * 1024  # Cloudflare Pages limit per file
@@ -302,10 +302,10 @@ def credits_html(registry, generated_at='', counts=None):
         rows.append(f'<article class="credit"><h2>{html.escape(label)}</h2><p><b>Titular:</b> {html.escape(entry.get("owner", ""))}</p><p><b>Dataset:</b> {html.escape(entry.get("dataset", ""))} {link}</p>'
                     f'<p><b>Licencia / base de reutilización:</b> {licence}. {html.escape(entry.get("license_basis", ""))}</p><p><b>Atribución:</b> {html.escape(entry.get("attribution", ""))}</p><p><b>Imágenes:</b> {images}</p></article>')
     counts = counts or {}
-    return ('<!DOCTYPE html><html lang="es" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Brollant</title>'
-            '<meta name="description" content="De dónde salen los datos y las imágenes de Brollant, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css"></head>'
+    return ('<!DOCTYPE html><html lang="es" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Ontoca</title>'
+            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css"></head>'
             '<body class="credits-page"><main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
-            '<p>Brollant recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
+            '<p>Ontoca recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
             'Los textos descriptivos y las imágenes pertenecen a quien los publica: se muestran con su crédito y su enlace de origen, bajo la licencia o la política de cada fuente que se detalla abajo. '
             'Cada ficha conserva la URL original y la fecha de la última sincronización. Los horarios y precios se reproducen tal y como los publica la fuente; confirma siempre en la fuente antes de ir. '
             'Las fechas de conciertos se contrastan además con directorios de conciertos: esas fichas muestran sólo título, fecha, hora y sala, enlazan a la web de la sala o a la venta de entradas y no reproducen textos ni imágenes de terceros.</p>'
@@ -366,7 +366,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             if len(first) >= 5:
                 picks = first + [e for e in picks if e['key'] not in set(chosen)]
                 picks = picks[:FEATURED_SIZE]; ai_pick = True
-        # Más «Selección Brollant» para la lista de ese día: los actos de ese día mejor
+        # Más «Selección Ontoca» para la lista de ese día: los actos de ese día mejor
         # puntuados con las mismas reglas explicables de la portada (featured_score).
         whole = [e for e in events if e['start'] <= day <= e['end'] and (e['start'] == e['end'] or not e.get('hours_by_day') or day in e['hours_by_day'])]
         chosen_hl = day_highlights(whole, day); by_key = {e['key']: e for e in whole}
