@@ -41,7 +41,8 @@ THUMBNAIL_MAX_PX = 1200
 GATE_MIN_EVENTS_14_DAYS = 300
 STATIC_FILES = ('public.css', 'public.js', 'public-v2.css',
                 'fonts/inter-tight-latin-400-normal.woff2', 'fonts/inter-tight-latin-500-normal.woff2', 'fonts/inter-tight-latin-600-normal.woff2',
-                'fonts/inter-tight-latin-700-normal.woff2', 'fonts/inter-tight-latin-500-italic.woff2', 'fonts/OFL-inter-tight.txt', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp')
+                'fonts/inter-tight-latin-700-normal.woff2', 'fonts/inter-tight-latin-500-italic.woff2', 'fonts/OFL-inter-tight.txt', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp',
+                'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png')  # icono «o.» de la pestaña (22-10-2026)
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
@@ -417,7 +418,7 @@ def v2_index(index, version):
 def headers_file():
     return ('/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n'
             "  Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' https://tile.openstreetmap.org; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-src https://www.openstreetmap.org; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'\n"
-            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
+            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/favicon.svg\n  Cache-Control: public, max-age=86400\n/favicon-32.png\n  Cache-Control: public, max-age=86400\n/apple-touch-icon.png\n  Cache-Control: public, max-age=86400\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
 
 
 def _content_hash(out):
