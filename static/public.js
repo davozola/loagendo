@@ -49,7 +49,7 @@ const CA = {
   'No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.':'No hi ha ubicacions geogràfiques per a aquests filtres. Prova un altre dia o consulta la llista.','Mapa de actividades geolocalizadas':'Mapa d\'activitats geolocalitzades','lugares con ubicación · pulsa un punto para abrir la ficha':'llocs amb ubicació · prem un punt per obrir la fitxa','Sin recinto identificado':'Sense recinte identificat',
   'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Descubre':'Descobreix','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
   'Horario':'Horari','Horas publicadas':'Hores publicades','las fuentes no coinciden; confirma en la sala':'les fonts no coincideixen; confirma-ho a la sala','Requiere inscripción':'Cal inscripció','Texto de':'Text de','Imagen del equipamiento':'Imatge de l\'equipament','Imagen de la fuente':'Imatge de la font','Más imágenes':'Més imatges','Ubicación':'Ubicació','Mapa de':'Mapa de','la ubicación':'la ubicació','Próximamente en':'Properament a','esta sala':'aquesta sala',
-  'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
+  'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Añadir al calendario':'Afegeix al calendari','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
   'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
   // index.html
   'Saltar a la agenda':'Salta a l\'agenda','Agenda':'Agenda','Selección':'Selecció','Barrios':'Barris','Guardados':'Desats','Ver guardados':'Mostra els desats','Cambiar modo claro u oscuro':'Canvia el mode clar o fosc',
@@ -130,7 +130,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -353,7 +353,7 @@ function pick(e, i) {
   const d = new Date((e.featured_date || e.start) + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
   const meta = esc(catLabel(e));
   const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
-  return `<button class="${i ? 'pick-small' : 'pick-large'}" type="button" data-open="${esc(key(e))}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
+  return `<button class="${i ? 'pick-small' : 'pick-large'}" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
 }
 async function selection() {
   try {
@@ -489,12 +489,19 @@ try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
 // «Arte y galerías» vive sobre todo de exposiciones (horario amplio) y de talleres de varias
 // sesiones: al entrar en el canal se ven todos los tipos; al salir vuelve la vista de cada uno.
 // (Cambios hechos dentro del canal no se guardan como preferencia general.)
-const CHANNEL_VIEW = {galerias: {fixed: true, wide: true, soon: true, tbc: true}};
-let savedShow = null;
+// Con el buscador también se ven los cuatro tipos (22-10-2026): quien busca «MIRA» no tiene
+// por qué saber si es un concierto con hora o una feria de horario amplio. Al borrar la
+// búsqueda vuelve la vista que tenía.
+const ALL_TYPES = {fixed: true, wide: true, soon: true, tbc: true};
+const CHANNEL_VIEW = {galerias: ALL_TYPES};
+let savedShow = null, viewKey = '';
 function channelView() {
-  const view = state.chans.length === 1 ? CHANNEL_VIEW[state.chans[0]] : null;
-  if (view && !savedShow) { savedShow = {...state.show}; Object.assign(state.show, view) }
-  else if (!view && savedShow) { state.show = savedShow; savedShow = null }
+  // Guardados (22-10-2026): también los cuatro tipos; lo que guardaste se ve siempre, sea del tipo que sea.
+  const key = state.savedOnly ? 'saved' : String(state.query || '').trim() ? 'search' : state.chans.length === 1 && CHANNEL_VIEW[state.chans[0]] ? state.chans[0] : '';
+  if (key === viewKey) return;
+  if (!key) { if (savedShow) { state.show = savedShow; savedShow = null } }
+  else { if (!savedShow) savedShow = {...state.show}; Object.assign(state.show, CHANNEL_VIEW[key] || ALL_TYPES) }
+  viewKey = key;
 }
 channelView();
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
@@ -593,7 +600,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -660,6 +667,22 @@ function hlHead(e) {
 // Festival: las actividades del mismo festival en un bloque plegado con su nombre y cuántas hay
 // (48h Open House: decenas de edificios el mismo día); con una o dos, filas normales con la etiqueta.
 const FEST_FOLD = 3;
+// Inauguración o clausura de una exposición (22-10-2026, src/milestones.py).
+const MS_LABEL = {opening: () => L('Inauguración', 'Inauguració'), closing: () => L('Clausura', 'Cloenda')};
+function msTag(e) { const k = e.milestone?.kind; return MS_LABEL[k] ? `<span class="ms-tag ms-${k}">${esc(MS_LABEL[k]())}</span>` : '' }
+// En la ficha: la inauguración dice hasta cuándo sigue la exposición, y la exposición, cuándo se inaugura.
+function msLine(e) {
+  const k = e.milestone?.kind, link = e.milestone_link, op = e.opening;
+  if (MS_LABEL[k]) {
+    const more = link ? ` · <button class="linklike" type="button" data-open="${esc(link.key)}">${esc(k === 'opening' ? L(`La exposición sigue hasta el ${labelDate(link.end)}`, `L'exposició continua fins al ${labelDate(link.end)}`) : L(`Exposición del ${labelDate(link.start)} al ${labelDate(link.end)}`, `Exposició del ${labelDate(link.start)} al ${labelDate(link.end)}`))} ›</button>` : '';
+    return `<p class="sheet-ms"><span class="ms-tag ms-${k}">${esc(MS_LABEL[k]())}</span>${esc(L(' de la exposición', " de l'exposició"))}${more}</p>`;
+  }
+  if (op && MS_LABEL[op.kind]) {
+    const when = `${labelDay(op.date)}${op.time ? ' · ' + op.time : ''}`;
+    return `<p class="sheet-ms"><span class="ms-tag ms-${op.kind}">${esc(MS_LABEL[op.kind]())}</span> ${esc(when)} · <button class="linklike" type="button" data-open="${esc(op.key)}">${esc(L('Ver', 'Mostra'))} ›</button></p>`;
+  }
+  return '';
+}
 function festTag(e) {
   const f = e.festival;
   const bare = x => fold(x).replace(/[^a-z0-9]+/g, '');
@@ -787,7 +810,7 @@ function renderAgenda() {
     const legend = group.querySelector('legend'); if (legend) legend.textContent = L('Talleres y cursos', 'Tallers i cursos');
   }
   if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
-  else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
+  else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].filter(onePlace).slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
   else host.innerHTML = model.mode === 'day' ? renderDay(model) : renderRange(model);
   $('agendaMore').innerHTML = '';
@@ -949,6 +972,17 @@ function detailWhen(e) {
   if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + showTime(t) : ''}`;
   return t ? `${when} · ${showTime(t)}` : when;
 }
+// Lugar que no es un sitio («Diferents espais», «Diversos centres cívics», «Recorregut: …», 22-10-2026).
+const MANY_PLACES = /^(?:diferents|diferentes|diversos|diversas|diverses|varis|varies|varios|varias|distints|distintos|m[uú]ltiples|recorregut|recorrido)\b/i;
+const onePlace = e => !MANY_PLACES.test(String(e.venue_names?.[0] || '').trim());
+// Precio en la ficha (22-10-2026): si la fuente da varias tarifas («Entrada 1 dia: 50 € · Abonament 2 dies: 95 €»),
+// la caja ocupa toda la fila y cada tarifa va en su línea. El texto es el de la fuente, solo partido por «·».
+function priceFact(e) {
+  const text = e.is_free ? t('Gratis') : String(e.price_text || e.price_label || L('Consultar', 'Consultar'));
+  const parts = text.split(/\s+·\s+/).map(x => x.trim()).filter(Boolean);
+  if (text.length <= 32 && parts.length < 2) return `<div><small>${t('Precio')}</small><b>${esc(text)}</b></div>`;
+  return `<div class="fact-wide"><small>${t('Precio')}</small><ul class="fact-lines">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+}
 async function openDetail(k, focus, opts = {}) {
   const [source, ...rest] = k.split(':'), id = rest.join(':');
   try {
@@ -972,21 +1006,27 @@ async function openDetail(k, focus, opts = {}) {
       : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
     const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${[e.media[0].alt && fold(e.media[0].alt) !== fold(e.title) ? esc(e.media[0].alt) : '', e.media[0].credit ? `© ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''].filter(Boolean).join(' · ')}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Ontoca · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
-    // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
-    const osm = e.coordinates ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
-    const map = e.coordinates ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div></a></section><div class="sheet-cta sheet-cta-map"><a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a></div>` : '';
-    // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
     const site = String(e.venue_names?.[0] || e.venues?.[0]?.name || '').split(' · ')[0];
-    const upcoming = site && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`))} ›</button></p>` : '';
+    // «Diferents espais», «Diversos centres cívics», «Recorregut: …» no son un espacio (22-10-2026):
+    // sin «Más planes en…», sin mapa y sin «Cómo llegar», porque el punto de la fuente no es el sitio del acto.
+    const manyPlaces = MANY_PLACES.test(site.trim());
+    const realSite = site && !manyPlaces;
+    // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
+    const osm = e.coordinates && !manyPlaces ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
+    const map = e.coordinates && !manyPlaces ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div></a></section><div class="sheet-cta sheet-cta-map"><a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a></div>` : '';
+    // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
+    const upcoming = realSite && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`))} ›</button></p>` : '';
     const main = mainLink(e);
     // 22-10-2026: el enlace a la fuente va debajo del texto; «Cómo llegar», debajo del mapa.
     const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
     // Si el botón lleva a la web original, la ficha del agregador queda como enlace secundario.
     const viaAgg = main && safeurl(e.url) && main.url !== safeurl(e.url) ? `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(L(`Ver en ${sourceName(e)}`, `Mostra a ${sourceName(e)}`))} ↗</a>` : '';
     const links = viaAgg + (e.links || []).filter((l, i, all) => safeurl(l.url) && l.url !== e.url && l.url !== main?.url && all.findIndex(x => x.label === l.label || x.url === l.url) === i && l.label !== 'Página de la fuente' && !(l.label === 'Web del evento' && !e.organizers?.length)).slice(0, 2).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(linkLabel(l.label))} ↗</a>`).join('');
-    $('sheet').innerHTML = `<div class="sheet-top"><span>${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}<div><small>${t('Precio')}</small><b>${e.is_free ? t('Gratis') : esc(e.price_text || e.price_label || L('Consultar', 'Consultar'))}</b></div>${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button></div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.") : L(`Datos de ${esc(sourceName(e))}. Confirma en la web oficial antes de ir.`, `Dades de ${esc(sourceName(e))}. Confirma-ho al web oficial abans d'anar-hi.`)}</p>`;
+    $('sheet').innerHTML = `<div class="sheet-top"><span data-cat="${esc(e.public_category || e.category || '')}">${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${msLine(e)}${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}${priceFact(e)}${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button>${calendarMenu(k, e)}</div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.") : L(`Datos de ${esc(sourceName(e))}. Confirma en la web oficial antes de ir.`, `Dades de ${esc(sourceName(e))}. Confirma-ho al web oficial abans d'anar-hi.`)}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);
+    // Algún dato muy largo (horario de varios días, lugar u organizador con nombre largo): dos cajas por fila, no cuatro estrechas.
+    const facts = document.querySelector('#sheet .facts'); if (facts && [...facts.querySelectorAll(':scope > div:not(.fact-wide) > b')].some(b => b.textContent.length > 45)) facts.classList.add('facts-long');
   } catch (_) {}
 }
 // Sin organizador declarado pero con la web oficial que publica la ficha (en
@@ -1028,6 +1068,18 @@ function mountSheetMap(e) {
   window.L.circleMarker(point, {radius: 9, color: '#ffffff', weight: 3, fillColor: '#6d5bd0', fillOpacity: 1}).addTo(sheetMap);
   setTimeout(() => sheetMap && sheetMap.invalidateSize(), 60);
 }
+// Añadir al calendario (22-10-2026): iPhone (.ics que Safari abre con «Añadir al calendario») y
+// Google Calendar. Lo sirve functions/cal/[[path]].js con el hueco ya calculado al exportar
+// (src/publish_static.py, calendar_days): el día que se mira y solo la hora que publica la fuente.
+// Solo en la web publicada: el servidor local no tiene esa función.
+function calendarMenu(k, e) {
+  if (!STATIC) return '';
+  const day = e.occurrence_date || (e.start === e.end ? e.start : state.day);
+  const base = eventPath(k).replace(/^(?:\/v2)?\/e\//, '/cal/') + '?d=' + encodeURIComponent(day);
+  const apple = `<a class="sheet-link" href="${esc(base)}">iPhone</a>`, gcal = `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(base + '&g=1')}">Google Calendar ↗</a>`;
+  const ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+  return `<details class="cal-menu"><summary class="save-link">▦ ${t('Añadir al calendario')}</summary><div class="cal-options">${ios ? apple + gcal : gcal + apple}</div></details>`;
+}
 async function shareEvent(k) {
   const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Ontoca';
   // En WhatsApp el enlace ya trae foto, título, cuándo y dónde (vista previa); el texto lo resume por si no carga.
@@ -1043,7 +1095,7 @@ function toggleSave(k) { state.saved = state.saved.includes(k) ? state.saved.fil
 
 /* ---------- orchestration ---------- */
 async function refresh({scroll = false} = {}) {
-  syncUrl(); days(); chips(); hours(); renderActive();
+  channelView(); syncUrl(); days(); chips(); hours(); renderActive();
   if (scroll) scrollToId('agenda');
   await Promise.all([agenda(), selection(), loadDistricts()]);
 }
@@ -1053,7 +1105,7 @@ document.addEventListener('click', e => {
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
   if (button.id === 'lang') { const next = LANG === 'ca' ? 'es' : 'ca'; try { localStorage.setItem('brollant-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href); return }
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
-  if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); scrollToId('agenda'); agenda(); return }
+  if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
@@ -1106,9 +1158,9 @@ $('dayPicker').addEventListener('click', e => { try { e.target.showPicker() } ca
 $('dayPicker').addEventListener('change', e => { if (!e.target.value) return; state.day = e.target.value; state.range = ''; refresh() });
 $('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
 $('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });
-$('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.query = e.target.value.trim(); syncUrl(); days(); renderActive(); agenda() }, 250) });
+$('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.query = e.target.value.trim(); channelView(); syncUrl(); days(); renderActive(); agenda() }, 250) });
 // Enter keeps the typed text and applies it at once (the form must never submit: that would reload the page without the query).
-$('searchForm').addEventListener('submit', e => { e.preventDefault(); clearTimeout(searchTimer); state.query = $('searchInput').value.trim(); syncUrl(); days(); renderActive(); agenda(); $('searchInput').blur(); scrollToId('agenda') });
+$('searchForm').addEventListener('submit', e => { e.preventDefault(); clearTimeout(searchTimer); state.query = $('searchInput').value.trim(); channelView(); syncUrl(); days(); renderActive(); agenda(); $('searchInput').blur(); scrollToId('agenda') });
 function setHours(changed) {
   let from = Number($('hourFrom').value), to = Number($('hourTo').value);
   if (changed === 'from' && from > to) { to = from; $('hourTo').value = to } if (changed === 'to' && to < from) { from = to; $('hourFrom').value = from }
@@ -1143,7 +1195,8 @@ function typeHero() {
 
 (async () => {
   let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}
-  if (SKIN === 'v2') theme = 'light';  // la versión 2 solo tiene modo claro  // oscuro por defecto; el usuario puede cambiarlo y se recuerda
+  // v1: oscuro por defecto. v2 (22-10-2026): sigue el modo del sistema. En las dos, el botón sol/luna lo cambia y se recuerda.
+  if (SKIN === 'v2') { let saved = null; try { saved = pref('theme') } catch (_) {} theme = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') }
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();

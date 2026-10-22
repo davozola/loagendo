@@ -162,8 +162,16 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .sheet h2{font-size:clamp(26px,4vw,38px);line-height:1.05;letter-spacing:-.035em;margin:14px 0 20px;text-wrap:balance}
 .detail-hero{margin:0 0 18px;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:var(--bg)}.detail-hero img{display:block;width:100%;height:min(42vh,340px);object-fit:cover}.detail-hero figcaption{padding:8px 12px;color:var(--soft);font-size:12px}
 .detail-poster{min-height:150px;margin:0 0 18px;padding:20px;border:1px solid var(--line2);border-radius:18px;background:radial-gradient(circle at 85% 15%,rgba(196,181,253,.45),transparent 36%),linear-gradient(135deg,#37304f,#17171c 64%);display:flex;flex-direction:column;justify-content:end;gap:8px;color:#fff}.detail-poster span{color:#ddd6fe;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.detail-poster strong{max-width:92%;font-size:22px;line-height:1.08;letter-spacing:-.025em}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;border:1px solid var(--line);background:var(--line);border-radius:16px;overflow:hidden}
-.facts div{background:var(--surface);padding:12px 14px}
+.facts{display:flex;flex-wrap:wrap;gap:1px;border:1px solid var(--line);background:var(--line);border-radius:16px;overflow:hidden}
+/* Flex en vez de rejilla (22-10-2026): cada fila se reparte entre sus cajas, sin huecos vacíos al final. */
+.facts div{background:var(--surface);padding:12px 14px;flex:1 1 150px;min-width:0;overflow-wrap:anywhere}
+/* Cinco cajas: 3 + 2 mejor que 4 + 1 (una sola caja suelta en la segunda fila). */
+@media (min-width:600px){.facts:has(>div:nth-child(5):not(.fact-wide))>div{flex-basis:180px}}
+.facts.facts-long>div{flex-basis:240px}
+.facts .fact-wide{flex-basis:100%}
+.fact-lines{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:4px}
+.fact-lines li{font-size:15px;line-height:1.35}
+.fact-lines li:first-child{font-weight:700}
 .facts small{display:block;color:var(--soft);font-size:12px}
 .facts b{font-size:15px;display:block}
 .sheet-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
@@ -184,6 +192,10 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .venue-what{display:grid;min-width:0;line-height:1.25}.venue-what b{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.venue-what small{font-size:12px;color:var(--soft)}
 .venue-go{font-size:22px;color:var(--soft)}
 .share-link{gap:6px}
+.cal-menu{position:relative}
+.cal-menu>summary{list-style:none;cursor:pointer;gap:6px}
+.cal-menu>summary::-webkit-details-marker{display:none}
+.cal-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 
 /* responsive */
 @media(max-width:1100px){.curated{grid-template-columns:repeat(3,minmax(0,1fr))}.pick-large{grid-column:span 3;grid-row:auto}.pick-large .pick-media{height:220px}}
@@ -414,3 +426,8 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .sheet-cta-main,.sheet-cta-map{margin:14px 0 0}
 .sheet-cta-main .source-link,.sheet-cta-map .cta-secondary{width:100%}
 .sheet-venue-link{margin:18px 0 0}.sheet-venue-link .linklike{font-size:15px;padding:6px 0}
+
+/* Inauguración / clausura de una exposición (22-10-2026) */
+.ms-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--accentSoft);color:var(--accentText);margin:0 0 4px;width:max-content}
+.ev-body .ms-tag{display:block}
+.sheet-ms{margin:6px 0 12px;font-size:14px;color:var(--muted)}.sheet-ms .ms-tag{margin:0 2px 0 0;vertical-align:1px}

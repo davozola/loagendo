@@ -45,7 +45,8 @@ STATIC_FILES = ('public.css', 'public.js', 'public-v2.css',
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit')
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
+                        'milestone', 'milestone_link', 'opening')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -211,6 +212,7 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
     if event.get('age_source'): out['ag'] = [event['age_min'], 99 if event.get('age_max') is None else event['age_max']]  # franja de edad
     if event.get('series'): out['se'] = event['series']  # serie que la web agrupa en una fila
+    if event.get('milestone'): out['ms'] = event['milestone']['kind'][:2]  # «op» inauguración, «cl» clausura (src/milestones.py)
     if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0]  # festival (src/festivals.py)
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
@@ -259,6 +261,84 @@ DAYS_ES = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
 GENERIC_TIME = {'Varios días', 'Exposición', 'Hora no indicada', ''}
 
 
+# Solo «19:00» con dos puntos (como la web, public.js): «12.50» puede ser un precio.
+_CLOCK = re.compile(r'\b([01]?\d|2[0-3]):([0-5]\d)(?!\d)')
+_RANGE = re.compile(r'\b([01]?\d|2[0-3]):([0-5]\d)\s*[–-]\s*([01]?\d|2[0-3]):([0-5]\d)(?!\d)')
+
+
+def _clocks(text):
+    return sorted({f'{int(h):02d}:{m}' for h, m in _CLOCK.findall(str(text or ''))})
+
+
+def _slot(text, times=None):
+    """Hueco de calendario de un día, solo con lo que dice la fuente:
+    «19:00-21:00» (rango publicado), «19:00» (hora de inicio, sin fin), «S19:00,21:00»
+    (varias sesiones: día completo con las horas en la nota) o «» (día completo, sin hora)."""
+    text, explicit = str(text or ''), sorted(set(times or []))
+    ranges = _RANGE.findall(text)
+    if ranges:
+        opens = f'{int(ranges[0][0]):02d}:{ranges[0][1]}'
+        # El rango vale si no hay sesiones fechadas o si la única sesión empieza a esa hora.
+        if not explicit or explicit == [opens]: return f'{opens}-{int(ranges[-1][2]):02d}:{ranges[-1][3]}'
+    times = explicit or _clocks(text)
+    if len(times) == 1: return times[0]
+    if len(times) > 1: return 'S' + ','.join(times)
+    return ''
+
+
+def calendar_days(detail, today, horizon_days=HORIZON_DAYS):
+    """Qué se añade al calendario cada día del acto ({día: hueco}, ver _slot), desde hoy y
+    dentro del horizonte publicado. Nunca inventa: sin hora publicada, día completo; sin
+    hora de fin, solo la de inicio. Los días válidos son los de la propia ficha: sesiones
+    fechadas, días del horario oficial (hours_by_day) o, si no hay, todos los del periodo."""
+    start, end = detail.get('start') or '', detail.get('end') or ''
+    if not start: return {}
+    end = end or start
+    first, last = max(start, today.isoformat()), min(end, (today + dt.timedelta(days=horizon_days)).isoformat())
+    if first > last: return {}
+    label, base = detail.get('time_label') or '', detail.get('time') or ''
+    general = '' if label in GENERIC_TIME else label
+    occ = {}
+    for o in detail.get('occurrences') or []:
+        d = str(o.get('date') or '')[:10]
+        if first <= d <= last: occ.setdefault(d, set()).update(_clocks(o.get('time')))
+    by_day = {d: v for d, v in (detail.get('hours_by_day') or {}).items() if first <= d <= last}
+    out = {}
+    if occ:
+        for d, times in occ.items():
+            if times: out[d] = _slot(by_day.get(d) or general or base, times)
+            else: out[d] = _slot(by_day.get(d, general if start == end else ''))
+    elif by_day and start != end:
+        out = {d: _slot(v) for d, v in by_day.items()}
+    elif start == end:
+        out = {start: _slot(f'{general} {base}' if general and base and base not in general else general or base)}
+    else:
+        slot = _slot(general)
+        day = dt.date.fromisoformat(first)
+        while day.isoformat() <= last:
+            out[day.isoformat()] = slot; day += dt.timedelta(days=1)
+    return dict(sorted(out.items()))
+
+
+def packed_calendar(detail, today):
+    """Como packed_hours, {hueco: [días desde el inicio]}, pero los días seguidos van como
+    [desde, hasta]: una exposición de seis meses abierta cada día ocupa un par de números."""
+    days = calendar_days(detail, today)
+    if not days: return None
+    base = dt.date.fromisoformat(detail['start'])
+    offsets = {}
+    for day, slot in days.items(): offsets.setdefault(slot, []).append((dt.date.fromisoformat(day) - base).days)
+    out = {}
+    for slot, ns in offsets.items():
+        runs = []
+        for n in ns:
+            if runs and isinstance(runs[-1], list) and runs[-1][1] == n - 1: runs[-1][1] = n
+            elif runs and isinstance(runs[-1], int) and runs[-1] == n - 1: runs[-1] = [runs[-1], n]
+            else: runs.append(n)
+        out[slot] = runs
+    return out
+
+
 def share_card(detail, today):
     """Lo que se ve al compartir el enlace (WhatsApp, Telegram, redes): título, cuándo, dónde,
     una frase de la descripción y la imagen. Solo datos que ya publica la ficha."""
@@ -282,7 +362,9 @@ def share_card(detail, today):
     return {'t': detail.get('title') or '', 'w': when, 'v': venue, 'd': text, 'p': price,
             'i': media[0]['url'] if media else '', 'a': start, 'b': end, 'tm': detail.get('time') or '',
             'g': [detail['coordinates']['lat'], detail['coordinates']['lon']] if detail.get('coordinates') else None,
-            'ad': ((detail.get('venues') or [{}])[0] or {}).get('address') or ''}
+            'ad': ((detail.get('venues') or [{}])[0] or {}).get('address') or '',
+            # Añadir al calendario (functions/cal/[[path]].js): hueco por día y web oficial del acto.
+            'k': packed_calendar(detail, today), 'o': ((detail.get('official_page') or {}).get('url') or '') if str((detail.get('official_page') or {}).get('url') or '').startswith('https://') else ''}
 
 
 def shard_of(key):
@@ -389,6 +471,13 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for e in events:
         detail = catalog.event_detail(conn, e['source'], e['id'])
         if detail is not None: details[e['key']] = detail
+    # Inauguración ↔ exposición del mismo espacio, cuando tenemos las dos (src/milestones.py).
+    from src.milestones import link as _link_milestones
+    to_expo, to_act = _link_milestones(events)
+    for k, v in to_expo.items():
+        if k in details: details[k]['milestone_link'] = v
+    for k, v in to_act.items():
+        if k in details: details[k]['opening'] = v
     hidden, link_report = check_links(conn, list(details.values()), link_fetcher)
     catalogue = [compact(e, images, full=False) for e in events]
     _write_json(out / 'data' / 'taxonomy.json', taxonomy.public_labels(events))
@@ -432,7 +521,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         detail['lineup_times'] = e.get('lineup_times') or detail.get('lineup_times') or []
         public = public_detail(detail, images, hidden)
         shards.setdefault(shard_of(e['key']), {})[e['key']] = public
-        cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media']}, today)
+        cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media'], 'official_page': public.get('official_page')}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
     for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
@@ -460,7 +549,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     # /e/* lo sirve la función functions/e/[[path]].js: la app con la vista previa para compartir
     # (título, foto, cuándo y dónde). Una regla de _redirects aquí le quitaría la ruta.
     (out / '_redirects').write_text('', encoding='utf-8')
-    (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
+    (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
     base = site_url.rstrip('/') if site_url else ''
     soon_sitemap = (today + dt.timedelta(days=45)).isoformat()
     urls = [f'{base}/', f'{base}/creditos.html'] + [f'{base}/?day={day}' for day in list(days)[:60]] + [f'{base}/e/{e["source"]}/{e["id"]}' for e in events if e['start'] <= soon_sitemap]
