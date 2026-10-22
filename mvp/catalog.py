@@ -260,6 +260,12 @@ def source_time(raw,source):
         dates=(((raw.get('item') or {}).get('calendar') or {}).get('dates') or [''])[0]
         m=re.fullmatch(r'(\d{8})T(\d{2})(\d{2})\d{2}/(\d{8})T(\d{2})(\d{2})\d{2}',str(dates))
         if m and m.group(1)==m.group(4) and m.group(2,3)!=('00','00'): return f'{m.group(2)}:{m.group(3)}–{m.group(5)}:{m.group(6)}'
+    if source=='web_graf':
+        # GRAF publica también la hora de fin (DTEND del iCal): en actos de un día, «18:00–21:00» (22-10-2026).
+        norm=raw.get('normalized') or {}; at=str(norm.get('time_text') or ''); until=str((raw.get('item') or {}).get('time_end') or '')
+        if norm.get('start') and norm.get('start')==norm.get('end') and re.fullmatch(r'\d{2}:\d{2}',at) and re.fullmatch(r'\d{2}:\d{2}',until) and until!=at:
+            return f'{at}–{until}'
+        return at
     if source.startswith(('web_','venue_')):return str((raw.get('normalized') or {}).get('time_text') or '')
     return str(raw.get('observacions_horari') or '')
 
@@ -650,6 +656,8 @@ def public_fields(event, projection, requested_day='', schedule_time=''):
     conflict=(event.get('time_conflicts') or {}).get(requested_day or event['start'])
     if conflict: time_label=' / '.join(conflict)
     elif day_hours and time_source=='official_schedule_by_day': time_label=day_hours  # «09:00–18:00»: abre y cierra
+    # Acto de un día con hora de fin publicada («18:00–21:00»): se muestra el rango, no solo el inicio.
+    elif time and event['start']==event['end'] and str(projection.get('schedule_range') or '').startswith(time+'–'): time_label=projection['schedule_range']
     elif time: time_label=time
     elif projection.get('hours_label'): time_label=projection['hours_label']
     elif event['start']!=event['end'] and event['kind']=='exhibition': time_label='Exposición'
@@ -871,7 +879,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=30  # 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=31  # 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -948,7 +956,7 @@ def project_raw(source, id, title, start, end, kind, url, raw):
     lineup,lineup_times=lineup_of(raw)
     return {'v':PROJECTION_VERSION,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
             'family_audience':family_audience(raw,source,title),'price_label':split_price(price)[0] or None,'is_free':is_free(price,free_label),
-            'schedule_text_time':schedule_time,'hours_label':hours_label,'url':links[0]['url'] if links else None,
+            'schedule_text_time':schedule_time,'hours_label':hours_label,'schedule_range':(lambda t:t if re.fullmatch(r'\d{2}:\d{2}–\d{2}:\d{2}',t) else '')(str(source_time(raw,source) or '').strip()),'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
             # Texto de la fuente para la extracción con IA (src/ai_extract.py): descripción, horario y precio tal cual.
             'ai_text':'\n\n'.join(x for x in (description.strip()[:2500],('Horari: '+str(source_time(raw,source)).strip()) if str(source_time(raw,source) or '').strip() else '',('Preu: '+str(price).strip()) if str(price or '').strip() else '') if x),
