@@ -808,7 +808,13 @@ function renderAgenda() {
   if (group && !group.dataset.v3) {
     group.dataset.v3 = '1'; fmt.hidden = true; fmt.value = '';
     const legend = group.querySelector('legend'); if (legend) legend.textContent = L('Talleres y cursos', 'Tallers i cursos');
+    // La casilla que da sentido al apartado (22-10-2026: el apartado salía vacío, solo con el desplegable oculto).
+    const sw = document.createElement('label'); sw.className = 'switch';
+    sw.innerHTML = `<input id="startedOnly" type="checkbox"><span>${esc(L('Incluir los que ya han empezado', 'Incloure els que ja han començat'))}</span>`;
+    group.appendChild(sw);
+    sw.querySelector('input').addEventListener('change', ev => { state.started = ev.target.checked; refresh() });
   }
+  const startedBox = $('startedOnly'); if (startedBox) startedBox.checked = Boolean(state.started);
   if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
   else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].filter(onePlace).slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
