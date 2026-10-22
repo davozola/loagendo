@@ -729,6 +729,34 @@ def source_links(raw,source,url):
         try:p.feed(str((raw.get('localizaciones') or [{}])[0].get('descripcio_html') or ''))
         except Exception:pass
         for u in p.hrefs[:6]:links.append({'label':'Enlace citado en la descripción','url':u,'verified':False})
+    # Enlaces que la fuente trae en sus datos y antes no se guardaban (22-10-2026): la web propia
+    # del acto, la de la sala u organizador, las entradas y las inscripciones. Solo lo que viene en
+    # el registro; nada se deduce.
+    item=raw.get('item') if isinstance(raw.get('item'),dict) else {}
+    def add(label,u):
+        if isinstance(u,str) and u.strip().startswith(('https://','http://')): links.append({'label':label,'url':u.strip(),'verified':False})
+    if source=='web_graf': add('Web del evento',item.get('event_web'))
+    if source=='generalitat':
+        for group in ('organizadores','localizaciones'):
+            for x in raw.get(group) or []:
+                if isinstance(x,dict): add('Entradas',x.get('linkbotoentrades'))
+        for x in raw.get('organizadores') or []:
+            if isinstance(x,dict): add('Web del organizador',x.get('url_organitzador'))
+        for x in raw.get('localizaciones') or []:
+            if isinstance(x,dict): add('Web de la sala',x.get('url'))
+    if source=='diba_bibliotecas': add('Inscripciones',raw.get('url_inscripcions'))
+    if source=='diba_turismo': add('Web del evento',raw.get('url_general'))
+    if source=='guiabcn': add('Web del evento',(raw.get('api_item') or {}).get('code_url') if isinstance(raw.get('api_item'),dict) else '')
+    if source.startswith('venue_') and item:
+        # schema.org de la sala: la página del acto (@id, url, la película de un cine) y la web del recinto.
+        # Las páginas de agregadores y ticketeras (DICE, Songkick, Ticketmaster, Xceed, Eventbrite) no cuentan.
+        agg=('dice.fm','songkick.com','ticketmaster.','xceed.me','eventbrite.','feverup.com')
+        def own(u): return isinstance(u,str) and u.startswith(('https://','http://')) and not any(a in u for a in agg)
+        for u in (item.get('@id'),item.get('url'),(item.get('workPresented') or {}).get('@id') if isinstance(item.get('workPresented'),dict) else ''):
+            if own(u) and u.split('#')[0].rstrip('/')!=str(url or '').split('#')[0].rstrip('/'): add('Web del evento',u.split('#')[0])
+        loc=item.get('location') if isinstance(item.get('location'),dict) else {}
+        for u in (loc.get('sameAs'),loc.get('url')):
+            if own(u): add('Web de la sala',u)
     out=[];seen=set()
     for link in links:
         u=link['url'].strip()

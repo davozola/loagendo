@@ -995,7 +995,7 @@ async function openDetail(k, focus, opts = {}) {
     // Descripción breve automática (IA) encima del texto original, para comparar; nunca lo sustituye.
     // Resumen y recomendación escritos por IA: fuera de la ficha pública hasta evaluarlos (22-10-2026).
     const brief = '';
-    const description = `${brief}<section class="sheet-copy">${paragraphs}${text ? `<small class="copy-credit">${t('Texto de')} ${esc(sourceName({source_label: e.description_credit || e.source_label}))}</small>` : ''}</section>`;
+    const description = `${brief}<section class="sheet-copy">${paragraphs}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     const scheduleBits = [conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`) : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`) : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
@@ -1016,12 +1016,11 @@ async function openDetail(k, focus, opts = {}) {
     const map = e.coordinates && !manyPlaces ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div></a></section><div class="sheet-cta sheet-cta-map"><a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a></div>` : '';
     // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
     const upcoming = realSite && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`))} ›</button></p>` : '';
-    const main = mainLink(e);
-    // 22-10-2026: el enlace a la fuente va debajo del texto; «Cómo llegar», debajo del mapa.
+    const all = sheetLinks(e), main = all[0] || null;
     const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
-    // Si el botón lleva a la web original, la ficha del agregador queda como enlace secundario.
-    const viaAgg = main && safeurl(e.url) && main.url !== safeurl(e.url) ? `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(e.url))}">${esc(L(`Ver en ${sourceName(e)}`, `Mostra a ${sourceName(e)}`))} ↗</a>` : '';
-    const links = viaAgg + (e.links || []).filter((l, i, all) => safeurl(l.url) && l.url !== e.url && l.url !== main?.url && all.findIndex(x => x.label === l.label || x.url === l.url) === i && l.label !== 'Página de la fuente' && !(l.label === 'Web del evento' && !e.organizers?.length)).slice(0, 2).map(l => `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(safeurl(l.url))}">${esc(linkLabel(l.label))} ↗</a>`).join('');
+    // Debajo, el resto en el mismo orden (sin repetir tipo salvo entradas/inscripciones distintas), y la fuente al final.
+    const rest = all.slice(1), useful = rest.filter(x => x.kind !== 'fuente' && x.kind !== 'social').slice(0, 3), social = rest.filter(x => x.kind === 'social').slice(0, 1), source = rest.filter(x => x.kind === 'fuente').slice(0, 1);
+    const links = [...useful, ...social, ...source].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
     $('sheet').innerHTML = `<div class="sheet-top"><span data-cat="${esc(e.public_category || e.category || '')}">${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${msLine(e)}${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}${priceFact(e)}${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button>${calendarMenu(k, e)}</div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.") : L(`Datos de ${esc(sourceName(e))}. Confirma en la web oficial antes de ir.`, `Dades de ${esc(sourceName(e))}. Confirma-ho al web oficial abans d'anar-hi.`)}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);
@@ -1040,18 +1039,44 @@ function sourceName(e) { return String(e.source_label || 'la fuente').split(' ·
 function linkLabel(label) {
   return L(label, String(label || '').replace(/^Ficha en /, 'Fitxa a ').replace(/^En /, 'A '));
 }
-function mainLink(e) {
-  const own = safeurl(e.url);
-  if (own && e.link_label) return {url: own, label: t(e.link_label)};
-  const host = u => { try { return new URL(u).hostname.replace(/^www\./, '') } catch (_) { return '' } };
-  const official = safeurl(e.official_page?.url);
-  const web = (e.links || []).map(l => l.label === 'Web del evento' ? safeurl(l.url) : '').find(u => u && new URL(u).pathname.replace(/\/+$/, '').length > 3);
-  const first = e.data_origin === 'centro' ? '' : (official || web);  // si la fuente es el propio centro, su enlace ya es el original
-  if (first && first !== own) return {url: first, label: L('Web oficial', 'Web oficial')};  // el dominio largo no cabe en el botón
-  // «Datos de la sala», «Agenda …»: nombre genérico de lector de sala → el dominio, que dice más.
-  const name = /^(datos|dades|agenda|web)\b/i.test(sourceName(e)) ? host(own) : sourceName(e);
-  return own ? {url: own, label: L(`Ver en ${name}`, `Mostra a ${name}`)} : null;
+// Enlaces de la ficha (22-10-2026): el botón lleva a lo más cercano al acto, por este orden:
+// 1) su web propia (una página concreta, no la portada de un dominio), 2) inscripciones,
+// 3) entradas, 4) web de la sala u organizador (y las portadas). La ficha de la fuente que lo
+// recoge solo es el botón si no hay nada de eso; si no, queda como enlace pequeño al final.
+const LINK_RANK = {evento: 0, inscripcion: 1, entradas: 2, sala: 3, social: 4, fuente: 5};
+const LINK_NAME = {evento: () => L('Web del evento', "Web de l'esdeveniment"), inscripcion: () => L('Inscripción', 'Inscripció'), entradas: () => L('Entradas', 'Entrades'), sala: () => L('Web de la sala', 'Web de la sala')};
+const urlHost = u => { try { return new URL(u).hostname.replace(/^www\./, '') } catch (_) { return '' } };
+// Portada de un dominio («auditori.cat/ca/»); las webs de una sola página con rutas tras «#/» (h2o.es/#/ca/exposicion/438) no lo son.
+const isHome = u => { try { const x = new URL(u), path = (x.pathname + (x.hash.startsWith('#/') ? x.hash.slice(1) : '')).replace(/\/+/g, '/'); return path.replace(/^\/(?:ca|es|en|cat|esp|eng)(?=\/|$)/, '').replace(/\/+$/, '').length <= 1 } catch (_) { return true } };
+// Páginas genéricas del Ajuntament (la del distrito, «ajuntament.barcelona.cat/sants-montjuic»): no dicen nada del acto.
+const isCityPortal = u => { try { const x = new URL(u); return /(^|\.)barcelona\.cat$/.test(x.hostname) && !/guia\.barcelona/.test(x.hostname) && x.pathname.split('/').filter(Boolean).length <= 2 } catch (_) { return false } };
+function linkKind(l, e) {
+  const label = String(l.label || ''), u = safeurl(l.url) || '';
+  if (!u) return '';
+  if (/whatsapp|drive\.google|docs\.google|geoportal|seuelectronica|safelinks|open\.spotify|linktr\.ee/i.test(u) || isCityPortal(u)) return '';
+  if (u === safeurl(e.url)) return e.data_origin === 'centro' ? 'evento' : 'fuente';  // si la fuente es el propio centro, su página es la del acto
+  if (/^(Página de la fuente|Ficha en |En |Butlletí)/.test(label)) return 'fuente';
+  if (/^(Facebook|Instagram|YouTube|LinkedIn)/.test(label) || /facebook\.com|instagram\.com|youtube\.com|linkedin\.com/i.test(u)) return 'social';
+  if (/^Inscripci/.test(label) || /inscripcions|inscripcionscc|\/\/reserva\.|registre_cursos/i.test(u)) return 'inscripcion';
+  if (/^(Entradas|Venta de entradas)/.test(label) || /ticket|\/\/entrades\.|\/\/entradas\.|entradium|entrapolis|koobin|weeztix|fourvenues|passline|vivaticket|admit-one|codetickets/i.test(u)) return 'entradas';
+  if (/^(Web de la sala|Web del organizador)/.test(label)) return 'sala';
+  return isHome(u) ? 'sala' : 'evento';
 }
+function sheetLinks(e) {
+  const own = safeurl(e.url), list = [];
+  // Ficha de una sala solo con su web o sus entradas (política de la fuente): ese es el enlace.
+  if (own && e.link_label) list.push({url: own, kind: e.link_label === 'Entradas' ? 'entradas' : 'sala', label: t(e.link_label)});
+  const official = safeurl(e.official_page?.url);
+  if (official) list.push({url: official, kind: isHome(official) ? 'sala' : 'evento'});
+  for (const l of e.links || []) { const kind = linkKind(l, e); if (kind) list.push({url: safeurl(l.url), kind, label: kind === 'social' || (kind === 'fuente' && l.label !== 'Página de la fuente') ? linkLabel(l.label) : kind === 'fuente' ? L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`) : ''}) }
+  // La página de la fuente: si la fuente es el propio centro, esa página ya es la del acto.
+  if (own && !e.link_label) list.push({url: own, kind: e.data_origin === 'centro' ? 'evento' : 'fuente', label: e.data_origin === 'centro' ? '' : L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`)});
+  const seen = new Set(), key = u => u.split('#')[0].replace(/^http:/, 'https:').replace('://www.', '://').replace(/\/+$/, '');
+  const out = list.filter(x => x.url && !seen.has(key(x.url)) && seen.add(key(x.url))).sort((a, b) => LINK_RANK[a.kind] - LINK_RANK[b.kind]);
+  for (const x of out) if (!x.label) x.label = x.kind === 'sala' && isHome(x.url) ? urlHost(x.url) : LINK_NAME[x.kind]();
+  return out;
+}
+function mainLink(e) { const first = sheetLinks(e)[0]; return first ? {url: first.url, label: first.label} : null }
 function organizerBox(e) {
   if (e.organizers?.length) return `<div><small>${t('Organiza')}</small><b>${esc(e.organizers.join(' · '))}</b></div>`;
   const web = (e.links || []).find(l => l.label === 'Web del evento' && safeurl(l.url));
