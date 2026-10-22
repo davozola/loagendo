@@ -175,7 +175,7 @@
     "owner": "GRAF — comunitat de creació contemporània de Catalunya (graf.cat)",
     "dataset": "Agenda de GRAF: feed iCal público (https://graf.cat/feed/eo-events/) + ficha pública de cada acto",
     "data_reuse_status": "editorial_decision_full_use",
-    "license_basis": "Agenda pública sin licencia explícita (robots.txt permite el rastreo; feed iCal público). Uso completo (textos e imágenes) por decisión editorial de David Sola, 20-10-2026, con crédito a GRAF y al espacio y enlace a la ficha. Pendiente de confirmar con info@graf.cat.",
+    "license_basis": "Agenda pública sin licencia explícita (robots.txt permite el rastreo; feed iCal público). Uso completo (textos e imágenes) por decisión editorial de David Sola, 20-10-2026, con crédito a GRAF y al espacio y enlace a la ficha. Pendiente de confirmar con info@graf.cat. 22-10-2026 (David): en la ficha, el crédito de la imagen es el espacio que la publica («Imagen: <espacio>»); GRAF queda acreditado en la página de créditos y en los datos internos.",
     "attribution": "GRAF (graf.cat)",
     "update_date_required": true,
     "image_reuse_confirmed": true,

@@ -985,6 +985,18 @@ function priceFact(e) {
   if (text.length <= 32 && parts.length < 2) return `<div><small>${t('Precio')}</small><b>${esc(text)}</b></div>`;
   return `<div class="fact-wide"><small>${t('Precio')}</small><ul class="fact-lines">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
 }
+// Crédito de la imagen (22-10-2026): quien tiene la imagen, no el agregador que la recoge. GRAF publica
+// la imagen que manda cada espacio → el espacio; las fuentes municipales → el Ajuntament (CC BY en Open Data);
+// la foto del equipamiento conserva su crédito y su enlace al original. La fuente sigue en los datos y en Créditos.
+function imageCredit(e, m) {
+  const c = m.credit || {}, attr = String(c.attribution || c || '');
+  if (!attr && !c.source) return '';
+  if (m.fallback) return `© ${attr}`;
+  let who = attr.split(' — ')[0].replace(/\s*\([^)]*\)/g, '').trim();
+  if (c.source === 'web_graf') who = e.organizers?.[0] || String(e.venue_names?.[0] || '').split(' · ')[0] || who;
+  else if (c.source === 'opendatabcn_agenda' || c.source === 'guiabcn') who = 'Ajuntament de Barcelona';
+  return who ? `${L('Imagen', 'Imatge')}: ${who}` : '';
+}
 async function openDetail(k, focus, opts = {}) {
   const [source, ...rest] = k.split(':'), id = rest.join(':');
   try {
@@ -1006,7 +1018,7 @@ async function openDetail(k, focus, opts = {}) {
     const names = e.lineup || [];
     const lineup = timed.length ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${timed.map(x => `${esc(x.time)} ${esc(x.name)}`).join(' · ')}${names.length > timed.length ? ` · ${esc(names.filter(n => !timed.some(x => x.name === n)).join(' · '))}` : ''}</p>`
       : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
-    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${[e.media[0].alt && fold(e.media[0].alt) !== fold(e.title) ? esc(e.media[0].alt) : '', e.media[0].credit ? `© ${esc(e.media[0].credit.attribution || e.media[0].credit)}` : ''].filter(Boolean).join(' · ')}${safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Ontoca · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
+    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${[e.media[0].alt && fold(e.media[0].alt) !== fold(e.title) ? esc(e.media[0].alt) : '', esc(imageCredit(e, e.media[0]))].filter(Boolean).join(' · ')}${e.media[0].fallback && safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Ontoca · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
     const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
     const site = String(e.venue_names?.[0] || e.venues?.[0]?.name || '').split(' · ')[0];
     // «Diferents espais», «Diversos centres cívics», «Recorregut: …» no son un espacio (22-10-2026):
