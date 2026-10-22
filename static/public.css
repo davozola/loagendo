@@ -409,3 +409,8 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .hl-tag.hl-last,.hl-tag.hl-lastday{color:#f5b84a}
 .hl-tag.hl-premiere{color:#7ee0c3}
 .hl-tag.hl-onlytoday{color:#f59ac0}
+
+/* Ficha (22-10-2026): enlace a la fuente bajo el texto, «Cómo llegar» bajo el mapa y otros planes del espacio como enlace */
+.sheet-cta-main,.sheet-cta-map{margin:14px 0 0}
+.sheet-cta-main .source-link,.sheet-cta-map .cta-secondary{width:100%}
+.sheet-venue-link{margin:18px 0 0}.sheet-venue-link .linklike{font-size:15px;padding:6px 0}
