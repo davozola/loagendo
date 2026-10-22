@@ -33,6 +33,8 @@ Este fichero es el volcado literal de lo que Claude tenía guardado en memoria s
 - Las imágenes de la API/dataset municipal (Open Data BCN y GuiaBCN) pueden usarse en Loagendo sin restricciones (12-10-2026).
 - Los agregadores privados de conciertos (Conciertos.Club, Songkick, etc.) sí se usan, pero solo para descubrir y contrastar (double check con un par de ellos); en público la ficha enlaza a la sala, el promotor, la fuente pública o la ticketera, sin mencionar que el dato viene del agregador. Objetivo: tener todos los conciertos (12-10-2026, revisada el mismo día).
 - Integrar los JSON-LD de las ticketeras como fuente de eventos privados (música de sala, teatro comercial); cree que a ellas les interesa la difusión de sus eventos (13-10-2026).
+- Enlaces rotos (22-10-2026): antes de cada publicación se comprueban los enlaces externos de las fichas (src/link_check.py). Los que dan 404/410/5xx, o no responden dos veces seguidas, no se muestran en la web hasta que vuelven a responder; no se borran (estado e historial en link_checks/link_check_log). 401/403/429 se publican. El readiness los cuenta en «external_links». Origen: las fichas de evento de graf.cat devolvían un error 500 de WordPress.
+- Enlaces a otra fuente del mismo acto: con el nombre corto de la fuente («En GRAF», en catalán «A GRAF»), no con el nombre largo del registro (22-10-2026).
 
 ## Fase y forma de trabajar
 

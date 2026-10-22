@@ -195,7 +195,7 @@ def day_highlights(items, day, size=None, floor=60):
     pool.sort(key=lambda e: (-e['featured_score'], catalog.featured_rotation(e, day)))
     return [e['key'] for e in catalog.spread_venues(catalog.one_per_title(pool))][:size]
 
-def compact(event, images, full=True):
+def compact(event, images, full=True, hidden=frozenset()):
     """The listing record the browser needs, with short keys to keep files small.
 
     The catalogue (``full=False``) carries only what filtering, ranking and the
@@ -229,11 +229,11 @@ def compact(event, images, full=True):
     for item in event.get('media', [])[:MAX_IMAGES_PER_EVENT]:
         exported = images.item(item)
         if exported: media.append({'u': exported['url'], 'alt': item.get('alt') or '', 'cr': exported['credit']['attribution'], **({'fb': 1} if item.get('fallback') else {})}); break
-    out.update({'sl': event['source_label'], 'c': event['category'], 'su': (event['summary'] or '')[:200], 'pl': event['price_label'] or '', 'm': media, 'u': event['url'] or ''})
+    out.update({'sl': event['source_label'], 'c': event['category'], 'su': (event['summary'] or '')[:200], 'pl': event['price_label'] or '', 'm': media, 'u': '' if event['url'] in hidden else (event['url'] or '')})
     return out
 
 
-def public_detail(detail, images):
+def public_detail(detail, images, hidden=frozenset()):
     out = {k: detail.get(k) for k in PUBLIC_DETAIL_FIELDS}
     out['hours_by_day'] = packed_hours(detail)
     out['notes_by_day'] = packed_hours(detail, 'notes_by_day')
@@ -242,7 +242,10 @@ def public_detail(detail, images):
         exported = images.item(item)
         if exported: media.append({'url': exported['url'], 'alt': item.get('alt') or '', 'credit': exported['credit'], **({'fallback': True} if item.get('fallback') else {})})
     out['media'] = media
-    out['links'] = [{'label': l['label'], 'url': l['url']} for l in detail.get('links', []) if str(l.get('url', '')).startswith('https://')]
+    out['links'] = [{'label': l['label'], 'url': l['url']} for l in detail.get('links', []) if str(l.get('url', '')).startswith('https://') and l['url'] not in hidden]
+    # Enlaces que hoy dan 404/410/5xx (src/link_check.py): fuera de la web hasta que respondan bien.
+    if out.get('url') in hidden: out['url'] = ''
+    if (out.get('official_page') or {}).get('url') in hidden: out['official_page'] = None
     # Descripción breve con IA: solo con config/ia.json → descripciones_publicas (tras revisar la muestra).
     from src.ai_describe import public_enabled
     if not public_enabled(): out['ai_summary'] = None
@@ -345,7 +348,31 @@ def _content_hash(out):
     return h.hexdigest()
 
 
-def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT / 'static', today=None, registry_path=REGISTRY_PATH, thumbnailer=None, site_url=''):
+def _links_of(detail):
+    """Los enlaces externos que la ficha pública puede mostrar: botón principal, web oficial y secundarios."""
+    out = [('Botón principal', detail.get('url'))]
+    if detail.get('official_page'): out.append(('Web oficial', detail['official_page'].get('url')))
+    out += [(l.get('label') or '', l.get('url')) for l in detail.get('links', [])]
+    return [(label, url) for label, url in out if str(url or '').startswith('https://')]
+
+
+def check_links(conn, details, fetch=None):
+    """Comprueba (si hay ``fetch``) y devuelve los enlaces rotos que la exportación oculta, con un resumen."""
+    from src import link_check
+    usage = [(url, d['source'], d['id'], label) for d in details for label, url in _links_of(d)]
+    urls = {u for u, _, _, _ in usage}
+    report = {'links': len(urls), 'checked': 0}
+    try:
+        if fetch: report = link_check.refresh(conn, urls, fetch)
+        link_check.record_usage(conn, usage)
+    except sqlite3.OperationalError as exc:  # base de solo lectura: se usa el último estado guardado
+        report['error'] = str(exc)
+    hidden = link_check.broken(conn, urls)
+    report['hidden'] = len(hidden)
+    return hidden, report
+
+
+def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT / 'static', today=None, registry_path=REGISTRY_PATH, thumbnailer=None, site_url='', link_fetcher=None):
     """Write the whole public site into ``out_dir`` and return an audit summary."""
     started = time.monotonic(); today = today or catalog.today(); out = Path(out_dir); registry = _registry(registry_path)
     out.mkdir(parents=True, exist_ok=True)
@@ -358,6 +385,11 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     try: classification_changes = taxonomy.record(conn, catalog.all_events(conn))
     except sqlite3.OperationalError: classification_changes = None  # base de solo lectura
     events = public_events(conn, today)
+    details = {}
+    for e in events:
+        detail = catalog.event_detail(conn, e['source'], e['id'])
+        if detail is not None: details[e['key']] = detail
+    hidden, link_report = check_links(conn, list(details.values()), link_fetcher)
     catalogue = [compact(e, images, full=False) for e in events]
     _write_json(out / 'data' / 'taxonomy.json', taxonomy.public_labels(events))
     _write_json(out / 'data' / 'catalog.json', {'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'items': catalogue})
@@ -388,17 +420,17 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             first = next((i for i in by_key[k].get('media', []) if not i.get('fallback')), None)
             exported = images.item(first) if first else None
             if exported: highlight_media[k] = exported['url']
-        days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images) for e in page['items']],
-                     'featured': [compact(e, images) for e in picks], 'featured_ai': ai_pick, 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
+        days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
+                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:
-        detail = catalog.event_detail(conn, e['source'], e['id'])
+        detail = details.get(e['key'])
         if detail is None: continue
         # El cartel ya agrupado de todas las fuentes del mismo acto.
         detail['lineup'] = e.get('lineup') or detail.get('lineup') or []
         detail['lineup_times'] = e.get('lineup_times') or detail.get('lineup_times') or []
-        public = public_detail(detail, images)
+        public = public_detail(detail, images, hidden)
         shards.setdefault(shard_of(e['key']), {})[e['key']] = public
         cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media']}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
@@ -442,7 +474,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     if not days[today.isoformat()]['items']: blockers.append('El día de hoy no tiene ninguna ficha')
     if file_count > MAX_FILES: blockers.append(f'{file_count} ficheros superan el límite de {MAX_FILES} de Cloudflare Pages')
     return {'status': 'completed' if not blockers else 'blocked', 'blockers': blockers, 'out_dir': str(out), 'generated_at': generated_at, 'today': today.isoformat(),
-            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'classification_changes': classification_changes, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1)}
+            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'links': link_report, 'classification_changes': classification_changes, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1)}
 
 
 def deploy(out_dir, command, *, env_file=None, runner=subprocess.run, timeout=1800):
@@ -465,10 +497,14 @@ def last_published_hash(conn, job_name):
     except (ValueError, AttributeError): return None
 
 
-def publish(conn, job, *, media_root=ROOT / 'data' / 'media', runner=subprocess.run, today=None, thumbnailer=None):
+def publish(conn, job, *, media_root=ROOT / 'data' / 'media', runner=subprocess.run, today=None, thumbnailer=None, link_fetcher=None):
     """Export, gate, and deploy only when something changed. Used by the automation engine and --publish."""
     out_dir = ROOT / job.get('out_dir', 'dist')
-    report = export(conn, out_dir, media_root=media_root, today=today, thumbnailer=thumbnailer, site_url=job.get('site_url', ''))
+    # Enlaces externos comprobados antes de publicar (src/link_check.py); «check_links»: false en el job lo desactiva.
+    if job.get('check_links', True) and link_fetcher is None:
+        from src.link_check import fetch_status as link_fetcher
+    elif not job.get('check_links', True): link_fetcher = None
+    report = export(conn, out_dir, media_root=media_root, today=today, thumbnailer=thumbnailer, site_url=job.get('site_url', ''), link_fetcher=link_fetcher)
     report['deploy'] = None
     if report['status'] != 'completed': return report
     command = job.get('deploy_command', '')

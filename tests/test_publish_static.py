@@ -90,6 +90,26 @@ class StaticExportTests(unittest.TestCase):
         # A thin catalogue is exported but blocked from deployment.
         self.assertEqual(report['status'], 'blocked'); self.assertTrue(any('mínimo' in b for b in report['blockers']))
 
+    def test_broken_links_are_left_out_of_the_public_site_and_come_back(self):
+        # 22-10-2026: graf.cat devolvía 500 en sus fichas; la web no debe enlazar una página rota.
+        broken = 'https://example.test/1'
+        report = self.export(link_fetcher=lambda u: (500, None) if u == broken else (200, None))
+        self.assertEqual(report['links']['hidden'], 1)
+        dist = self.root / 'dist'
+        detail = json.loads((dist / 'data' / 'detail' / (shard_of('opendatabcn_agenda:1') + '.json')).read_text(encoding='utf-8'))['opendatabcn_agenda:1']
+        day = json.loads((dist / 'data' / 'day' / '2026-10-12.json').read_text(encoding='utf-8'))
+        self.assertEqual((detail['url'], day['items'][0]['u']), ('', ''))
+        # El dato sigue en la fuente y el estado queda guardado, con su historial.
+        self.assertEqual(self.conn.execute("SELECT source_url FROM source_records WHERE id='1'").fetchone()[0], broken)
+        self.assertEqual(self.conn.execute('SELECT state,http_status FROM link_checks WHERE url=?', (broken,)).fetchone(), ('broken', 500))
+        self.conn.execute("UPDATE link_checks SET checked_at='2000-01-01T00:00:00+00:00'"); self.conn.commit()
+        again = self.export(link_fetcher=lambda u: (200, None))
+        self.assertEqual(again['links']['hidden'], 0)
+        detail = json.loads((dist / 'data' / 'detail' / (shard_of('opendatabcn_agenda:1') + '.json')).read_text(encoding='utf-8'))['opendatabcn_agenda:1']
+        self.assertEqual(detail['url'], broken)
+        from src.readiness import report as readiness
+        self.assertEqual(readiness(self.conn, today=TODAY)['external_links']['hidden_links'], 0)
+
     def test_second_export_reuses_images_and_hash_is_stable(self):
         first = self.export(); second = self.export()
         self.assertEqual(first['content_hash'], second['content_hash'])

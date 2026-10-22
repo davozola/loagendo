@@ -985,7 +985,8 @@ def borrow_from_twins(conn, event):
         if not event.get('organizers') and twin.get('organizers'): event['organizers']=twin['organizers']; borrowed['organizers']=member
         seen={l['url'] for l in event.get('links',[])}
         for link in twin.get('links',[]):
-            if link['url'] not in seen: event.setdefault('links',[]).append({**link,'label':('Enlace' if link.get('label')=='Página de la fuente' else link['label'])+' · '+twin['source_label']}); seen.add(link['url'])
+            # La fuente por su nombre corto («GRAF», no «GRAF · agenda de creació contemporània»): readable_links lo convierte en «En GRAF».
+            if link['url'] not in seen: event.setdefault('links',[]).append({**link,'label':('Enlace' if link.get('label')=='Página de la fuente' else link['label'])+' · '+short_source(twin['source_label'])}); seen.add(link['url'])
     if event.get('description') and borrowed.get('description'): event['description_source']=borrowed['description']
     event['borrowed']=borrowed
     return event
@@ -1838,6 +1839,11 @@ PLATFORMS={'eventbrite','dice','xceed','ticketmaster','songkick','fever','concie
 SOCIAL={'facebook.com':'Facebook','instagram.com':'Instagram','x.com':'X','twitter.com':'X','youtube.com':'YouTube','tiktok.com':'TikTok','linkedin.com':'LinkedIn'}
 
 
+def short_source(label):
+    """Nombre corto de una fuente para un enlace: lo que va antes del primer « · »."""
+    return str(label or '').split(' · ')[0].strip() or str(label or '')
+
+
 def readable_links(links):
     """Enlaces con nombre: «Enlace detectado en la fuente» dice poco; se nombra por su sitio
     («Instagram», «Web: cotxeres-casinet.org»). Mismo destino, una sola vez."""
@@ -1854,6 +1860,7 @@ def readable_links(links):
             if host.endswith('guia.barcelona.cat'): label='Ficha en GuiaBCN'
             else: label=social or f'Web: {host}'
         elif base=='Enlace' or label=='Enlace · GuiaBCN': label='Ficha en GuiaBCN'
+        elif label.startswith('Enlace · '): label='En '+short_source(label.removeprefix('Enlace · '))  # página de otra fuente del mismo acto
         out.append({**link,'label':label})
     return out
 

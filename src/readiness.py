@@ -110,6 +110,10 @@ def report(conn, *, today=None, horizon_days=30):
         'events_with_hours_by_day':sum(1 for s,i,_,_,_ in rows if (s,i) in by_day_keys),
         'by_source':dict(sorted(by_source.items())), 'unhealthy_sources':health,
     }
+    # Enlaces externos de las fichas publicadas que hoy están rotos (404/410/5xx) y la web oculta,
+    # por fuente de la ficha y por web enlazada (src/link_check.py, se actualiza en cada publicación).
+    from src.link_check import summary as link_summary
+    metrics['external_links']=link_summary(conn)
     blockers=[]
     if health: blockers.append('Hay conectores con errores o volumen anómalo recientes; resuélvelos o exclúyelos explícitamente de la publicación.')
     if metrics['description_coverage_percent'] < 60: blockers.append('La cobertura de descripciones aún es inferior al 60 %.')
