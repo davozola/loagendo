@@ -14,7 +14,7 @@ from pathlib import Path
 
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
-STALE_LOCK_MINUTES = 120
+STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
 VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).

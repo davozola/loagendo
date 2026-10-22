@@ -461,17 +461,24 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     out.mkdir(parents=True, exist_ok=True)
     for stale in ('data',):
         if (out / stale).exists(): shutil.rmtree(out / stale)
+    phases = {}; mark = time.monotonic()
+    def phase(name):
+        nonlocal mark
+        now = time.monotonic(); phases[name] = round(now - mark, 1); mark = now
     images = ImageExporter(conn, out, media_root, registry, thumbnailer)
     # Clasificación vigente de todas las fichas (también las pendientes y excluidas): tabla
     # event_classification + historial de cambios tras cada sincronización (src/taxonomy.py).
     from src import taxonomy
     try: classification_changes = taxonomy.record(conn, catalog.all_events(conn))
     except sqlite3.OperationalError: classification_changes = None  # base de solo lectura
+    phase('clasificacion')
     events = public_events(conn, today)
+    phase('fichas_publicas')
     details = {}
     for e in events:
         detail = catalog.event_detail(conn, e['source'], e['id'])
         if detail is not None: details[e['key']] = detail
+    phase('detalle_de_fichas')
     # Inauguración ↔ exposición del mismo espacio, cuando tenemos las dos (src/milestones.py).
     from src.milestones import link as _link_milestones
     to_expo, to_act = _link_milestones(events)
@@ -480,6 +487,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for k, v in to_act.items():
         if k in details: details[k]['opening'] = v
     hidden, link_report = check_links(conn, list(details.values()), link_fetcher)
+    phase('enlaces')
     catalogue = [compact(e, images, full=False) for e in events]
     _write_json(out / 'data' / 'taxonomy.json', taxonomy.public_labels(events))
     _write_json(out / 'data' / 'catalog.json', {'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'items': catalogue})
@@ -526,6 +534,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
     for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
+    phase('dias_y_tarjetas')
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards)}
     sources = {s: {'label': catalog.SOURCES.get(s, s), 'attribution': registry_entry(registry, s).get('attribution', ''), 'license_url': registry_entry(registry, s).get('license_url', '')} for s in sorted({e['source'] for e in events}) if registry_entry(registry, s).get('public_credit') is not False}
@@ -564,7 +573,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     if not days[today.isoformat()]['items']: blockers.append('El día de hoy no tiene ninguna ficha')
     if file_count > MAX_FILES: blockers.append(f'{file_count} ficheros superan el límite de {MAX_FILES} de Cloudflare Pages')
     return {'status': 'completed' if not blockers else 'blocked', 'blockers': blockers, 'out_dir': str(out), 'generated_at': generated_at, 'today': today.isoformat(),
-            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'links': link_report, 'classification_changes': classification_changes, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1)}
+            'counts': {**counts, 'upcoming_14_days': upcoming, 'files': file_count}, 'images': images.stats, 'links': link_report, 'classification_changes': classification_changes, 'content_hash': _content_hash(out), 'seconds': round(time.monotonic() - started, 1), 'phases': phases}
 
 
 def deploy(out_dir, command, *, env_file=None, runner=subprocess.run, timeout=1800):
