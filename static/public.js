@@ -997,6 +997,14 @@ function imageCredit(e, m) {
   else if (c.source === 'opendatabcn_agenda' || c.source === 'guiabcn') who = 'Ajuntament de Barcelona';
   return who ? `${L('Imagen', 'Imatge')}: ${who}` : '';
 }
+// «Horario» solo si dice algo que «Cuándo» no dice (22-10-2026): «18:00» o «18:00–21:00» ya están arriba;
+// «Divendres i dissabte · de 17.30 h a 05.30 h» o «sessions a les 18 i a les 20» sí se muestran.
+function scheduleExtra(e) {
+  const text = String(e.time_text || '').trim(); if (!text) return '';
+  const when = detailWhen(e), clocks = text.match(/\b\d{1,2}[:.]\d{2}\b/g) || [];
+  const rest = text.replace(/\b\d{1,2}[:.]\d{2}\b/g, '').replace(/[\s·–\-—,;/h]+/g, '');
+  return !rest && clocks.length && clocks.every(c => when.includes(c.replace('.', ':').padStart(5, '0'))) ? '' : text;
+}
 async function openDetail(k, focus, opts = {}) {
   const [source, ...rest] = k.split(':'), id = rest.join(':');
   try {
@@ -1011,7 +1019,7 @@ async function openDetail(k, focus, opts = {}) {
     const brief = '';
     const description = `${brief}<section class="sheet-copy">${paragraphs}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
-    const scheduleBits = [conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`) : '', e.schedule_days, e.time_text, e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`) : ''].filter(Boolean);
+    const scheduleBits = [conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`) : '', e.schedule_days, scheduleExtra(e), e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`) : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
     // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
     const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));
