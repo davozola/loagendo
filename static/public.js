@@ -49,7 +49,7 @@ const CA = {
   'No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.':'No hi ha ubicacions geogràfiques per a aquests filtres. Prova un altre dia o consulta la llista.','Mapa de actividades geolocalizadas':'Mapa d\'activitats geolocalitzades','lugares con ubicación · pulsa un punto para abrir la ficha':'llocs amb ubicació · prem un punt per obrir la fitxa','Sin recinto identificado':'Sense recinte identificat',
   'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Descubre':'Descobreix','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
   'Horario':'Horari','Horas publicadas':'Hores publicades','las fuentes no coinciden; confirma en la sala':'les fonts no coincideixen; confirma-ho a la sala','Requiere inscripción':'Cal inscripció','Texto de':'Text de','Imagen del equipamiento':'Imatge de l\'equipament','Imagen de la fuente':'Imatge de la font','Más imágenes':'Més imatges','Ubicación':'Ubicació','Mapa de':'Mapa de','la ubicación':'la ubicació','Próximamente en':'Properament a','esta sala':'aquesta sala',
-  'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Añadir al calendario':'Afegeix al calendari','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
+  'Incluir los que ya han empezado':'Incloure els que ja han començat','Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Añadir al calendario':'Afegeix al calendari','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
   'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
   // index.html
   'Saltar a la agenda':'Salta a l\'agenda','Agenda':'Agenda','Selección':'Selecció','Barrios':'Barris','Guardados':'Desats','Ver guardados':'Mostra els desats','Cambiar modo claro u oscuro':'Canvia el mode clar o fosc',
@@ -810,7 +810,7 @@ function renderAgenda() {
     const legend = group.querySelector('legend'); if (legend) legend.textContent = L('Talleres y cursos', 'Tallers i cursos');
     // La casilla que da sentido al apartado (22-10-2026: el apartado salía vacío, solo con el desplegable oculto).
     const sw = document.createElement('label'); sw.className = 'switch';
-    sw.innerHTML = `<input id="startedOnly" type="checkbox"><span>${esc(L('Incluir los que ya han empezado', 'Incloure els que ja han començat'))}</span>`;
+    sw.innerHTML = `<input id="startedOnly" type="checkbox"><span data-i18n="Incluir los que ya han empezado">${esc(t('Incluir los que ya han empezado'))}</span>`;
     group.appendChild(sw);
     sw.querySelector('input').addEventListener('change', ev => { state.started = ev.target.checked; refresh() });
   }
