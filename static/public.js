@@ -20,7 +20,7 @@ const chanName = c => CHANS[c] ? byLang(CHANS[c]) : c;
 const catMatch = (e, cats) => !cats || !cats.length || cats.includes(e.public_category);
 const chanMatch = (e, chans) => !chans || !chans.length || chans.some(c => (e.channels || []).includes(c));
 // Idioma en que se hace la actividad (23-10-2026): solo lo declaran algunas fuentes (Open Data BCN).
-const ACT_LANGS = {en: ['En inglés', 'En anglès', 'In English'], es: ['En castellano', 'En castellà', 'In Spanish'], ca: ['En catalán', 'En català', 'In Catalan'], other: ['Otros idiomas', 'Altres idiomes', 'Other languages']};
+const ACT_LANGS = {en: ['En inglés', 'En anglès', 'In English'], es: ['En castellano', 'En castellà', 'In Spanish'], ca: ['En catalán', 'En català', 'In Catalan'], other: ['Más idiomas', 'Més idiomes', 'Other languages']};
 const langMatch = (e, langs) => !langs || !langs.length || langs.some(l => l === 'other' ? (e.languages || []).some(x => ['fr', 'it', 'other'].includes(x)) : (e.languages || []).includes(l));
 // Franjas de edad del canal «En familia» (20-10-2026). La edad sale de la fuente (título o texto) o
 // del texto leído por IA con cita comprobada; si nadie la dice, la ficha es «Edad no indicada».
