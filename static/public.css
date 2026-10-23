@@ -431,3 +431,6 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ms-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--accentSoft);color:var(--accentText);margin:0 0 4px;width:max-content}
 .ev-body .ms-tag{display:block}
 .sheet-ms{margin:6px 0 12px;font-size:14px;color:var(--muted)}.sheet-ms .ms-tag{margin:0 2px 0 0;vertical-align:1px}
+
+/* Selector de idioma ES · CA · EN (23-10-2026) */
+.lang-select{appearance:none;-webkit-appearance:none;cursor:pointer;text-align:center;font:inherit;font-weight:600;color:inherit;padding:0 12px}
