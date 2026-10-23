@@ -693,6 +693,12 @@ function markHighlights(list, day) {
     e._hl = hlReason(e, day); used++;
   }
 }
+// Imagen de un destacado que no carga (23-10-2026): fuera el recuadro vacío. Los errores de carga no suben
+// por el DOM, así que se escuchan en captura; y nada de onerror en línea, que la CSP de la web no permite.
+document.addEventListener('error', ev => {
+  const img = ev.target;
+  if (img && img.tagName === 'IMG' && img.closest) { const box = img.closest('.hl-img'); if (box) box.remove() }
+}, true);
 function hlHead(e) {
   if (!e._hl) return '';
   const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
