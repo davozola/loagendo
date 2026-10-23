@@ -249,7 +249,11 @@ def _classify_rules(ev, override=None):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'producto_de_ticketera',
                 'evidence': 'Mejora de entrada o producto de la ticketera, no un acto', 'ambiguous': False}
     # La web de centres cívics mezcla noticias con actividades: sin género ni fecha propia es una noticia.
-    if not signals and (ev.get('source') == 'web_centres_civics' or UMBRELLA_VENUE.search(norm(' '.join(ev.get('venue_names') or [])))):
+    # Y en esa web, lo que va a nombre de la red entera («Xarxa de Centres Cívics», «Diversos centres
+    # cívics») es siempre un artículo de recopilación («10 visites i itineraris…», «5 tallers per…»,
+    # «Inscripcions als tallers de tardor»), aunque el título nombre un género (23-10-2026).
+    umbrella = UMBRELLA_VENUE.search(norm(' '.join(ev.get('venue_names') or [])))
+    if (not signals and (ev.get('source') == 'web_centres_civics' or umbrella)) or (ev.get('source') == 'web_centres_civics' and umbrella):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'resumen_de_programa',
                 'evidence': 'Noticia o resumen de programación de la red de centres cívics, no una actividad', 'ambiguous': False}
     if PATIS.search(t):

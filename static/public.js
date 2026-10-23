@@ -488,7 +488,7 @@ const ORIGIN = {centro: () => L('datos del propio centro', 'dades del mateix cen
 /* ---------- botones de tipo ---------- */
 const CHIPS = [
   {k: 'fixed', label: () => L('Empiezan a una hora', 'Comencen a una hora', 'Set start time'), short: () => L('Con hora', 'Amb hora', 'Timed'), desc: () => L('Conciertos, funciones, charlas', 'Concerts, funcions, xerrades', 'Concerts, shows, talks'), mark: 'dot'},
-  {k: 'wide', label: () => L('Horario amplio', 'Horari ampli', 'Open hours'), short: () => L('Abierto', 'Obert', 'Open'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais', 'Exhibitions, fairs and venues'), mark: 'bar'},
+  {k: 'wide', label: () => L('Horario amplio', 'Horari ampli', 'Open hours'), short: () => L('Abierto', 'Obert', 'Ongoing'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais', 'Exhibitions, fairs and venues'), mark: 'bar'},
   {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos', 'Workshops and courses'), short: () => L('Talleres', 'Tallers', 'Workshops'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`, `Starting in the next ${COURSE_AHEAD} days`), mark: ''},
   {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed'), short: () => L('Sin hora', 'Sense hora', 'No time'), desc: () => '', mark: 'dash'},
 ];
@@ -566,6 +566,8 @@ function buildModel(items, win) {
 }
 
 /* ---------- fila ---------- */
+// «Último día» (23-10-2026): aparte del «hasta las 21:00» de hoy, para no juntar dos «hasta» distintos.
+const lastText = (e, d) => daysBetween(e._day || today, d) <= 0 ? L('Último día', 'Últim dia', 'Last day') : L('Último día: mañana', 'Últim dia: demà', 'Last day: tomorrow');
 const untilText = (e, d) => { const n = daysBetween(e._day || today, d); return n <= 0 ? L('último día', 'últim dia', 'last day') : n === 1 ? L('hasta mañana', 'fins demà', 'until tomorrow') : `${L('hasta el', 'fins al', 'until')} ${labelDate(d)}` };
 function bar(a, st) {
   const from = 8 * 60, span = 16 * 60, pct = m => Math.max(0, Math.min(100, (m - from) / span * 100)).toFixed(1);
@@ -574,6 +576,7 @@ function bar(a, st) {
 }
 function whenCell(e) {
   const a = e._a, st = e._st || {state: 'none'};
+  if (a.ranges && a.ranges.length > 1) a.ranges = [...a.ranges].sort((x, y) => x.open - y.open);  // franjas en orden (09:00–13:00 · 16:00–23:00)
   if (a.kind === 'timed') {
     const multi = a.times.length > 1 || a.season;
     let note = '', cls = '';
@@ -594,8 +597,8 @@ function whenCell(e) {
     else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${st.reopens ? L('Reabre', 'Reobre', 'Reopens') : L('Abre', 'Obre', 'Opens')} ${clock(st.opensAt ?? a.open)}</span>`; note = (a.ranges || []).length > 1 ? a.ranges.map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ') : `${L('hasta las', 'fins a les', 'until')} ${clock(a.close)}` }
     else if (st.state === 'past') { main = `<span class="w-mid w-dim">${L('Cerrado ya', 'Ja tancat', 'Closed now')}</span>`; note = `${clock(a.open)}–${clock(a.close)}` }
     else { main = `<span class="w-mid">${(a.ranges || [a]).map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ')}</span>` }
-    if (e.start !== e.end && last && !cls) { note = [note, untilText(e, a.until)].filter(Boolean).join(' · '); cls = 'urgent' }
-    return `<div class="when w-wide">${bar(a, st)}${main}${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
+    const lastNote = e.start !== e.end && last && cls !== 'urgent' ? `<span class="w-note urgent">${esc(lastText(e, a.until))}</span>` : '';
+    return `<div class="when w-wide">${bar(a, st)}${main}${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}${lastNote}</div>`;
   }
   if (a.kind === 'soon') return `<div class="when w-course"><span class="w-kind">${L('Empieza', 'Comença', 'Starts')}</span><span class="w-mid">${esc(e.start === (e._day || today) ? L('hoy', 'avui', 'today') : labelDate(e.start))}</span>${a.open !== undefined ? `<span class="w-note">${clock(a.open)}–${clock(a.close)}</span>` : ''}</div>`;
   if (a.kind === 'started') return `<div class="when w-course"><span class="w-kind">${L('En marcha', 'En marxa', 'Under way')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
@@ -603,12 +606,12 @@ function whenCell(e) {
   if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa', 'times in its programme') : L('hora por confirmar', 'hora per confirmar', 'time to be confirmed')}</span></div>`;
   const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar', 'Time to be announced'), 'Horario próximamente': L('Horario próximamente', 'Horari properament', 'Times coming soon')}[e.time_label];
   if (fixedLater) return `<div class="when w-tbc"><span class="w-mid">${esc(fixedLater)}</span><span class="w-note">${L('según la fuente', 'segons la font', 'according to the source')}</span></div>`;
-  return `<div class="when w-tbc"><span class="w-mid">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-note">${a.run ? esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`) : L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span></div>`;
+  return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
 }
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-meta"><span>${esc(venue(e))}</span><span>${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}</span><span class="ev-meta"><span>${esc(venue(e))}</span></span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1052,8 +1055,9 @@ async function openDetail(k, focus, opts = {}) {
     // Debajo, el resto en el mismo orden (sin repetir tipo salvo entradas/inscripciones distintas), y la fuente al final.
     // La ficha de la fuente (GRAF, GuiaBCN…) solo sale si no tenemos la página concreta del acto (22-10-2026).
     const hasEventPage = all.some(x => x.kind === 'evento');
-    const rest = all.slice(1), useful = rest.filter(x => x.kind !== 'fuente' && x.kind !== 'social').slice(0, 3), social = rest.filter(x => x.kind === 'social').slice(0, 1), source = hasEventPage ? [] : rest.filter(x => x.kind === 'fuente').slice(0, 1);
-    const links = [...useful, ...social, ...source].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
+    // (Nombres propios: «source» y «rest» ya son el origen y el id del acto, arriba; repetirlos aquí rompía la ficha.)
+    const others = all.slice(1), useful = others.filter(x => x.kind !== 'fuente' && x.kind !== 'social').slice(0, 3), social = others.filter(x => x.kind === 'social').slice(0, 1), sourceLink = hasEventPage ? [] : others.filter(x => x.kind === 'fuente').slice(0, 1);
+    const links = [...useful, ...social, ...sourceLink].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
     $('sheet').innerHTML = `<div class="sheet-top"><span data-cat="${esc(e.public_category || e.category || '')}">${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${msLine(e)}${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}${priceFact(e)}${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat', 'Age'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada', 'Not stated'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button>${calendarMenu(k, e)}</div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.", 'Details on the venue’s website. Check before you go.') : L('Confirma en la web oficial antes de ir.', "Confirma-ho al web oficial abans d'anar-hi.", 'Check the official website before you go.')}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);

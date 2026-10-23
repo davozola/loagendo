@@ -210,6 +210,10 @@ def parse_centres_civics(page):
         url='https://ajuntament.barcelona.cat'+html.unescape(link.group(1))
         image=re.search(r'<img[^>]+src="([^"]+)"',block)
         record=_record(source,html.unescape(re.sub('<[^>]+>',' ',link.group(2))).strip(),start,end,url,html.unescape(re.sub('<[^>]+>',' ',venue.group(1))).strip() if venue else cfg['venue'],cfg['address'],{'when':text},image=html.unescape(image.group(1)) if image else '')
+        # Con «Fins al…» el inicio es el día de lectura y cambia cada día: el id no puede depender de él,
+        # o cada lectura crea una ficha nueva del mismo acto (pasó del 12 al 23-10-2026).
+        if re.match(r'\s*fins',text,re.I) and len(dates)==1:
+            record['id']=hashlib.sha256((source+'\0'+url+'\0fins\0'+record['title']).encode()).hexdigest()[:24]
         if 'vigent' not in block: record['alerts'].append('SOURCE_PAGE_NOT_MARKED_CURRENT')
         result.append(record)
     return result

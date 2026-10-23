@@ -93,10 +93,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 /* tipos de plan */
 .ag-chip,.mini-chip{border-radius:0;border-color:var(--ink);color:var(--ink);background:var(--paper)}
 .ag-chip-desc,.ag-chip-top b,.mini-chip b{color:inherit;opacity:.8}
-.ag-chip.c-fixed.on,.mini-chip.c-fixed.on{background:var(--petrol);border-color:var(--ink);color:#FFF}
-.ag-chip.c-wide.on,.mini-chip.c-wide.on{background:var(--turq);border-color:var(--ink);color:var(--on-color)}
-.ag-chip.c-soon.on,.mini-chip.c-soon.on{background:var(--sage);border-color:var(--ink);color:var(--on-color)}
-.ag-chip.c-tbc.on,.mini-chip.c-tbc.on{border-color:var(--ink);background:var(--paper)}
+/* Activas en negro (23-10-2026): petróleo, turquesa y salvia son también colores de categoría (Deporte, Charlas, Arte). */
+.ag-chip.on,.mini-chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .ag-chip .m-dot,.mini-chip .m-dot{background:currentColor}.ag-chip .m-dots,.mini-chip .m-dots{background:radial-gradient(circle,currentColor 2.6px,transparent 3px) 0 50%/6px 6px repeat-x}
 .ag-chip .m-bar,.mini-chip .m-bar{background:currentColor;border-radius:0}
 
@@ -106,19 +104,21 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .ag-stick.is-now{color:var(--now)}.ag-stick.is-now:after{background:var(--now)}
 .ag-daystick{font-size:18px;font-weight:600}.ag-daystick em{color:var(--petrol-text)}
 .ev{border-bottom-color:var(--line)}
-.ev-main:hover .ev-title{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+@media(hover:hover){.ev-main:hover .ev-title{color:var(--ink);text-decoration:underline;text-underline-offset:3px}}
 .w-big{font-weight:700;letter-spacing:-.02em}
 .w-mid{font-weight:600}
 .ev-title{font-weight:600;font-size:clamp(16px,1.5vw,18px)}
 .ev-meta{color:var(--text2);font-size:13.5px}
+.ev-cat{color:var(--ink);font-size:13.5px;font-weight:500}
+@media(max-width:620px){.ev-meta,.ev-cat{font-size:12.5px}}
 .ev-free{display:inline-block;background:var(--turq);border:1px solid var(--on-color);color:var(--on-color);padding:0 6px;line-height:1.35;font-size:12px;font-weight:700}
 /* «Gratis» va como etiqueta: sin el «·» separador dentro de la caja y con aire respecto a la categoría (22-10-2026). */
-.ev-meta>span.ev-free:before{content:none}
-.ev-meta>.ev-free{margin-left:10px;vertical-align:1px}
+.ev-cat>span.ev-free:before{content:none}
+.ev-cat>.ev-free{margin-left:10px;vertical-align:1px}
 .w-fill,.m-bar{border-radius:0}.w-bar{border-radius:0;background:var(--bar)}
 
 /* cuadradito de color por categoría, en lugar del punto separador */
-.ev[data-cat] .ev-meta>span:nth-child(2):before{content:'';display:inline-block;width:9px;height:9px;margin:0 7px 0 9px;border:1px solid var(--ink);background:var(--cat,var(--paper));opacity:1;vertical-align:0}
+.ev[data-cat] .ev-cat>.ev-catname:before{content:'';display:inline-block;width:9px;height:9px;margin:0 7px 0 0;border:1px solid var(--ink);background:var(--cat,var(--paper));opacity:1;vertical-align:0}
 [data-cat=musica],[data-category=musica]{--cat:var(--ink)}[data-cat=escena],[data-category=escena]{--cat:var(--coral)}[data-cat=arte],[data-category=arte]{--cat:var(--sage)}
 [data-cat=charlas],[data-category=charlas]{--cat:var(--turq)}[data-cat=fiestas],[data-category=fiestas]{--cat:var(--sand)}[data-cat=cine],[data-category=cine]{--cat:var(--lilac)}
 [data-cat=deporte],[data-category=deporte]{--cat:var(--petrol)}[data-cat=talleres],[data-category=talleres]{--cat:var(--cobalt)}
