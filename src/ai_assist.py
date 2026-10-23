@@ -30,7 +30,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1}
+PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -93,12 +93,13 @@ def _conf(row):
 
 
 def _tasks():
-    from src import ai_extract, ai_describe, ai_family
+    from src import ai_extract, ai_describe, ai_family, ai_translate
     return {'familia': (ai_family.SYSTEM, ai_family.TOOL, 'fichas', ai_family.parse),
             'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
             'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
             'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos),
-            'descripcion': (ai_describe.SYSTEM, ai_describe.TOOL, 'fichas', ai_describe.parse)}
+            'descripcion': (ai_describe.SYSTEM, ai_describe.TOOL, 'fichas', ai_describe.parse),
+            'traduccion': (ai_translate.SYSTEM, ai_translate.TOOL, 'items', ai_translate.parse)}  # solo muestra (23-10-2026)
 
 
 def load_key(env_path=None):
@@ -305,7 +306,7 @@ def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220}.get(task, 150)  # tope de salida, no se cobra si no se usa
+    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220, 'traduccion': 900}.get(task, 150)  # tope de salida, no se cobra si no se usa
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},
@@ -347,7 +348,7 @@ def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None, retr
     pequeños (hasta ``retries`` veces)."""
     key = key or load_key(); out = {}; requester = requester or _request
     usage = usage if usage is not None else {}
-    pending, size = list(items), ITEMS_PER_REQUEST
+    pending, size = list(items), {'traduccion': 8}.get(task, ITEMS_PER_REQUEST)  # textos largos: grupos pequeños
     for attempt in range(retries + 1):
         for start in range(0, len(pending), size):
             chunk = pending[start:start + size]
