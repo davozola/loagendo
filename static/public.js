@@ -308,6 +308,8 @@ function renderActive() {
   $('openFilters').classList.toggle('has-filters', n > 0);
 }
 function chips() {
+  // La categoría se elige en la barra rápida de encima de la lista (23-10-2026): fuera de la columna de filtros.
+  const catGroup = $('categories')?.closest('fieldset'); if (catGroup) catGroup.hidden = true;
   $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
     .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
   // Franjas de edad: solo con «En familia» activo.
@@ -496,8 +498,7 @@ const CHIPS = [
   {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos', 'Workshops and courses'), short: () => L('Talleres', 'Tallers', 'Workshops'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`, `Starting in the next ${COURSE_AHEAD} days`), mark: ''},
   {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed'), short: () => L('Sin hora', 'Sense hora', 'No time'), desc: () => '', mark: 'dash'},
 ];
-state.show = {fixed: true, wide: false, tbc: true, soon: false};
-try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
+state.show = {fixed: true, wide: true, tbc: true, soon: true};  // sin bloques de tipo: todo se ve, plegado donde toca (23-10-2026)
 // «Arte y galerías» vive sobre todo de exposiciones (horario amplio) y de talleres de varias
 // sesiones: al entrar en el canal se ven todos los tipos; al salir vuelve la vista de cada uno.
 // (Cambios hechos dentro del canal no se guardan como preferencia general.)
@@ -507,7 +508,8 @@ try { Object.assign(state.show, JSON.parse(pref('show') || '{}')) } catch (_) {}
 const ALL_TYPES = {fixed: true, wide: true, soon: true, tbc: true};
 const CHANNEL_VIEW = {galerias: ALL_TYPES};
 let savedShow = null, viewKey = '';
-function channelView() {
+function channelView() { return }
+function channelViewOld() {
   // Guardados (22-10-2026): también los cuatro tipos; lo que guardaste se ve siempre, sea del tipo que sea.
   // Con cualquier filtro (categoría, plan, edad, idioma, distrito, formato, gratis u horario) también los cuatro
   // tipos (23-10-2026, David): quien filtra «Teatro en Gràcia» quiere verlo todo, tenga hora fija o no.
@@ -520,7 +522,22 @@ function channelView() {
 }
 channelView();
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
+// Barra rápida de categorías (23-10-2026, propuesta A + B): un toque elige una categoría (o «Todo»);
+// los cuatro bloques de tipo de horario desaparecen y la lista se ordena por su naturaleza.
+const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Arte', 'Art', 'Art'],
+  charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities'], deporte: ['Deporte', 'Esport', 'Sport']};
+function catBarHtml() {
+  const only = state.cats.length === 1 ? state.cats[0] : '';
+  const btn = (c, label) => `<button type="button" class="cat-pill${(c ? only === c : !state.cats.length) ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${c ? only === c : !state.cats.length}"${c ? ` data-category-color="${c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}</button>`;
+  return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}</div>`;
+}
 function chipsHtml(counts) {
+  // Antes, los cuatro bloques de tipo; ahora la barra de categorías (en el mismo sitio, fuera de la lista).
+  const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = catBarHtml();
+  const mini = $('typeMini'); if (mini) mini.innerHTML = '';
+  return '';
+}
+function chipsHtmlOld(counts) {
   const html = `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure', 'Which kinds of plans to show')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
   // Los botones de tipo viven fuera de la lista (#typeTabs): al activarlos no se mueven de sitio.
   const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = html;
@@ -745,28 +762,45 @@ function foldHtml(id, title, list, sub = '') {
   const open = state.expanded.has(id);
   return `<section class="ag-fold${open ? ' open' : ''}" id="ag-${id}"><button class="ag-fold-head" type="button" data-${open ? 'collapse' : 'expand'}="${id}" aria-expanded="${open}"><span>${esc(title)} · <b>${list.length.toLocaleString('es-ES')}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><i aria-hidden="true">${open ? '−' : '+'}</i></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
 }
+// Bloque plegable de lista entera (talleres, sin hora): cerrado salvo que se abra o que sea lo principal.
+function foldBlock(id, title, list, sub, openByDefault = false, cls = '') {
+  if (!list.length) return '';
+  const open = state.expanded.has(id) || (openByDefault && !state.collapsed?.has(id));
+  return `<section class="ag-block${open ? ' open' : ''}${cls}" id="ag-${id}"><button class="ag-block-head" type="button" data-block="${id}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><em>${open ? L('Plegar', 'Plega', 'Hide') : L('Ver', 'Mostra', 'See')} ${open ? '−' : '›'}</em></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
+}
+// Exposiciones y espacios abiertos (23-10-2026, David): arriba y plegados; con «Arte» como única categoría, desplegados.
+// Al abrir, las 10 primeras (último día y cierre más cercano primero) y «Ver todas»; se puede volver a plegar.
+function wideBlock(list, live) {
+  if (!list.length) return '';
+  const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0;
+  const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
+  const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
+  const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
+  const title = live ? L(`${list.length} exposiciones y espacios abiertos hoy`, `${list.length} exposicions i espais oberts avui`, `${list.length} exhibitions and venues open today`) : L(`${list.length} exposiciones y espacios abiertos`, `${list.length} exposicions i espais oberts`, `${list.length} exhibitions and venues open`);
+  const id = 'wide', open = state.expanded.has(id) || (state.cats.length === 1 && state.cats[0] === 'arte' && !state.collapsed?.has(id));
+  const cap = state.expanded.has('wideAll') ? sorted.length : 10, more = sorted.length - cap;
+  sorted.forEach(e => { e._hl = '' });  // dentro del bloque, sin destacados: ya va ordenado por cierre
+  return `<section class="ag-block ag-wide${open ? ' open' : ''}" id="ag-wide"><button class="ag-block-head" type="button" data-block="${id}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><em>${open ? L('Plegar', 'Plega', 'Hide') : L('Ver', 'Mostra', 'See')} ${open ? '−' : '›'}</em></button>${open ? `<div class="ag-rows">${seriesFold(sorted.slice(0, cap))}${more > 0 ? `<button class="ag-toggle" type="button" data-expand="wideAll">${L('Ver las', 'Mostra les', 'See all')} ${sorted.length.toLocaleString('es-ES')}</button>` : ''}</div>` : ''}</section>`;
+}
 function renderDay(m) {
   const s = m.sections, show = state.show, live = m.live;
   const counts = {fixed: s.fixed.length, wide: s.wide.length + s.wideNoHours.length, tbc: s.tbc.length, soon: s.soon.length};
   const hourOf = e => hourKey(e, live), seasonLast = e => e._a.season ? 1 : 0;
-  let timeline = [...(show.fixed ? s.fixed : []), ...(show.wide ? s.wide : [])].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
+  let timeline = [...s.fixed].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let html = chipsHtml(counts), current = null, groups = '';
   // Festivales con varias actividades este día: un bloque plegado por festival, arriba, en vez de
   // repartir sus actividades por todas las horas (48h Open House, una fiesta mayor…).
   const festMembers = {};
-  for (const e of [...timeline, ...(show.tbc ? s.tbc : []), ...(show.wide ? s.wideNoHours : [])])
+  for (const e of [...timeline, ...s.tbc, ...s.wide, ...s.wideNoHours])
     if (e.festival && String(e.series).startsWith('festival:')) (festMembers[e.series] ||= []).push(e);
   const bigFest = Object.values(festMembers).filter(l => l.length >= FEST_FOLD), inFest = new Set(bigFest.flat());
   timeline = timeline.filter(e => !inFest.has(e));
-  const tbcList = s.tbc.filter(e => !inFest.has(e)), wideNoHoursList = s.wideNoHours.filter(e => !inFest.has(e));
-  markHighlights([...timeline, ...(show.wide ? wideNoHoursList : []), ...(show.tbc ? tbcList : [])], state.day);
+  const tbcList = s.tbc.filter(e => !inFest.has(e)), wideList = [...s.wide, ...s.wideNoHours].filter(e => !inFest.has(e));
+  markHighlights(timeline, state.day);
   // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
   const nowTimed = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'timed');
-  const nowOpen = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'wide').sort((a, b) => (a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4) || byTitle(a, b));
-  if (nowTimed.length || nowOpen.length) {
-    const cap = state.expanded.has('nowOpen') ? nowOpen.length : 8, more = nowOpen.length - cap;
-    groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nowTimed)}${nowOpen.slice(0, cap).map(row).join('')}${more > 0 ? `<button class="ag-toggle" type="button" data-expand="nowOpen">${L('Ver las', 'Mostra les', 'See all')} ${nowOpen.length.toLocaleString('es-ES')} ${L('abiertas ahora', 'obertes ara', 'open now')}</button>` : ''}</div>`;
-  }
+  html += wideBlock(wideList, live);
+  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nowTimed)}</div>`;
   if (bigFest.length) groups += `<div class="ag-group" id="ag-fest">${groupHead(L('Festivales', 'Festivals', 'Festivals'))}${bigFest.map(festGroup).join('')}</div>`;
   let bucket = [];
   const flush = () => { if (current !== null) groups += seriesFold(bucket) + '</div>'; bucket = [] };
@@ -777,14 +811,13 @@ function renderDay(m) {
     bucket.push(e);
   }
   flush();
-  if (show.wide && wideNoHoursList.length) groups += `<div class="ag-group">${groupHead(L('Horario amplio sin horas indicadas', 'Horari ampli sense hores indicades', 'Open hours not stated'))}${rows(wideNoHoursList, 'wideNoHours')}</div>`;
-  if (show.tbc && tbcList.length) groups += `<div class="ag-group" id="ag-tbc">${groupHead(L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed'), ' is-tbc')}${rows(tbcList, 'tbc')}</div>`;
   if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió', 'Series and seasons without session dates'))}${rows(s.run, 'run')}</div>`;
-  if (show.soon && s.soon.length) groups += `<div class="ag-group" id="ag-soon">${groupHead(L(`Talleres y cursos que empiezan en ${COURSE_AHEAD} días`, `Tallers i cursos que comencen en ${COURSE_AHEAD} dies`, `Workshops and courses starting within ${COURSE_AHEAD} days`))}${rows(s.soon, 'soon')}</div>`;
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
-  if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada de lo que estás viendo. Activa otro tipo arriba o mira mañana.', 'Per avui ja no queda res del que estàs mirant. Activa un altre tipus a dalt o mira demà.', 'Nothing left today for what you are viewing. Turn on another type above or look at tomorrow.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
+  if (!groups && !wideList.length) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
   html += `<div class="ag-timeline">${groups}</div>`;
-  html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past.filter(e => (e._a.kind === 'wide' ? show.wide : show.fixed)));
+  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, L(`En los próximos ${COURSE_AHEAD} días`, `En els propers ${COURSE_AHEAD} dies`, `In the next ${COURSE_AHEAD} days`), state.cats.length === 1 && state.cats[0] === 'talleres');
+  html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
+  html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return html;
 }
@@ -795,8 +828,10 @@ function dayHeading(d) {
 }
 function renderRange(m) {
   const show = state.show, s = m.sections;
-  const visible = e => ({timed: show.fixed, wide: show.wide, tbc: show.tbc, run: Boolean(state.query)}[e._a.kind] ?? true);
+  const visible = e => e._a.kind !== 'wide' && (e._a.kind !== 'run' || Boolean(state.query));
   const counts = {...m.counts, soon: s.soon.length};
+  const seenWide = new Set(), wideAll = [];
+  for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(visible)]).filter(([, l]) => l.length);
   const days = buckets.slice(0, state.shown).map(([d, list]) => {
     const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
@@ -804,9 +839,9 @@ function renderRange(m) {
     return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
   }).join('');
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
-  let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`}</div>`;
+  let html = chipsHtml(counts) + wideBlock(wideAll, false) + `<div class="ag-timeline">${days || (wideAll.length ? '' : `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`)}</div>`;
   if (rest) html += `<button class="ag-toggle ag-moredays" type="button" data-moredays="1">${L('Ver más días', 'Mostra més dies', 'See more days')} · ${rest.toLocaleString('es-ES')} ${L('actividades más', 'activitats més', 'more activities')}</button>`;
-  if (show.soon && s.soon.length) html += `<div class="ag-group" id="ag-soon">${groupHead(L('Talleres y cursos que empiezan pronto', 'Tallers i cursos que comencen aviat', 'Workshops and courses starting soon'))}${rows(s.soon, 'soon')}</div>`;
+  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, '', state.cats.length === 1 && state.cats[0] === 'talleres');
   if (state.started && s.started.length) html += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   html += foldHtml('past', L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other);
@@ -1204,6 +1239,12 @@ document.addEventListener('click', e => {
     const from = button.dataset.fesfrom > today ? button.dataset.fesfrom : today, span = daysBetween(from, button.dataset.festo || from);
     hideSheet(); state.detail = null; state.query = button.dataset.festq; $('searchInput').value = state.query; state.day = from;
     state.range = span <= 0 ? '' : span <= 7 ? '7' : span <= 30 ? '30' : '90'; refresh({scroll: true}); return
+  }
+  if (button.dataset.quickcat !== undefined) { const c = button.dataset.quickcat; state.cats = !c || (state.cats.length === 1 && state.cats[0] === c) ? [] : [c]; refresh(); return }
+  if (button.dataset.block) {
+    const id = button.dataset.block, open = button.getAttribute('aria-expanded') === 'true'; state.collapsed ||= new Set();
+    if (open) { state.expanded.delete(id); state.collapsed.add(id); if (id === 'wide') state.expanded.delete('wideAll') } else { state.expanded.add(id); state.collapsed.delete(id) }
+    stableRender(); const sec = $('ag-' + id); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return
   }
   if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; if (button.closest('#typeMini')) { state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return } state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }

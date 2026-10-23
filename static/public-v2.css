@@ -124,9 +124,9 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 
 /* cuadradito de color por categoría, en lugar del punto separador */
 .ev[data-cat] .ev-cat>.ev-catname:before{content:'';display:inline-block;width:9px;height:9px;margin:0 7px 0 0;border:1px solid var(--ink);background:var(--cat,var(--paper));opacity:1;vertical-align:0}
-[data-cat=musica],[data-category=musica]{--cat:var(--ink)}[data-cat=escena],[data-category=escena]{--cat:var(--coral)}[data-cat=arte],[data-category=arte]{--cat:var(--sage)}
-[data-cat=charlas],[data-category=charlas]{--cat:var(--turq)}[data-cat=fiestas],[data-category=fiestas]{--cat:var(--sand)}[data-cat=cine],[data-category=cine]{--cat:var(--lilac)}
-[data-cat=deporte],[data-category=deporte]{--cat:var(--petrol)}[data-cat=talleres],[data-category=talleres]{--cat:var(--cobalt)}
+[data-cat=musica],[data-category=musica],[data-category-color=musica]{--cat:var(--ink)}[data-cat=escena],[data-category=escena],[data-category-color=escena]{--cat:var(--coral)}[data-cat=arte],[data-category=arte],[data-category-color=arte]{--cat:var(--sage)}
+[data-cat=charlas],[data-category=charlas],[data-category-color=charlas]{--cat:var(--turq)}[data-cat=fiestas],[data-category=fiestas],[data-category-color=fiestas]{--cat:var(--sand)}[data-cat=cine],[data-category=cine],[data-category-color=cine]{--cat:var(--lilac)}
+[data-cat=deporte],[data-category=deporte],[data-category-color=deporte]{--cat:var(--petrol)}[data-cat=talleres],[data-category=talleres],[data-category-color=talleres]{--cat:var(--cobalt)}
 /* El mismo cuadrito de categoría en la selección de la semana, la ficha y los filtros de categoría (22-10-2026). */
 .pick-small[data-cat] .pick-meta:before,.pick-large[data-cat] .pick-meta:before,.sheet-top>span[data-cat]:before,#categories .filter-chip:not([data-category=""]):before{content:'';display:inline-block;width:9px;height:9px;margin-right:7px;border:1px solid var(--ink);background:var(--cat,var(--paper));vertical-align:0;flex:none}
 #categories .filter-chip.active:not([data-category=""]):before{border-color:var(--paper)}
@@ -195,3 +195,11 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .ms-tag{border-radius:0;background:var(--sage);color:var(--on-color);border:1px solid var(--on-color);letter-spacing:.08em}
 .ev.ev-hl .ms-tag{border-color:var(--on-color)}
 .sheet-ms{color:var(--ink)}
+
+/* Barra de categorías y bloques plegables, en recto (23-10-2026) */
+.cat-pill{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}
+.cat-pill i{border-color:var(--ink)}
+.cat-pill.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}.cat-pill.on i{border-color:var(--paper)}
+.ag-block{border-radius:0;border-color:var(--ink);background:var(--paper)}
+.ag-wide{background:var(--surface2)}
+.ag-block .ag-rows .ev{border-bottom-color:var(--line)}
