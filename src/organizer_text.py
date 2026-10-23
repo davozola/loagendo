@@ -64,18 +64,45 @@ def page_text(page):
     return ' '.join(_h.unescape(text).split()), ' '.join(_h.unescape(title.group(1)).split()) if title else ''
 
 
+def jsonld_text(page, title):
+    """Descripción del schema.org Event de la página que es este acto (suele ser más completa que og:description)."""
+    from src.venue_feeds import jsonld_events
+    import html as _h
+    words = _words(title)
+    for node in jsonld_events(page or ''):
+        if words & _words(str(node.get('name') or '')):
+            text = re.sub(r'<[^>]+>', ' ', str(node.get('description') or ''))
+            return ' '.join(_h.unescape(text).split())
+    return ''
+
+
 def candidates(conn, limit, today=None):
     today = (today or dt.date.today()).isoformat()
     retry = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=30)).isoformat(timespec='seconds')
-    rows = conn.execute("""SELECT r.source, r.id, r.title, e.description, e.links_json FROM source_records r
-        JOIN source_enrichments e ON e.source=r.source AND e.id=r.id
-        LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
-        WHERE r.source='guiabcn' AND r.end_date>=? AND r.eligibility<>'exclude'
-          AND NOT EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id)
-          AND length(trim(COALESCE(e.description,'')))<?
-          AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
-        ORDER BY r.start_date LIMIT ?""", (today, SHORT, retry, limit * 3)).fetchall()
     out = []
+    # Agendas de sala leídas con IA (23-10-2026): el listado no trae texto; la página propia del acto sí.
+    try:
+        own = conn.execute("""SELECT r.source, r.id, r.title, r.source_url FROM source_records r
+            LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
+            WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.eligibility<>'exclude'
+              AND COALESCE(json_extract(r.raw_json,'$.loagendo.description'),'')=''
+              AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
+            ORDER BY r.start_date LIMIT ?""", (today, retry, limit * 3)).fetchall()
+    except sqlite3.DatabaseError: own = []
+    for source, rid, title, url in own:
+        if usable_link(url) and _words(title) & _words(urlsplit(url).path.replace('-', ' ').replace('_', ' ')):
+            out.append((source, rid, title, url))
+        if len(out) >= limit: return out
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, e.description, e.links_json FROM source_records r
+            JOIN source_enrichments e ON e.source=r.source AND e.id=r.id
+            LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
+            WHERE r.source='guiabcn' AND r.end_date>=? AND r.eligibility<>'exclude'
+              AND NOT EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id)
+              AND length(trim(COALESCE(e.description,'')))<?
+              AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
+            ORDER BY r.start_date LIMIT ?""", (today, SHORT, retry, limit * 3)).fetchall()
+    except sqlite3.DatabaseError: rows = []
     for source, rid, title, desc, links in rows:
         try: links = json.loads(links or '[]')
         except ValueError: links = []
@@ -92,20 +119,33 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
     from src.venue_feeds import fetch, robots_allows
     import time
     initialize(conn); fetcher = fetcher or fetch
-    found = ok = 0
+    found = ok = images = 0; pages = {}
     for source, rid, title, url in candidates(conn, limit, today):
         status, text, ptitle = 'sin_texto', '', ''
         try:
             if fetcher is fetch and not robots_allows(url): status = 'robots'
             else:
-                st, final, page = fetcher(url, timeout)
+                # Una obra con funciones diarias son varias fichas con la misma página: se lee una vez por pasada.
+                if url not in pages: pages[url] = fetcher(url, timeout)
+                st, final, page = pages[url]
                 if st != 200: status = f'http_{st}'
                 else:
                     text, ptitle = page_text(page)
+                    if source.startswith('venue_ia_'):
+                        longer = jsonld_text(page, title)
+                        if len(longer) > len(text): text = longer
+                        # Imagen que la sala pone para compartir el acto, con su crédito, si la ficha no tiene.
+                        from src.venue_feeds import og_meta
+                        image = og_meta(page).get('og:image', '')
+                        if image.startswith(('https://', 'http://')) and not conn.execute('SELECT 1 FROM media_assets WHERE source=? AND id=?', (source, rid)).fetchone():
+                            from src.media import register
+                            venue = conn.execute('SELECT venue FROM source_venues WHERE source=? AND id=? ORDER BY seq LIMIT 1', (source, rid)).fetchone()
+                            with conn: register(conn, source, rid, image, alt=title, credit=venue[0] if venue else '')
+                            images += 1
                     if len(text) < MIN_TEXT: status = 'corto'
                     elif not (_words(title) & (_words(text) | _words(ptitle) | _words(urlsplit(final or url).path.replace('-', ' ')))): status = 'no_es_del_acto'
                     else: status = 'ok'; ok += 1
-            if fetcher is fetch: time.sleep(0.5)
+            if fetcher is fetch and len(pages) and url == list(pages)[-1]: time.sleep(0.5)
         except Exception as error:
             status = 'error: ' + type(error).__name__
         found += 1
@@ -116,8 +156,8 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
     # Texto genérico del sitio: el mismo para tres actos distintos de la misma web.
     with conn:
         conn.execute("""UPDATE organizer_texts SET status='generico_del_sitio' WHERE status='ok' AND text IN (
-            SELECT text FROM organizer_texts WHERE status='ok' GROUP BY text HAVING COUNT(DISTINCT id)>=3)""")
-    return {'status': 'completed', 'attempted': found, 'with_text': ok}
+            SELECT text FROM organizer_texts WHERE status='ok' GROUP BY text HAVING COUNT(DISTINCT url)>=3)""")
+    return {'status': 'completed', 'attempted': found, 'with_text': ok, 'images': images}
 
 
 def texts(conn):

@@ -1392,7 +1392,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         organizer_credit=''
         if len((archived_description or '').strip())<80 and not source_description(raw,source):
             organizer=organizer_description(conn,source,id,prefetch)
-            if organizer: archived_description,organizer_credit=organizer,'la web del organizador'
+            if organizer: archived_description,organizer_credit=organizer,('la web de la sala' if source.startswith('venue_ia_') else 'la web del organizador')
         archived_facts=detail_facts(conn,source,id,prefetch)
         opendata_facts=(_opendata_schedule(raw)['facts'] if raw.get('timetable') else opendata_normalized(raw)) if source=='opendatabcn_agenda' else {}
         links=source_links(raw,source,url)
