@@ -229,14 +229,24 @@ def run_due(conn, config, media_root, *, force=False, now=None):
                 conn.execute("UPDATE automation_runs SET finished_at=?,status=?,result_json=?,error=? WHERE id=?", (now_utc(), status, json.dumps(result, ensure_ascii=False, sort_keys=True), error[:1000], run_id))
                 _health(conn, source, status, error)
             outcomes.append({"name": job["name"], "source": source, "status": status, "result": result, "error": error})
-        return {"ran_at": now.isoformat(timespec="seconds"), "outcomes": outcomes}
+        # Vigilancia de horas por fuente (23-10-2026): si una fuente que daba horas deja de darlas, alerta y aviso.
+        horas = None
+        if any(o.get("status") not in ("disabled", "not_due") for o in outcomes):
+            try:
+                from src.time_health import check as _time_check
+                horas = _time_check(conn)
+            except Exception as exc:
+                horas = {"error": str(exc)}
+        return {"ran_at": now.isoformat(timespec="seconds"), "outcomes": outcomes, "horas": horas}
     finally:
         with conn: conn.execute("DELETE FROM automation_locks WHERE name='engine'")
 
 
 def status(conn):
     initialize(conn)
+    from src.time_health import open_alerts
     return {
+        "alerts": open_alerts(conn),
         "health": [dict(zip(("source", "last_success_at", "last_failure_at", "last_status", "consecutive_failures", "last_error"), row)) for row in conn.execute("SELECT source,last_success_at,last_failure_at,last_status,consecutive_failures,last_error FROM source_health ORDER BY source")],
         "recent_runs": [dict(zip(("job_name", "source", "kind", "started_at", "finished_at", "status", "error"), row)) for row in conn.execute("SELECT job_name,source,kind,started_at,finished_at,status,error FROM automation_runs ORDER BY id DESC LIMIT 100")],
     }

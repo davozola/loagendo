@@ -114,6 +114,10 @@ def report(conn, *, today=None, horizon_days=30):
     # por fuente de la ficha y por web enlazada (src/link_check.py, se actualiza en cada publicación).
     from src.link_check import summary as link_summary
     metrics['external_links']=link_summary(conn)
+    # Fuentes que daban horas y han dejado de darlas (src/time_health.py). Aviso, no bloqueo: la web sigue
+    # mostrando la última hora que dio la fuente mientras se revisa el conector.
+    from src.time_health import open_alerts
+    metrics['source_alerts']=open_alerts(conn)
     blockers=[]
     if health: blockers.append('Hay conectores con errores o volumen anómalo recientes; resuélvelos o exclúyelos explícitamente de la publicación.')
     if metrics['description_coverage_percent'] < 60: blockers.append('La cobertura de descripciones aún es inferior al 60 %.')
