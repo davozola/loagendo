@@ -941,9 +941,10 @@ function sortItems(items) { return items.sort((a, b) => Boolean(b.time) - Boolea
 async function loadDistricts() {
   try {
     const rows = await get('/api/districts?day=' + state.day);
-    $('districts').innerHTML = rows.map(x => `<button class="district ${state.district === x.name ? 'active' : ''}" type="button" data-district="${esc(x.name)}"><b>${esc(t(x.name))}</b><span>${x.count}</span></button>`).join('');
+    // 23-10-2026: el bloque «Por distritos» ya no está en la página; solo se rellena el desplegable del panel.
+    if ($('districts')) $('districts').innerHTML = rows.map(x => `<button class="district ${state.district === x.name ? 'active' : ''}" type="button" data-district="${esc(x.name)}"><b>${esc(t(x.name))}</b><span>${x.count}</span></button>`).join('');
     $('districtFilter').innerHTML = `<option value="">${t('Todos los distritos')}</option>${[...rows].sort((x, y) => collator.compare(t(x.name), t(y.name))).map(x => `<option value="${esc(x.name)}" ${state.district === x.name ? 'selected' : ''}>${esc(t(x.name))}</option>`).join('')}`;
-  } catch (_) { $('districts').innerHTML = '' }
+  } catch (_) { if ($('districts')) $('districts').innerHTML = '' }
 }
 
 /* ---------- detail ---------- */
