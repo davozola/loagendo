@@ -273,7 +273,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -495,6 +495,56 @@ def title_pairs(conn):
                 elif a["route"] and b["route"] and first_time(a) and first_time(a) == first_time(b):
                     pairs.append((a["key"], b["key"]))
     return pairs
+
+
+COURSE_TITLE = re.compile(r"^(?:taller|tallers|curs|cursos|curso|classe|classes|clase|clases|grup|grupo|iniciacio|iniciacion|conversa|conversacion)\b")
+RUN_MIN_DAYS = 7          # una «temporada»: obra en cartel, exposición
+RUN_MIN_OVERLAP = 0.5     # dos temporadas son la misma si se solapan al menos la mitad de la más corta
+
+
+def run_pairs(conn):
+    """La misma obra o exposición en cartel con fechas que no coinciden del todo (23-10-2026):
+    «El Mago Pop» en el Victòria (Generalitat 14-10 → 31-1, la sala 14-10 → 28-2), «Mamma Mia!» en el
+    Tívoli (Generalitat y Balañà), la expo de Sant Pau (4-7 y 7-7 → 15-11). Mismo título (sin «Espectacle»,
+    comillas…), mismo sitio, las dos de una semana o más y solapadas al menos la mitad de la más corta.
+    Y las funciones sueltas del mismo título y sitio que caen dentro de la temporada (Conciertos.Club publica
+    cada función de «Mamma Mia!» por separado) son esa temporada: pasan a ser sus días con hora."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    by_key = {}
+    for source, rid, title, start, end, venue, lat, lon in rows:
+        key = _title_key(title)
+        if len(key) < 5 or key in CONTAINED_GENERIC or ROUTE.match(key): continue
+        # Talleres y cursos fuera: un centro tiene varios grupos con el mismo título («Taller de pilates» de lunes y de
+        # jueves) y unirlos de dos en dos entre fuentes acabaría juntando grupos distintos.
+        if COURSE_TITLE.match(_clean(title)): continue
+        try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
+        except (TypeError, ValueError): continue
+        by_key.setdefault(key, []).append({"key": f"{source}:{rid}", "source": source, "start": a, "end": b, "days": (b - a).days,
+                                           "venue": venue or "", "lat": lat, "lon": lon})
+    pairs = []
+    for items in by_key.values():
+        if len(items) < 2: continue
+        runs = [x for x in items if x["days"] >= RUN_MIN_DAYS and not _generic_site(x)]
+        if not runs: continue
+        for i, a in enumerate(runs):
+            for b in runs[i + 1:]:
+                overlap = (min(a["end"], b["end"]) - max(a["start"], b["start"])).days
+                # Solo entre fuentes distintas: dos fichas de la misma fuente con el mismo título en el mismo centro
+                # suelen ser grupos distintos de un curso («Taller de ioga» de mañana y de tarde).
+                if a["source"] != b["source"] and overlap >= 0 and overlap >= RUN_MIN_OVERLAP * min(a["days"], b["days"]) and _same_site(a, b):
+                    pairs.append((a["key"], b["key"]))
+        for x in items:
+            if x["days"] != 0 or _generic_site(x): continue
+            host = next((r for r in runs if r["source"] != x["source"] and r["start"] <= x["start"] <= r["end"] and _same_site(r, x)), None)
+            if host: pairs.append((x["key"], host["key"]))
+    return list(dict.fromkeys(pairs))
 
 
 def contained_pairs(conn):

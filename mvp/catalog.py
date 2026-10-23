@@ -1218,6 +1218,16 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             return [{'date':d,'time':t} for d,t in conn.execute('SELECT local_date,local_time FROM candidate_occurrences WHERE source=? AND id=?',(ms,mi))]
         timed={o['date'] for o in occurrences if o.get('time')}
         days=[str(start)[:10]] if str(start)[:10]==str(end)[:10] else sorted({o['date'] for o in occurrences if not o.get('time')})
+        # Temporada sin sesiones propias (obra en cartel, 23-10-2026): las funciones sueltas del mismo acto que otras
+        # fuentes publican día a día (con hora) pasan a ser sus días; así sale solo los días que hay función.
+        if str(start)[:10]!=str(end)[:10] and not occurrences:
+            singles=set()
+            for member in collapsed_members:
+                ms,mi=member.split(':',1)
+                if ms==source: continue
+                occ=_member_occ(ms,mi); dates={o['date'] for o in occ}
+                if len(dates)==1: singles|={o['date'] for o in occ if o.get('time') and str(start)[:10]<=o['date']<=str(end)[:10]}
+            if len(singles)>=3: days=sorted(singles)
         for day in days:
             if day in timed: continue
             for member in sorted(collapsed_members, key=lambda m: _rank(m.split(':',1)[0])):
