@@ -109,6 +109,20 @@ def guiabcn_exclusion(raw, start='', end=''):
     return None
 
 
+ACTIVITY_LANGUAGES={'catala':'ca','castella':'es','angles':'en','frances':'fr','italia':'it','altres':'other'}
+
+
+def activity_languages(raw,source):
+    """Idioma en que se hace la actividad, cuando la fuente lo declara (Open Data BCN: languages_data).
+    «Indiferent» no dice nada y se ignora. Devuelve códigos: ca, es, en, fr, it, other."""
+    if source!='opendatabcn_agenda': return []
+    out=[]
+    for item in (raw or {}).get('languages_data') or []:
+        code=ACTIVITY_LANGUAGES.get(clean(str((item or {}).get('language') or '')).replace(' ',''))
+        if code and code not in out: out.append(code)
+    return out
+
+
 def opendata_normalized(raw):
     """Fields the Open Data BCN connector derived from its source record."""
     return (raw or {}).get('loagendo') or {}
@@ -879,7 +893,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=31  # 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=32  # 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -954,7 +968,8 @@ def project_raw(source, id, title, start, end, kind, url, raw):
         if rows: hours_by_day=schedule_by_day(rows,start,end)
         if hours_by_day and len(set(hours_by_day.values()))>1: schedule_time=hours_label=None
     lineup,lineup_times=lineup_of(raw)
-    return {'v':PROJECTION_VERSION,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
+    languages=activity_languages(raw,source)
+    return {'v':PROJECTION_VERSION,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'languages':languages,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
             'family_audience':family_audience(raw,source,title),'price_label':split_price(price)[0] or None,'is_free':is_free(price,free_label),
             'schedule_text_time':schedule_time,'hours_label':hours_label,'schedule_range':(lambda t:t if re.fullmatch(r'\d{2}:\d{2}–\d{2}:\d{2}',t) else '')(str(source_time(raw,source) or '').strip()),'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
@@ -1225,7 +1240,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         'time_conflicts':time_conflicts,
         'hours_by_day':hours_by_day if isinstance(hours_by_day,dict) else {},
         'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'ticket_url':projection.get('ticket_url',''),
-        'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),
+        'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),'languages':list(projection.get('languages') or []),
         'superseded_by':(twin if source=='guiabcn' else None) or collapsed_into,
         'also_in':([twin] if source=='opendatabcn_agenda' and twin else [])+[m for m in collapsed_members if m!=twin],
     }

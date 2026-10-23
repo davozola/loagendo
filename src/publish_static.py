@@ -213,6 +213,7 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
     if event.get('age_source'): out['ag'] = [event['age_min'], 99 if event.get('age_max') is None else event['age_max']]  # franja de edad
     if event.get('series'): out['se'] = event['series']  # serie que la web agrupa en una fila
+    if event.get('languages'): out['lg'] = event['languages']  # idioma de la actividad, si la fuente lo dice
     if event.get('milestone'): out['ms'] = event['milestone']['kind'][:2]  # «op» inauguración, «cl» clausura (src/milestones.py)
     if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0]  # festival (src/festivals.py)
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
