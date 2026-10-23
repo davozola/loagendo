@@ -86,7 +86,9 @@ def fill(occurrences: list, known_by_day: dict, start: str, end: str) -> list:
         if start != end and named and day not in named: continue
         occurrences[:] = [o for o in occurrences if o['date'] != day]
         for x in items:
-            occurrences.append({'date': day, 'time': x['time'], 'evidence_field': EVIDENCE, 'verified': False,
+            # Hora rescatada de la página del acto (src/time_rescue.py) o última que dio la lectura de la fuente.
+            evidence = 'rescate' if str(x['evidence_field']).startswith('rescate') else EVIDENCE
+            occurrences.append({'date': day, 'time': x['time'], 'evidence_field': evidence, 'verified': False,
                                 'seen_at': x['last_seen_at'][:10], 'original_evidence': x['evidence_field']})
         filled.append(day)
     if filled: occurrences.sort(key=lambda o: (o['date'], o.get('time') or ''))
