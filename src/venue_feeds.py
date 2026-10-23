@@ -407,6 +407,12 @@ def tribe_list_nodes(venue, fetcher=fetch, timeout=25, today=None, known=None):
         for raw_time in re.findall(r'tribe-event-sesion-hora[^>]*>(.*?)</div>', block, re.S):
             m = re.search(r'\b(\d{1,2}):(\d{2})\s*h?\b', strip(raw_time))
             if m and int(m.group(1)) < 24: sessions.append(f"{int(m.group(1)):02d}:{m.group(2)}")
+        # Un solo pase (23-10-2026): la hora no va en «tribe-event-sesion-hora» sino en un segundo
+        # <time class="…event-datetime"> sin atributo datetime («23:00h»). Era la mitad del listado.
+        if not sessions:
+            for raw_time in re.findall(r'<time[^>]*tribe-events-calendar-list__event-datetime(?![^>]*datetime=)[^>]*>(.*?)</time>', block, re.S):
+                m = re.search(r'\b(\d{1,2}):(\d{2})\s*h?\b', strip(raw_time))
+                if m and int(m.group(1)) < 24: sessions.append(f"{int(m.group(1)):02d}:{m.group(2)}")
         sessions = list(dict.fromkeys(sessions))
         room = re.search(r'event-venue-title[^>]*>(.*?)</span>', block, re.S)
         prices = [strip(x) for x in re.findall(r'<span class="preu-[^"]*">(.*?)</span>', block, re.S) if strip(x)]

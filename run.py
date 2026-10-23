@@ -211,7 +211,7 @@ def main():
     parser.add_argument('--sync-venues',action='store_true',help='Importa los recintos con enabled=true en config/venues.json a partir de su JSON-LD schema.org')
     parser.add_argument('--register-images',action='store_true',help='Registra las referencias de imagen de las fichas archivadas que aún no las tenían (Generalitat); no descarga nada')
     parser.add_argument('--retry-failed-media',action='store_true',help='Vuelve a encolar las descargas de imagen que fallaron por red (TLS, timeout, 5xx); los 404 se mantienen')
-    parser.add_argument('--rebuild-candidates',action='store_true',help='Recalcula las horas candidatas de todas las fichas a partir del JSON archivado (sin red)')
+    parser.add_argument('--rebuild-candidates',action='store_true',help='Recalcula las horas candidatas de todas las fichas a partir del JSON archivado y guarda las horas de su historial (sin red)')
     parser.add_argument('--reclassify-guiabcn',action='store_true',help='Marca como excluidas las filas GuiaBCN fuera de Barcelona o avisos de calendario; no borra nada')
     parser.add_argument('--automation-config',default=str(ROOT/'config'/'automation.json'),help='Ruta al JSON de trabajos automáticos')
     parser.add_argument('--export-static',metavar='DIR',nargs='?',const='dist',help='Genera la web pública estática (listado, fichas, imágenes autorizadas con crédito) en DIR sin publicarla')
@@ -289,8 +289,10 @@ def main():
         print(json.dumps({'requeued':n},ensure_ascii=False)); return 0
     if a.rebuild_candidates:
         from src.sync import rebuild_candidates
+        from src.known_times import backfill
         with closing(catalog.connect(DB)) as conn:
-            print(json.dumps(rebuild_candidates(conn),ensure_ascii=False,indent=2))
+            # Primero el historial de horas (todas las versiones guardadas), luego las sesiones actuales.
+            print(json.dumps({'horas_conocidas':backfill(conn),'sesiones':rebuild_candidates(conn)},ensure_ascii=False,indent=2))
         return 0
     if a.reclassify_guiabcn:
         from src.sync import reclassify_guiabcn

@@ -63,3 +63,26 @@ class RunTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CalendarSessionsTest(unittest.TestCase):
+    def test_lee_los_pases_del_calendario_impreso(self):
+        from src.official_dates import page_facts
+        page = ('<div class="ticketsCalendar__sessions is-active" data-calendar-sessions="2026-10-23"><div class="ticketsCalendar__sessionTime"> <span>20:00</span> </div></div>'
+                '<div class="ticketsCalendar__sessions" data-calendar-sessions="2026-10-24"><div class="ticketsCalendar__sessionTime"> <span>18:00</span></div>'
+                '<div class="ticketsCalendar__sessionTime"> <span>21:00</span></div></div>')
+        times, _, _ = page_facts(page, 'El Tenoriu', '2026-10-01', '2026-11-30')
+        self.assertEqual(times, {'2026-10-23': '20:00', '2026-10-24': '18:00'})
+
+
+class SingleClockTest(unittest.TestCase):
+    def _read(self, body):
+        from src.official_dates import read_page
+        page = f'<html><head><title>Joan Reggae Drummer All Stars - Sala Upload</title></head><body>{body}</body></html>'
+        return read_page('https://sala-upload.com/conciertos/joan-reggae-drummer-all-stars/', 'Joan Reggae Drummer All Stars', '2026-10-23', '2026-10-23', lambda u, t: (200, u, page), 5)
+
+    def test_una_sola_hora_en_la_pagina_es_la_del_acto(self):
+        self.assertEqual(self._read('<p>Divendres 23 octubre</p><p>20:00</p><p>Entrades 15 €</p>')['times'], {'2026-10-23': '20:00'})
+
+    def test_con_dos_horas_no_se_elige(self):
+        self.assertEqual(self._read('<p>Portes 19:30</p><p>Concert 20:30</p>')['times'], {})

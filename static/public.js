@@ -427,6 +427,10 @@ function availability(e, day) {
   if (occTimes.length) return {kind: 'timed', times: occTimes};
   const part = hoursByDay(e)?.[day];
   if (PARTS[part]) return {kind: 'tbc', part, until: e.end};
+  // Días con sesión según la fuente (23-10-2026): si la tabla por días cubre esta fecha y no la nombra,
+  // ese día no hay sesión (la «Jamboree Jam Session» de Open Data es los lunes 19 y 26: no sale el viernes 23).
+  const hbd = hoursByDay(e), hbDays = hbd ? Object.keys(hbd).sort() : [];
+  if (e.start !== e.end && hbDays.length && !(day in hbd) && day >= hbDays[0] && day <= hbDays[hbDays.length - 1]) return {kind: 'run', until: e.end};
   if (e.start === e.end) {
     const range = rangeIn(label) || rangeIn(raw);
     if (range) return range.close - range.open >= WIDE_MIN ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
@@ -1031,7 +1035,10 @@ async function openDetail(k, focus, opts = {}) {
     const brief = '';
     const description = `${brief}<section class="sheet-copy">${paragraphs}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
-    const scheduleBits = [conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`, `Sources give different times (${conflict.join(' and ')}): check with the venue`) : '', e.schedule_days, scheduleExtra(e), e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta', 'Registration open') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`, `This date is not yet on ${e.venue_unconfirmed}’s listings: check it before you go`) : ''].filter(Boolean);
+    // Hora que dio una lectura anterior de la fuente y la actual ya no trae (23-10-2026): se dice.
+    const carried = (e.occurrences || []).find(o => o.evidence_field === 'ultima_hora_conocida' && o.date === (e.occurrence_date || state.day));
+    const carriedNote = carried ? L(`La fuente publicó esta hora${carried.seen_at ? ' el ' + labelDate(carried.seen_at) : ''} y ahora no la muestra: confírmala`, `La font va publicar aquesta hora${carried.seen_at ? ' el ' + labelDate(carried.seen_at) : ''} i ara no la mostra: confirma-la`, `The source published this time${carried.seen_at ? ' on ' + labelDate(carried.seen_at) : ''} and no longer shows it: please check`) : '';
+    const scheduleBits = [carriedNote, conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`, `Sources give different times (${conflict.join(' and ')}): check with the venue`) : '', e.schedule_days, scheduleExtra(e), e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta', 'Registration open') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`, `This date is not yet on ${e.venue_unconfirmed}’s listings: check it before you go`) : ''].filter(Boolean);
     const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
     // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
     const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));

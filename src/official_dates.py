@@ -269,7 +269,20 @@ def page_candidates(conn, limit, today=None):
           AND NOT (r.source='guiabcn' AND EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id))
           AND (o.id IS NULL OR o.checked_at<?)
         ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (*AGGREGATOR_SOURCES, today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit * 3)).fetchall()
+    # Agendas de sala leídas con IA cuyo listado no da la hora (23-10-2026): la página propia del acto
+    # suele traerla en schema.org (Marula: «Bex + Ay Trick» 21:00). Primero estas: son de la propia sala.
+    try: own = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
+        LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
+        WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude' AND r.kind<>'exhibition'
+          AND NOT EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>'')
+          AND (o.id IS NULL OR o.checked_at<?)
+        ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
+    except sqlite3.OperationalError: own = []  # base sin tabla de sesiones (pruebas antiguas)
     out = []
+    for source, rid, title, start, end, url in own:
+        if url and usable(url) and _words(title) & _words(urlsplit(url).path.replace("-", " ").replace("_", " ")):
+            out.append((source, rid, title, start, end, url))
+        if len(out) >= limit: return out
     for source, rid, title, start, end, raw in rows:
         words = _words(title)
         # Solo un enlace a la página de ESTE acto: su ruta comparte palabras propias con el título.
@@ -306,6 +319,12 @@ def page_facts(page, title, start, end):
         if day and start <= day <= end and hour and hour != "00:00": times.setdefault(day, hour)
         if not price and node.get("offers"): price, free = _price_of(node.get("offers"))
         if node.get("isAccessibleForFree") in (True, "true", "True") and not price: price, free = "Gratis", True
+    # Calendario de funciones impreso en la página (Balañà: cada día un bloque data-calendar-sessions con sus
+    # pases, 23-10-2026). Solo completa los días que schema.org no da.
+    for day, block in re.findall(r'data-calendar-sessions="(\d{4}-\d{2}-\d{2})"(.*?)(?=data-calendar-sessions=|</section>|$)', page or "", re.S):
+        hours = re.findall(r'sessionTime[^>]*>\s*(?:<span>)?\s*(\d{1,2}):(\d{2})', block)
+        if hours and start <= day <= end and day not in times:
+            times[day] = f"{int(hours[0][0]):02d}:{hours[0][1]}"
     return times, price, free
 
 
@@ -324,7 +343,13 @@ def read_page(url, title, start, end, fetcher, timeout):
     words = _words(title)
     if not (words & (_words(ptitle) | _words(urlsplit(final or url).path.replace("-", " ")))): return {"status": "no_es_del_acto"}
     times, price, free = page_facts(page, title, start, end)
-    return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(page_text(page), title)}
+    text = page_text(page)
+    if not times and start == end:
+        # Página propia de un acto de un solo día sin schema.org (Sala Upload, 23-10-2026): si en todo su texto
+        # hay una sola hora escrita, es la del acto. Con dos o más (puertas y concierto, horario de taquilla…) no se elige.
+        clocks = {f"{int(h):02d}:{m}" for h, m in re.findall(r"(?<![\d:.])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d:])\s*h?", text)}
+        if len(clocks) == 1 and clocks != {"00:00"}: times = {start: clocks.pop()}
+    return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(text, title)}
 
 
 def run_pages(conn, limit=300, fetcher=None, timeout=15, today=None):

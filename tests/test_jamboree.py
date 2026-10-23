@@ -17,8 +17,11 @@ class TribeListTest(unittest.TestCase):
         self.records = [record_from_jsonld(VENUE, node, url) for url, node in self.nodes]
 
     def test_reads_sessions_room_price_and_skips_past(self):
-        self.assertEqual([r["title"] for r in self.records], ["Chico Pinheiro Quartet", "Clarence Bekker Christmas Special"])
-        chico, bekker = self.records
+        self.assertEqual([r["title"] for r in self.records], ["Chico Pinheiro Quartet", "Benziê", "Clarence Bekker Christmas Special"])
+        chico, benzie, bekker = self.records
+        # Un solo pase: la hora va en un segundo <time> sin datetime (23-10-2026).
+        self.assertEqual((benzie["start"], benzie["time_text"]), ("2026-10-23", "23:00"))
+        self.assertEqual([o["local_time"] for o in candidate_sessions(benzie)], ["23:00"])
         self.assertEqual((chico["start"], chico["time_text"], chico["price_text"]), ("2026-10-20", "19:00 · 20:30", "25€"))
         self.assertEqual(chico["raw"]["loagendo"]["room"], "Jamboree Sala 1")
         self.assertEqual(chico["raw"]["loagendo"]["tickets_url"], "https://tickets.oneboxtds.com/jamboree/events/53460?hl=ca-ES")

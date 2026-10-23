@@ -20,6 +20,7 @@ from urllib.request import Request, urlopen
 from src.pipeline import candidate_sessions, coor, coords_in_row, delta, event_kind, sha
 from src.network import tls_context
 from mvp.catalog import guiabcn_exclusion
+from src import known_times as _known_times
 
 BARCELONA_INE = "08019"
 GENCAT_BARCELONA = "agenda:ubicacions/barcelona/barcelones/barcelona"
@@ -301,8 +302,11 @@ def _upsert_record(conn: sqlite3.Connection, run_id: int, record: dict) -> tuple
         conn.execute("INSERT INTO source_organizers VALUES (?,?,?,?)", (record["source"], record["id"], seq, name))
     for flag in sorted(set(record["alerts"])):
         conn.execute("INSERT INTO review_flags VALUES (?,?,?)", (record["source"], record["id"], flag))
-    for occurrence in candidate_sessions(record):
+    sessions = candidate_sessions(record)
+    for occurrence in sessions:
         conn.execute("INSERT INTO candidate_occurrences VALUES (?,?,?,?,?,?)", (record["source"], record["id"], occurrence["local_date"], occurrence["local_time"], occurrence["type"], occurrence["evidence_field"]))
+    # Toda hora que dé una lectura queda guardada: si otra pasada la pierde, la ficha muestra la última conocida.
+    _known_times.remember(conn, record["source"], record["id"], sessions, now_utc())
     conn.execute("""INSERT OR IGNORE INTO source_record_versions(source,external_id,run_id,raw_sha256,normalized_sha256,raw_json,changed_fields_json,observed_at)
         VALUES(?,?,?,?,?,?,?,?)""", (record["source"], record["id"], run_id, raw_hash, normalized_hash, json.dumps(record["raw"], ensure_ascii=False, sort_keys=True), json.dumps(changed), now_utc()))
     for field in changed:
@@ -455,6 +459,26 @@ class IncrementalSync:
         return {"id": run_id, "source": source, "status": status, "http_status": last_status, "cursor": str(cursor), "pages": pages, "rows_received": received, "rows_rejected": rejected, "rows_mutated": mutated, "warnings": warnings}
 
 
+def record_from_stored(source, record_id, raw, start, end, kind, eligibility, today=None):
+    """La ficha (forma de conector) que da un raw_json guardado, para volver a sacar sus sesiones sin red.
+    La usan ``rebuild_candidates`` y el historial de horas (src/known_times.py)."""
+    from src.opendata_bcn import record_from_item
+    try:
+        if source == "generalitat": record = _record_generalitat(raw.get("localizaciones", []), raw.get("organizadores", []))[0]
+        elif source in ("diba_bibliotecas", "diba_turismo"): record = _record_diba(source, [raw])[0]
+        elif source == "opendatabcn_agenda": record = record_from_item(raw, today)
+        elif source.startswith(("web_", "venue_")):
+            normalized = raw.get("normalized") or {}
+            record = {"source": source, "id": record_id, "start": start, "end": end, "kind": kind, "eligibility": eligibility,
+                      "time_text": normalized.get("time_text", ""), "venues": normalized.get("venues", []),
+                      "time_evidence_field": "event_next_date" if source == "web_auditori" else "schema.org/startDate" if source.startswith("venue_") else "listing_time"}
+        else: return None
+    except (IndexError, KeyError, TypeError, ValueError, AttributeError):
+        return None
+    if record is not None: record["eligibility"] = eligibility
+    return record
+
+
 def rebuild_candidates(conn: sqlite3.Connection, *, today=None) -> dict:
     """Recompute candidate occurrences for every archived record from its stored
     raw JSON, without any network call. Needed after a parser improvement:
@@ -469,21 +493,10 @@ def rebuild_candidates(conn: sqlite3.Connection, *, today=None) -> dict:
             stat["records"] += 1
             try: raw = json.loads(raw_text)
             except (TypeError, ValueError): stat["unparsed"] += 1; continue
-            record = None
-            try:
-                if source == "generalitat": record = _record_generalitat(raw.get("localizaciones", []), raw.get("organizadores", []))[0]
-                elif source in ("diba_bibliotecas", "diba_turismo"): record = _record_diba(source, [raw])[0]
-                elif source == "opendatabcn_agenda": record = record_from_item(raw, today)
-                elif source.startswith(("web_", "venue_")):
-                    normalized = raw.get("normalized") or {}
-                    record = {"source": source, "id": record_id, "start": start, "end": end, "kind": kind, "eligibility": eligibility,
-                              "time_text": normalized.get("time_text", ""), "venues": normalized.get("venues", []),
-                              "time_evidence_field": "event_next_date" if source == "web_auditori" else "schema.org/startDate" if source.startswith("venue_") else "listing_time"}
-            except (IndexError, KeyError, TypeError, ValueError):
-                record = None
+            record = record_from_stored(source, record_id, raw, start, end, kind, eligibility, today)  # editorial/derived state already stored wins
             if record is None: stat["unparsed"] += 1; continue
-            record["eligibility"] = eligibility  # editorial/derived state already stored wins
             wanted = sorted({(o["local_date"], o["local_time"], o["type"], o["evidence_field"]) for o in candidate_sessions(record)})
+            _known_times.remember(conn, source, record_id, [{"local_date": d, "local_time": t, "evidence_field": f} for d, t, _, f in wanted], now_utc())
             current = sorted(conn.execute("SELECT local_date,local_time,kind,evidence_field FROM candidate_occurrences WHERE source=? AND id=?", (source, record_id)).fetchall())
             if wanted: stat["with_candidates"] += 1
             if [tuple(c) for c in current] != wanted:

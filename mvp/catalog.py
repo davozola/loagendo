@@ -834,6 +834,8 @@ class Prefetch:
         self.organizer=_organizer_texts(conn)
         from src.official_dates import official as _official_dates, pages as _official_pages
         self.official=_official_dates(conn); self.official_pages=_official_pages(conn)
+        from src.known_times import load as _known_times
+        self.known_times=_known_times(conn)
         if 'source_detail_facts' in tables:
             for s,i,facts in conn.execute('SELECT source,id,facts_json FROM source_detail_facts'):
                 try: self.facts[(s,i)]=json.loads(facts) or {}
@@ -1181,7 +1183,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # del agregador; su precio, más abajo; su texto se añade al de la ficha para la extracción con IA.
     official_page=None
     from src.dedupe import first_party as _first_party
-    if not _first_party(source):
+    # También las agendas de sala leídas con IA: su listado no siempre da la hora y la página del acto sí (23-10-2026).
+    own_page_fill=source.startswith('venue_ia_')
+    if not _first_party(source) or own_page_fill:
         from src.official_dates import pages as _pages
         ptable=prefetch.official_pages if prefetch is not None else _pages(conn)
         for k in [key,twin or '']+list(collapsed_members):
@@ -1191,10 +1195,19 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if official_page and official_page['times']:
         for day,hour in official_page['times'].items():
             same=[o for o in occurrences if o['date']==day]
-            if len(same)==1 and same[0].get('time')!=hour:
+            if own_page_fill:
+                # La sala: solo completa lo que falta (nunca corrige una hora que su listado ya da).
+                if not any(o.get('time') for o in same) and str(start)[:10]<=day<=str(end)[:10]:
+                    occurrences[:]=[o for o in occurrences if o['date']!=day]+[{'date':day,'time':hour,'evidence_field':'pagina_del_acto','verified':False}]
+                    official_page['applied'].append('hora')
+            elif len(same)==1 and same[0].get('time')!=hour:
                 same[0]['time']=hour; same[0]['evidence_field']='web_oficial'; official_page['applied'].append('hora')
             elif not same and start<=day<=end and str(start)[:10]==str(end)[:10]:
                 occurrences.append({'date':day,'time':hour,'evidence_field':'web_oficial','verified':False}); official_page['applied'].append('hora')
+    # Última hora conocida (23-10-2026, decisión de David): un día que la lectura actual deja sin hora
+    # toma la que dio una lectura anterior de esta misma ficha, marcada como tal (src/known_times.py).
+    from src import known_times as _kt
+    _kt.fill(occurrences, (getattr(prefetch, 'known_times', {}).get((source,id)) if prefetch is not None else _kt.for_record(conn,source,id)) or {}, start, end)
     # Two directories often publish different times for the same concert
     # (doors vs. show, or a plain error). When the canonical record is itself a
     # directory, every published time is shown and the reader is told to
