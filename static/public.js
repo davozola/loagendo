@@ -768,10 +768,12 @@ function foldHtml(id, title, list, sub = '') {
   const open = state.expanded.has(id);
   return `<section class="ag-fold${open ? ' open' : ''}" id="ag-${id}"><button class="ag-fold-head" type="button" data-${open ? 'collapse' : 'expand'}="${id}" aria-expanded="${open}"><span>${esc(title)} · <b>${list.length.toLocaleString('es-ES')}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><i aria-hidden="true">${open ? '−' : '+'}</i></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
 }
+// Al buscar, en Guardados o en «Arte y galerías» lo que se busca puede estar en cualquier bloque: todos abiertos.
+const openAll = () => Boolean(String(state.query || '').trim()) || state.savedOnly || state.chans.includes('galerias');
 // Bloque plegable de lista entera (talleres, sin hora): cerrado salvo que se abra o que sea lo principal.
 function foldBlock(id, title, list, sub, openByDefault = false, cls = '') {
   if (!list.length) return '';
-  const open = state.expanded.has(id) || (openByDefault && !state.collapsed?.has(id));
+  const open = state.expanded.has(id) || ((openByDefault || openAll()) && !state.collapsed?.has(id));
   return `<section class="ag-block${open ? ' open' : ''}${cls}" id="ag-${id}"><button class="ag-block-head" type="button" data-block="${id}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><em>${open ? L('Plegar', 'Plega', 'Hide') : L('Ver', 'Mostra', 'See')} ${open ? '−' : '›'}</em></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
 }
 // Exposiciones y espacios abiertos (23-10-2026, David): arriba y plegados; con «Arte» como única categoría, desplegados.
@@ -783,7 +785,7 @@ function wideBlock(list, live) {
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
   const title = live ? L(`${list.length} exposiciones y espacios abiertos hoy`, `${list.length} exposicions i espais oberts avui`, `${list.length} exhibitions and venues open today`) : L(`${list.length} exposiciones y espacios abiertos`, `${list.length} exposicions i espais oberts`, `${list.length} exhibitions and venues open`);
-  const id = 'wide', open = state.expanded.has(id) || (state.cats.length === 1 && state.cats[0] === 'arte' && !state.collapsed?.has(id));
+  const id = 'wide', open = state.expanded.has(id) || (((state.cats.length === 1 && state.cats[0] === 'arte') || openAll()) && !state.collapsed?.has(id));
   const cap = state.expanded.has('wideAll') ? sorted.length : 10, more = sorted.length - cap;
   sorted.forEach(e => { e._hl = '' });  // dentro del bloque, sin destacados: ya va ordenado por cierre
   return `<section class="ag-block ag-wide${open ? ' open' : ''}" id="ag-wide"><button class="ag-block-head" type="button" data-block="${id}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><em>${open ? L('Plegar', 'Plega', 'Hide') : L('Ver', 'Mostra', 'See')} ${open ? '−' : '›'}</em></button>${open ? `<div class="ag-rows">${seriesFold(sorted.slice(0, cap))}${more > 0 ? `<button class="ag-toggle" type="button" data-expand="wideAll">${L('Ver las', 'Mostra les', 'See all')} ${sorted.length.toLocaleString('es-ES')}</button>` : ''}</div>` : ''}</section>`;
