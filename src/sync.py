@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re as _re
 import sqlite3
 import time
 from dataclasses import dataclass
@@ -300,6 +301,11 @@ def _upsert_record(conn: sqlite3.Connection, run_id: int, record: dict) -> tuple
         conn.execute("INSERT INTO source_venues VALUES (?,?,?,?,?,?,?)", (record["source"], record["id"], seq, venue.get("name", ""), venue.get("address", ""), coords[0] if coords else None, coords[1] if coords else None))
     for seq, name in enumerate(record["organizers"]):
         conn.execute("INSERT INTO source_organizers VALUES (?,?,?,?)", (record["source"], record["id"], seq, name))
+    # Una lectura que funciona pero ya no trae la hora que traía la anterior es una anomalía (maqueta nueva,
+    # cita de hora que la IA no copió…), no algo normal: queda marcada para revisar (23-10-2026).
+    if old and _re.match(r"\d{2}:\d{2}", str(old.get("time_text") or "")) and not _re.match(r"\d{2}:\d{2}", str(record.get("time_text") or "")) \
+            and str(old.get("start") or "")[:10] == str(record.get("start") or "")[:10]:
+        record["alerts"] = list(record["alerts"]) + ["TIME_LOST_IN_NEW_READ"]
     for flag in sorted(set(record["alerts"])):
         conn.execute("INSERT INTO review_flags VALUES (?,?,?)", (record["source"], record["id"], flag))
     sessions = candidate_sessions(record)

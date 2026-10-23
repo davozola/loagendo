@@ -1208,6 +1208,26 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # toma la que dio una lectura anterior de esta misma ficha, marcada como tal (src/known_times.py).
     from src import known_times as _kt
     _kt.fill(occurrences, (getattr(prefetch, 'known_times', {}).get((source,id)) if prefetch is not None else _kt.for_record(conn,source,id)) or {}, start, end)
+    # Orden de la hora (23-10-2026, David): 1) lo que da la fuente ahora, 2) la página del propio acto,
+    # 3) la última hora que dio la fuente, 4) solo si la fuente nunca la dio, la de otra agenda del mismo acto
+    # (municipal antes que ticketera o directorio). Marcada «otra_fuente»; en público no se nombra el agregador.
+    if collapsed_members:
+        from src.dedupe import source_rank as _rank
+        def _member_occ(ms,mi):
+            if prefetch is not None: return prefetch.occurrences.get((ms,mi),[])
+            return [{'date':d,'time':t} for d,t in conn.execute('SELECT local_date,local_time FROM candidate_occurrences WHERE source=? AND id=?',(ms,mi))]
+        timed={o['date'] for o in occurrences if o.get('time')}
+        days=[str(start)[:10]] if str(start)[:10]==str(end)[:10] else sorted({o['date'] for o in occurrences if not o.get('time')})
+        for day in days:
+            if day in timed: continue
+            for member in sorted(collapsed_members, key=lambda m: _rank(m.split(':',1)[0])):
+                ms,mi=member.split(':',1)
+                if ms==source: continue
+                ts=sorted({o['time'] for o in _member_occ(ms,mi) if o['date']==day and o.get('time')})
+                if ts:
+                    occurrences[:]=[o for o in occurrences if o['date']!=day]+[{'date':day,'time':t,'evidence_field':'otra_fuente','verified':False} for t in ts]
+                    break
+        occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
     # Two directories often publish different times for the same concert
     # (doors vs. show, or a plain error). When the canonical record is itself a
     # directory, every published time is shown and the reader is told to

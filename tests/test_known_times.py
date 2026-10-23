@@ -30,6 +30,9 @@ class KnownTimesTest(unittest.TestCase):
         filled = known_times.fill(occ, known_times.for_record(self.conn, 'venue_prueba', 'a1'), '2026-10-30', '2026-10-30')
         self.assertEqual(filled, ['2026-10-30'])
         self.assertEqual((occ[0]['time'], occ[0]['evidence_field']), ('21:00', 'ultima_hora_conocida'))
+        # Y la pérdida queda marcada como anomalía para revisar.
+        flags = {f for (f,) in self.conn.execute("SELECT issue FROM review_flags WHERE source='venue_prueba' AND id='a1'")}
+        self.assertIn('TIME_LOST_IN_NEW_READ', flags)
 
     def test_una_hora_nueva_manda_sobre_la_conocida(self):
         _upsert_record(self.conn, self.run, _record('21:00'))
