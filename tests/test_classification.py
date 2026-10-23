@@ -202,7 +202,8 @@ class PublicUiTests(unittest.TestCase):
     def test_front_end_labels_match_the_taxonomy_and_old_controls_are_gone(self):
         js = (ROOT / 'static' / 'public.js').read_text(); html = (ROOT / 'static' / 'index.html').read_text()
         for key, (es, ca) in {**taxonomy.CATEGORIES, **taxonomy.CHANNELS}.items():
-            self.assertRegex(js, re.escape(f"{key}: ['{es}', '{ca}']") + '|' + re.escape(f'{key}: [\'{es}\', "{ca}"]'))
+            # 23-10-2026: el tercer elemento es el inglés.
+            self.assertRegex(js, re.escape(f"{key}: ['{es}', '{ca}'") + '|' + re.escape(f'{key}: [\'{es}\', "{ca}"'))
         self.assertNotIn('kidsOnly', html); self.assertNotIn('id="subtypes"', html); self.assertIn('id="channels"', html)
         self.assertNotIn('Otros', js)
 
