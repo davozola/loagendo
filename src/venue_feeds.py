@@ -672,6 +672,14 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
             known = {urljoin(page_url, str(node.get("url") or "")) for page_url, node in nodes}
             for listing_url, body in pages:
                 links = event_links(body, listing_url, budget * 4, exclude=known)
+                # Salas cuyas fichas no llevan palabras de evento en la URL (Cinemes Girona: «/blue-heron», 23-10-2026):
+                # con «follow_all_links», cualquier enlace del mismo sitio que case con link_pattern y no con exclude_pattern.
+                if venue.get("follow_all_links"):
+                    host = listing_url.split("/", 3)[2]
+                    links = [u for u in dict.fromkeys(urljoin(listing_url, html.unescape(h)).split("#", 1)[0].split("?", 1)[0]
+                                                      for h in re.findall(r'<a[^>]+href=["\']([^"\'#]+)', body, re.I))
+                             if u.startswith("http") and u.split("/", 3)[2] == host and u not in known and u.rstrip("/") != listing_url.rstrip("/")
+                             and not (venue.get("exclude_pattern") and re.search(venue["exclude_pattern"], u))]
                 if venue.get("link_pattern"):  # solo fichas de evento («/es/evento/» en Apolo), no paginación ni ciclos
                     links = [l for l in links if re.search(venue["link_pattern"], l)]
                 for link in links[:budget]:
