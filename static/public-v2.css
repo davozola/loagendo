@@ -95,6 +95,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .ag-chip-desc,.ag-chip-top b,.mini-chip b{color:inherit;opacity:.8}
 /* Activas en negro (23-10-2026): petróleo, turquesa y salvia son también colores de categoría (Deporte, Charlas, Arte). */
 .ag-chip.on,.mini-chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+/* «Sin hora» activo en gris (23-10-2026): se distingue de los otros tres, pero se ve claramente marcado. */
+.ag-chip.c-tbc.on,.mini-chip.c-tbc.on{background:#5c5c5c;border-color:#5c5c5c;border-style:solid;color:#fff}
 .ag-chip .m-dot,.mini-chip .m-dot{background:currentColor}.ag-chip .m-dots,.mini-chip .m-dots{background:radial-gradient(circle,currentColor 2.6px,transparent 3px) 0 50%/6px 6px repeat-x}
 .ag-chip .m-bar,.mini-chip .m-bar{background:currentColor;border-radius:0}
 

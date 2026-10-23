@@ -509,7 +509,10 @@ const CHANNEL_VIEW = {galerias: ALL_TYPES};
 let savedShow = null, viewKey = '';
 function channelView() {
   // Guardados (22-10-2026): también los cuatro tipos; lo que guardaste se ve siempre, sea del tipo que sea.
-  const key = state.savedOnly ? 'saved' : String(state.query || '').trim() ? 'search' : state.chans.length === 1 && CHANNEL_VIEW[state.chans[0]] ? state.chans[0] : '';
+  // Con cualquier filtro (categoría, plan, edad, idioma, distrito, formato, gratis u horario) también los cuatro
+  // tipos (23-10-2026, David): quien filtra «Teatro en Gràcia» quiere verlo todo, tenga hora fija o no.
+  const filtered = state.cats.length || state.chans.length || state.ages.length || state.langs.length || state.district || state.format || state.free || state.hourFrom !== null || state.hourTo !== null;
+  const key = state.savedOnly ? 'saved' : String(state.query || '').trim() ? 'search' : state.chans.length === 1 && CHANNEL_VIEW[state.chans[0]] ? state.chans[0] : filtered ? 'filter' : '';
   if (key === viewKey) return;
   if (!key) { if (savedShow) { state.show = savedShow; savedShow = null } }
   else { if (!savedShow) savedShow = {...state.show}; Object.assign(state.show, CHANNEL_VIEW[key] || ALL_TYPES) }
