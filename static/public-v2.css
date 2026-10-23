@@ -13,20 +13,14 @@
 @font-face{font-family:'Inter Tight';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/inter-tight-latin-700-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter Tight';font-style:italic;font-weight:500;font-display:swap;src:url(/fonts/inter-tight-latin-500-italic.woff2) format('woff2')}
 
-:root,html[data-theme=light]{
+:root,html[data-theme=light],html[data-theme=dark]{
   --sand:#F9D779;--turq:#23CED9;--coral:#FCA47C;--petrol:#097C87;--sage:#A1CCA6;--lilac:#BBA6EA;--cobalt:#3D5BD9;
   --ink:#000;--paper:#fff;--on-color:#000;--active-bg:#000;--active-fg:#fff;--text2:#444;--bar:#e3e3e3;--petrol-text:#097C87;--footer:var(--ink);--footer-ink:var(--paper);--shade:rgba(0,0,0,.06);
   --bg:var(--paper);--surface:var(--paper);--surface2:#f4f4f1;--fg:var(--ink);--muted:#2b2b2b;--soft:#555;--line:#e3e3e3;--line2:var(--ink);
   --hover:rgba(0,0,0,.05);--header:var(--paper);--accent:var(--ink);--accentText:var(--petrol-text);--accentSoft:rgba(9,124,135,.10);--onAccent:var(--paper);--radius:0px;
   --fixed:#097C87;--fixedSoft:#097C87;--fixedLine:var(--ink);--wide:#0a6f78;--wideSoft:#23CED9;--wideLine:var(--ink);--now:#b4400f;--nowLine:#b4400f}
-/* Oscuro: gris antracita cálido, no negro puro; las cajas de color mantienen su tono y la letra oscura. */
-html[data-theme=dark]{
-  --sand:#F9D779;--turq:#23CED9;--coral:#FCA47C;--petrol:#0b8a96;--sage:#A1CCA6;--lilac:#BBA6EA;--cobalt:#3D5BD9;
-  --ink:#ecebe6;--paper:#1d1d1b;--on-color:#111;--active-bg:#ecebe6;--active-fg:#111;--text2:#b9b7af;--bar:#3a3a37;--petrol-text:#5cc8d1;--footer:#121211;--footer-ink:#ecebe6;--shade:rgba(255,255,255,.08);
-  --bg:var(--paper);--surface:var(--paper);--surface2:#262624;--fg:var(--ink);--muted:#d6d4cc;--soft:#a8a69e;--line:#3a3a37;--line2:var(--ink);
-  --hover:rgba(255,255,255,.06);--header:var(--paper);--accent:var(--ink);--accentText:var(--petrol-text);--accentSoft:rgba(92,200,209,.14);--onAccent:var(--paper);--radius:0px;
-  --fixed:#5cc8d1;--fixedSoft:#0b8a96;--fixedLine:var(--ink);--wide:#5cc8d1;--wideSoft:#23CED9;--wideLine:var(--ink);--now:#ff8a5c;--nowLine:#ff8a5c}
 body{font-family:'Inter Tight','Helvetica Neue',Arial,sans-serif;background:var(--paper);color:var(--ink)}
+#theme{display:none}  /* solo modo claro (23-10-2026) */
 
 /* cabecera */
 .site-header{background:var(--paper);backdrop-filter:none;border-bottom:1px solid var(--ink)}

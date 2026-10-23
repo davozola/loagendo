@@ -942,7 +942,7 @@ async function loadDistricts() {
   try {
     const rows = await get('/api/districts?day=' + state.day);
     $('districts').innerHTML = rows.map(x => `<button class="district ${state.district === x.name ? 'active' : ''}" type="button" data-district="${esc(x.name)}"><b>${esc(t(x.name))}</b><span>${x.count}</span></button>`).join('');
-    $('districtFilter').innerHTML = `<option value="">${t('Todos los distritos')}</option>${rows.map(x => `<option value="${esc(x.name)}" ${state.district === x.name ? 'selected' : ''}>${esc(t(x.name))} · ${x.count}</option>`).join('')}`;
+    $('districtFilter').innerHTML = `<option value="">${t('Todos los distritos')}</option>${[...rows].sort((x, y) => collator.compare(t(x.name), t(y.name))).map(x => `<option value="${esc(x.name)}" ${state.district === x.name ? 'selected' : ''}>${esc(t(x.name))}</option>`).join('')}`;
   } catch (_) { $('districts').innerHTML = '' }
 }
 
@@ -1245,7 +1245,7 @@ function typeHero() {
 (async () => {
   let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}
   // v1: oscuro por defecto. v2 (22-10-2026): sigue el modo del sistema. En las dos, el botón sol/luna lo cambia y se recuerda.
-  if (SKIN === 'v2') { let saved = null; try { saved = pref('theme') } catch (_) {} theme = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') }
+  if (SKIN === 'v2') theme = 'light';  // v2 solo en claro (23-10-2026: el oscuro no convenció; los colores siguen con nombre por si se retoma)
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();

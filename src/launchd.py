@@ -17,7 +17,7 @@ def plist_data(root: Path, interval=900):
     return {"Label": LABEL, "ProgramArguments": [sys.executable, str(root / "run.py"), "--run-jobs"],
             "WorkingDirectory": str(root), "StartInterval": interval,
             "StandardOutPath": str(root / "reports" / "automation.log"),
-            "StandardErrorPath": str(root / "reports" / "automation-error.log"), "ProcessType": "Background",
+            "StandardErrorPath": str(root / "reports" / "automation-error.log"), "ProcessType": "Standard",  # 23-10-2026: con «Background» macOS frenaba la publicación ~5 veces (2 h 35 frente a 30 min)
             # launchd starts with a minimal PATH; the publish job needs node/npx (Homebrew) to reach Cloudflare.
             "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"}}
 
