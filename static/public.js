@@ -1071,6 +1071,10 @@ async function openDetail(k, focus, opts = {}) {
   const [source, ...rest] = k.split(':'), id = rest.join(':');
   try {
     const e = await get('/api/event?' + new URLSearchParams({source, id, day: state.day}));
+    // El mismo acto tiene su propia ficha en el día que se está mirando (otra fecha de la misma página del
+    // acto, 24-10-2026): se abre esa, no la de otro día.
+    const sameDay = !opts.sibling && state.day && e.other_days && e.other_days[state.day];
+    if (sameDay && sameDay !== k && !(e.start <= state.day && state.day <= e.end)) return openDetail(sameDay, focus, {...opts, sibling: true});
     returnFocus = focus || document.activeElement; state.detail = k; syncUrl(opts.push !== false);
     // One descriptive block: the source's own text when it exists (paragraphs
     // kept), otherwise a single factual sentence built from the record.

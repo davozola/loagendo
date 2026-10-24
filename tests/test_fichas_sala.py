@@ -183,5 +183,18 @@ class FamilyTest(unittest.TestCase):
         self.assertEqual(ages_by_rule('Soc lluna, sol i estrella', "Nens i nenes d'entre 3 i 5 anys")[:2], (3, 5))
 
 
+class OtherDaysTest(unittest.TestCase):
+    def test_las_otras_fechas_del_mismo_acto(self):
+        conn = _db()
+        for rid, day in (('miro25', '2026-10-25'), ('miro612', '2026-12-06')):
+            conn.execute("INSERT INTO source_records(source,id,title,start_date,end_date,kind,eligibility,evidence_level,source_url,raw_sha256,raw_json) "
+                         "VALUES('venue_ia_fundacio_miro',?,'Soc lluna, sol i estrella',?,?,'single','review','',?,'','{}')", (rid, day, day, MIRO_URL))
+        conn.execute("INSERT INTO source_records(source,id,title,start_date,end_date,kind,eligibility,evidence_level,source_url,raw_sha256,raw_json) "
+                     "VALUES('venue_ia_fundacio_miro','fuera','Soc lluna, sol i estrella','2026-11-08','2026-11-08','single','exclude','',?,'','{}')", (MIRO_URL,))
+        event = {'source': 'venue_ia_fundacio_miro', 'id': 'miro', 'title': 'Soc lluna, sol i estrella', 'start': '2026-11-01', 'end': '2026-11-01', 'url': MIRO_URL}
+        self.assertEqual(catalog.other_days(conn, event), {'2026-10-25': 'venue_ia_fundacio_miro:miro25', '2026-12-06': 'venue_ia_fundacio_miro:miro612'})
+        self.assertEqual(catalog.other_days(conn, {**event, 'end': '2026-11-30'}), {})   # un periodo no tiene «otras fechas»
+
+
 if __name__ == '__main__':
     unittest.main()

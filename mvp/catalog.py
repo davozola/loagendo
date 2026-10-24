@@ -1948,12 +1948,27 @@ def event_detail(conn,source,id,day=''):
     if not row:return None
     if day and not parse_date(day): raise ValueError('Fecha no válida')
     event=row_to_event(conn,row,True,day)
+    event['other_days']=other_days(conn,event)
     event['venue_upcoming']=venue_upcoming(conn,event)
     event['links']=readable_links(event.get('links') or [])
     # La plataforma no es quien organiza («Eventbrite», «DICE»).
     names=[re.sub(r'^\s*Organizado por\s+','',o) for o in event.get('organizers') or []]
     event['organizers']=[o for o in names if clean(o) not in PLATFORMS]
     return event
+
+
+def other_days(conn, event):
+    """{fecha: clave} de las otras fichas del mismo acto en otros días (24-10-2026): misma fuente, mismo
+    título y misma página del acto, cada una de un solo día («Soc lluna, sol i estrella» de la Miró:
+    25-10, 1-11 y 6-12). Así, al abrir la ficha desde la agenda de un día, se abre la de ese día."""
+    url=str(event.get('url') or '')
+    if event.get('start')!=event.get('end') or not url.startswith(('https://','http://')): return {}
+    rows=conn.execute('''SELECT id,substr(start_date,1,10) FROM source_records WHERE source=? AND id<>? AND source_url=? AND title=?
+        AND substr(start_date,1,10)=substr(end_date,1,10) AND eligibility<>'exclude' ''',(event['source'],event['id'],url,event.get('title') or '')).fetchall()
+    out={}
+    for rid,day in sorted(rows,key=lambda r:r[1]):
+        if day!=event.get('start'): out.setdefault(day,event['source']+':'+rid)
+    return out
 
 
 PLATFORMS={'eventbrite','dice','xceed','ticketmaster','songkick','fever','conciertos club','entradas com'}
