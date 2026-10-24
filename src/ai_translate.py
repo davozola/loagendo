@@ -21,7 +21,7 @@ from src.ai_extract import fold
 
 PROMPT_VERSION = 1  # la comprobación es v2 (24-10-2026)
 MIN_TEXT = 80
-MAX_TEXT = 2500
+MAX_TEXT = 3000  # 3000 (25-10-2026): el texto completo de las salas llega hasta 3000 (src/venue_text.py)
 
 SYSTEM = """You translate event descriptions from a Barcelona cultural listings site (Ontoca) into English.
 The source text is usually Catalan, sometimes Spanish. Translate it faithfully and completely:

@@ -263,6 +263,7 @@ def translation_candidates(conn, lang):
     except sqlite3.DatabaseError: return []
     for item, text in rows:
         if not ai_translate.needs(text) or ai_translate.guess_lang(text) == lang: continue
+        if len(text.strip()) > ai_translate.MAX_TEXT: continue  # no se publica media traducción
         if official_translations.official_for(conn, item, lang): continue  # la sala ya la publica
         payload = {'text': text.strip()[:ai_translate.MAX_TEXT]}; s = current.get((task, item))
         if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version(task): continue
@@ -275,6 +276,7 @@ def translation_for(conn, key, text, lang):
     a comprobar con las reglas de hoy; si el original ya estaba en ``lang``, no hay traducción."""
     from src import ai_translate
     task = f'traduccion_{lang}'; s = suggestions(conn).get((task, key))
+    if len((text or '').strip()) > ai_translate.MAX_TEXT: return None
     if not s or s['prompt_version'] != prompt_version(task) or s['input_hash'] != _hash({'text': (text or '').strip()[:ai_translate.MAX_TEXT]}): return None
     try: d = json.loads(s['answer'])
     except ValueError: return None
@@ -354,7 +356,7 @@ def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220}.get(task, 900 if task.startswith('traduccion') else 150)  # tope de salida, no se cobra si no se usa
+    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220}.get(task, 1100 if task.startswith('traduccion') else 150)  # tope de salida, no se cobra si no se usa
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},

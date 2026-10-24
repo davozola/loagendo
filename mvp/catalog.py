@@ -1555,6 +1555,13 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'source_taxonomy':{'guiabcn_activity_codes':guiabcn_codes(raw)} if source=='guiabcn' else {},
             'possible_duplicates':_possible_duplicates(conn,source,id),
         })
+        # Texto completo de la página del acto en la web de la sala (src/venue_text.py, 25-10-2026): cuando es más
+        # largo que lo que da la programación (una línea, una meta recortada). El de la fuente queda en el registro.
+        from src.venue_text import text_for as _venue_text
+        full=_venue_text(conn,source,id)
+        if full and len(full['text'])>len((events.get('description') or '').strip()):
+            events['description_short']=events.get('description') or ''
+            events['description']=full['text']; events['description_scope']='sala'; events['description_url']=full['url']
         if policy=='venue_link_only': apply_venue_link_policy(events,detail=True,source_url=url)
         else: borrow_from_twins(conn,events)
     return events

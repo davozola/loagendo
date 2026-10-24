@@ -59,7 +59,7 @@ class Pipeline(unittest.TestCase):
         items = [(f'a:{n}', {'text': CA}) for n in range(20)]
         info = ai_assist.submit(self.conn, 'k', 'traduccion_en', items, requester=requester)
         self.assertEqual(info['requests'], 3)
-        self.assertEqual(sent['body']['requests'][0]['params']['max_tokens'], 200 + 900 * 8)
+        self.assertEqual(sent['body']['requests'][0]['params']['max_tokens'], 200 + 1100 * 8)
         self.assertIn('Spanish', ai_assist._tasks()['traduccion_es'][0])
 
 
