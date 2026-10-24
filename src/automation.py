@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -140,6 +140,9 @@ def execute(conn, job, media_root):
     if kind == "official_dates":
         from src.official_dates import run_all
         return run_all(conn, job)
+    if kind == "official_translations":
+        from src.official_translations import run as run_official_translations
+        return run_official_translations(conn, job)
     if kind == "time_rescue":
         from src.time_rescue import run as run_rescue
         return run_rescue(conn, job)

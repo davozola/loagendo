@@ -1198,7 +1198,7 @@ async function openDetail(k, focus, opts = {}) {
     // Resumen y recomendación escritos por IA: fuera de la ficha pública hasta evaluarlos (22-10-2026).
     const brief = '';
     // Con traducción: se dice que es automática y el original queda a un clic (24-10-2026).
-    const description = tr ? `${brief}<section class="sheet-copy"><div class="tr-note">${L('Traducción automática', 'Traducció automàtica', 'Machine translation')} · <button type="button" class="tr-toggle" data-trtoggle aria-expanded="false">${L('Ver original', "Veure l'original", 'Show original')}</button></div><div class="tr-text" lang="${LANG}">${para(tr.t)}</div><div class="tr-orig" hidden>${paragraphs}</div></section>`
+    const description = tr ? `${brief}<section class="sheet-copy"><div class="tr-note">${tr.o ? L('Texto de la web oficial', 'Text del web oficial', 'Text from the official website') : L('Traducción automática', 'Traducció automàtica', 'Machine translation')} · <button type="button" class="tr-toggle" data-trtoggle aria-expanded="false">${L('Ver original', "Veure l'original", 'Show original')}</button></div><div class="tr-text" lang="${LANG}">${para(tr.t)}</div><div class="tr-orig" hidden>${paragraphs}</div></section>`
       : `${brief}<section class="sheet-copy">${paragraphs}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     // Hora que dio una lectura anterior de la fuente y la actual ya no trae (23-10-2026): se dice.

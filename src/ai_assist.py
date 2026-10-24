@@ -257,12 +257,13 @@ def queue_translations(conn, texts, stamp=None):
 def translation_candidates(conn, lang):
     """Descripciones de la última exportación sin traducción vigente a ``lang`` (las que ya están en ese
     idioma, a ojo, no se piden)."""
-    from src import ai_translate
+    from src import ai_translate, official_translations
     task = f'traduccion_{lang}'; current = suggestions(conn); out = []
     try: rows = conn.execute('SELECT item,text FROM ai_translation_texts WHERE seen_at=(SELECT MAX(seen_at) FROM ai_translation_texts) ORDER BY item').fetchall()
     except sqlite3.DatabaseError: return []
     for item, text in rows:
         if not ai_translate.needs(text) or ai_translate.guess_lang(text) == lang: continue
+        if official_translations.official_for(conn, item, lang): continue  # la sala ya la publica
         payload = {'text': text.strip()[:ai_translate.MAX_TEXT]}; s = current.get((task, item))
         if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version(task): continue
         out.append((item, payload))

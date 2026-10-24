@@ -47,7 +47,7 @@ class Pipeline(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             shards = {publish_static.shard_of('a:1'): {'a:1': {'description': CA}}, publish_static.shard_of('a:2'): {'a:2': {'description': ES}}}
             report = publish_static.write_translations(self.conn, Path(tmp), shards)
-            self.assertEqual(report['traducidas'], {'en': 0, 'es': 1})
+            self.assertEqual(report['traducidas'], {'en': 0, 'en_oficiales': 0, 'es': 1, 'es_oficiales': 0})
             data = json.loads((Path(tmp) / 'data' / 'tr' / 'es' / f"{publish_static.shard_of('a:1')}.json").read_text())
             self.assertEqual(data['a:1']['t'], ES)
             self.assertTrue((Path(tmp) / 'data' / 'tr' / 'en' / f"{publish_static.shard_of('a:2')}.json").exists())

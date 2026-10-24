@@ -377,7 +377,7 @@ def write_translations(conn, out, shards):
     publicadas para que «ia-asistente» las traduzca y escribe /data/tr/<idioma>/<shard>.json con las ya
     hechas que pasan la comprobación ({clave: {t: texto, m: modelo, f: fecha}}). Un fichero por shard de
     ficha aunque esté vacío, para que la web no pida ficheros que no existen."""
-    from src import ai_assist, ai_translate
+    from src import ai_assist, ai_translate, official_translations
     texts = {k: str(r.get('description') or '').strip() for records in shards.values() for k, r in records.items()}
     texts = {k: v for k, v in texts.items() if ai_translate.needs(v)}
     try: ai_assist.queue_translations(conn, texts)
@@ -386,10 +386,13 @@ def write_translations(conn, out, shards):
     for lang in ai_translate.TARGETS:
         files = {name: {} for name in shards}
         for k, text in texts.items():
+            # La de la propia sala (src/official_translations.py) antes que la automática.
+            official = official_translations.official_for(conn, k, lang)
+            if official: files[shard_of(k)][k] = {'t': official['text'], 'o': 1, 'u': official['url'], 'f': official['date']}; continue
             tr = ai_assist.translation_for(conn, k, text, lang)
             if tr: files[shard_of(k)][k] = {'t': tr['text'], 'm': tr['model'], 'f': tr['date']}
         for name, records in files.items(): _write_json(out / 'data' / 'tr' / lang / f'{name}.json', records)
-        counts[lang] = sum(len(r) for r in files.values())
+        counts[lang] = sum(len(r) for r in files.values()); counts[lang + '_oficiales'] = sum(1 for r in files.values() for v in r.values() if v.get('o'))
     return {'descripciones': len(texts), 'traducidas': counts}
 
 
