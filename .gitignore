@@ -34,3 +34,14 @@ reports/*.tgz
 
 # Ficheros apartados para que David los borre a mano
 _para_borrar/
+
+# Estado que la publicación reescribe en cada pasada (como la base): primera aparición, tarjetas
+# archivadas y fechas del sitemap. Se conservan en disco, fuera del historial (24-10-2026).
+data/first_seen.json
+data/share_archive.json
+data/sitemap_lastmod.json
+# Muestras y listas de revisión que generan los scripts (se regeneran)
+reports/muestra_*
+reports/titulos_normalizados_*.md
+# Restos de bases rotas que se guardan para diagnóstico
+reports/*.roto-*
