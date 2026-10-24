@@ -715,6 +715,27 @@
       "note": "21-10-2026: programa oficial del festival desde la API de su web (edificios de Barcelona con su franja de apertura). Actualizar «dias» en cada edición."
     },
     {
+      "slug": "mira_festival",
+      "name": "MIRA Festival",
+      "type": "festival",
+      "url": "https://mirafestival.com/horarios/",
+      "site": "https://mirafestival.com/",
+      "enabled": true,
+      "feed": {
+        "kind": "festival_schedule",
+        "url": "https://mirafestival.com/horarios/",
+        "lugar": "Fira de Barcelona - Montjuïc",
+        "direccion": "Avinguda de la Reina Maria Cristina, s/n",
+        "lat": 41.37272,
+        "lon": 2.15021,
+        "festival": {
+          "slug": "mira-festival",
+          "name": "MIRA Festival"
+        }
+      },
+      "note": "24-10-2026: horarios oficiales del festival (cada actuación con su escenario y franja) desde mirafestival.com/horarios; robots.txt lo permite. Cada edición cambia la página: revisar al publicar los horarios."
+    },
+    {
       "slug": "poblenou_urban_district",
       "name": "Poblenou Urban District",
       "type": "culture",

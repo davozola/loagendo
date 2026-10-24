@@ -5,12 +5,13 @@
       "slug": "48h-open-house-bcn",
       "nombre": "48h Open House BCN",
       "patron": "48\\s*h\\.?\\s*open\\s*house",
-      "web": "https://www.48hopenhousebarcelona.org/"
+      "web": "https://www.48hopenhousebarcelona.org/",
+      "nota": "El programa oficial (API de su web) responde 403 a nuestro lector desde el 23-10-2026; el programa llega por GuiaBCN y Open Data."
     },
     {
       "slug": "mira-festival",
       "nombre": "MIRA Festival",
-      "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b",
+      "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b|^mira 20\\d\\d\\b",
       "web": "https://mirafestival.com/"
     },
     {
@@ -93,6 +94,13 @@
       "slug": "urban-talks",
       "nombre": "Urban Talks",
       "patron": "\\burban talks\\b"
+    },
+    {
+      "slug": "dart",
+      "nombre": "DART Festival",
+      "patron": "\\bdart\\b.{0,6}festival|festival.{0,40}\\bdart\\b",
+      "web": "https://dart-festival.com/ca/",
+      "nota": "24-10-2026: su web no permite lectores automáticos (robots.txt: Disallow /); el programa llega por GuiaBCN y Open Data."
     }
   ]
 }

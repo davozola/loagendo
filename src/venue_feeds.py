@@ -321,6 +321,7 @@ def record_from_jsonld(venue, node, page_url):
     organizers = [_text(o) for o in ([node.get("organizer")] if node.get("organizer") else []) if _text(o)]
     time_text = _time(node.get("startDate"))
     sessions = [t for t in (node.get("x_sessions") or []) if re.fullmatch(r"\d{2}:\d{2}", str(t))]
+    if node.get("x_time_text") and time_text: time_text = str(node["x_time_text"])   # «01:15–02:15 (madrugada del sábado 7)»
     if len(sessions) > 1: time_text = " · ".join(sessions)   # pases que imprime la sala («19:00h 20:30h»)
     key = record_id(venue["slug"], url.split("?", 1)[0], start, title)
     kind, eligibility = event_kind(title, "", delta(start, end), "", "venue_" + venue["slug"])
@@ -631,6 +632,57 @@ def wp_openhouse_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+_ROW_SPLIT = re.compile(r'<div\s+class="[^"]*\bschedule__row\b(?!-)[^"]*"')
+
+
+def festival_schedule_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Horarios oficiales de un festival en la plantilla de MIRA (24-10-2026, mirafestival.com/horarios): un panel por
+    día («schedule-day-20261106»), un bloque por escenario (h4) y una fila por actuación con su franja («18:00 - 19:00»),
+    artista (enlace a su ficha), imagen y tipo («Live AV Show»). Cada actuación es una ficha del festival (x_festival),
+    en el día de la noche del festival: lo que empieza de madrugada («01:15») es de esa noche y se dice así.
+    El recinto y sus coordenadas salen de config (feed.lugar, feed.direccion, feed.lat, feed.lon)."""
+    from src.festivals import fold
+    feed = venue["feed"]; url = feed["url"]
+    status, final_url, body = fetcher(url, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+    strip = lambda v: " ".join(html.unescape(re.sub(r"<[^>]+>", " ", str(v or ""))).split())
+    weekday = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+    place = {"@type": "Place", "name": feed.get("lugar") or venue["name"],
+             "address": {"@type": "PostalAddress", "streetAddress": feed.get("direccion") or "", "addressLocality": "Barcelona"}}
+    if feed.get("lat") is not None: place["geo"] = {"@type": "GeoCoordinates", "latitude": feed["lat"], "longitude": feed["lon"]}
+    nodes = []
+    panels = re.split(r'<div\s+id="schedule-day-(\d{8})"', body or "")
+    for i in range(1, len(panels), 2):
+        ymd, panel = panels[i], panels[i + 1]
+        day = f"{ymd[:4]}-{ymd[4:6]}-{ymd[6:]}"
+        try: next_day = dt.date.fromisoformat(day) + dt.timedelta(days=1)
+        except ValueError: continue
+        for chunk in re.split(r'schedule__venue-title', panel)[1:]:
+            stage = strip((re.search(r"<h4[^>]*>(.*?)</h4>", chunk, re.S) or [None, ""])[1])
+            for row in _ROW_SPLIT.split(chunk)[1:]:
+                t = re.search(r'schedule__row-time"[^>]*>\s*<p>\s*(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})', row)
+                artists = re.search(r'schedule__row-artists"[^>]*>(.*?)</div>', row, re.S)
+                if not t or not artists: continue
+                names = [strip(a) for a in re.findall(r"<a\b[^>]*>(.*?)</a>", artists.group(1), re.S)] or [strip(artists.group(1))]
+                names = [n for n in names if n]
+                if not names: continue
+                link = re.search(r'<a\b[^>]*href="([^"]+)"', artists.group(1))
+                img = re.search(r'<img\b[^>]*\bsrc="([^"]+)"', row)
+                kind = strip((re.search(r'schedule__row-type"[^>]*>(.*?)</div>', row, re.S) or [None, ""])[1])
+                start, end = f"{int(t.group(1)):02d}:{t.group(2)}", f"{int(t.group(3)):02d}:{t.group(4)}"
+                title = " + ".join(names)
+                # «Instalaciones» en el «Digital Art Area by Landscapes»: el título solo no dice qué es.
+                if len(names) == 1 and fold(title) in {"instalaciones", "instal·lacions", "instal lacions", "installations", "exposicion", "exposicio"}:
+                    title = f"{title} · {stage}"
+                night = start < "08:00"
+                when = f"{start}–{end}" + (f" (madrugada del {weekday[next_day.weekday()]} {next_day.day})" if night else "")
+                node = {"@type": "Event", "name": title, "startDate": f"{day}T{start}", "endDate": day, "url": urljoin(final_url or url, link.group(1)) if link else (final_url or url),
+                        "image": urljoin(final_url or url, img.group(1)) if img else "", "x_room": stage, "x_festival": feed.get("festival"),
+                        "description": " · ".join(x for x in (kind, stage, when) if x), "location": place, "x_time_text": when}
+                nodes.append((final_url or url, node))
+    return nodes, 1
+
+
 def tribe_rest_nodes(venue, fetcher=fetch, timeout=25, today=None):
     """Webs WordPress con The Events Calendar (21-10-2026): su API pública
     ``/wp-json/tribe/events/v1/events`` da cada acto con fechas, sala, dirección, coordenadas, precio,
@@ -680,7 +732,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -690,7 +742,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)

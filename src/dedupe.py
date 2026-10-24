@@ -396,6 +396,13 @@ def festival_pairs(conn):
                  # Songkick anuncia festivales con el nombre del cabeza de cartel («Anthony Rother» con
                  # todo el cartel de MIRA): eso es un concierto suelto a absorber, no un festival.
                  and r["clean"] not in {_clean(n) for n in r["lineup"]}]
+    # Programa oficial del festival leído de su web (fuentes de tipo «festival», p. ej. los horarios de MIRA): cada
+    # actuación tiene su ficha; el anuncio suelto del mismo artista se une a esa actuación (act_pairs, title_pairs), no
+    # a la ficha general del festival (24-10-2026).
+    from src.venue_directory import venue_type
+    official = [r for r in records if r["source"].startswith("venue_") and venue_type(r["source"][6:]) == "festival"]
+    def has_official_set(r):
+        return any(abs((o["start"] - r["start"]).days) <= 1 and (o["clean"] == r["clean"] or f" {r['clean']} " in f" {o['clean']} ") for o in official)
     pairs = []
     # 1) El mismo festival en varias fuentes.
     for i, f in enumerate(festivals):
@@ -411,7 +418,7 @@ def festival_pairs(conn):
             if r is f or r["source"] not in SINGLE_ACT_SOURCES or r in festivals: continue
             if not (f["start"] <= r["start"] and r["end"] <= f["end"]): continue
             artists = {_clean(n) for n in r["lineup"]} | {r["clean"]}
-            if artists & names and _same_place(r, f): pairs.append((r["key"], f["key"]))
+            if artists & names and _same_place(r, f) and not has_official_set(r): pairs.append((r["key"], f["key"]))
     return pairs
 
 

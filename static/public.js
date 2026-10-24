@@ -837,6 +837,8 @@ function msLine(e) {
 function festTag(e) {
   const f = e.festival;
   const bare = x => fold(x).replace(/[^a-z0-9]+/g, '');
+  // Dentro del desplegable del festival, la primera fila es la ficha general (24-10-2026).
+  if (f && f.umbrella && e._inFest) return `<span class="ev-hit ev-fest">${esc(L('Ficha general del festival', 'Fitxa general del festival', 'Festival overview'))}</span>`;
   return f && !f.umbrella && !e._inFest && !bare(e.title).includes(bare(f.name)) ? `<span class="ev-hit ev-fest">${esc(f.name)}</span>` : '';
 }
 // Dentro del bloque del festival, el título sin el nombre del festival delante («…: Fira de vins» → «Fira de vins»).
@@ -846,9 +848,14 @@ function festShort(e) {
 }
 function festGroup(list) {
   list.forEach(e => { e._inFest = true });
-  const f = list[0].festival, sorted = [...list].sort((a, b) => String(a._a?.times?.[0] || a.time || '99').localeCompare(String(b._a?.times?.[0] || b.time || '99')) || byTitle(a, b));
-  const first = sorted.find(e => e._a?.times?.[0] || e.time);
-  return `<details class="ev-fest-group"><summary><span class="fest-text"><span class="fest-name">${esc(f.name)}</span><span class="fest-count">${list.length.toLocaleString('es-ES')} ${L('actividades', 'activitats', 'activities')}${first ? ' · ' + L('desde las', 'des de les', 'from') + ' ' + esc(first._a?.times?.[0] || first.time) : ''}</span></span><i aria-hidden="true">+</i></summary>${sorted.map(row).join('')}</details>`;
+  // Primero la ficha general del festival; luego sus actividades por hora, con las de madrugada (00:00–05:59) al final
+  // de la noche, no al principio (MIRA: Arca a la 01:15 va después de Tortoise a las 22:15). 24-10-2026.
+  const tm = e => String(e._a?.times?.[0] || e.time || ''), night = t => !t ? '9' : (t < '06:00' ? '2' : '1') + t;
+  const general = list.filter(e => e.festival?.umbrella), acts = list.filter(e => !e.festival?.umbrella);
+  acts.sort((a, b) => night(tm(a)).localeCompare(night(tm(b))) || byTitle(a, b));
+  const f = (general[0] || list[0]).festival, first = acts.find(e => tm(e));
+  const n = acts.length || list.length;
+  return `<details class="ev-fest-group"><summary><span class="fest-text"><span class="fest-name">${esc(f.name)}</span><span class="fest-count">${n.toLocaleString('es-ES')} ${L('actividades', 'activitats', 'activities')}${first ? ' · ' + L('desde las', 'des de les', 'from') + ' ' + esc(tm(first)) : ''}</span></span><i aria-hidden="true">+</i></summary>${[...general, ...acts].map(row).join('')}</details>`;
 }
 function seriesFold(list) {
   const out = [], seen = {};

@@ -1491,7 +1491,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         except ValueError: raw_fest=None
     fest=_festivals(conn).of(title,raw_fest,venue=(place[0][0] if place and place[0][0] else ''))
     events['festival']=fest
-    if fest and not fest['umbrella']: events['series']='festival:'+fest['slug']
+    # La ficha general del festival va en el mismo grupo que sus actividades (la primera del desplegable, 24-10-2026).
+    if fest: events['series']='festival:'+fest['slug']
     # Inauguración o clausura de una exposición (src/milestones.py): por la dirección o el título, con su motivo.
     from src.milestones import milestone_of as _milestone
     events['milestone']=_milestone(title,url,verdict['category'],events.get('start'),events.get('end'))
