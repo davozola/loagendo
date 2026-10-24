@@ -33,6 +33,7 @@ from urllib.parse import urlsplit
 from src.organizer_text import SKIP_HOSTS, _words
 
 RECHECK_DAYS = 7
+FREE_FIX = "2026-10-24T10:00:00+00:00"   # antes, un precio 0 de schema.org se guardaba como «Gratis»
 AGGREGATORS = re.compile(r"(?:^|\.)(?:gencat\.cat|graf\.cat|git\.io|barcelona\.cat|bcn\.cat|guia\.barcelona\.cat|agendaculturalbarcelona\.\w+|timeout\.\w+|songkick\.com|xceed\.me)$")
 ASSET = re.compile(r"\.(?:jpe?g|png|gif|webp|svg|pdf|css|js|ico|mp4|mp3)(?:\?|$)", re.I)
 
@@ -270,7 +271,7 @@ def page_candidates(conn, limit, today=None):
         LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
         WHERE r.source IN ({marks}) AND r.kind<>'exhibition' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude'
           AND NOT (r.source='guiabcn' AND EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id))
-          AND (o.id IS NULL OR o.checked_at<?)
+          AND (o.id IS NULL OR o.checked_at<? OR (o.price='Gratis' AND o.checked_at<'2026-10-24T10:00:00+00:00'))
         ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (*AGGREGATOR_SOURCES, today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit * 3)).fetchall()
     # Agendas de sala leídas con IA (23-10-2026): la página propia del acto suele traer la hora en schema.org
     # (Marula: «Bex + Ay Trick» 21:00). Primero estas: son de la propia sala. Desde el 24-10-2026 también las
@@ -279,7 +280,7 @@ def page_candidates(conn, limit, today=None):
     try: own = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
         LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
         WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude' AND r.kind<>'exhibition'
-          AND (o.id IS NULL OR o.checked_at<?)
+          AND (o.id IS NULL OR o.checked_at<? OR (o.price='Gratis' AND o.checked_at<'2026-10-24T10:00:00+00:00'))
         ORDER BY (o.id IS NOT NULL),
                  EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>''),
                  r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
@@ -310,7 +311,9 @@ def _price_of(offers):
             except (TypeError, ValueError): pass
     if not values: return "", False
     lo, hi = min(values), max(values)
-    if hi == 0: return "Gratis", True
+    # Un precio 0 en schema.org no es «gratis» (24-10-2026): muchas webs lo dejan a 0 cuando no lo rellenan
+    # (Poliorama, «Gran Gala Flamenco», con entradas de pago). Gratis solo con isAccessibleForFree.
+    if hi == 0: return "", False
     fmt = lambda v: (f"{v:.2f}".rstrip("0").rstrip(".").replace(".", ",")) + " €"
     return (fmt(lo) if lo == hi else f"{fmt(lo)} – {fmt(hi)}"), False
 
@@ -324,7 +327,7 @@ def page_facts(page, title, start, end):
         day, hour = _date(node.get("startDate")), _time(node.get("startDate"))
         if day and start <= day <= end and hour and hour != "00:00": times.setdefault(day, hour)
         if not price and node.get("offers"): price, free = _price_of(node.get("offers"))
-        if node.get("isAccessibleForFree") in (True, "true", "True") and not price: price, free = "Gratis", True
+        if node.get("isAccessibleForFree") in (True, "true", "True", "1") and not price: price, free = "Gratis", True
     # Calendario de funciones impreso en la página (Balañà: cada día un bloque data-calendar-sessions con sus
     # pases, 23-10-2026). Solo completa los días que schema.org no da.
     for day, block in re.findall(r'data-calendar-sessions="(\d{4}-\d{2}-\d{2})"(.*?)(?=data-calendar-sessions=|</section>|$)', page or "", re.S):
@@ -412,8 +415,11 @@ def pages(conn):
     try:
         cols = {r[1] for r in conn.execute("PRAGMA table_info(official_pages)")}
         sess = "sessions_json" if "sessions_json" in cols else "'{}'"
-        return {(s, i): {"url": u, "times": json.loads(t or "{}"), "price": p, "free": bool(f), "excerpt": x, "sessions": json.loads(ss or "{}")}
-                for s, i, u, t, p, f, x, ss in conn.execute(f"SELECT source,id,url,times_json,price,free,excerpt,{sess} FROM official_pages WHERE status='ok'")}
+        out = {}
+        for s, i, u, t, p, f, x, ss, at in conn.execute(f"SELECT source,id,url,times_json,price,free,excerpt,{sess},checked_at FROM official_pages WHERE status='ok'"):
+            if p == "Gratis" and at < FREE_FIX: p, f = "", 0   # «Gratis» por un precio 0, leído antes del arreglo
+            out[(s, i)] = {"url": u, "times": json.loads(t or "{}"), "price": p, "free": bool(f), "excerpt": x, "sessions": json.loads(ss or "{}")}
+        return out
     except sqlite3.DatabaseError:
         return {}
 

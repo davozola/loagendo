@@ -335,6 +335,19 @@ def source_price(raw,source):
     return str(raw.get('preu') or ''),''
 
 
+def source_notices(raw, source):
+    """Avisos públicos de la fuente, tal cual (24-10-2026): «Entrades exhaurides», «Entrades exhaurides pel
+    concert del 24 d'octubre», cambios de fecha. Solo los de tipo «public» de Open Data BCN y el aviso de
+    GuiaBCN; los internos («revisar», «preus?») nunca."""
+    out=[]
+    if source=='opendatabcn_agenda':
+        from src.opendata_bcn import plain
+        out=[plain(w.get('text')) for w in (raw or {}).get('warnings') or [] if isinstance(w,dict) and w.get('type')=='public']
+    elif source=='guiabcn':
+        out=[str(((raw or {}).get('api_item') or {}).get('warning') or '')]
+    return ['Aviso del Ajuntament: '+' '.join(x.split()) for x in out if x and x.strip()]
+
+
 def family_audience(raw, source, title):
     """True only when the source declares a family/children audience or the title says so."""
     if source=='guiabcn' and guiabcn_taxonomy(raw)[1]: return True
@@ -846,6 +859,8 @@ class Prefetch:
         self.organizer=_organizer_texts(conn)
         from src.official_dates import official as _official_dates, pages as _official_pages
         self.official=_official_dates(conn); self.official_pages=_official_pages(conn)
+        from src.event_status import statuses as _statuses
+        self.statuses=_statuses(conn)
         from src.known_times import load as _known_times
         self.known_times=_known_times(conn)
         if 'source_detail_facts' in tables:
@@ -1159,6 +1174,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if facts.get('api_name'): title=facts['api_name']
     elif facts.get('date_matches') is False and facts.get('api_start_date') and facts['api_start_date']!=str(start)[:10]:
         moved_to=facts['api_start_date']
+    # Aplazado o cancelado según esta fuente u otra del mismo acto (src/event_status.py, 24-10-2026):
+    # no se publica como vigente; la ficha y su evidencia se conservan.
+    from src import event_status as _event_status
+    status_map=getattr(prefetch,'statuses',None) if prefetch is not None else None
+    act_status=(status_map if status_map is not None else _event_status.statuses(conn)).get((source,id))
+    if act_status and not moved_to: moved_to=act_status['estado']
     # GuiaBCN's listing never carries prose: its description lives in the
     # archived official page, so the listing must look there too.
     # Sin texto en GuiaBCN: el de la web oficial del acto, con su crédito (src/organizer_text.py).
@@ -1204,6 +1225,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             if k and tuple(k.split(':',1)) in ptable:
                 found=ptable[tuple(k.split(':',1))]
                 official_page={**found,'host':re.sub(r'^www\.','',urlsplit(found['url']).netloc),'applied':[]}; break
+    # Temporada o programa de la sala sin días propios (Poliorama «Gran Gala Flamenco», del 19-10-2021 al
+    # 30-12-2026): las funciones fechadas de la página del acto dicen qué días hay función. Solo esos días
+    # salen en la agenda; los demás no se presentan como «temporada · confirma el pase» (24-10-2026).
+    if own_page_fill and official_page and str(start)[:10]!=str(end)[:10] and not any((hours_by_day or {}).values()):
+        page_days={d:h for d,h in (official_page.get('times') or {}).items() if str(start)[:10]<=d<=str(end)[:10]}
+        if len(page_days)>=2: hours_by_day=page_days; official_page['applied'].append('funciones')
     if official_page and official_page['times']:
         for day,hour in official_page['times'].items():
             same=[o for o in occurrences if o['date']==day]
@@ -1306,7 +1333,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         # municipal id); the archived row and its history stay untouched.
         'time_conflicts':time_conflicts,
         'hours_by_day':hours_by_day if isinstance(hours_by_day,dict) else {},
-        'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'ticket_url':projection.get('ticket_url',''),
+        'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'event_status':act_status,'ticket_url':projection.get('ticket_url',''),
         'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),'languages':list(projection.get('languages') or []),
         'superseded_by':(twin if source=='guiabcn' else None) or collapsed_into,
         'also_in':([twin] if source=='opendatabcn_agenda' and twin else [])+[m for m in collapsed_members if m!=twin],
@@ -1355,7 +1382,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     price=ai_data.get('price')
     if price and not events.get('is_free') and not events.get('price_label'):
         events['price_label']=price['label']; events['is_free']=bool(price['free']); events['price_source']='ia_texto'; events['ai_quotes']['price']=price['quote']
-    if official_page and official_page.get('price'):
+    # «Gratis» de la página oficial no tapa un importe que ya da la ficha (24-10-2026).
+    paid=bool(re.search(r'\d',str(events.get('price_label') or '')))
+    if official_page and official_page.get('price') and not (official_page['free'] and paid):
         if official_page['price']!=events.get('price_label') or bool(official_page['free'])!=bool(events.get('is_free')):
             events['price_label']=None if official_page['free'] else official_page['price']; events['is_free']=bool(official_page['free'])
             events['price_source']='web_oficial'; official_page['applied'].append('precio')
@@ -1452,7 +1481,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'time_text':(' · '.join(page_passes) if page_passes else '') or (opendata_facts.get('schedule_hours') if od_table else '') or schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
             'schedule_days':sched_days,
             # Las condiciones que venían pegadas al precio pasan a las notas del horario (sin repetir).
-            'schedule_note':' · '.join(dict.fromkeys([x for x in sched_note.split(' · ') if x]+[n for n in split_price(price or archived_facts.get('price_text',''))[1] if n.rstrip('.').lower() not in sched_note.lower()])),
+            'schedule_note':' · '.join(dict.fromkeys(source_notices(raw,source)+[x for x in sched_note.split(' · ') if x]+[n for n in split_price(price or archived_facts.get('price_text',''))[1] if n.rstrip('.').lower() not in sched_note.lower()])),
             'registration_required':bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False)),
             'price_text':split_price(price or archived_facts.get('price_text',''))[0],'source_free_label':free,
             'price_status':'unknown' if not (price or archived_facts.get('price_text') or free) else 'source_claim_unverified',
