@@ -361,7 +361,7 @@ def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None, retr
                 out[chunk[n][0]] = (answer, confidence, why)
         pending = [x for x in pending if x[0] not in out]
         if not pending: break
-        size = 10
+        size = 2 if task == 'traduccion' else 10
     usage['sin_respuesta'] = len(pending)
     return out
 
