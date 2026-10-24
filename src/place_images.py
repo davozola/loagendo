@@ -102,8 +102,9 @@ def fetch_page(url, timeout=20):
 
 def image_from_page(page, base_url):
     """The page's og:image, else its first content image on a municipal host."""
-    match = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', page, re.I) or re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', page, re.I)
-    if match: return urljoin(base_url, html.unescape(match.group(1)))
+    from src.venue_feeds import og_meta
+    og = og_meta(page).get('og:image')
+    if og: return urljoin(base_url, og)
     for src in re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', page, re.I):
         url = urljoin(base_url, html.unescape(src))
         if re.search(r"\.(?:jpe?g|png|webp)(?:\?|$)", url, re.I) and "logo" not in url.lower() and "icon" not in url.lower(): return url

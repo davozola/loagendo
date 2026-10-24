@@ -19,11 +19,15 @@ import json
 import re
 import sqlite3
 import unicodedata
+from html.parser import HTMLParser
 from urllib.parse import urlsplit
 
 MIN_TEXT = 60
 MAX_TEXT = 700
 SHORT = 80
+# Lo leído antes de esta hora con resultado «corto» o «sin texto» se vuelve a leer en la siguiente pasada:
+# el lector anterior cortaba en el primer apóstrofo y no leía el cuerpo de la página (24-10-2026).
+REREAD_BEFORE = '2026-10-24T09:00:00+00:00'
 CREDIT = 'la web del organizador'
 SKIP_HOSTS = re.compile(r"(?:^|\.)(?:barcelona\.cat|bcn\.cat|instagram\.com|facebook\.com|fb\.me|twitter\.com|x\.com|youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|"
                         r"ticketmaster\.\w+|entradas\.com|eventbrite\.\w+|atrapalo\.com|fever\w*\.com|dice\.fm|wegow\.com|taquilla\.com|tickets\.\w+|"
@@ -51,17 +55,74 @@ def usable_link(url):
 
 
 def page_text(page):
-    from src.venue_feeds import og_meta
-    meta = og_meta(page)
-    text = meta.get('og:description') or ''
-    if not text:
-        m = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)', page or '', re.I) or \
-            re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']', page or '', re.I)
-        if m:
-            import html as _h; text = _h.unescape(m.group(1))
-    title = re.search(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)', page or '', re.I) or re.search(r'<title>(.*?)</title>', page or '', re.I | re.S)
-    import html as _h
-    return ' '.join(_h.unescape(text).split()), ' '.join(_h.unescape(title.group(1)).split()) if title else ''
+    """(descripción que la web publica para compartir, título de la página). Con src.venue_feeds.meta_tags:
+    un apóstrofo («d'exploració») ya no corta el texto (24-10-2026)."""
+    from src.venue_feeds import meta_tags
+    tags = meta_tags(page)
+    text = tags.get('og:description') or tags.get('description') or ''
+    title = tags.get('og:title') or tags.get('<title>') or ''
+    return ' '.join(text.split()), ' '.join(title.split())
+
+
+# Texto y foto del cuerpo de la página del acto (24-10-2026), para webs de sala que no publican
+# og:description ni og:image (Arts Santa Mònica) o publican una frase corta.
+BOILER = re.compile(r"cookie|galetes|newsletter|butllet[ií]|bolet[ií]n|subscriu|suscr[ií]bete|uneix-te|privacitat|privacidad|avís legal|aviso legal|"
+                    r"tots els drets|todos los derechos|javascript", re.I)
+SKIP_TAGS = {'script', 'style', 'noscript', 'svg', 'template', 'nav', 'footer', 'header', 'aside', 'form', 'button', 'select'}
+BAD_IMAGE = re.compile(r"logo|icon|sprite|avatar|placeholder|blank|pixel|banner-cookie|\.svg(?:\?|$)|\.gif(?:\?|$)", re.I)
+
+
+class _Body(HTMLParser):
+    """Párrafos (<p>) y fotos (<img>) del contenido, a partir del encabezado que lleva el título del acto."""
+    def __init__(self, title_words):
+        super().__init__(convert_charrefs=True)
+        self.words = title_words; self.skip = 0; self.heading = None; self.started = False
+        self.para = None; self.paras = []; self.images = []; self.has_main = False; self.in_main = 0
+
+    def handle_starttag(self, tag, attrs):
+        a = {k.lower(): (v or '') for k, v in attrs if k}
+        if tag in SKIP_TAGS: self.skip += 1; return
+        if self.skip: return
+        if tag in ('main', 'article'): self.has_main = True; self.in_main += 1
+        if tag in ('h1', 'h2'): self.heading = []
+        elif tag == 'p': self.para = []
+        elif tag == 'br' and self.para is not None: self.para.append(' ')
+        elif tag == 'img' and self.started:
+            src = a.get('src') or a.get('data-src') or ''
+            if src and not src.startswith('data:') and not BAD_IMAGE.search(src): self.images.append(src)
+
+    def handle_endtag(self, tag):
+        if tag in SKIP_TAGS:
+            if self.skip: self.skip -= 1
+            return
+        if self.skip: return
+        if tag in ('main', 'article') and self.in_main: self.in_main -= 1
+        if tag in ('h1', 'h2') and self.heading is not None:
+            if self.words & _words(''.join(self.heading)): self.started = True
+            self.heading = None
+        elif tag == 'p' and self.para is not None:
+            if self.started: self.paras.append(' '.join(''.join(self.para).split()))
+            self.para = None
+
+    def handle_data(self, data):
+        if self.skip: return
+        if self.heading is not None: self.heading.append(data)
+        if self.para is not None: self.para.append(data)
+
+
+def body_text(page, title, limit=MAX_TEXT):
+    """(texto, imagen) del cuerpo de la página del acto: los párrafos de 80 caracteres o más que siguen al
+    encabezado con el título, tal cual y en su orden, hasta ``limit``; y su primera foto. Nada si la página
+    no tiene un encabezado con palabras propias del título (entonces no sabemos qué parte es del acto)."""
+    p = _Body(_words(title))
+    try: p.feed(page or '')
+    except Exception: pass
+    out = []
+    for para in p.paras:
+        if len(para) < 80 or BOILER.search(para) or para in out: continue
+        if out and len('\n\n'.join(out + [para])) > limit: break
+        out.append(para)
+    return '\n\n'.join(out)[:limit], (p.images[0] if p.images else '')
 
 
 def jsonld_text(page, title):
@@ -86,8 +147,8 @@ def candidates(conn, limit, today=None):
             LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
             WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.eligibility<>'exclude'
               AND COALESCE(json_extract(r.raw_json,'$.loagendo.description'),'')=''
-              AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
-            ORDER BY r.start_date LIMIT ?""", (today, retry, limit * 3)).fetchall()
+              AND (o.id IS NULL OR (o.status<>'ok' AND (o.fetched_at<? OR (o.status IN ('corto','sin_texto') AND o.fetched_at<?))))
+            ORDER BY r.start_date LIMIT ?""", (today, retry, REREAD_BEFORE, limit * 3)).fetchall()
     except sqlite3.DatabaseError: own = []
     for source, rid, title, url in own:
         if usable_link(url) and _words(title) & _words(urlsplit(url).path.replace('-', ' ').replace('_', ' ')):
@@ -100,8 +161,8 @@ def candidates(conn, limit, today=None):
             WHERE r.source='guiabcn' AND r.end_date>=? AND r.eligibility<>'exclude'
               AND NOT EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id)
               AND length(trim(COALESCE(e.description,'')))<?
-              AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
-            ORDER BY r.start_date LIMIT ?""", (today, SHORT, retry, limit * 3)).fetchall()
+              AND (o.id IS NULL OR (o.status<>'ok' AND (o.fetched_at<? OR (o.status IN ('corto','sin_texto') AND o.fetched_at<?))))
+            ORDER BY r.start_date LIMIT ?""", (today, SHORT, retry, REREAD_BEFORE, limit * 3)).fetchall()
     except sqlite3.DatabaseError: rows = []
     for source, rid, title, desc, links in rows:
         try: links = json.loads(links or '[]')
@@ -132,11 +193,16 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
                 else:
                     text, ptitle = page_text(page)
                     if source.startswith('venue_ia_'):
+                        # La página propia del acto: su schema.org o, si no, sus párrafos, cuando dicen más.
                         longer = jsonld_text(page, title)
-                        if len(longer) > len(text): text = longer
-                        # Imagen que la sala pone para compartir el acto, con su crédito, si la ficha no tiene.
+                        body, body_image = body_text(page, title)
+                        for candidate in (longer, body):
+                            if len(candidate) > len(text): text = candidate
+                        # Imagen que la sala pone para compartir el acto, con su crédito, si la ficha no tiene; si la
+                        # página no la declara (og:image), la primera foto del contenido del acto (24-10-2026).
                         from src.venue_feeds import og_meta
-                        image = og_meta(page).get('og:image', '')
+                        from urllib.parse import urljoin
+                        image = og_meta(page).get('og:image', '') or (urljoin(final or url, body_image) if body_image else '')
                         if image.startswith(('https://', 'http://')) and not conn.execute('SELECT 1 FROM media_assets WHERE source=? AND id=?', (source, rid)).fetchone():
                             from src.media import register
                             venue = conn.execute('SELECT venue FROM source_venues WHERE source=? AND id=? ORDER BY seq LIMIT 1', (source, rid)).fetchone()

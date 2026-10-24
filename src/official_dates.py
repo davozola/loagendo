@@ -257,6 +257,9 @@ def initialize_pages(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS official_pages (source TEXT NOT NULL, id TEXT NOT NULL, url TEXT NOT NULL DEFAULT '',
       times_json TEXT NOT NULL DEFAULT '{}', price TEXT NOT NULL DEFAULT '', free INTEGER NOT NULL DEFAULT 0, excerpt TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL, checked_at TEXT NOT NULL, PRIMARY KEY(source, id))""")
+    # Pases del día que la página enumera («Tres passis: 12-12.30h / 16-16.30h / 17-17.30h»), 24-10-2026.
+    if "sessions_json" not in {r[1] for r in conn.execute("PRAGMA table_info(official_pages)")}:
+        conn.execute("ALTER TABLE official_pages ADD COLUMN sessions_json TEXT NOT NULL DEFAULT '{}'")
 
 
 def page_candidates(conn, limit, today=None):
@@ -269,14 +272,17 @@ def page_candidates(conn, limit, today=None):
           AND NOT (r.source='guiabcn' AND EXISTS (SELECT 1 FROM source_records t WHERE t.source='opendatabcn_agenda' AND t.id=r.id))
           AND (o.id IS NULL OR o.checked_at<?)
         ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (*AGGREGATOR_SOURCES, today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit * 3)).fetchall()
-    # Agendas de sala leídas con IA cuyo listado no da la hora (23-10-2026): la página propia del acto
-    # suele traerla en schema.org (Marula: «Bex + Ay Trick» 21:00). Primero estas: son de la propia sala.
+    # Agendas de sala leídas con IA (23-10-2026): la página propia del acto suele traer la hora en schema.org
+    # (Marula: «Bex + Ay Trick» 21:00). Primero estas: son de la propia sala. Desde el 24-10-2026 también las
+    # que ya tienen hora (después de las que no): la página trae además la edad, el precio y los demás pases
+    # («Tres passis: 12-12.30h / 16-16.30h / 17-17.30h», Arts Santa Mònica), que el listado no da.
     try: own = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
         LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
         WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude' AND r.kind<>'exhibition'
-          AND NOT EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>'')
           AND (o.id IS NULL OR o.checked_at<?)
-        ORDER BY (o.id IS NOT NULL), r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
+        ORDER BY (o.id IS NOT NULL),
+                 EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>''),
+                 r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
     except sqlite3.OperationalError: own = []  # base sin tabla de sesiones (pruebas antiguas)
     out = []
     for source, rid, title, start, end, url in own:
@@ -335,6 +341,28 @@ def excerpt_of(text, title):
     return "\n".join(lines[first:])[:EXCERPT] if first is not None else ""
 
 
+PASSES_RX = re.compile(r"\b(?:\w+\s+)?(?:passis|passi|passades|pases|pase|sessions|sessio|sesiones|sesion|funcions|funciones)\s*:\s*([^\n]{4,160})")
+
+
+def passes_of(text):
+    """Horas de inicio de los pases que la página enumera en una línea con su nombre («Tres passis:
+    12-12.30h / 16-16.30h / 17-17.30h» → 12:00, 16:00, 17:00). Solo si son dos o más: una sola hora ya la
+    da el resto del lector. De cada rango («16-16.30h») cuenta el inicio."""
+    for m in PASSES_RX.finditer(_fold(text)):
+        line = m.group(1)
+        if not re.search(r"\d", line): continue
+        starts = []
+        for part in re.split(r"\s*(?:/|,|;|\||\bi\b|\by\b|\band\b)\s*", line):
+            part = part.strip()
+            mm = re.match(r"([01]?\d|2[0-3])(?:[:.h]([0-5]\d))?\s*h?(?:\s*(?:-|–|a)\s*([01]?\d|2[0-3])(?:[:.h]([0-5]\d))?\s*h?)?$", part)
+            if not mm: continue
+            if not (mm.group(2) or mm.group(3) or re.search(r"h", part)): continue  # «3» suelto no es una hora
+            starts.append(f"{int(mm.group(1)):02d}:{mm.group(2) or '00'}")
+        starts = sorted(set(starts))
+        if len(starts) >= 2: return starts
+    return []
+
+
 def read_page(url, title, start, end, fetcher, timeout):
     status, final, page = fetcher(url, timeout)
     if status != 200: return {"status": f"http_{status}"}
@@ -349,7 +377,11 @@ def read_page(url, title, start, end, fetcher, timeout):
         # hay una sola hora escrita, es la del acto. Con dos o más (puertas y concierto, horario de taquilla…) no se elige.
         clocks = {f"{int(h):02d}:{m}" for h, m in re.findall(r"(?<![\d:.])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d:])\s*h?", text)}
         if len(clocks) == 1 and clocks != {"00:00"}: times = {start: clocks.pop()}
-    return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(text, title)}
+    sessions = {}
+    if start == end:
+        passes = passes_of(text)
+        if passes: sessions = {start: passes}
+    return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(text, title), "sessions": sessions}
 
 
 def run_pages(conn, limit=300, fetcher=None, timeout=15, today=None):
@@ -367,19 +399,21 @@ def run_pages(conn, limit=300, fetcher=None, timeout=15, today=None):
             res = {"status": "error: " + type(error).__name__}
         done += 1; ok += res["status"] == "ok"; facts += bool(res.get("times") or res.get("price"))
         with conn:
-            conn.execute("""INSERT INTO official_pages(source,id,url,times_json,price,free,excerpt,status,checked_at) VALUES(?,?,?,?,?,?,?,?,?)
+            conn.execute("""INSERT INTO official_pages(source,id,url,times_json,price,free,excerpt,status,checked_at,sessions_json) VALUES(?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(source,id) DO UPDATE SET url=excluded.url,times_json=excluded.times_json,price=excluded.price,free=excluded.free,
-                excerpt=excluded.excerpt,status=excluded.status,checked_at=excluded.checked_at""",
+                excerpt=excluded.excerpt,status=excluded.status,checked_at=excluded.checked_at,sessions_json=excluded.sessions_json""",
                          (source, rid, url, json.dumps(res.get("times") or {}), res.get("price") or "", int(bool(res.get("free"))), res.get("excerpt") or "",
-                          res["status"], dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")))
+                          res["status"], dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), json.dumps(res.get("sessions") or {})))
     return {"checked": done, "pages_ok": ok, "with_time_or_price": facts}
 
 
 def pages(conn):
     """{(source, id): {url, times, price, free, excerpt}} de páginas oficiales leídas."""
     try:
-        return {(s, i): {"url": u, "times": json.loads(t or "{}"), "price": p, "free": bool(f), "excerpt": x}
-                for s, i, u, t, p, f, x in conn.execute("SELECT source,id,url,times_json,price,free,excerpt FROM official_pages WHERE status='ok'")}
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(official_pages)")}
+        sess = "sessions_json" if "sessions_json" in cols else "'{}'"
+        return {(s, i): {"url": u, "times": json.loads(t or "{}"), "price": p, "free": bool(f), "excerpt": x, "sessions": json.loads(ss or "{}")}
+                for s, i, u, t, p, f, x, ss in conn.execute(f"SELECT source,id,url,times_json,price,free,excerpt,{sess} FROM official_pages WHERE status='ok'")}
     except sqlite3.DatabaseError:
         return {}
 

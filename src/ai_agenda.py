@@ -85,6 +85,15 @@ def load_agendas(path=CONFIG_PATH):
     except (OSError, ValueError): return []
 
 
+_BY_SOURCE = {}
+
+
+def agenda_for_source(source):
+    """Agenda de config/agendas_ia.json de una fuente venue_ia_<slug> (o {})."""
+    if not _BY_SOURCE: _BY_SOURCE.update({'venue_ia_' + a['slug']: a for a in load_agendas() if a.get('slug')})
+    return _BY_SOURCE.get(source, {})
+
+
 def expand_urls(agenda, today):
     monday = today - dt.timedelta(days=today.weekday())
     out = []
@@ -291,6 +300,23 @@ def ask(agenda, text, page_url, today, key, requester=None, model=None, usage=No
 
 
 # ---------- registros ----------
+EXHIBITION_SEGMENTS = {'exposicions', 'exposicio', 'exposiciones', 'exposicion', 'exhibitions', 'exhibition', 'expos', 'expo'}
+
+
+def venue_category(agenda, page_url='', act_url=''):
+    """Categoría de la fuente para una ficha de la agenda (24-10-2026). Un museo o centro cultural
+    (type «culture») programa de todo: talleres familiares, conciertos, visitas, charlas… Su tipo ya no
+    hace que todo sea «Arte y exposiciones»: solo lo que está en su sección de exposiciones (un tramo de
+    la ruta que es exactamente «exposicions», «exposiciones», «exhibitions»…; «exposicions-i-activitats»
+    no cuenta). Manda la página del acto; la del listado, solo si el acto no tiene página propia.
+    Lo demás se clasifica por título y texto, o lo decide la IA de pendientes.
+    Las salas de música, teatro o cine siguen dando su categoría (None = la del tipo de sala)."""
+    if agenda.get('type', 'culture') != 'culture': return None
+    url = act_url if urlsplit(act_url or '').netloc else page_url
+    segments = {seg.lower() for seg in urlsplit(url or '').path.split('/') if seg}
+    return 'Arte y exposiciones' if segments & EXHIBITION_SEGMENTS else ''
+
+
 def records_for(agenda, accepted, page_url, page_hash, model):
     """Fichas (forma de src.sync) de los actos comprobados: una por día con sus pases; un periodo, una ficha."""
     from src.venue_feeds import record_from_jsonld
@@ -299,6 +325,8 @@ def records_for(agenda, accepted, page_url, page_hash, model):
     for act in accepted:
         sala = act.get('sala') or {'name': agenda['name'], 'address': agenda.get('address') or ''}
         venue = {'slug': slug, 'name': sala['name'], 'type': agenda.get('type', 'culture')}
+        cat = venue_category(agenda, page_url, act.get('url') or '')
+        if cat is not None: venue['category'] = cat
         address = {'@type': 'PostalAddress', 'streetAddress': sala.get('address') or '', 'addressLocality': 'Barcelona'}
         base = {'@type': 'Event', 'name': act['titulo'], 'url': act.get('url') or page_url,
                 'location': {'@type': 'Place', 'name': sala['name'], 'address': address}}
@@ -431,7 +459,8 @@ def rules_records(agenda, nodes):
              'address': agenda.get('address') or ''}
     out = []
     for node, page_url, page_hash in nodes:
-        record = record_from_jsonld(venue, node, page_url)
+        cat = venue_category(agenda, page_url, str(node.get('url') or ''))
+        record = record_from_jsonld({**venue, **({'category': cat} if cat is not None else {})}, node, page_url)
         if not record: continue
         record['raw'].setdefault('loagendo', {})['source_label'] = LABEL
         record['raw']['ai_agenda'] = {'page': page_url, 'page_hash': page_hash, 'model': 'reglas: schema.org', 'prompt_version': PROMPT_VERSION}

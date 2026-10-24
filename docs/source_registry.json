@@ -192,7 +192,8 @@
     "attribution": "«Datos de la sala», con enlace a la página de la sala",
     "update_date_required": true,
     "image_reuse_confirmed": true,
-    "image_reuse_basis": "Decisión editorial de David Sola (20-10-2026): mostrar la imagen que la propia sala publica para compartir cada acto (og:image), con crédito a la sala.",
+    "image_reuse_basis": "Decisión editorial de David Sola (20-10-2026): mostrar la imagen que la propia sala publica para compartir cada acto (og:image), con crédito a la sala. Ampliada el 24-10-2026 («haz todo», a raíz de Arts Santa Mònica, cuyas fichas no declaran og:image): si la página del acto no la declara, la primera foto del contenido de esa misma página, tras el encabezado con el título del acto (nunca logos ni iconos), con el mismo crédito.",
+    "text_reuse_basis": "Decisión de David Sola (23-10-2026): en las fichas sin texto, la descripción que la página propia del acto publica (og:description, schema.org o, desde el 24-10-2026, sus párrafos tras el encabezado con el título), tal cual y rotulada «Texto de la web de la sala» (src/organizer_text.py).",
     "remarks": "Lectura cada dos días; solo agendas con activa=true tras revisar la muestra (scripts/muestra_agendas_ia.py). Lo que desaparece de la página deja de publicarse, no se borra."
   }
 }

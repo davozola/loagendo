@@ -158,7 +158,19 @@ def category_of(raw, source, kind):
     if source=='opendatabcn_agenda':
         declared=opendata_normalized(raw).get('category')
         if declared: return declared
-    if source.startswith('venue_'):
+    own_culture=False
+    if source.startswith('venue_ia_'):
+        # Museos y centros culturales leídos con IA (24-10-2026): el tipo de sala ya no hace que todo sea
+        # exposición; solo lo que viene de su página de exposiciones (src.ai_agenda.venue_category).
+        from src.ai_agenda import agenda_for_source,venue_category
+        cat=venue_category(agenda_for_source(source),str((raw or {}).get('source_page') or ''),str(((raw or {}).get('item') or {}).get('url') or ''))
+        if cat: return cat
+        own_culture=cat==''
+        if own_culture:
+            from src.venue_feeds import TYPE_CATEGORY
+            schema=next((TYPE_CATEGORY[t] for t in ((raw or {}).get('loagendo') or {}).get('schema_types') or [] if t in TYPE_CATEGORY and t!='Event'),None)
+            if schema: return schema
+    if source.startswith('venue_') and not own_culture:
         venue=_VENUES.get(source[6:],{})
         declared=(raw.get('loagendo') or {}).get('category') or VENUE_CATEGORY.get(venue.get('type',''))
         if declared and kind!='exhibition': return declared
@@ -895,7 +907,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=32  # 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=33  # 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1204,6 +1216,18 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 same[0]['time']=hour; same[0]['evidence_field']='web_oficial'; official_page['applied'].append('hora')
             elif not same and start<=day<=end and str(start)[:10]==str(end)[:10]:
                 occurrences.append({'date':day,'time':hour,'evidence_field':'web_oficial','verified':False}); official_page['applied'].append('hora')
+    # Pases que la página propia del acto enumera (24-10-2026, Arts Santa Mònica «Tres passis: 12-12.30h /
+    # 16-16.30h / 17-17.30h»): si la ficha tiene ese día con una hora que está entre ellos, se añaden los demás.
+    page_passes=[]
+    if own_page_fill and official_page and official_page.get('sessions'):
+        for day,hours in official_page['sessions'].items():
+            same=[o for o in occurrences if o['date']==day]
+            known={o.get('time') for o in same if o.get('time')}
+            if same and known and known<=set(hours) and len(hours)>len(known):
+                for hour in hours:
+                    if hour not in known: occurrences.append({'date':day,'time':hour,'evidence_field':'pagina_del_acto','verified':False})
+                occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
+                official_page['applied'].append('pases'); page_passes=hours
     # Última hora conocida (23-10-2026, decisión de David): un día que la lectura actual deja sin hora
     # toma la que dio una lectura anterior de esta misma ficha, marcada como tal (src/known_times.py).
     from src import known_times as _kt
@@ -1425,7 +1449,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'description':('' if boiler else source_description(raw,source)) or archived_description,
             **({'description_credit':organizer_credit} if organizer_credit else {}),
             'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=sched_days,registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),
-            'time_text':(opendata_facts.get('schedule_hours') if od_table else '') or schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
+            'time_text':(' · '.join(page_passes) if page_passes else '') or (opendata_facts.get('schedule_hours') if od_table else '') or schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
             'schedule_days':sched_days,
             # Las condiciones que venían pegadas al precio pasan a las notas del horario (sin repetir).
             'schedule_note':' · '.join(dict.fromkeys([x for x in sched_note.split(' · ') if x]+[n for n in split_price(price or archived_facts.get('price_text',''))[1] if n.rstrip('.').lower() not in sched_note.lower()])),

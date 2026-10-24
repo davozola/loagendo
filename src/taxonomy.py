@@ -202,6 +202,20 @@ def classify(ev, override=None, ai=None):
             'ambiguous': False}
 
 
+def page_subtitle_category(ev):
+    """(categoría, palabra, línea) del género con que empieza una de las tres líneas cortas que siguen al
+    título en la página oficial del acto (texto que catalog añade tras «[Web oficial del acto]»)."""
+    text = str(ev.get('source_text') or '')
+    if '[Web oficial del acto]' not in text: return None, '', ''
+    words = set(norm(ev.get('title')).split())
+    lines = [l.strip() for l in text.split('[Web oficial del acto]', 1)[1].split('\n') if l.strip()]
+    for line in lines[:4]:
+        if len(line) > 90 or (words and set(norm(line).split()) <= words): continue
+        cat, word = lead_category(line)
+        if cat: return cat, word, line
+    return None, '', ''
+
+
 def _classify_rules(ev, override=None):
     """→ dict(category, status, method, evidence, ambiguous).
 
@@ -275,6 +289,12 @@ def _classify_rules(ev, override=None):
         return {'category': 'talleres', 'status': 'probable', 'method': 'comunidad_y_cuidados',
                 'evidence': 'Grupo o espacio comunitario del barrio (decisión editorial 20-10-2026)', 'ambiguous': False}
     if not signals:
+        # Sin señal en el título: el subtítulo con que la página propia del acto lo presenta, justo debajo
+        # del título («Concert familiar amb Ayako Okubo», «Taller d'arts plàstiques»), 24-10-2026. Solo las
+        # líneas cortas que siguen al título en la página; queda como «probable» (la IA puede discrepar).
+        cat, word, line = page_subtitle_category(ev)
+        if cat: signals.append((cat, 'subtitulo_pagina', f'La página del acto lo presenta como «{line}»'))
+    if not signals:
         return {'category': PENDING, 'status': 'pendiente', 'method': 'sin_senal',
                 'evidence': 'Ni formato, ni género en el título, ni categoría de la fuente', 'ambiguous': False}
     first = signals[0]
@@ -312,7 +332,10 @@ FESTIVAL_RE = re.compile(r"\b(?:festival|fest|biennal|bienal|mostra internaciona
 FAMILY_TEXT = re.compile(r"(?:per a|para|dirigida a|dirigit a|dirigido a|pensada per a|pensat per a|adrecada a|adrecat a)\s+"
                          r"(?:tota la |toda la |les |las |los |els )?(?:families|familias|infants|nens i nenes|ninos y ninas|criatures|public familiar|public infantil|publico familiar|publico infantil)\b"
                          r"|\bpublic (?:familiar|infantil)\b|\bpublico (?:familiar|infantil)\b|\btaller (?:per a|para) famil"
-                         r"|\bedat recomanada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anys|any|a)\b|\bedad recomendada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anos|ano|a)\b")
+                         r"|\bedat recomanada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anys|any|a)\b|\bedad recomendada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anos|ano|a)\b"
+                         # El formato lo dice (24-10-2026): «Taller familiar», «Concert familiar amb…», «espectacle infantil».
+                         r"|\b(?:taller|tallers|activitat|activitats|concert|concerts|espectacle|espectacles|visita|visites|ruta|itinerari|proposta|sessio|"
+                         r"actividad|actividades|concierto|conciertos|espectaculo|espectaculos|sesion)\s+(?:familiar|familiars|familiares|infantil|infantils|infantiles|per a nadons|para bebes)\b")
 NOT_FAMILY_TEXT = re.compile(r"per a infants i adults|para ninos y adultos|canguratge|cangur|servei de guarderia|servicio de guarderia|espai infantil mentre|ludoteca mentre")
 
 
@@ -322,6 +345,17 @@ def family_text(text):
     if NOT_FAMILY_TEXT.search(t): return ''
     m = FAMILY_TEXT.search(t)
     return t[max(0, m.start() - 30):m.end() + 20].strip() if m else ''
+
+
+# La web de la sala publica el acto en su sección para familias (24-10-2026): un tramo de la ruta de la
+# página del acto que es exactamente uno de estos (fmirobcn.org/ca/activitats/families/…).
+FAMILY_PATH = {'families', 'familia', 'familias', 'familiar', 'infantil', 'infants', 'nens', 'ninos', 'petits', 'kids', 'canalla', 'en-familia'}
+
+
+def family_path(url):
+    from urllib.parse import urlsplit
+    segments = {seg.lower() for seg in urlsplit(str(url or '')).path.split('/') if seg}
+    return next((seg for seg in segments if seg in FAMILY_PATH), '')
 
 
 def channels(ev, category, override=None):
@@ -339,6 +373,8 @@ def channels(ev, category, override=None):
         out['familia'] = 'Patio escolar abierto para jugar en familia'
     elif family_text(' '.join((ev.get('title') or '', ev.get('source_text') or ''))):
         out['familia'] = f'La fuente lo indica en su texto: «…{family_text(" ".join((ev.get("title") or "", ev.get("source_text") or "")))}…»'
+    elif str(ev.get('source') or '').startswith(('venue_', 'web_')) and family_path(ev.get('url')):
+        out['familia'] = f'La web de la sala la publica en su sección para familias («/{family_path(ev.get("url"))}/»)'
     elif ev.get('ai_family_rec'):
         out['familia'] = f'Recomendación automática (IA): {ev["ai_family_rec"].get("es", "")}'
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un

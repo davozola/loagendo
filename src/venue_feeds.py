@@ -21,6 +21,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import html
+from html.parser import HTMLParser
 import json
 import re
 import sqlite3
@@ -332,7 +333,11 @@ def record_from_jsonld(venue, node, page_url):
     if not price_text: alerts.append("NO_PRICE_TEXT")
     description = _text(node.get("description"))
     types = node.get("@type"); types = [str(t).split("/")[-1] for t in (types if isinstance(types, list) else [types]) if t]
-    category = venue.get("category") or VENUE_CATEGORY.get(venue.get("type", "")) or next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
+    if "category" in venue:
+        # Quien llama decide la categoría (o que no la hay, None): el tipo de sala no se usa (24-10-2026).
+        category = venue["category"] or next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
+    else:
+        category = VENUE_CATEGORY.get(venue.get("type", "")) or next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
     if venue.get("type") in ("ticketing", "aggregator"):
         # A marketplace lists every kind of event: classify by the schema type, not the site.
         category = next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
@@ -347,13 +352,42 @@ def record_from_jsonld(venue, node, page_url):
 FEED_HORIZON_DAYS = 180
 
 
+class _MetaParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True); self.tags = {}; self.title = ""; self._in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title": self._in_title = True
+        if tag != "meta": return
+        a = {k.lower(): (v or "") for k, v in attrs if k}
+        key = (a.get("property") or a.get("name") or "").strip().lower()
+        if key and "content" in a and key not in self.tags: self.tags[key] = a["content"]
+
+    def handle_endtag(self, tag):
+        if tag == "title": self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title: self.title += data
+
+
+def meta_tags(page):
+    """{propiedad o nombre: contenido} de las <meta> de la página, más «<title>».
+
+    Con un analizador de HTML y no con expresiones regulares (24-10-2026): la regex anterior cortaba
+    el contenido en el primer apóstrofo, y en catalán hay uno casi en cada frase («Taller familiar
+    d'exploració…» quedaba en «Taller familiar d», 17 caracteres, y la ficha se quedaba sin texto)."""
+    p = _MetaParser()
+    try: p.feed(page or "")
+    except Exception: pass
+    out = {k: " ".join(v.split()) for k, v in p.tags.items()}
+    if p.title.strip(): out.setdefault("<title>", " ".join(p.title.split()))
+    return out
+
+
 def og_meta(page):
     """og:image / og:description of a page (what the site itself offers for sharing)."""
-    out = {}
-    for prop in ("og:image", "og:description"):
-        m = re.search(r'<meta[^>]+property=["\']' + re.escape(prop) + r'["\'][^>]+content=["\']([^"\']+)["\']', page, re.I) or re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']' + re.escape(prop) + r'["\']', page, re.I)
-        if m: out[prop] = html.unescape(m.group(1))
-    return out
+    tags = meta_tags(page)
+    return {prop: tags[prop] for prop in ("og:image", "og:description") if tags.get(prop)}
 
 
 def _page_extras(node, event_url, fetcher, timeout):
