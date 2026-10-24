@@ -446,10 +446,27 @@ TITLE_PREFIX = re.compile(r"^(?:concert|concierto|espectacle|espectaculo|teatre|
                           r"activitat familiar|activitat|visita guiada|visita|obra de teatre|cinema|projeccio|recital|xerrada|conferencia)\s+", re.I)
 
 
+# Título de la obra entre comillas tras un prefijo genérico, con créditos detrás (24-10-2026):
+# «Teatre "Alejandra", a càrrec de Martín Rechimuzzi», «Espectacle "Viejóvenes", amb Raquel Ramos i Borja Calvo»,
+# «Espectacle "Manual para follarse a un macho con vagina", de i amb Pablo Alamá». La sala lo publica solo como
+# «ALEJANDRA», «Viejóvenes»… La clave es la obra; lo que va detrás (créditos) no cuenta.
+QUOTED_WORK = re.compile(r'^\s*(?:(?:concert|concierto|espectacle|espectáculo|espectaculo|teatre|teatro|musical|obra de teatre|obra de teatro|recital|'
+                         r'dansa|danza|circ|circo|opera|òpera|monòleg|monologo|monólogo|comèdia|comedia|humor|màgia|magia)(?:\s+(?:familiar|infantil))?\s+)*'
+                         r'["«“]([^"»”]{3,})["»”]\s*(?:$|[,.;]|-\s|–\s|\s(?:amb|con|de|a c[aà]rrec|per|por|dirigit|dirigida|dirigido)\b)', re.I)
+
+
 def _title_key(title):
     t = _clean(title)
     for _ in range(2): t = TITLE_PREFIX.sub("", t)
     return t
+
+
+def _title_keys(title):
+    """La clave de siempre y, si el título es «Prefijo "Obra", créditos», también la de la obra sola."""
+    keys = [_title_key(title)]
+    m = QUOTED_WORK.match(str(title or ''))
+    if m and _clean(m.group(1)) not in keys: keys.append(_clean(m.group(1)))
+    return keys
 
 
 def title_pairs(conn):
@@ -468,10 +485,10 @@ def title_pairs(conn):
         return []
     groups = {}
     for source, rid, title, start, end, venue, lat, lon in rows:
-        key = _title_key(title)
-        if len(key) < 6 or len(key.split()) < 1: continue
-        groups.setdefault((start, end, key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
-                                                         "route": bool(ROUTE.match(_clean(title)))})
+        for key in _title_keys(title):
+            if len(key) < 6 or len(key.split()) < 1: continue
+            groups.setdefault((start, end, key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
+                                                             "route": bool(ROUTE.match(_clean(title)))})
     pairs = []
     times = {}
     def first_time(item):
@@ -519,15 +536,15 @@ def run_pairs(conn):
         return []
     by_key = {}
     for source, rid, title, start, end, venue, lat, lon in rows:
-        key = _title_key(title)
-        if len(key) < 5 or key in CONTAINED_GENERIC or ROUTE.match(key): continue
         # Talleres y cursos fuera: un centro tiene varios grupos con el mismo título («Taller de pilates» de lunes y de
         # jueves) y unirlos de dos en dos entre fuentes acabaría juntando grupos distintos.
         if COURSE_TITLE.match(_clean(title)): continue
         try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
         except (TypeError, ValueError): continue
-        by_key.setdefault(key, []).append({"key": f"{source}:{rid}", "source": source, "start": a, "end": b, "days": (b - a).days,
-                                           "venue": venue or "", "lat": lat, "lon": lon})
+        for key in _title_keys(title):
+            if len(key) < 5 or key in CONTAINED_GENERIC or ROUTE.match(key): continue
+            by_key.setdefault(key, []).append({"key": f"{source}:{rid}", "source": source, "start": a, "end": b, "days": (b - a).days,
+                                               "venue": venue or "", "lat": lat, "lon": lon})
     pairs = []
     for items in by_key.values():
         if len(items) < 2: continue
