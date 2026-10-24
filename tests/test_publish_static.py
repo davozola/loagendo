@@ -58,11 +58,13 @@ class StaticExportTests(unittest.TestCase):
         concert = next(c for c in cat['items'] if c['i'] == '1')
         self.assertEqual((concert['tm'], concert['fr'], concert['o'], concert['g']), ('19:00', 1, [['2026-10-12', '19:00']], [41.4, 2.17]))
         self.assertNotIn('m', concert)  # images, summaries and links travel in the day files and detail shards
-        # Versión 2 del estilo en /v2/: misma app, hoja propia encima y solo modo claro; la 1 no cambia.
-        v1, v2 = (dist / 'index.html').read_text(encoding='utf-8'), (dist / 'v2' / 'index.html').read_text(encoding='utf-8')
-        self.assertNotIn('public-v2.css', v1)
+        # La versión 2 del estilo es la portada: misma app, hoja propia encima y solo modo claro;
+        # /v2/ (la dirección de prueba) redirige a la portada.
+        v2 = (dist / 'index.html').read_text(encoding='utf-8')
         self.assertIn('data-skin="v2"', v2); self.assertIn('data-theme="light"', v2)
         self.assertRegex(v2, r'href="/public\.css\?v=[0-9a-f]+"><link rel="stylesheet" href="/public-v2\.css\?v=[0-9a-f]+">')
+        self.assertFalse((dist / 'v2' / 'index.html').exists())
+        self.assertIn('/v2/ / 301', (dist / '_redirects').read_text(encoding='utf-8'))
         self.assertTrue((dist / 'fonts' / 'inter-tight-latin-400-normal.woff2').exists())
         self.assertTrue((dist / 'img' / '1.png').is_file()); self.assertFalse((dist / 'img' / '3.png').exists())
         day = json.loads((dist / 'data' / 'day' / '2026-10-12.json').read_text(encoding='utf-8'))
@@ -85,7 +87,29 @@ class StaticExportTests(unittest.TestCase):
         headers = (dist / '_headers').read_text(encoding='utf-8')
         self.assertIn('Cache-Control: public, max-age=2592000, immutable', headers); self.assertIn('/public.js\n  Cache-Control: public, max-age=0, must-revalidate', headers)
         self.assertIn('Sitemap: https://loagendo.example/sitemap.xml', (dist / 'robots.txt').read_text(encoding='utf-8'))
+        # Sitemap por partes (23-10-2026): índice, páginas y fichas, siempre con el dominio completo,
+        # con lastmod del día en que cambió la ficha y sin las direcciones ?day= (su canónica es la portada).
+        index_xml = (dist / 'sitemap.xml').read_text(encoding='utf-8')
+        self.assertIn('<sitemapindex', index_xml); self.assertIn('https://loagendo.example/sitemap-fichas-1.xml', index_xml)
+        fichas = (dist / 'sitemap-fichas-1.xml').read_text(encoding='utf-8')
+        self.assertIn(f'<loc>https://loagendo.example/e/opendatabcn_agenda/1</loc><lastmod>{TODAY.isoformat()}</lastmod>', fichas)
+        self.assertNotIn('?day=', fichas + (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
+        self.assertNotIn('<loc>/', fichas)
+        # Páginas de entrada (src/landings.py): ficheros .html, en el sitemap y enlazadas desde el pie.
+        for name in ('hoy.html', 'fin-de-semana.html', 'con-ninos/fin-de-semana.html', 'dia/2026-10-12.html'):
+            self.assertTrue((dist / name).is_file(), name)
+        self.assertIn('<loc>https://loagendo.example/con-ninos/fin-de-semana</loc>', (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
+        self.assertIn('data-landing=', (dist / 'hoy.html').read_text(encoding='utf-8'))
+        # Avisos por correo: apagados por defecto; /alertas/ y /api/ fuera de los buscadores.
+        self.assertNotIn('data-alerts', (dist / 'index.html').read_text(encoding='utf-8'))
+        self.assertIn('Disallow: /alertas/', (dist / 'robots.txt').read_text(encoding='utf-8'))
+        self.assertTrue((dist / 'data' / 'alertas' / 'nuevos.json').is_file())
+        self.export(site_url='https://loagendo.example', alerts={'enabled': True, 'turnstile_site_key': '0xPUBLICA'})
+        self.assertIn('data-alerts="1" data-turnstile="0xPUBLICA"', (dist / 'con-ninos.html').read_text(encoding='utf-8'))
+        state = json.loads((self.root / 'data' / 'sitemap_lastmod.json').read_text(encoding='utf-8'))
+        self.assertEqual(state['opendatabcn_agenda:1'][1], TODAY.isoformat())
         meta = json.loads((dist / 'data' / 'meta.json').read_text(encoding='utf-8'))
+        self.assertEqual(meta['site_url'], 'https://loagendo.example')   # la canónica de /e/* (functions/e)
         self.assertEqual(meta['sources']['opendatabcn_agenda']['attribution'], 'Ajuntament de Barcelona — Agenda cultural (Open Data BCN)')
         # A thin catalogue is exported but blocked from deployment.
         self.assertEqual(report['status'], 'blocked'); self.assertTrue(any('mínimo' in b for b in report['blockers']))

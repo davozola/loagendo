@@ -14,6 +14,10 @@ David es el único desarrollador y editor del proyecto; no es un proyecto de emp
 
 Vienen de David y están en `memoria/loagendo-decisiones.md`; las más importantes: no borrar datos ni decisiones editoriales (todo se marca, versiona o excluye, nunca se borra); no inventar horarios, precios, imágenes ni descripciones; mantener procedencia e historial por registro; no rebajar TLS; sin IA que reescriba contenido sin evaluación y trazabilidad explícitas; preferir soluciones implementables y escalables a procesos manuales.
 
+## Regla técnica: la base en vivo no se abre desde la máquina virtual de Claude (23-10-2026)
+
+Claude trabaja en esta carpeta desde una máquina virtual (Cowork, `device_bash`). Si desde ahí se abre `reports/loagendo_v12.sqlite3` con SQLite (sqlite3, Python, `Connection.backup()`, incluso solo lectura), los bloqueos no cruzan la frontera entre la máquina virtual y el Mac: el SQLite de la máquina virtual cree ser el único usuario y reinicia el `-shm`, y el Python del Mac que lo está leyendo muere con «bus error» (`walFindFrame`). Pasó el 23-10: la publicación caía siempre hasta cerrar la app de Claude; con la app cerrada publicó a la primera (1975 s). Por tanto: **desde la máquina virtual nunca se abre la base en vivo**. Para consultarla, David hace una copia en el Mac (`sqlite3 reports/loagendo_v12.sqlite3 ".backup /tmp/loagendo-copia.sqlite3"` y la deja en la carpeta) y Claude trabaja sobre esa copia; o Claude le pasa la consulta para que la ejecute él. Ver archivos (`ls`, `grep` en código) sí es seguro.
+
 ## Estado verificado en el código (17-10-2026, primera sesión en la cuenta nueva)
 
 Esta sección manda sobre la siguiente, que es el estado tal como lo dejó la cuenta anterior.

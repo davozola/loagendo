@@ -22,6 +22,7 @@ import sqlite3
 import os
 import shutil
 import subprocess
+from urllib.parse import quote
 import time
 from pathlib import Path
 
@@ -367,6 +368,7 @@ def share_card(detail, today):
             'g': [detail['coordinates']['lat'], detail['coordinates']['lon']] if detail.get('coordinates') else None,
             'ad': ((detail.get('venues') or [{}])[0] or {}).get('address') or '',
             # Añadir al calendario (functions/cal/[[path]].js): hueco por día y web oficial del acto.
+            'c': detail.get('public_category') or '', 'ch': list(detail.get('channels') or []),   # para «actos parecidos» cuando ya ha pasado
             'k': packed_calendar(detail, today), 'o': ((detail.get('official_page') or {}).get('url') or '') if str((detail.get('official_page') or {}).get('url') or '').startswith('https://') else ''}
 
 
@@ -379,7 +381,10 @@ def _write_json(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 
 
-def credits_html(registry, generated_at='', counts=None):
+CONTACT_EMAIL = 'hola@ontoca.com'   # buzón de contacto (Cloudflare Email Routing → Gmail; responde vía Brevo), 23-10-2026
+
+
+def credits_html(registry, generated_at='', counts=None, skin_css=''):
     """The public Fuentes y créditos page: who publishes each dataset, under what terms."""
     rows = []
     for source, entry in registry.items():
@@ -393,28 +398,36 @@ def credits_html(registry, generated_at='', counts=None):
         rows.append(f'<article class="credit"><h2>{html.escape(label)}</h2><p><b>Titular:</b> {html.escape(entry.get("owner", ""))}</p><p><b>Dataset:</b> {html.escape(entry.get("dataset", ""))} {link}</p>'
                     f'<p><b>Licencia / base de reutilización:</b> {licence}. {html.escape(entry.get("license_basis", ""))}</p><p><b>Atribución:</b> {html.escape(entry.get("attribution", ""))}</p><p><b>Imágenes:</b> {images}</p></article>')
     counts = counts or {}
-    return ('<!DOCTYPE html><html lang="es" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Ontoca</title>'
-            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css"></head>'
-            '<body class="credits-page"><main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
+    # skin_css: la hoja de la versión 2 (solo claro), como la portada; sin ella, la página de siempre.
+    theme, extra = ('light', f'<link rel="stylesheet" href="{html.escape(skin_css)}">') if skin_css else ('dark', '')
+    return (f'<!DOCTYPE html><html lang="es" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Ontoca</title>'
+            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css">' + extra + '</head>'
+            '<body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="/">ontoca<span>.</span></a></div></header>'
+            '<main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
             '<p>Ontoca recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
             'Los textos descriptivos y las imágenes pertenecen a quien los publica: se muestran con su crédito y su enlace de origen, bajo la licencia o la política de cada fuente que se detalla abajo. '
             'Cada ficha conserva la URL original y la fecha de la última sincronización. Los horarios y precios se reproducen tal y como los publica la fuente; confirma siempre en la fuente antes de ir. '
             'Las fechas de conciertos se contrastan además con directorios de conciertos: esas fichas muestran sólo título, fecha, hora y sala, enlazan a la web de la sala o a la venta de entradas y no reproducen textos ni imágenes de terceros.</p>'
             f'<p class="credits-meta">Última generación: {html.escape(generated_at)}. Fichas públicas en los próximos seis meses: {counts.get("events", "")}. Imágenes publicadas: {counts.get("images", "")}.</p>'
-            '<p><b>Retirada o corrección.</b> Si eres titular de un dato o una imagen y quieres que se corrija o se retire, escribe indicando el enlace de la ficha: se atiende en la siguiente actualización y el cambio queda registrado con fecha y motivo.</p>'
+            '<p><b>Retirada o corrección.</b> Si eres titular de un dato o una imagen y quieres que se corrija o se retire, escribe a <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> indicando el enlace de la ficha: se atiende en la siguiente actualización y el cambio queda registrado con fecha y motivo.</p>'
             + ''.join(rows) +
-            '<p class="credits-meta">Mapa: © colaboradores de <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">OpenStreetMap</a>. Tipografías del sistema. Sin cookies de terceros ni rastreadores.</p>'
+            '<p class="credits-meta">Mapa: © colaboradores de <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">OpenStreetMap</a>. ' + ('Tipografía Inter Tight (licencia SIL Open Font License).' if skin_css else 'Tipografías del sistema.') + ' Sin cookies de terceros ni rastreadores.</p>'
             '</main></body></html>')
 
 
+# Estilo de la web pública. 'v2' (por defecto desde el 23-10-2026): public-v2.css encima de
+# public.css y solo modo claro. Para volver a la versión 1 basta con poner PUBLIC_SKIN = ''.
+PUBLIC_SKIN = 'v2'
+
+
 def v2_index(index, version):
-    """Versión 2 del estilo en /v2/: la misma app y los mismos datos, con public-v2.css encima
-    de public.css y solo modo claro. Para volver a la versión 1 basta con no enlazar /v2/."""
+    """La app con el estilo de la versión 2: la misma app y los mismos datos, con public-v2.css
+    encima de public.css y solo modo claro. Se sirve en la portada; /v2/ redirige a ella."""
     v2 = index.replace('data-static="1"', 'data-static="1" data-skin="v2"', 1).replace('data-theme="dark"', 'data-theme="light"', 1)
     link = f'<link rel="stylesheet" href="/public-v2.css?v={version}">'
     v2 = re.sub(r'(<link rel="stylesheet" href="/public\.css[^"]*">)', lambda m: m.group(1) + link, v2, count=1)
     if link not in v2: v2 = v2.replace('</head>', link + '</head>', 1)
-    return v2.replace('<a class="logo" href="/">', '<a class="logo" href="/v2/">', 1)
+    return v2
 
 
 def headers_file():
@@ -457,11 +470,109 @@ def check_links(conn, details, fetch=None):
     return hidden, report
 
 
-def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT / 'static', today=None, registry_path=REGISTRY_PATH, thumbnailer=None, site_url='', link_fetcher=None):
+ALERTS_FEED_DAYS = 15   # novedades que lee el envío de alertas (alertas/worker.js): las de las dos últimas semanas
+
+
+def write_alerts_feed(out, events, today, generated_at):
+    """Novedades para las alertas por correo (24-10-2026): data/alertas/nuevos.json con los actos
+    publicados que aparecieron por primera vez en los últimos ALERTS_FEED_DAYS días y que aún no han
+    terminado. La fecha de primera aparición se guarda en data/first_seen.json, junto a la carpeta
+    publicada, y no se borra. La primera vez todo lo que ya existe se marca como visto ('base'):
+    nadie recibe de golpe toda la agenda como «novedad». Solo datos que ya publica la ficha."""
+    path = out.parent / 'data' / 'first_seen.json'
+    try: seen = json.loads(path.read_text(encoding='utf-8')); first_run = False
+    except (OSError, ValueError): seen, first_run = {}, True
+    for e in events:
+        if e['key'] not in seen: seen[e['key']] = 'base' if first_run else generated_at
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(seen, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+    since = (dt.datetime.fromisoformat(generated_at) - dt.timedelta(days=ALERTS_FEED_DAYS)).isoformat(timespec='seconds')
+    items = []
+    for e in events:
+        first = seen.get(e['key'], 'base')
+        if first == 'base' or first < since or e['end'] < today.isoformat(): continue
+        items.append({'k': e['key'], 'fs': first, 't': e['title'], 'a': e['start'], 'b': e['end'], 'tm': e.get('time') or '',
+                      'tl': e.get('time_label') or '', 'v': (e.get('venue_names') or [''])[0] or '', 'd': e.get('district') or '',
+                      'pc': e.get('public_category') or '', 'ch': e.get('channels') or [], 'fr': 1 if e.get('is_free') else 0,
+                      'lu': (e.get('lineup') or [])[:10]})
+    items.sort(key=lambda x: (x['fs'], x['a'], x['k']))
+    _write_json(out / 'data' / 'alertas' / 'nuevos.json', {'items': items})   # sin fecha de generación: solo cambia si hay novedades
+    return len(items)
+
+
+PAST_KEEP_DAYS = 183   # cuánto se conserva la ficha de un acto ya celebrado (decidido el 23-10-2026: 6 meses)
+PAST_SKIP_SOURCES = ('ticketmaster',)   # los caducados de Ticketmaster se borran (decisión de David)
+
+
+def keep_past_cards(out, cards, today):
+    """Actos ya celebrados (23-10-2026): su dirección /e/<fuente>/<id> sigue respondiendo durante
+    PAST_KEEP_DAYS con «Ya se celebró» (functions/e/[[path]].js, fuera del índice de los buscadores).
+    Se guarda la última tarjeta publicada de cada acto en data/share_archive.json, junto a la carpeta
+    publicada, y se vuelve a publicar con 'x': 1 solo si su fecha final ya pasó: lo que desaparece por
+    otro motivo (cancelado, excluido, aplazado) no se conserva. No se borra nada del archivo."""
+    path = out.parent / 'data' / 'share_archive.json'
+    try: archive = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError): archive = {}
+    current = {k for records in cards.values() for k in records}
+    for records in cards.values():
+        for k, card in records.items(): archive[k] = card
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(archive, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+    limit = (today - dt.timedelta(days=PAST_KEEP_DAYS)).isoformat(); kept = 0
+    for k, card in archive.items():
+        if k in current or k.split(':', 1)[0].startswith(PAST_SKIP_SOURCES): continue
+        end = card.get('b') or card.get('a') or ''
+        if not end or end >= today.isoformat() or end < limit: continue
+        cards.setdefault(shard_of(k), {})[k] = {**card, 'x': 1, 'k': ''}   # sin «añadir al calendario»
+        kept += 1
+    return kept
+
+
+URI_SAFE = "!'()*"   # lo que encodeURIComponent deja sin escapar, además de - _ . ~
+SITEMAP_CHUNK = 40000   # Google admite 50.000 direcciones por fichero; margen por si crece
+
+
+def write_sitemaps(out, site_url, events, cards, today, landing_paths=()):
+    """Sitemap por partes (23-10-2026): un índice en /sitemap.xml, las páginas fijas y las fichas
+    /e/<fuente>/<id> en ficheros de hasta SITEMAP_CHUNK direcciones, siempre con el dominio completo.
+    lastmod es el día en que cambió lo que se ve de la ficha (título, cuándo, dónde, texto, imagen),
+    no el de cada publicación: Google solo lo tiene en cuenta si es fiable. Se guarda fuera de la web,
+    en data/sitemap_lastmod.json junto a la carpeta publicada, y nunca se borran entradas."""
+    for old in out.glob('sitemap*.xml'): old.unlink()
+    if not site_url:   # sin dominio un sitemap no es válido: solo uno vacío
+        (out / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', encoding='utf-8')
+        return
+    base = site_url.rstrip('/')
+    state_path = out.parent / 'data' / 'sitemap_lastmod.json'
+    try: state = json.loads(state_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError): state = {}
+    seen = {}
+    for name, records in cards.items():
+        for k, card in records.items():
+            digest = hashlib.sha256(json.dumps({x: card.get(x) for x in ('t', 'w', 'v', 'ad', 'd', 'p', 'i', 'a', 'b', 'tm', 'o')}, sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()[:16]
+            prev = state.get(k)
+            if not prev or prev[0] != digest: state[k] = [digest, today.isoformat()]
+            seen[k] = state[k][1]
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps(state, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+    def urlset(rows):
+        return ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                + ''.join(f'<url><loc>{html.escape(u)}</loc>' + (f'<lastmod>{m}</lastmod>' if m else '') + '</url>' for u, m in rows) + '</urlset>')
+    files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat()), (f'{base}/creditos.html', '')] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
+    def event_url(e):   # igual que eventPath() en public.js (encodeURIComponent)
+        return f"{base}/e/{quote(e['source'], safe=URI_SAFE)}/{quote(str(e['id']), safe=URI_SAFE)}"
+    rows = [(event_url(e), seen.get(e['key'], '')) for e in sorted(events, key=lambda e: (e['start'], e['key']))]
+    for n in range(0, len(rows), SITEMAP_CHUNK): files[f'sitemap-fichas-{n // SITEMAP_CHUNK + 1}.xml'] = rows[n:n + SITEMAP_CHUNK]
+    for name, part in files.items(): (out / name).write_text(urlset(part), encoding='utf-8')
+    (out / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        + ''.join(f'<sitemap><loc>{html.escape(base)}/{name}</loc></sitemap>' for name in files) + '</sitemapindex>', encoding='utf-8')
+
+
+def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT / 'static', today=None, registry_path=REGISTRY_PATH, thumbnailer=None, site_url='', link_fetcher=None, alerts=None):
     """Write the whole public site into ``out_dir`` and return an audit summary."""
     started = time.monotonic(); today = today or catalog.today(); out = Path(out_dir); registry = _registry(registry_path)
     out.mkdir(parents=True, exist_ok=True)
-    for stale in ('data',):
+    for stale in ('data', 'v2', 'dia'):   # v2: la antigua dirección de prueba de la versión 2; dia: las fechas ya pasadas
         if (out / stale).exists(): shutil.rmtree(out / stale)
     phases = {}; mark = time.monotonic()
     def phase(name):
@@ -538,12 +649,14 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media'], 'official_page': public.get('official_page')}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
+    keep_past_cards(out, cards, today)
+    alerts_new = write_alerts_feed(out, events, today, dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'))
     for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
     phase('dias_y_tarjetas')
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards)}
     sources = {s: {'label': catalog.SOURCES.get(s, s), 'attribution': registry_entry(registry, s).get('attribution', ''), 'license_url': registry_entry(registry, s).get('license_url', '')} for s in sorted({e['source'] for e in events}) if registry_entry(registry, s).get('public_credit') is not False}
-    _write_json(out / 'data' / 'meta.json', {'generated_at': generated_at, 'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'counts': counts, 'sources': sources})
+    _write_json(out / 'data' / 'meta.json', {'generated_at': generated_at, 'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'counts': counts, 'sources': sources, 'site_url': site_url.rstrip('/') if site_url else ''})
     # Front end: the same files the local server serves, switched to static mode.
     index = (Path(static_dir) / 'index.html').read_text(encoding='utf-8').replace('<html lang="es"', '<html lang="es" data-static="1"', 1)
     if site_url: index = index.replace('</head>', f'<link rel="canonical" href="{html.escape(site_url.rstrip("/"))}/"></head>', 1)
@@ -555,20 +668,30 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     versions = {name: hashlib.sha256((out / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
     for name in ('public.css', 'public.js'):
         index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
+    if PUBLIC_SKIN == 'v2': index = v2_index(index, versions['public-v2.css'])
+    # Avisos por correo (alertas/): el botón solo aparece con alerts.enabled y la clave pública de Turnstile
+    # (config/automation.json, trabajo publicar-web). Apagado mientras no estén la privacidad y las claves.
+    alerts = alerts or {}
+    if alerts.get('enabled') and alerts.get('turnstile_site_key'):
+        index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
+    from src import landings
+    index = index.replace('</footer>', landings.nav_html() + '</footer>', 1)   # enlaces a las páginas de entrada
     (out / 'index.html').write_text(index, encoding='utf-8')
-    (out / 'v2').mkdir(exist_ok=True)
-    (out / 'v2' / 'index.html').write_text(v2_index(index, versions['public-v2.css']), encoding='utf-8')
-    (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts), encoding='utf-8')
+    # Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…): la app con su filtro y la lista en el HTML.
+    landing_pages = landings.pages(today)
+    for page in landing_pages:
+        target = out / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
+    (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts, skin_css=f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else ''), encoding='utf-8')
     (out / '_headers').write_text(headers_file(), encoding='utf-8')
     # Every record has its own address (/e/<source>/<id>); the static host serves the app for it.
     # /e/* lo sirve la función functions/e/[[path]].js: la app con la vista previa para compartir
     # (título, foto, cuándo y dónde). Una regla de _redirects aquí le quitaría la ruta.
-    (out / '_redirects').write_text('', encoding='utf-8')
-    (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
-    base = site_url.rstrip('/') if site_url else ''
-    soon_sitemap = (today + dt.timedelta(days=45)).isoformat()
-    urls = [f'{base}/', f'{base}/creditos.html'] + [f'{base}/?day={day}' for day in list(days)[:60]] + [f'{base}/e/{e["source"]}/{e["id"]}' for e in events if e['start'] <= soon_sitemap]
-    (out / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + ''.join(f'<url><loc>{html.escape(u)}</loc></url>' for u in urls) + '</urlset>', encoding='utf-8')
+    # /v2/ fue la dirección de prueba de la versión 2: los enlaces antiguos van a la portada
+    # (/v2/e/* lo redirige su función, functions/v2/e/[[path]].js).
+    (out / '_redirects').write_text('/v2 / 301\n/v2/ / 301\n', encoding='utf-8')
+    (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
+    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landing_pages])
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()
@@ -608,7 +731,7 @@ def publish(conn, job, *, media_root=ROOT / 'data' / 'media', runner=subprocess.
     if job.get('check_links', True) and link_fetcher is None:
         from src.link_check import fetch_status as link_fetcher
     elif not job.get('check_links', True): link_fetcher = None
-    report = export(conn, out_dir, media_root=media_root, today=today, thumbnailer=thumbnailer, site_url=job.get('site_url', ''), link_fetcher=link_fetcher)
+    report = export(conn, out_dir, media_root=media_root, today=today, thumbnailer=thumbnailer, site_url=job.get('site_url', ''), link_fetcher=link_fetcher, alerts=job.get('alerts'))
     report['deploy'] = None
     if report['status'] != 'completed': return report
     command = job.get('deploy_command', '')

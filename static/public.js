@@ -40,7 +40,7 @@ const params = new URLSearchParams(location.search);
 // Preferencias del navegador: nombre nuevo (brollant-*) y, si no existe, el de Loagendo, para no perder eventos guardados.
 function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
 const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca','en'].includes(q) ? q : ['es','ca','en'].includes(saved) ? saved : 'es' })();
-const CA = {
+const CA = {'Este fin de semana': 'Aquest cap de setmana', 
   'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Cartel':'Cartell','Con':'Amb','Público y precio':'Públic i preu','Solo planes para ir con niños':'Només plans per anar amb canalla','Baile':'Ball','Teatro y circo':'Teatre i circ','Temporadas y ciclos':'Temporades i cicles',
   'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
   'Arquitectura y diseño':'Arquitectura i disseny','Arte contemporáneo':'Art contemporani','Arte y manualidades':'Art i manualitats','Ciencia y naturaleza':'Ciència i natura','Clásica y ópera':'Clàssica i òpera','Cocina':'Cuina','Coral y tradicional':'Coral i tradicional','Cuerpo y salud':'Cos i salut','Electrónica':'Electrònica','Flamenco y músicas del mundo':'Flamenc i músiques del món','Fotografía':'Fotografia','Historia y patrimonio':'Història i patrimoni','Humanidades y ciencia':'Humanitats i ciència','Idiomas':'Idiomes','Jazz y blues':'Jazz i blues','Música, danza y teatro':'Música, dansa i teatre','Pintura y dibujo':'Pintura i dibuix','Pop y rock':'Pop i rock','Tecnología':'Tecnologia','Sin clasificar':'Sense classificar','Varios distritos':'Diversos districtes',
@@ -64,7 +64,7 @@ const CA = {
   'Cambiar idioma':'Canvia l\'idioma','mañana.':'demà.','este fin de semana.':'aquest cap de setmana.','esta semana.':'aquesta setmana.','este mes.':'aquest mes.','Exposición':'Exposició','Hoy, lunes':'Avui, dilluns'
 };
 // Inglés (23-10-2026): mismas claves que CA (el texto en castellano).
-const EN = {"Conciertos":"Concerts","Música":"Music","Teatro":"Theatre","Exposiciones":"Exhibitions","Cine":"Cinema","Familia":"Family","Talleres":"Workshops","Deporte":"Sport","Barrio":"Neighbourhood","Teatro y danza":"Theatre and dance","Charlas, visitas y barrio":"Talks, visits and neighbourhood","Talleres y cursos":"Workshops and courses","Con niños":"With kids","Cartel":"Line-up","Con":"With","Público y precio":"Audience and price","Solo planes para ir con niños":"Only plans for kids","Baile":"Dance","Teatro y circo":"Theatre and circus","Temporadas y ciclos":"Seasons and series","Actos y funciones":"Events and shows","Cursos":"Courses","Ciclos y programas":"Series and programmes","Festivales":"Festivals","Actividades continuadas":"Ongoing activities","Arquitectura y diseño":"Architecture and design","Arte contemporáneo":"Contemporary art","Arte y manualidades":"Arts and crafts","Ciencia y naturaleza":"Science and nature","Clásica y ópera":"Classical and opera","Cocina":"Cooking","Coral y tradicional":"Choral and traditional","Cuerpo y salud":"Body and health","Electrónica":"Electronic","Flamenco y músicas del mundo":"Flamenco and world music","Fotografía":"Photography","Historia y patrimonio":"History and heritage","Humanidades y ciencia":"Humanities and science","Idiomas":"Languages","Jazz y blues":"Jazz and blues","Música, danza y teatro":"Music, dance and theatre","Pintura y dibujo":"Painting and drawing","Pop y rock":"Pop and rock","Tecnología":"Technology","Sin clasificar":"Unclassified","Varios distritos":"Several districts","Hoy":"Today","Fecha":"Date","planes":"plans","guardados":"saved","Todos los días":"Every day","Próximos 7 días":"Next 7 days","Próximos 30 días":"Next 30 days","Próximos 3 meses":"Next 3 months","Próximos 6 meses":"Next 6 months","Próximos":"Next","días":"days","Varios días":"Several days","Hora no indicada":"Time not stated","Gratis":"Free","Todo":"All","Todos":"All","Todos los distritos":"All districts","Cualquier hora":"Any time","Con cursos ya empezados":"Including courses under way","Limpiar todo":"Clear all","Quitar filtro":"Remove filter","Ver":"See","más":"more","restantes":"remaining","Reintentar":"Try again","Nada con estos filtros este día. Prueba otro día o quita algún filtro.":"Nothing with these filters on this day. Try another day or remove a filter.","No se pudo cargar la agenda.":"The listings could not be loaded.","No se pudo cargar la selección.":"The selection could not be loaded.","Aún no hay actividades destacadas para estas fechas.":"No featured activities for these dates yet.","No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.":"No locations for these filters. Try another day or check the list.","Mapa de actividades geolocalizadas":"Map of activities","lugares con ubicación · pulsa un punto para abrir la ficha":"places with a location · tap a point to open it","Sin recinto identificado":"No venue identified","Cerrar ficha":"Close","Ver en la fuente oficial":"See on the official source","Web del evento":"Event website","Web de la sala":"Venue website","Cómo llegar":"Directions","Cuándo":"When","Dónde":"Where","Organiza":"Organiser","Consultar fuente":"Check the source","Precio":"Price","Descubre":"Discover","Consultar en la fuente":"Check with the source","Contraste":"Cross-check","Fecha coincidente en":"Same date on","fuentes":"sources","Horario":"Times","Horas publicadas":"Published times","las fuentes no coinciden; confirma en la sala":"sources disagree; check with the venue","Requiere inscripción":"Registration required","Texto de":"Text by","Imagen del equipamiento":"Venue photo","Imagen de la fuente":"Source image","Más imágenes":"More images","Ubicación":"Location","Mapa de":"Map of","la ubicación":"the location","Próximamente en":"Coming up at","esta sala":"this venue","Guardado":"Saved","Guardar":"Save","Compartir":"Share","Añadir al calendario":"Add to calendar","Enlace copiado":"Link copied","Enlace de la ficha":"Link","Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.":"Date and venue collected automatically and cross-checked between sources; details on the venue’s website.","Fuente":"Source","Información recogida automáticamente":"Information collected automatically","confirma horario y precio antes de ir.":"check times and prices before you go.","Saltar a la agenda":"Skip to the listings","Agenda":"Listings","Selección":"Picks","Barrios":"Neighbourhoods","Guardados":"Saved","Ver guardados":"See saved","Cambiar modo claro u oscuro":"Switch light or dark mode","Qué hacer en Barcelona":"What to do in Barcelona","hoy.":"today.","Mil maneras de vivir la ciudad.":"A thousand ways to live the city.","Selección de la semana":"This week’s picks","Buscar en la agenda":"Search the listings","Artista, sala, barrio, obra…":"Artist, venue, neighbourhood, show…","7 días":"7 days","30 días":"30 days","6 meses":"6 months","Elegir una fecha concreta":"Pick a date","Días anteriores":"Previous days","Días siguientes":"Next days","Días de agenda":"Listing days","Periodo":"Period","Filtros":"Filters","Filtros activos":"Active filters","Planes":"Plans","Limpiar":"Clear","Cerrar filtros":"Close filters","Qué te apetece":"What do you fancy","Categoría":"Category","Tipo":"Type","Distrito":"District","Filtrar por distrito":"Filter by district","Formato":"Format","Filtrar por formato":"Filter by format","Todos los formatos":"All formats","Idioma de la actividad":"Language of the activity","Incluir cursos ya empezados":"Include courses under way","Solo gratis":"Free only","Filtrar por horario":"Filter by time","Franja horaria":"Time of day","Mañana":"Morning","Tarde":"Afternoon","Noche":"Evening","Desde":"From","Hasta":"Until","Hora desde":"From time","Hora hasta":"Until time","Quitar horario":"Remove time filter","Vista":"View","Modo de vista":"View mode","Lista":"List","Mapa":"Map","Por sitio":"By venue","Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.":"Times and prices are shown as each source publishes them. Check them before you go.","Por distritos":"By district","Próximos 14 días":"Next 14 days","Fuentes y créditos":"Sources and credits","Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.":"Data: Barcelona City Council (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Barcelona Provincial Council (CC BY 4.0) and venue listings. Check times with the source.","Cambiar idioma":"Change language","mañana.":"tomorrow.","este fin de semana.":"this weekend.","esta semana.":"this week.","este mes.":"this month.","Exposición":"Exhibition","Hoy, lunes":"Today, Monday"};
+const EN = {"Este fin de semana":"This weekend","Conciertos":"Concerts","Música":"Music","Teatro":"Theatre","Exposiciones":"Exhibitions","Cine":"Cinema","Familia":"Family","Talleres":"Workshops","Deporte":"Sport","Barrio":"Neighbourhood","Teatro y danza":"Theatre and dance","Charlas, visitas y barrio":"Talks, visits and neighbourhood","Talleres y cursos":"Workshops and courses","Con niños":"With kids","Cartel":"Line-up","Con":"With","Público y precio":"Audience and price","Solo planes para ir con niños":"Only plans for kids","Baile":"Dance","Teatro y circo":"Theatre and circus","Temporadas y ciclos":"Seasons and series","Actos y funciones":"Events and shows","Cursos":"Courses","Ciclos y programas":"Series and programmes","Festivales":"Festivals","Actividades continuadas":"Ongoing activities","Arquitectura y diseño":"Architecture and design","Arte contemporáneo":"Contemporary art","Arte y manualidades":"Arts and crafts","Ciencia y naturaleza":"Science and nature","Clásica y ópera":"Classical and opera","Cocina":"Cooking","Coral y tradicional":"Choral and traditional","Cuerpo y salud":"Body and health","Electrónica":"Electronic","Flamenco y músicas del mundo":"Flamenco and world music","Fotografía":"Photography","Historia y patrimonio":"History and heritage","Humanidades y ciencia":"Humanities and science","Idiomas":"Languages","Jazz y blues":"Jazz and blues","Música, danza y teatro":"Music, dance and theatre","Pintura y dibujo":"Painting and drawing","Pop y rock":"Pop and rock","Tecnología":"Technology","Sin clasificar":"Unclassified","Varios distritos":"Several districts","Hoy":"Today","Fecha":"Date","planes":"plans","guardados":"saved","Todos los días":"Every day","Próximos 7 días":"Next 7 days","Próximos 30 días":"Next 30 days","Próximos 3 meses":"Next 3 months","Próximos 6 meses":"Next 6 months","Próximos":"Next","días":"days","Varios días":"Several days","Hora no indicada":"Time not stated","Gratis":"Free","Todo":"All","Todos":"All","Todos los distritos":"All districts","Cualquier hora":"Any time","Con cursos ya empezados":"Including courses under way","Limpiar todo":"Clear all","Quitar filtro":"Remove filter","Ver":"See","más":"more","restantes":"remaining","Reintentar":"Try again","Nada con estos filtros este día. Prueba otro día o quita algún filtro.":"Nothing with these filters on this day. Try another day or remove a filter.","No se pudo cargar la agenda.":"The listings could not be loaded.","No se pudo cargar la selección.":"The selection could not be loaded.","Aún no hay actividades destacadas para estas fechas.":"No featured activities for these dates yet.","No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.":"No locations for these filters. Try another day or check the list.","Mapa de actividades geolocalizadas":"Map of activities","lugares con ubicación · pulsa un punto para abrir la ficha":"places with a location · tap a point to open it","Sin recinto identificado":"No venue identified","Cerrar ficha":"Close","Ver en la fuente oficial":"See on the official source","Web del evento":"Event website","Web de la sala":"Venue website","Cómo llegar":"Directions","Cuándo":"When","Dónde":"Where","Organiza":"Organiser","Consultar fuente":"Check the source","Precio":"Price","Descubre":"Discover","Consultar en la fuente":"Check with the source","Contraste":"Cross-check","Fecha coincidente en":"Same date on","fuentes":"sources","Horario":"Times","Horas publicadas":"Published times","las fuentes no coinciden; confirma en la sala":"sources disagree; check with the venue","Requiere inscripción":"Registration required","Texto de":"Text by","Imagen del equipamiento":"Venue photo","Imagen de la fuente":"Source image","Más imágenes":"More images","Ubicación":"Location","Mapa de":"Map of","la ubicación":"the location","Próximamente en":"Coming up at","esta sala":"this venue","Guardado":"Saved","Guardar":"Save","Compartir":"Share","Añadir al calendario":"Add to calendar","Enlace copiado":"Link copied","Enlace de la ficha":"Link","Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.":"Date and venue collected automatically and cross-checked between sources; details on the venue’s website.","Fuente":"Source","Información recogida automáticamente":"Information collected automatically","confirma horario y precio antes de ir.":"check times and prices before you go.","Saltar a la agenda":"Skip to the listings","Agenda":"Listings","Selección":"Picks","Barrios":"Neighbourhoods","Guardados":"Saved","Ver guardados":"See saved","Cambiar modo claro u oscuro":"Switch light or dark mode","Qué hacer en Barcelona":"What to do in Barcelona","hoy.":"today.","Mil maneras de vivir la ciudad.":"A thousand ways to live the city.","Selección de la semana":"This week’s picks","Buscar en la agenda":"Search the listings","Artista, sala, barrio, obra…":"Artist, venue, neighbourhood, show…","7 días":"7 days","30 días":"30 days","6 meses":"6 months","Elegir una fecha concreta":"Pick a date","Días anteriores":"Previous days","Días siguientes":"Next days","Días de agenda":"Listing days","Periodo":"Period","Filtros":"Filters","Filtros activos":"Active filters","Planes":"Plans","Limpiar":"Clear","Cerrar filtros":"Close filters","Qué te apetece":"What do you fancy","Categoría":"Category","Tipo":"Type","Distrito":"District","Filtrar por distrito":"Filter by district","Formato":"Format","Filtrar por formato":"Filter by format","Todos los formatos":"All formats","Idioma de la actividad":"Language of the activity","Incluir cursos ya empezados":"Include courses under way","Solo gratis":"Free only","Filtrar por horario":"Filter by time","Franja horaria":"Time of day","Mañana":"Morning","Tarde":"Afternoon","Noche":"Evening","Desde":"From","Hasta":"Until","Hora desde":"From time","Hora hasta":"Until time","Quitar horario":"Remove time filter","Vista":"View","Modo de vista":"View mode","Lista":"List","Mapa":"Map","Por sitio":"By venue","Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.":"Times and prices are shown as each source publishes them. Check them before you go.","Por distritos":"By district","Próximos 14 días":"Next 14 days","Fuentes y créditos":"Sources and credits","Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.":"Data: Barcelona City Council (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Barcelona Provincial Council (CC BY 4.0) and venue listings. Check times with the source.","Cambiar idioma":"Change language","mañana.":"tomorrow.","este fin de semana.":"this weekend.","esta semana.":"this week.","este mes.":"this month.","Exposición":"Exhibition","Hoy, lunes":"Today, Monday"};
 const t = s => LANG === 'ca' ? (CA[s] ?? s) : LANG === 'en' ? (EN[s] ?? s) : s;
 const months = LANG === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : LANG === 'ca' ? ['gen','febr','març','abr','maig','juny','jul','ag','set','oct','nov','des'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const weekdays = LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : LANG === 'ca' ? ['dg','dl','dt','dc','dj','dv','ds'] : ['dom','lun','mar','mié','jue','vie','sáb'];
@@ -86,8 +86,24 @@ function lineupHit(e) {
   if (queryMatches(fold(e.title + ' ' + (e.venue_names || []).join(' ')), q)) return '';
   return e.lineup.find(n => queryMatches(fold(n), q)) || '';
 }
+// Raíz de palabra (24-10-2026): se quita la terminación de la palabra buscada (raíz de 4
+// letras o más) y se aceptan, como palabra entera, las terminaciones de su misma familia:
+// «castellers» encuentra «castellera» pero no «castell», «Castelló» ni «castellà»;
+// «sardanes», «sardana»; «exposiciones», «exposició»; «castells», «castellera». La coincidencia exacta de antes
+// (también dentro de otra palabra) se mantiene. Igual que mvp/catalog.word_stem.
+const ENDING_FAMILIES = [['er','ers','era','eres','ero','eros'], ['or','ors','ora','ores'], ['al','als','ales'], ['io','ion','ions','iones'], ['','a','as','e','es','o','os','s']];
+const ENDINGS = ENDING_FAMILIES.flat().filter(Boolean).sort((x, y) => y.length - x.length);
+// La familia nominal (-a, -es, -s…) acepta también la de oficio: «castells» encuentra «castellera».
+const familyOf = x => { const f = ENDING_FAMILIES.find(g => g.includes(x)); return f === ENDING_FAMILIES[4] ? [...f, ...ENDING_FAMILIES[0]] : f };
+const wordStem = w => { for (const x of ENDINGS) if (w.endsWith(x) && w.length - x.length >= 4) return [w.slice(0, -x.length), familyOf(x)]; return [w, ['','s','es']] };
+const STEM_RE = new Map();
+const stemRe = w => {
+  if (!STEM_RE.has(w)) { const [st, fam] = wordStem(w); const clean = st.replace(/[^a-z0-9]/g, ''); STEM_RE.set(w, clean.length >= 4 ? new RegExp(`(?:^|[^a-z0-9])${clean}(?:${fam.join('|')})(?![a-z0-9])`) : null) }
+  return STEM_RE.get(w);
+};
 function queryMatches(text, query) {
   return query.split(' ').every(word => {
+    const re = stemRe(word); if (re && re.test(text)) return true;
     const alts = new Set([word]);
     for (const g of SYN) if (g.some(m => word.startsWith(m) || m.startsWith(word))) g.forEach(m => alts.add(m));
     return [...alts].some(a => text.includes(a));
@@ -97,26 +113,35 @@ const iso = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 6000
 const today = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Madrid'}).format(new Date());  // el día de Barcelona, aunque el dispositivo esté en otra zona
 const MAX_DAYS = 183;
 const addDays = (v, n) => { const d = new Date(v + 'T12:00:00'); d.setDate(d.getDate() + n); return iso(d) };
-const RANGE_LABELS = {'7': t('Próximos 7 días'), '30': t('Próximos 30 días'), '90': t('Próximos 3 meses'), '183': t('Próximos 6 meses'), all: t('Todos los días')};
+const RANGE_LABELS = {finde: t('Este fin de semana'), '7': t('Próximos 7 días'), '30': t('Próximos 30 días'), '90': t('Próximos 3 meses'), '183': t('Próximos 6 meses'), all: t('Todos los días')};
 function rangeWindow() {
   // Returns {from,to,label} for the active period, or null in single-day mode.
   // A search without a chosen period looks across the whole public horizon.
   const r = state.range || (state.query ? 'all' : '');
   if (!r) return null;
+  if (r === 'finde') {   // de lunes a jueves, viernes a domingo de esa semana; de viernes a domingo, de hoy al domingo (src/landings.py)
+    const wd = (new Date(today + 'T12:00:00').getDay() + 6) % 7;
+    return {from: wd < 4 ? addDays(today, 4 - wd) : today, to: addDays(today, 6 - wd), label: RANGE_LABELS.finde};
+  }
   const n = r === 'all' ? MAX_DAYS : Math.min(Number(r) || 7, MAX_DAYS);
   return {from: today, to: addDays(today, n), label: RANGE_LABELS[r] || `${t('Próximos')} ${n} ${t('días')}`};
 }
 
+// Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…, src/landings.py): arrancan con su filtro.
+// Solo cuando se llega sin parámetros; la dirección se mantiene mientras el filtro sea ese (syncUrl).
+const LANDING = (() => { try { return location.search ? {} : JSON.parse(document.documentElement.dataset.landing || '{}') } catch (_) { return {} } })();
+const landingDay = () => LANDING.day === 'today' ? today : LANDING.day === 'tomorrow' ? addDays(today, 1) : (LANDING.day || '');
 let state = {
-  day: params.get('day') || today, cats: [...new Set(params.getAll('cat').map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
-  chans: [...new Set([...params.getAll('ch'), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
+  day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
+  chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
-  range: params.get('range') || '',
+  range: params.get('range') || LANDING.range || '',
   started: params.get('started') === '1', langs: params.getAll('idioma').filter(l => ACT_LANGS[l]),
   savedOnly: false, saved: [], detail: null, page: 1, items: [], total: 0,
 };
+const LANDING_Q = LANDING.path ? stateQuery() : null;   // el filtro con que arrancó la página de entrada (syncUrl)
 try { state.saved = JSON.parse(pref('saved') || '[]') } catch (_) { state.saved = [] }
 let returnFocus = null, agendaRequest = 0;
 
@@ -248,7 +273,7 @@ const get = async path => {
 };
 const key = e => `${e.source}:${e.id}`;
 // Versión 2 del estilo (22-10-2026): la misma app en /v2/ con otra hoja de estilo; las direcciones llevan /v2 delante.
-const SKIN = document.documentElement.dataset.skin || '', BASE = SKIN === 'v2' ? '/v2' : '';
+const SKIN = document.documentElement.dataset.skin || '', BASE = '';   // la v2 se sirve en la portada (antes en /v2/)
 const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
 const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
 function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate()} ${months[d.getMonth()]}` }
@@ -266,19 +291,84 @@ function catLabel(e) {
 // The sheet is a history entry of its own: opening it pushes /e/<source>/<id>,
 // so the browser's Back closes the sheet and returns to the list instead of
 // leaving the site; Back from a shared link lands on the agenda.
-function syncUrl(push) {
+function stateQuery() {
   const p = new URLSearchParams();
   if (state.day !== today) p.set('day', state.day);
   state.cats.forEach(c => p.append('cat', c)); state.chans.forEach(c => p.append('ch', c)); state.ages.forEach(a => p.append('edad', a)); state.langs.forEach(l => p.append('idioma', l)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
   if (state.free) p.set('free', '1'); if (state.query) p.set('q', state.query);
   if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
   if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
-  const q = p.toString(), path = state.detail ? eventPath(state.detail) : BASE + '/', url = path + (q ? '?' + q : '');
+  return p.toString();
+}
+function syncUrl(push) {
+  const q = stateQuery();
+  const onLanding = !state.detail && LANDING_Q !== null && q === LANDING_Q;
+  const path = state.detail ? eventPath(state.detail) : onLanding ? LANDING.path : BASE + '/', url = onLanding ? path : path + (q ? '?' + q : '');
   if (push) history.pushState({sheet: state.detail, depth: (history.state?.depth || 0) + 1}, '', url); else history.replaceState(history.state, '', url);
 }
 const detailFromLocation = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
 function scrollToId(id) { const el = $(id); if (el) window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth'}) }
 function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
+
+/* ---------- avisos por correo (alertas/, functions/api/alertas) ---------- */
+// Apagados hasta que la publicación los activa (data-alerts="1" y la clave pública de Turnstile).
+const ALERTS = document.documentElement.dataset.alerts === '1', TURNSTILE_KEY = document.documentElement.dataset.turnstile || '';
+// Los filtros que admite un aviso (los mismos que alertas/lib.js): sin ninguno no se ofrece.
+function alertFilters() {
+  const f = {cats: state.cats, chans: state.chans, district: state.district || '', free: state.free, q: (state.query || '').trim()};
+  return f.cats.length || f.chans.length || f.district || f.free || f.q ? f : null;
+}
+const alertLabel = f => [...f.cats.map(catName), ...f.chans.map(chanName), f.district ? t(f.district) : '', f.free ? t('Gratis') : '', f.q ? `«${f.q}»` : ''].filter(Boolean).join(' · ');
+let turnstileToken = '', turnstileWidget = null;
+function loadTurnstile() {
+  if (!TURNSTILE_KEY) return;
+  const render = () => { try { turnstileWidget = window.turnstile.render('#alertsTurnstile', {sitekey: TURNSTILE_KEY, language: LANG, callback: tok => { turnstileToken = tok }, 'expired-callback': () => { turnstileToken = '' }}) } catch (_) {} };
+  if (window.turnstile) { if (turnstileWidget !== null) { try { window.turnstile.reset(turnstileWidget) } catch (_) {} } else render(); return }
+  const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = render; document.head.append(sc);
+}
+function openAlerts() {
+  const f = alertFilters(); if (!f) return;
+  let dlg = $('alertsDialog');
+  if (!dlg) {
+    dlg = document.createElement('dialog'); dlg.id = 'alertsDialog'; dlg.className = 'alerts-dialog'; dlg.setAttribute('aria-labelledby', 'alertsTitle');
+    dlg.innerHTML = `<form id="alertsForm" method="dialog" novalidate>
+<div class="alerts-head"><h2 id="alertsTitle">${L('Avisos de novedades', 'Avisos de novetats', 'Email alerts')}</h2><button type="button" class="alerts-close" data-alerts="close" aria-label="${L('Cerrar', 'Tanca', 'Close')}">✕</button></div>
+<p class="alerts-lead">${L('Te escribimos solo cuando aparezcan planes nuevos para esta búsqueda:', 'T\'escrivim només quan apareguin plans nous per a aquesta cerca:', 'We only write when new plans appear for this search:')}</p>
+<p class="alerts-search" id="alertsSearch"></p>
+<label class="alerts-field" for="alertsEmail">${L('Tu correo', 'El teu correu', 'Your email')}</label>
+<input id="alertsEmail" type="email" autocomplete="email" required inputmode="email">
+<fieldset class="alerts-freq"><legend>${L('¿Cada cuánto?', 'Cada quan?', 'How often?')}</legend>
+<label><input type="radio" name="alertsFreq" value="bisemanal" checked> ${L('Lunes y jueves', 'Dilluns i dijous', 'Mondays and Thursdays')}</label>
+<label><input type="radio" name="alertsFreq" value="semanal"> ${L('Solo los lunes', 'Només els dilluns', 'Mondays only')}</label></fieldset>
+<label class="alerts-privacy"><input id="alertsPrivacy" type="checkbox" required> <span>${L('Acepto la <a href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>. Puedes darte de baja en cada correo.', 'Accepto la <a href="/privacidad" target="_blank" rel="noopener">política de privacitat</a>. Et pots donar de baixa a cada correu.', 'I accept the <a href="/privacidad" target="_blank" rel="noopener">privacy policy</a>. You can unsubscribe in every email.')}</span></label>
+<div id="alertsTurnstile" class="alerts-turnstile"></div>
+<p id="alertsMsg" class="alerts-msg" role="status" aria-live="polite"></p>
+<button id="alertsSend" class="alerts-send" type="submit">${L('Quiero los avisos', 'Vull els avisos', 'Send me alerts')}</button></form>`;
+    document.body.append(dlg);
+    dlg.addEventListener('click', ev => { if (ev.target === dlg || ev.target.closest('[data-alerts="close"]')) dlg.close() });
+    $('alertsForm').addEventListener('submit', sendAlerts);
+  }
+  $('alertsSearch').textContent = alertLabel(f); $('alertsMsg').textContent = ''; $('alertsMsg').className = 'alerts-msg';
+  $('alertsSend').disabled = false; $('alertsForm').hidden = false;
+  dlg.showModal(); $('alertsEmail').focus(); loadTurnstile();
+}
+async function sendAlerts(ev) {
+  ev.preventDefault();
+  const f = alertFilters(), msg = $('alertsMsg'), btn = $('alertsSend'), email = $('alertsEmail').value.trim();
+  const fail = text => { msg.textContent = text; msg.className = 'alerts-msg is-error'; btn.disabled = false };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(L('Revisa el correo electrónico.', 'Revisa el correu electrònic.', 'Please check your email address.'));
+  if (!$('alertsPrivacy').checked) return fail(L('Tienes que aceptar la política de privacidad.', 'Has d\'acceptar la política de privacitat.', 'Please accept the privacy policy.'));
+  if (TURNSTILE_KEY && !turnstileToken) return fail(L('Espera un momento a que termine la comprobación antirrobots.', 'Espera un moment que acabi la comprovació antirobots.', 'Please wait for the bot check to finish.'));
+  btn.disabled = true; msg.textContent = L('Enviando…', 'Enviant…', 'Sending…'); msg.className = 'alerts-msg';
+  try {
+    const r = await fetch('/api/alertas/alta', {method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({email, freq: document.querySelector('input[name="alertsFreq"]:checked')?.value || 'bisemanal', filters: f, privacy: true, turnstile: turnstileToken})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) { turnstileToken = ''; loadTurnstile(); return fail(d.error || L('No se ha podido guardar. Prueba más tarde.', 'No s\'ha pogut desar. Prova-ho més tard.', 'Could not save. Please try later.')) }
+    msg.textContent = L('Listo. Te hemos enviado un correo: confírmalo para empezar a recibir los avisos.', 'Fet. T\'hem enviat un correu: confirma\'l per començar a rebre els avisos.', 'Done. We have sent you an email: confirm it to start getting alerts.');
+    msg.className = 'alerts-msg is-ok';
+  } catch (_) { fail(L('Sin conexión. Prueba otra vez.', 'Sense connexió. Torna-ho a provar.', 'No connection. Please try again.')) }
+}
 
 /* ---------- filters panel ---------- */
 function activeFilterList() {
@@ -306,6 +396,7 @@ function clearFilter(k) {
 function renderActive() {
   const list = activeFilterList();
   $('activeFilters').innerHTML = list.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (list.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
+  if (ALERTS && alertFilters()) $('activeFilters').insertAdjacentHTML('beforeend', `<button class="alert-cta" type="button" data-alerts="open"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}</button>`);
   const n = list.length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
 }
@@ -869,6 +960,7 @@ function venueView(items) {
 function renderAgenda() {
   const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
   const model = state.model = buildModel(items, win);
+  document.getElementById('seoLista')?.remove();   // la lista en HTML de las páginas de entrada (src/landings.py): ya está la de la app
   $('typeTabs').innerHTML = ''; $('typeMini').innerHTML = '';
   // El filtro «Formato» se solapa con los botones de tipo: se retira y su apartado queda solo para los talleres ya empezados.
   const fmt = $('formatFilter'), group = fmt?.closest('fieldset');
@@ -1082,6 +1174,7 @@ async function openDetail(k, focus, opts = {}) {
     const sameDay = !opts.sibling && state.day && e.other_days && e.other_days[state.day];
     if (sameDay && sameDay !== k && !(e.start <= state.day && state.day <= e.end)) return openDetail(sameDay, focus, {...opts, sibling: true});
     returnFocus = focus || document.activeElement; state.detail = k; syncUrl(opts.push !== false);
+    document.getElementById('seoFicha')?.remove();   // la ficha en HTML de /e/* (functions/e): ya está la de la app
     // One descriptive block: the source's own text when it exists (paragraphs
     // kept), otherwise a single factual sentence built from the record.
     const text = (e.description || '').trim();
@@ -1241,6 +1334,7 @@ document.addEventListener('click', e => {
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
   if (button.id === 'filtersClear') { ['query','cat','ch','edad','idioma','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
+  if (button.dataset.alerts === 'open') { openAlerts(); return }
   if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','ch','edad','format','free','hours','district'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { clearFilter(button.dataset.clear); refresh(); return }
   if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }

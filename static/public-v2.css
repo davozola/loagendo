@@ -207,3 +207,21 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .ag-block{border-radius:0;border-color:var(--ink);background:var(--paper)}
 .ag-wide{background:var(--surface2)}
 .ag-block .ag-rows .ev{border-bottom-color:var(--line)}
+
+/* Fuentes y créditos (23-10-2026): la misma página, con el estilo de la v2. */
+.credits-page{background:var(--paper);color:var(--ink)}
+.credits-page .site-header .nav-wrap{padding:14px 16px}
+.credits{max-width:52rem;padding:2rem 16px 4rem}
+.credits h1{font-size:clamp(2rem,5vw,3rem);font-weight:700;letter-spacing:-.035em;line-height:1.05;margin:.6rem 0 1.2rem}
+.credits .back{color:var(--ink);font-weight:600;text-decoration:underline}
+.credits a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}.credits a:hover{color:var(--petrol-text)}
+.credits .credit{border-top:1px solid var(--ink);padding:1.1rem 0}
+.credits .credit h2{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+.credits .credits-meta{color:var(--text2)}
+
+/* Avisos por correo (24-10-2026): en la v2, esquinas rectas y negro sobre blanco. */
+.alert-cta{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}
+.alert-cta:hover{background:var(--sand)}
+.alerts-dialog{border-radius:0;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font-family:'Inter Tight','Helvetica Neue',Arial,sans-serif}
+.alerts-head h2{font-size:1.8rem;font-weight:700;letter-spacing:-.03em}
+.alerts-send{background:var(--ink);color:var(--paper);border-color:var(--ink)}

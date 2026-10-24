@@ -1,0 +1,14 @@
+# Worker «ontoca-alertas» (generado por alertas/desplegar.sh). Envío de avisos: ver alertas/LEEME.md.
+name = "ontoca-alertas"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+
+[[d1_databases]]
+binding = "ALERTAS_DB"
+database_name = "ontoca-alertas"
+database_id = "490fab30-6202-4d6f-a9ee-4aab0e00067f"
+
+# Cada 5 minutos entre las 6:00 y las 10:55 UTC: cubre las 8:00 de Barcelona en invierno y en verano.
+[triggers]
+crons = ["*/5 6-10 * * *"]

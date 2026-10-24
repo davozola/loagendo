@@ -50,6 +50,36 @@ def clean(s):
     return ' '.join(''.join(c for c in unicodedata.normalize('NFKD', str(s or '').lower()) if not unicodedata.combining(c)).split())
 
 
+ENDING_FAMILIES=(('er','ers','era','eres','ero','eros'),('or','ors','ora','ores'),('al','als','ales'),('io','ion','ions','iones'),('','a','as','e','es','o','os','s'))
+ENDINGS=sorted({x for f in ENDING_FAMILIES for x in f if x},key=len,reverse=True)
+_STEM_RE={}
+
+
+def word_stem(w):
+    """Raíz para buscar (24-10-2026): se quita la terminación si quedan 4 letras o más y se
+    devuelve con las terminaciones de su misma familia. «castellers» → («castell», -er/-ers/-era…).
+    Igual que wordStem en public.js."""
+    for x in ENDINGS:
+        if w.endswith(x) and len(w)-len(x)>=4:
+            fam=next(f for f in ENDING_FAMILIES if x in f)
+            # La familia nominal acepta también la de oficio: «castells» encuentra «castellera».
+            return w[:-len(x)],(fam+ENDING_FAMILIES[0] if fam is ENDING_FAMILIES[4] else fam)
+    return w,('','s','es')
+
+
+def query_matches(text, query):
+    """Cada palabra de la búsqueda (ya limpia) debe estar en el texto: tal cual (también
+    dentro de otra palabra, como antes) o como palabra entera formada por su raíz y una
+    terminación habitual. «castellers» encuentra «castellera», no «Castellví»."""
+    for word in query.split():
+        if word in text: continue
+        if word not in _STEM_RE:
+            st,fam=word_stem(word); st=re.sub(r'[^a-z0-9]','',st)
+            _STEM_RE[word]=re.compile(r'(?:^|[^a-z0-9])'+st+'(?:'+'|'.join(fam)+r')(?![a-z0-9])') if len(st)>=4 else None
+        if not (_STEM_RE[word] and _STEM_RE[word].search(text)): return False
+    return True
+
+
 def parse_date(v):
     try:return dt.date.fromisoformat(str(v)[:10])
     except (TypeError, ValueError):return None
@@ -1824,7 +1854,7 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     latest_hour=23 if hour_to is None else hour_to
     has_hour_filter=hour_from is not None or hour_to is not None
     for e in events:
-        if term and term not in clean(e['title']+' '+' '.join(e['venue_names'])+' '+' '.join(e.get('lineup') or [])):continue
+        if term and not query_matches(clean(e['title']+' '+' '.join(e['venue_names'])+' '+' '.join(e.get('lineup') or [])),term):continue
         # La selección de la semana mira 7 días desde el día pedido, no solo ese día.
         if date and featured and not curated:
             if not (e['start']<=week_end and e['end']>=date):continue

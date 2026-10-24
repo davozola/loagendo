@@ -457,3 +457,35 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ag-block-head em{font-style:normal;font-size:14px;font-weight:700;flex:none}
 .ag-block .ag-rows{padding:0 14px 8px}
 .ag-wide{background:var(--surface2)}
+
+/* Ficha en HTML de /e/* (functions/e/[[path]].js): la leen los buscadores y quien no tiene JavaScript;
+   la app la retira al abrir su propia ficha. */
+.seo-ficha{max-width:720px;margin:24px auto;padding:0 16px;line-height:1.5}
+.seo-ficha h1{font-size:2rem;line-height:1.1;margin:.2em 0 .4em}
+.seo-ficha-img{margin:0 0 16px}.seo-ficha-img img{width:100%;height:auto;max-height:420px;object-fit:cover;display:block}
+.seo-ficha-img figcaption,.seo-ficha-kind{font-size:.85rem;opacity:.75}
+.seo-ficha-links{padding-left:1.2em}.seo-ficha-more{margin-top:24px}
+/* Páginas de entrada (src/landings.py): lista en HTML que la app retira al pintar la suya, y enlaces al pie. */
+.seo-lista{max-width:900px;margin:24px auto;padding:0 16px;line-height:1.45}
+.seo-lista h1{font-size:2rem;line-height:1.1;margin:0 0 .3em}.seo-lista h2{font-size:1.1rem;margin:1.2em 0 .4em}
+.seo-lista ul{list-style:none;padding:0;margin:0}.seo-lista li{padding:.35em 0;border-bottom:1px solid rgba(127,127,127,.25)}
+.seo-lista li span{display:block;font-size:.85rem;opacity:.75}
+.seo-nav{display:block;width:100%;margin-top:8px;font-size:.85rem}.seo-nav span{font-weight:600}
+.seo-ficha-gone{padding:10px 12px;border:1px solid currentColor;margin:0 0 16px}
+/* Avisos por correo (alertas/): botón junto a los filtros activos y formulario. */
+.alert-cta{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;border-radius:999px}
+.alerts-dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:20px;border:1px solid currentColor;border-radius:12px;background:var(--bg,#fff);color:var(--fg,#000)}
+.alerts-dialog::backdrop{background:rgba(0,0,0,.45)}
+.alerts-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.alerts-head h2{margin:0;font-size:1.5rem}
+.alerts-close{width:44px;height:44px;border:0;background:none;color:inherit;font-size:1.1rem;cursor:pointer}
+.alerts-lead{margin:.6em 0 .2em}.alerts-search{font-weight:700;margin:0 0 1em}
+.alerts-field{display:block;font-weight:600;margin-bottom:4px}
+#alertsEmail{width:100%;box-sizing:border-box;height:46px;padding:0 12px;font:inherit;border:1px solid currentColor;background:transparent;color:inherit}
+.alerts-freq{border:0;padding:0;margin:14px 0}.alerts-freq legend{font-weight:600;margin-bottom:4px}.alerts-freq label{display:flex;align-items:center;gap:8px;min-height:36px}
+.alerts-privacy{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;margin:6px 0 12px}.alerts-privacy input{margin-top:3px}
+.alerts-turnstile{min-height:0;margin:8px 0}
+.alerts-msg{min-height:1.2em;font-size:.95rem;margin:8px 0}.alerts-msg.is-error{color:#b4400f;font-weight:600}.alerts-msg.is-ok{font-weight:700}
+.alerts-send{width:100%;height:50px;border:1px solid currentColor;background:var(--fg,#000);color:var(--bg,#fff);font:inherit;font-weight:700;font-size:1rem;cursor:pointer}
+.alerts-send:disabled{opacity:.6;cursor:wait}
+.alerts-privacy a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.seo-nav a{display:inline-block;margin:0 14px 6px 0}
