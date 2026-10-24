@@ -47,7 +47,7 @@ PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
                         'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
-                        'milestone', 'milestone_link', 'opening', 'other_days')
+                        'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -219,6 +219,7 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento
+    if event.get('sold_out'): out['so'] = event['sold_out'].get('dias') or 1  # entradas agotadas: días que nombra el aviso o 1 = todos
     if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse
     if (event.get('confirmations') or 1) >= 3: out['cf'] = event['confirmations']  # lo anuncian tres fuentes o más
     if not full:

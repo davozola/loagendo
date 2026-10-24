@@ -45,6 +45,37 @@ class EventStatusTest(unittest.TestCase):
         self.assertEqual(event_status.compute(self.conn, TODAY)[('opendatabcn_agenda', 'x')]['estado'], 'aplazado')
 
 
+class SoldOutTest(unittest.TestCase):
+    def setUp(self):
+        self.conn = connect(':memory:'); init_sync(self.conn); catalog.initialize(self.conn)
+        _add(self.conn, 'opendatabcn_agenda', 'oreja', 'Concert "La Oreja de Van Gogh"', '2026-11-06', '2026-11-27', 'Palau Sant Jordi',
+             {'event_status': 'ok', 'warnings': [{'type': 'public', 'text': '<p>Entrades exhaurides pels concerts del 6 i 7 de novembre</p>'}]})
+        _add(self.conn, 'venue_songkick', 'oreja7', 'La Oreja de Van Gogh', '2026-11-07', '2026-11-07', 'Palau Sant Jordi', {})
+        _add(self.conn, 'venue_songkick', 'oreja27', 'La Oreja de Van Gogh', '2026-11-27', '2026-11-27', 'Palau Sant Jordi', {})
+        _add(self.conn, 'generalitat', 'fest', 'Festival Oreja', '2026-02-01', '2026-12-31', 'Palau Sant Jordi', {})
+
+    def test_dias_del_aviso_y_fichas_del_mismo_acto(self):
+        got = event_status.compute_sold_out(self.conn, TODAY)
+        self.assertEqual(got[('opendatabcn_agenda', 'oreja')]['dias'], ['2026-11-06', '2026-11-07'])
+        self.assertEqual(got[('venue_songkick', 'oreja7')]['dias'], ['2026-11-07'])
+        self.assertNotIn(('venue_songkick', 'oreja27'), got)   # el 27 quedan entradas
+        self.assertNotIn(('generalitat', 'fest'), got)         # un festival de meses no se agota por un concierto
+
+
+class TitlesTest(unittest.TestCase):
+    def test_reglas(self):
+        from src.titles import display_title as d
+        self.assertEqual(d('Activitat familiar "Tula Contes', 'talleres'), 'Activitat familiar "Tula Contes"')
+        self.assertEqual(d("'Fet al barri': Teatre Musical \" De 9 a 5\"", 'escena'), "'Fet al barri': Teatre Musical \"De 9 a 5\"")
+        self.assertEqual(d('GRAN GALA FLAMENCO', 'escena'), 'Gran Gala Flamenco')
+        self.assertEqual(d('Concert "Dani Martin", dins la gira "25 P*t*s Años" *Ajornat', 'musica'), 'Dani Martin, dins la gira "25 P*t*s Años"')
+        self.assertEqual(d('Concert "Dani Martin"', 'charlas'), 'Concert "Dani Martin"')       # la categoría no lo dice: se queda
+        self.assertEqual(d('Espectacle familiar "La Fillaharmònica"', 'escena'), 'Espectacle familiar "La Fillaharmònica"')
+        self.assertEqual(d("FESTA D'ESTIU AL BARRI", 'fiestas'), "Festa d'Estiu al Barri")
+        self.assertEqual(d('DJ SET: BCN NIGHTS', 'musica'), 'DJ Set: BCN Nights')
+        self.assertEqual(d('Bad Gyal', 'musica'), 'Bad Gyal')
+
+
 class PriceZeroTest(unittest.TestCase):
     def test_precio_cero_no_es_gratis(self):
         self.assertEqual(official_dates._price_of({'@type': 'Offer', 'price': '0'}), ('', False))

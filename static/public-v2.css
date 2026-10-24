@@ -120,6 +120,10 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 /* «Gratis» va como etiqueta: sin el «·» separador dentro de la caja y con aire respecto a la categoría (22-10-2026). */
 .ev-cat>span.ev-free:before{content:none}
 .ev-cat>.ev-free{margin-left:10px;vertical-align:1px}
+/* «Agotado» (24-10-2026): etiqueta como «Gratis», en tinta, para que no se confunda con un plan disponible. */
+.ev-soldout{display:inline-block;background:var(--ink);border:1px solid var(--ink);color:var(--bg);padding:0 6px;line-height:1.35;font-size:12px;font-weight:700}
+.ev-cat>span.ev-soldout:before{content:none}
+.ev-cat>.ev-soldout{margin-left:10px;vertical-align:1px}
 .w-fill,.m-bar{border-radius:0}.w-bar{border-radius:0;background:var(--bar)}
 
 /* cuadradito de color por categoría, en lugar del punto separador */

@@ -859,8 +859,8 @@ class Prefetch:
         self.organizer=_organizer_texts(conn)
         from src.official_dates import official as _official_dates, pages as _official_pages
         self.official=_official_dates(conn); self.official_pages=_official_pages(conn)
-        from src.event_status import statuses as _statuses
-        self.statuses=_statuses(conn)
+        from src.event_status import statuses as _statuses, sold_out as _sold_out
+        self.statuses=_statuses(conn); self.sold_out=_sold_out(conn)
         from src.known_times import load as _known_times
         self.known_times=_known_times(conn)
         if 'source_detail_facts' in tables:
@@ -1180,6 +1180,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     status_map=getattr(prefetch,'statuses',None) if prefetch is not None else None
     act_status=(status_map if status_map is not None else _event_status.statuses(conn)).get((source,id))
     if act_status and not moved_to: moved_to=act_status['estado']
+    # Entradas agotadas según la fuente o una gemela (todas las fechas o las que nombra el aviso).
+    sold_map=getattr(prefetch,'sold_out',None) if prefetch is not None else None
+    sold=(sold_map if sold_map is not None else _event_status.sold_out(conn)).get((source,id))
     # GuiaBCN's listing never carries prose: its description lives in the
     # archived official page, so the listing must look there too.
     # Sin texto en GuiaBCN: el de la web oficial del acto, con su crédito (src/organizer_text.py).
@@ -1333,7 +1336,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         # municipal id); the archived row and its history stay untouched.
         'time_conflicts':time_conflicts,
         'hours_by_day':hours_by_day if isinstance(hours_by_day,dict) else {},
-        'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'event_status':act_status,'ticket_url':projection.get('ticket_url',''),
+        'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'event_status':act_status,'sold_out':({'texto':sold['texto'],'dias':sold['dias'],'origen':sold['origen']} if sold else None),'ticket_url':projection.get('ticket_url',''),
         'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),'languages':list(projection.get('languages') or []),
         'superseded_by':(twin if source=='guiabcn' else None) or collapsed_into,
         'also_in':([twin] if source=='opendatabcn_agenda' and twin else [])+[m for m in collapsed_members if m!=twin],
@@ -1421,6 +1424,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
                    'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous'],
                    'rule_status':verdict['rule_status'],'rule_ambiguous':verdict['rule_ambiguous'],'ai_disagrees':verdict.get('ai_disagrees','')})
+    # Título que se muestra, limpio (src/titles.py, 24-10-2026); el de la fuente queda en source_title.
+    from src.titles import display_title
+    events['source_title']=events['title']; events['title']=display_title(events['title'],verdict['category'])
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])
@@ -1993,7 +1999,7 @@ def other_days(conn, event):
     url=str(event.get('url') or '')
     if event.get('start')!=event.get('end') or not url.startswith(('https://','http://')): return {}
     rows=conn.execute('''SELECT id,substr(start_date,1,10) FROM source_records WHERE source=? AND id<>? AND source_url=? AND title=?
-        AND substr(start_date,1,10)=substr(end_date,1,10) AND eligibility<>'exclude' ''',(event['source'],event['id'],url,event.get('title') or '')).fetchall()
+        AND substr(start_date,1,10)=substr(end_date,1,10) AND eligibility<>'exclude' ''',(event['source'],event['id'],url,event.get('source_title') or event.get('title') or '')).fetchall()
     out={}
     for rid,day in sorted(rows,key=lambda r:r[1]):
         if day!=event.get('start'): out.setdefault(day,event['source']+':'+rid)
