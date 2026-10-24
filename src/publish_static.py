@@ -372,6 +372,27 @@ def share_card(detail, today):
             'k': packed_calendar(detail, today), 'o': ((detail.get('official_page') or {}).get('url') or '') if str((detail.get('official_page') or {}).get('url') or '').startswith('https://') else ''}
 
 
+def write_translations(conn, out, shards):
+    """Traducciones automáticas de la descripción (src/ai_translate.py, 24-10-2026): deja las descripciones
+    publicadas para que «ia-asistente» las traduzca y escribe /data/tr/<idioma>/<shard>.json con las ya
+    hechas que pasan la comprobación ({clave: {t: texto, m: modelo, f: fecha}}). Un fichero por shard de
+    ficha aunque esté vacío, para que la web no pida ficheros que no existen."""
+    from src import ai_assist, ai_translate
+    texts = {k: str(r.get('description') or '').strip() for records in shards.values() for k, r in records.items()}
+    texts = {k: v for k, v in texts.items() if ai_translate.needs(v)}
+    try: ai_assist.queue_translations(conn, texts)
+    except sqlite3.DatabaseError: pass  # base de solo lectura (pruebas): se publican las que haya
+    counts = {}
+    for lang in ai_translate.TARGETS:
+        files = {name: {} for name in shards}
+        for k, text in texts.items():
+            tr = ai_assist.translation_for(conn, k, text, lang)
+            if tr: files[shard_of(k)][k] = {'t': tr['text'], 'm': tr['model'], 'f': tr['date']}
+        for name, records in files.items(): _write_json(out / 'data' / 'tr' / lang / f'{name}.json', records)
+        counts[lang] = sum(len(r) for r in files.values())
+    return {'descripciones': len(texts), 'traducidas': counts}
+
+
 def shard_of(key):
     return hashlib.sha1(key.encode('utf-8')).hexdigest()[:2]
 
@@ -650,6 +671,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         shards.setdefault(shard_of(e['key']), {})[e['key']] = public
         cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media'], 'official_page': public.get('official_page')}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
+    translations = write_translations(conn, out, shards)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
     from src.event_status import statuses as _statuses
     keep_past_cards(out, cards, today, gone={f'{s}:{i}' for s, i in _statuses(conn)})
@@ -657,7 +679,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
     phase('dias_y_tarjetas')
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
-    counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards)}
+    counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards), 'translations': translations['traducidas']}
     sources = {s: {'label': catalog.SOURCES.get(s, s), 'attribution': registry_entry(registry, s).get('attribution', ''), 'license_url': registry_entry(registry, s).get('license_url', '')} for s in sorted({e['source'] for e in events}) if registry_entry(registry, s).get('public_credit') is not False}
     _write_json(out / 'data' / 'meta.json', {'generated_at': generated_at, 'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'counts': counts, 'sources': sources, 'site_url': site_url.rstrip('/') if site_url else ''})
     # Front end: the same files the local server serves, switched to static mode.

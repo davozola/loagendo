@@ -30,11 +30,14 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1}
+PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1, 'traduccion_en': 1, 'traduccion_es': 1}
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
 MAX_REQUESTS_PER_BATCH = 150
+# Textos largos (traducciones): grupos pequeños para que la respuesta no se corte, y más peticiones por lote.
+CHUNK = {'traduccion': 8, 'traduccion_en': 8, 'traduccion_es': 8}
+MAX_REQUESTS = {'traduccion_en': 400, 'traduccion_es': 400}
 
 CATEGORY_KEYS = ['musica', 'escena', 'cine', 'arte', 'charlas', 'talleres', 'fiestas', 'deporte', 'excluida', 'pendiente']
 
@@ -99,7 +102,8 @@ def _tasks():
             'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
             'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos),
             'descripcion': (ai_describe.SYSTEM, ai_describe.TOOL, 'fichas', ai_describe.parse),
-            'traduccion': (ai_translate.SYSTEM, ai_translate.TOOL, 'items', ai_translate.parse)}  # solo muestra (23-10-2026)
+            'traduccion': (ai_translate.SYSTEM, ai_translate.TOOL, 'items', ai_translate.parse),  # la muestra (23-10-2026)
+            **{f'traduccion_{lang}': (ai_translate.system_for(lang), ai_translate.tool_for(lang), 'items', ai_translate.parser_for(lang)) for lang in ai_translate.TARGETS}}
 
 
 def load_key(env_path=None):
@@ -126,6 +130,10 @@ def initialize(conn):
     CREATE TABLE IF NOT EXISTS ai_batches (
       batch_id TEXT PRIMARY KEY, task TEXT NOT NULL, model TEXT NOT NULL, status TEXT NOT NULL, items_json TEXT NOT NULL,
       created_at TEXT NOT NULL, ended_at TEXT, usage_json TEXT, error TEXT);
+    -- Descripciones publicadas que se pueden traducir: las deja la exportación (src/publish_static.py) con
+    -- la marca de la última; la traducción las recoge de aquí porque el listado no lleva el texto entero.
+    CREATE TABLE IF NOT EXISTS ai_translation_texts (
+      item TEXT PRIMARY KEY, text TEXT NOT NULL, seen_at TEXT NOT NULL);
     """)
 
 
@@ -156,9 +164,9 @@ def suggestions(conn):
     try: stamp = conn.execute('SELECT COUNT(*), MAX(created_at) FROM ai_suggestions').fetchone()
     except sqlite3.DatabaseError: return {}
     if stamp != _CACHE['stamp']:
-        rows = conn.execute('SELECT task,item,answer,confidence,reason,input_hash,model,prompt_version FROM ai_suggestions').fetchall()
-        _CACHE.update(stamp=stamp, map={(t, i): {'answer': a, 'confidence': c, 'reason': r, 'input_hash': h, 'model': m, 'prompt_version': v}
-                                        for t, i, a, c, r, h, m, v in rows})
+        rows = conn.execute('SELECT task,item,answer,confidence,reason,input_hash,model,prompt_version,created_at FROM ai_suggestions').fetchall()
+        _CACHE.update(stamp=stamp, map={(t, i): {'answer': a, 'confidence': c, 'reason': r, 'input_hash': h, 'model': m, 'prompt_version': v, 'created_at': d}
+                                        for t, i, a, c, r, h, m, v, d in rows})
     return _CACHE['map']
 
 
@@ -237,6 +245,45 @@ def description_for(conn, key, ev):
     return {'es': es, 'ca': ca, 'model': s['model']}
 
 
+def queue_translations(conn, texts, stamp=None):
+    """La exportación deja aquí {clave: descripción publicada}; todas con la misma marca."""
+    initialize(conn); stamp = stamp or _now()
+    with conn:
+        conn.executemany('INSERT INTO ai_translation_texts(item,text,seen_at) VALUES(?,?,?) ON CONFLICT(item) DO UPDATE SET text=excluded.text, seen_at=excluded.seen_at',
+                         [(k, v, stamp) for k, v in texts.items()])
+    return len(texts)
+
+
+def translation_candidates(conn, lang):
+    """Descripciones de la última exportación sin traducción vigente a ``lang`` (las que ya están en ese
+    idioma, a ojo, no se piden)."""
+    from src import ai_translate
+    task = f'traduccion_{lang}'; current = suggestions(conn); out = []
+    try: rows = conn.execute('SELECT item,text FROM ai_translation_texts WHERE seen_at=(SELECT MAX(seen_at) FROM ai_translation_texts) ORDER BY item').fetchall()
+    except sqlite3.DatabaseError: return []
+    for item, text in rows:
+        if not ai_translate.needs(text) or ai_translate.guess_lang(text) == lang: continue
+        payload = {'text': text.strip()[:ai_translate.MAX_TEXT]}; s = current.get((task, item))
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version(task): continue
+        out.append((item, payload))
+    return out
+
+
+def translation_for(conn, key, text, lang):
+    """Traducción vigente y aceptada de la descripción ({text, model, date, source_lang}) o None. Se vuelve
+    a comprobar con las reglas de hoy; si el original ya estaba en ``lang``, no hay traducción."""
+    from src import ai_translate
+    task = f'traduccion_{lang}'; s = suggestions(conn).get((task, key))
+    if not s or s['prompt_version'] != prompt_version(task) or s['input_hash'] != _hash({'text': (text or '').strip()[:ai_translate.MAX_TEXT]}): return None
+    try: d = json.loads(s['answer'])
+    except ValueError: return None
+    out, src = str(d.get('text') or '').strip(), d.get('source_lang') or ''
+    if not out or src == lang: return None
+    ok, _ = ai_translate.check_target((text or '').strip()[:ai_translate.MAX_TEXT], out, lang)
+    if not ok: return None
+    return {'text': out, 'model': s['model'], 'date': (s.get('created_at') or '')[:10], 'source_lang': src}
+
+
 def family_candidates(conn, events, today):
     from src import ai_family, taxonomy
     current = suggestions(conn); out = []
@@ -306,7 +353,7 @@ def _params(task, chunk, model):
     system, tool, field, _ = _tasks()[task]
     if task == 'categoria' and guide(): system = system + '\n\n' + guide()  # en caché: apenas cuesta
     listing = [{'n': n, **payload} for n, (_, payload) in enumerate(chunk)]
-    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220, 'traduccion': 900}.get(task, 150)  # tope de salida, no se cobra si no se usa
+    per_item = {'datos': 400, 'descripcion': 260, 'familia': 220}.get(task, 900 if task.startswith('traduccion') else 150)  # tope de salida, no se cobra si no se usa
     return {'model': model, 'max_tokens': min(32000, 200 + per_item * len(chunk)),
             'system': [{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral', 'ttl': '1h'}}],
             'tools': [tool], 'tool_choice': {'type': 'tool', 'name': tool['name']},
@@ -348,7 +395,7 @@ def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None, retr
     pequeños (hasta ``retries`` veces)."""
     key = key or load_key(); out = {}; requester = requester or _request
     usage = usage if usage is not None else {}
-    pending, size = list(items), {'traduccion': 8}.get(task, ITEMS_PER_REQUEST)  # textos largos: grupos pequeños
+    pending, size = list(items), CHUNK.get(task, ITEMS_PER_REQUEST)  # textos largos: grupos pequeños
     for attempt in range(retries + 1):
         for start in range(0, len(pending), size):
             chunk = pending[start:start + size]
@@ -361,7 +408,7 @@ def ask_now(task, items, key=None, model=MODEL, usage=None, requester=None, retr
                 out[chunk[n][0]] = (answer, confidence, why)
         pending = [x for x in pending if x[0] not in out]
         if not pending: break
-        size = 2 if task == 'traduccion' else 10
+        size = 2 if task in CHUNK else 10
     usage['sin_respuesta'] = len(pending)
     return out
 
@@ -389,13 +436,15 @@ def collect(conn, key, requester=_request):
 
 
 def submit(conn, key, task, items, model=MODEL, requester=_request):
-    """Envía un lote con hasta MAX_REQUESTS_PER_BATCH peticiones de ITEMS_PER_REQUEST elementos."""
+    """Envía un lote con hasta MAX_REQUESTS_PER_BATCH peticiones de ITEMS_PER_REQUEST elementos
+    (las traducciones, en grupos más pequeños: CHUNK y MAX_REQUESTS)."""
     if not items: return None
     pending = {tuple(x)[0] for (j,) in conn.execute("SELECT items_json FROM ai_batches WHERE status='in_progress' AND task=?", (task,))
                for chunk in json.loads(j).values() for x in chunk}
-    items = [x for x in items if x[0] not in pending][:ITEMS_PER_REQUEST * MAX_REQUESTS_PER_BATCH]
+    size = CHUNK.get(task, ITEMS_PER_REQUEST)
+    items = [x for x in items if x[0] not in pending][:size * MAX_REQUESTS.get(task, MAX_REQUESTS_PER_BATCH)]
     if not items: return None
-    chunks = {f'{task[:3]}-{n}': items[start:start + ITEMS_PER_REQUEST] for n, start in enumerate(range(0, len(items), ITEMS_PER_REQUEST))}
+    chunks = {f'{task[:3]}-{n}': items[start:start + size] for n, start in enumerate(range(0, len(items), size))}
     body = {'requests': [{'custom_id': cid, 'params': _params(task, chunk, model)} for cid, chunk in chunks.items()]}
     info = requester('POST', f'{API}/messages/batches', key, body, timeout=300)  # lotes grandes: subida de varios MB
     with conn:
@@ -418,6 +467,10 @@ def run(conn, job=None, requester=_request, today=None):
         sent = {}
         for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('familia', family_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
+        from src import ai_translate
+        for lang in ai_translate.TARGETS:  # descripciones de la última exportación (24-10-2026)
+            task = f'traduccion_{lang}'
+            if job.get(task, True): sent[task] = submit(conn, key, task, translation_candidates(conn, lang), model, requester)
         selection = None
         if job.get('seleccion', True):
             from src import ai_select

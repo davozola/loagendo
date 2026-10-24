@@ -154,7 +154,7 @@ const fetchJson = async (path, opts) => { const r = await fetch(path, opts); con
    multi-day query, and detail records sharded by key in /data/detail/. The ranking
    below mirrors mvp/catalog.query_events so both modes order a day the same way. */
 const STATIC = document.documentElement.dataset.static === '1';
-const store = {catalog: null, loading: null, days: {}, shards: {}};
+const store = {catalog: null, loading: null, days: {}, shards: {}, tr: {}};
 const fold = s => String(s ?? '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').split(/\s+/).filter(Boolean).join(' ');
 function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
@@ -171,9 +171,22 @@ async function dayFile(day) {
   store.days[day] ||= fetchJson(`/data/day/${day}.json`).catch(err => { delete store.days[day]; throw err });
   return store.days[day];
 }
-async function shardFor(k) {
+async function shardName(k) {
   const bytes = new TextEncoder().encode(k), digest = await crypto.subtle.digest('SHA-1', bytes);
-  const name = Array.from(new Uint8Array(digest).slice(0, 1)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(digest).slice(0, 1)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// Traducción automática de la descripción (inglés o castellano; el original suele ser catalán): solo las
+// que pasaron la comprobación (src/ai_translate.py). Sin traducción, la ficha enseña el original.
+async function translationFor(k) {
+  if (!STATIC || !['en', 'es'].includes(LANG)) return null;
+  try {
+    const name = await shardName(k);
+    store.tr[name] ||= fetchJson(`/data/tr/${LANG}/${name}.json`).catch(() => ({}));
+    return (await store.tr[name])[k] || null;
+  } catch (_) { return null }
+}
+async function shardFor(k) {
+  const name = await shardName(k);
   store.shards[name] ||= fetchJson(`/data/detail/${name}.json`).catch(err => { delete store.shards[name]; throw err });
   return store.shards[name];
 }
@@ -1178,11 +1191,15 @@ async function openDetail(k, focus, opts = {}) {
     // One descriptive block: the source's own text when it exists (paragraphs
     // kept), otherwise a single factual sentence built from the record.
     const text = (e.description || '').trim();
-    const paragraphs = text ? text.slice(0, 3000).split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('') : `<p>${esc(e.editorial_summary || '')}</p>`;
+    const para = s => s.slice(0, 3000).split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('');
+    const paragraphs = text ? para(text) : `<p>${esc(e.editorial_summary || '')}</p>`;
+    const tr = text ? await translationFor(k) : null;
     // Descripción breve automática (IA) encima del texto original, para comparar; nunca lo sustituye.
     // Resumen y recomendación escritos por IA: fuera de la ficha pública hasta evaluarlos (22-10-2026).
     const brief = '';
-    const description = `${brief}<section class="sheet-copy">${paragraphs}</section>`;
+    // Con traducción: se dice que es automática y el original queda a un clic (24-10-2026).
+    const description = tr ? `${brief}<section class="sheet-copy"><div class="tr-note">${L('Traducción automática', 'Traducció automàtica', 'Machine translation')} · <button type="button" class="tr-toggle" data-trtoggle aria-expanded="false">${L('Ver original', "Veure l'original", 'Show original')}</button></div><div class="tr-text" lang="${LANG}">${para(tr.t)}</div><div class="tr-orig" hidden>${paragraphs}</div></section>`
+      : `${brief}<section class="sheet-copy">${paragraphs}</section>`;
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     // Hora que dio una lectura anterior de la fuente y la actual ya no trae (23-10-2026): se dice.
     const carried = (e.occurrences || []).find(o => o.evidence_field === 'ultima_hora_conocida' && o.date === (e.occurrence_date || state.day));
@@ -1371,6 +1388,11 @@ document.addEventListener('click', e => {
   if (button.dataset.actlang) { const l = button.dataset.actlang; state.langs = state.langs.includes(l) ? state.langs.filter(x => x !== l) : [...state.langs, l]; refresh(); return }
   if (button.dataset.channel) { const c = button.dataset.channel; state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; channelView(); refresh(); return }
   if (button.dataset.district) { state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
+  if (button.dataset.trtoggle !== undefined) {
+    const sec = button.closest('.sheet-copy'), orig = button.getAttribute('aria-expanded') !== 'true';
+    sec.querySelector('.tr-text').hidden = orig; sec.querySelector('.tr-orig').hidden = !orig; button.setAttribute('aria-expanded', String(orig));
+    button.textContent = orig ? L('Ver traducción', 'Veure la traducció', 'Show translation') : L('Ver original', "Veure l'original", 'Show original'); return
+  }
   if (button.dataset.save) { toggleSave(button.dataset.save); return }
   if (button.dataset.share) { shareEvent(button.dataset.share); return }
   if (button.dataset.open) { openDetail(button.dataset.open, button); return }

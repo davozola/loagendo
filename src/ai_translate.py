@@ -1,6 +1,9 @@
-"""Traducción automática de descripciones al inglés · MUESTRA (23-10-2026).
+"""Traducción automática de descripciones al inglés y al castellano.
 
-Solo para evaluar calidad y coste antes de decidir nada: no escribe en la base ni publica.
+La tarea «traduccion» fue la muestra del 23-10-2026 (solo inglés, no publica). Las tareas
+«traduccion_en» y «traduccion_es» (24-10-2026) son las de producción: el original se conserva siempre,
+cada traducción guarda modelo, versión del prompt, huella del texto y resultado de la comprobación, y
+solo se publica la que la pasa (si no, la ficha enseña el original).
 Reglas (las de siempre con la IA: evaluación y trazabilidad):
   · se traduce la descripción de la fuente, no el título (nombres de obras, artistas y salas se quedan como están);
   · fiel al original: sin añadir, quitar ni resumir; sin adjetivos nuevos;
@@ -135,6 +138,81 @@ def check(source, en):
     names = _names(source); lost = sorted(n for n in names if not any(fold(w) in fold(en) for w in n.split() if len(w) > 3))
     if lost: warnings.append('revisar nombres: ' + ', '.join(lost[:4]))
     return not problems, problems + warnings if problems else ([] if not warnings else ['aviso · ' + '; '.join(warnings)])
+
+
+# ---------- producción: inglés y castellano (24-10-2026) ----------
+TARGETS = ('en', 'es')
+LANG_NAMES = {'en': 'English', 'es': 'Spanish (Spain)'}
+STYLE = {'en': 'Plain, natural British English.', 'es': 'Castellano de España, natural y sencillo.'}
+
+
+def system_for(lang):
+    return f"""You translate event descriptions from a Barcelona cultural listings site (Ontoca) into {LANG_NAMES[lang]}.
+The source text is usually Catalan, sometimes Spanish or English. Translate it faithfully and completely:
+- Do not add, remove, summarise or explain anything. No new adjectives, opinions or calls to action.
+- Keep proper names exactly as written, including accents and diacritics (Händel stays Händel, Pérez stays Pérez):
+  people, groups, venues, works, festivals, organisations, streets, neighbourhoods.
+  Titles of works stay in their original language (you may keep quotation marks as in the source).
+- Keep every number, date, time, price, age and URL exactly as in the source (digits stay digits; 24-hour times stay 24-hour).
+- {STYLE[lang]} Keep paragraph breaks.
+- If the text is already in {LANG_NAMES[lang]}, return it unchanged.
+Also return the language of the source text (ca, es, en or other).
+Answer with the tool traducir, one entry per item (n)."""
+
+
+def tool_for(lang):
+    return {'name': 'traducir', 'description': f'{LANG_NAMES[lang]} translation of each description.',
+            'input_schema': {'type': 'object', 'required': ['items'], 'properties': {'items': {'type': 'array', 'items': {
+                'type': 'object', 'required': ['n', 'source_lang', 'text'],
+                'properties': {'n': {'type': 'integer'}, 'source_lang': {'type': 'string'}, 'text': {'type': 'string'}}}}}}}
+
+
+MARKERS = {'ca': {'els', 'amb', 'per', 'aquest', 'aquesta', 'dels', 'i', 'què', 'també', 'però', 'seva', 'seu', 'fins', 'molt', 'una', 'és', 'més', 'pel', 'als', 'on'},
+           'es': {'los', 'con', 'para', 'por', 'este', 'esta', 'las', 'y', 'también', 'pero', 'su', 'sus', 'muy', 'hasta', 'una', 'es', 'más', 'que', 'donde'},
+           'en': {'the', 'and', 'with', 'of', 'for', 'is', 'this', 'to', 'in', 'on', 'from', 'by', 'are'}}
+
+
+def guess_lang(text):
+    """Idioma probable del texto por palabras frecuentes ('ca', 'es', 'en' o '' si no está claro).
+    Solo sirve para no pedir lo que ya está en el idioma de destino; la palabra final la da la respuesta."""
+    words = re.findall(r"[a-zà-ÿ·]+", (text or '').lower()[:1500])
+    if any("l·l" in w for w in words): words.append('i')  # ela geminada: catalán
+    score = {k: sum(w in m for w in words) for k, m in MARKERS.items()}
+    best = sorted(score.items(), key=lambda x: -x[1])
+    return best[0][0] if best[0][1] >= 4 and best[0][1] >= 2 * best[1][1] else ''
+
+
+def check_target(source, target, lang):
+    """Como check(), para el idioma de destino: en inglés, igual; en castellano, los números del destino
+    se leen con las palabras de catalán/castellano y solo cuentan como nuevas las cifras escritas."""
+    if lang == 'en': return check(source, target)
+    problems, warnings = [], []
+    if not target.strip(): return False, ['vacía']
+    src_nums, tgt_nums = _numbers(source), _numbers(target)
+    digits = lambda t: {n.replace('.', '').replace(',', '').replace(':', '').lstrip('0') or '0' for n in NUM.findall(t)}
+    digits_src = digits(source)
+    missing = sorted(n for n in src_nums & digits_src if n not in tgt_nums)
+    if missing: problems.append('faltan números: ' + ', '.join(missing[:5]))
+    tgt_hours = {str(int(re.split(r'[:.]', n)[0])) for n in NUM.findall(target) if re.fullmatch(r'\d{1,2}[:.]\d{2}', n)}
+    added = sorted(n for n in digits(target) | tgt_hours if n not in src_nums)
+    if added: problems.append('números nuevos: ' + ', '.join(added[:5]))
+    if [u for u in URL.findall(source) if u.rstrip('.,;)') not in target]: problems.append('enlaces perdidos')
+    ratio = len(target) / max(1, len(source))
+    if not 0.7 <= ratio <= 1.5: problems.append(f'longitud rara ({ratio:.2f})')
+    names = _names(source); lost = sorted(n for n in names if not any(fold(w) in fold(target) for w in n.split() if len(w) > 3))
+    if lost: warnings.append('revisar nombres: ' + ', '.join(lost[:4]))
+    return not problems, problems + warnings if problems else ([] if not warnings else ['aviso · ' + '; '.join(warnings)])
+
+
+def parser_for(lang):
+    def parse_target(row, payload):
+        text = str(row.get('text') or '').strip(); src = str(row.get('source_lang') or '').strip().lower()[:5]
+        if not text: return None  # vacía: se vuelve a pedir
+        if src == lang:  # ya estaba en el idioma de destino: no hay traducción que publicar
+            return json.dumps({'text': '', 'source_lang': src, 'ok': False, 'problems': ['ya en el idioma']}, ensure_ascii=False), 0.0, 'ya en el idioma'
+        ok, problems = check_target(payload['text'], text, lang)
+        return json.dumps({'text': text, 'source_lang': src, 'ok': ok, 'problems': problems}, ensure_ascii=False), 1.0 if ok else 0.0, '; '.join(problems)
+    return parse_target
 
 
 def parse(row, payload):
