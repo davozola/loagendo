@@ -1304,14 +1304,32 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         days=[str(start)[:10]] if str(start)[:10]==str(end)[:10] else sorted({o['date'] for o in occurrences if not o.get('time')})
         # Temporada sin sesiones propias (obra en cartel, 23-10-2026): las funciones sueltas del mismo acto que otras
         # fuentes publican día a día (con hora) pasan a ser sus días; así sale solo los días que hay función.
+        session_days=False; first=False
         if str(start)[:10]!=str(end)[:10] and not occurrences:
             singles=set()
+            from src.dedupe import first_party as _first_party
+            # La propia sala: sus agendas leídas (venue_*) y las webs propias que se leen aparte (L'Auditori, Lliure, MACBA, CCCB).
+            _fp=lambda src: _first_party(src) or src in ('web_auditori','web_teatre_lliure','web_macba','web_cccb')
             for member in collapsed_members:
                 ms,mi=member.split(':',1)
                 if ms==source: continue
                 occ=_member_occ(ms,mi); dates={o['date'] for o in occ}
-                if len(dates)==1: singles|={o['date'] for o in occ if o.get('time') and str(start)[:10]<=o['date']<=str(end)[:10]}
-            if len(singles)>=3: days=sorted(singles)
+                # Funciones sueltas y, desde el 24-10-2026, también fines de semana (Generalitat publica cada fin de
+                # semana de «Concert per a nadons» con sus pases) y la sala con cada función (L'Auditori, Liceu).
+                if 1<=len(dates)<=7 and (max(dates)>min(dates) or len(dates)==1):
+                    got={o['date'] for o in occ if o.get('time') and str(start)[:10]<=o['date']<=str(end)[:10]}
+                    singles|=got; first=first or (bool(got) and _fp(ms))
+            if len(singles)>=3 or (singles and first): days=sorted(singles)
+            # Qué días salen en la agenda (24-10-2026):
+            #  · si la propia sala publica funciones (Liceu, L'Auditori, Palau, Antic Teatre…), manda la sala: solo los
+            #    días con función fechada (de la sala y de las demás fuentes), aunque el agregador dé un periodo más largo
+            #    («Miserable»: GuiaBCN del 6-11-2026 al 6-11-2027, el Borràs el 6-11);
+            #  · si no, solo cuando las funciones abarcan la temporada (la primera y la última a menos de 3 días de su
+            #    inicio y su fin); si no la abarcan, son solo las horas de esos días.
+            if days and len(days)==len(singles):
+                d0,d1=parse_date(start),parse_date(end); a,b=parse_date(days[0]),parse_date(days[-1])
+                session_days=bool(first or (d0 and d1 and a and b and (a-d0).days<=3 and (d1-b).days<=3))
+                if first and session_days: start,end=days[0],days[-1]
         for day in days:
             if day in timed: continue
             for member in sorted(collapsed_members, key=lambda m: _rank(m.split(':',1)[0])):
@@ -1322,6 +1340,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                     occurrences[:]=[o for o in occurrences if o['date']!=day]+[{'date':day,'time':t,'evidence_field':'otra_fuente','verified':False} for t in ts]
                     break
         occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
+        # Con funciones de la sala, sus horas mandan también sobre la tabla por días del agregador (Open Data daba
+        # «16:00 · 17:15» también los domingos de «Concert per a nadons»; la sala y la Generalitat, 10:00, 11:15, 12:30).
+        if session_days and (first or not any((hours_by_day or {}).values())):
+            hours_by_day={d:' · '.join(sorted({o['time'] for o in occurrences if o['date']==d and o.get('time')})) for d in days}
     # Two directories often publish different times for the same concert
     # (doors vs. show, or a plain error). When the canonical record is itself a
     # directory, every published time is shown and the reader is told to

@@ -279,13 +279,16 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     for key in list(parent):
         groups.setdefault(find(key), []).append(key)
     # Misma fuente con dos fichas del mismo acto: manda la que cubre más días (no se pierde ninguna fecha).
-    spans = {}
+    spans = {}; dates = {}   # dates: (inicio, días, fin normalizado) — el fin sin la medianoche de las ticketeras
     try:
         members = [k for k in parent]
         for i in range(0, len(members), 500):
             chunk = members[i:i + 500]
             for src, rid, a, b in conn.execute(f"SELECT source,id,start_date,end_date FROM source_records WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
-                try: spans[f"{src}:{rid}"] = (dt.date.fromisoformat(str(b)[:10]) - dt.date.fromisoformat(str(a)[:10])).days
+                try:
+                    d0, d1 = dt.date.fromisoformat(str(a)[:10]), dt.date.fromisoformat(_end_of(src, str(a)[:10], str(b)[:10]))
+                    spans[f"{src}:{rid}"] = (dt.date.fromisoformat(str(b)[:10]) - d0).days
+                    dates[f"{src}:{rid}"] = (d0, (d1 - d0).days, d1)
                 except ValueError: pass
     except sqlite3.DatabaseError: pass
     # Manda la fuente original: si el propio centro publica el acto, su ficha es la canónica (fechas,
@@ -296,6 +299,18 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     out = {}
     for members in groups.values():
         canonical = min(members, key=rank)
+        # Que no se pierda ninguna fecha (24-10-2026): si la ficha elegida es una función o un fin de semana (hasta 6
+        # días) y otras del grupo tienen fechas fuera de ella («Concert per a nadons»: L'Auditori publica cada función,
+        # la Generalitat cada fin de semana y Open Data la temporada), manda la que cubre todas; sus días y horas
+        # salen de las funciones (catalog.row_to_event).
+        if canonical in dates and dates[canonical][1] <= 6:
+            # Las ticketeras no cuentan: alargan las fechas por la medianoche («MIRA» en DICE del 6 al 8).
+            pool = [m for m in members if m in dates and m.split(":", 1)[0] not in SINGLE_ACT_SOURCES] or [m for m in members if m in dates]
+            known = [dates[m] for m in pool]
+            lo, hi = min(d[0] for d in known), max(d[2] for d in known)
+            if dates[canonical][0] > lo or dates[canonical][2] < hi:
+                covering = [m for m in pool if dates[m][0] <= lo and dates[m][2] >= hi]
+                if covering: canonical = min(covering, key=rank)
         for member in members:
             if member != canonical: out[member] = canonical
     return out
@@ -461,12 +476,75 @@ def _title_key(title):
     return t
 
 
-def _title_keys(title):
-    """La clave de siempre y, si el título es «Prefijo "Obra", créditos», también la de la obra sola."""
-    keys = [_title_key(title)]
+# Palabras genéricas de títulos en castellano → su forma catalana (24-10-2026): la misma sala publica a veces su
+# web en castellano («Concierto para bebés», L'Auditori) y la agenda municipal en catalán («Concert per a nadons»).
+# Solo para comparar títulos; no cambia nada de lo que se publica.
+LEX = {"concierto": "concert", "conciertos": "concerts", "para": "per a", "bebes": "nadons", "bebe": "nado", "ninos": "infants", "ninas": "nenes",
+       "familias": "families", "espectaculo": "espectacle", "espectaculos": "espectacles", "ciclo": "cicle", "exposicion": "exposicio",
+       "danza": "dansa", "teatro": "teatre", "cuento": "conte", "cuentos": "contes", "cuentacuentos": "contacontes", "y": "i", "los": "els",
+       "las": "les", "con": "amb", "sin": "sense", "noche": "nit", "navidad": "nadal", "ano": "any", "nuevo": "nou", "otono": "tardor",
+       "verano": "estiu", "invierno": "hivern", "jovenes": "joves", "abuelos": "avis", "mujeres": "dones", "fiesta": "festa", "mercado": "mercat",
+       "feria": "fira", "presentacion": "presentacio", "charla": "xerrada", "cine": "cinema", "sesion": "sessio", "paseo": "passejada",
+       "coro": "cor", "orquesta": "orquestra", "sinfonica": "simfonica", "voz": "veu", "canciones": "cancons", "cancion": "canco",
+       "musica": "musica", "taller": "taller", "talleres": "tallers", "visita": "visita", "visitas": "visites", "guiada": "guiada", "guiadas": "guiades",
+       "familiar": "familiar", "infantil": "infantil", "concierto-vermut": "concert vermut", "domingo": "diumenge", "sabado": "dissabte",
+       "matinal": "matinal", "primera": "primera", "infancia": "infancia", "semana": "setmana", "magia": "magia", "humor": "humor"}
+
+
+def _lex(key):
+    return " ".join(LEX.get(w, w) for w in key.split())
+
+
+def _title_keys_typed(title):
+    """[(clave, tipo)] para comparar títulos. Tipos: «full» la de siempre; «quoted» la obra sola si el título es
+    «Prefijo "Obra", créditos»; «sub» la parte tras «:» si es un título propio («Magia Kids: La biblioteca secreta» →
+    «la biblioteca secreta»). Cada una también con las palabras genéricas del castellano pasadas al catalán
+    («Concierto para bebés» = «Concert per a nadons»)."""
+    out = [(_title_key(title), "full")]
     m = QUOTED_WORK.match(str(title or ''))
-    if m and _clean(m.group(1)) not in keys: keys.append(_clean(m.group(1)))
-    return keys
+    if m: out.append((_clean(m.group(1)), "quoted"))
+    # «Palms Trax all night long / POGO: …» junta dos actos: la parte tras «:» no es el título de la ficha entera.
+    if ':' in str(title or '') and not str(title).lstrip().startswith(('"', '«', '“', "'")) and '/' not in str(title).split(':', 1)[0]:
+        after = _clean(str(title).split(':', 1)[1])
+        for _ in range(2): after = TITLE_PREFIX.sub("", after)
+        if len(after) >= 8 and len(after.split()) >= 2 and after not in CONTAINED_GENERIC: out.append((after, "sub"))
+    out += [(_lex(k), t) for k, t in out]
+    seen, res = set(), []
+    for k, t in out:
+        if k and k not in seen: seen.add(k); res.append((k, t))
+    return res
+
+
+def _title_keys(title):
+    return [k for k, _ in _title_keys_typed(title)]
+
+
+# Las ticketeras alargan al día siguiente las sesiones que pasan de medianoche (DICE «Irieix» 5 → 6-3, la sala el 5-3).
+def _end_of(source, start, end):
+    try:
+        if source in SINGLE_ACT_SOURCES and (dt.date.fromisoformat(end) - dt.date.fromisoformat(start)).days == 1: return start
+    except (TypeError, ValueError): pass
+    return end
+
+
+STREET_GENERIC = {"carrer", "c", "calle", "cl", "avinguda", "avenida", "av", "avda", "passeig", "paseo", "pg", "placa", "plaza", "pl",
+                  "ronda", "via", "travessera", "gran", "de", "del", "dels", "la", "el", "les", "els", "d", "l", "barcelona", "bcn", "s", "n"}
+
+
+def _address_col(conn):
+    """«v.address» si la tabla de lugares la tiene (bases de prueba antiguas: no)."""
+    try: return "v.address" if "address" in {r[1] for r in conn.execute("PRAGMA table_info(source_venues)")} else "''"
+    except sqlite3.DatabaseError: return "''"
+
+
+def _address_key(address):
+    """(calle, número) de una dirección: «Carrer de Lepant, 150» = «C. de Lepant, 150» = «Lepant 150, 08013 BARCELONA»."""
+    words = _clean(address).split()
+    for i, w in enumerate(words):
+        if w.isdigit() or w in STREET_GENERIC or len(w) < 3: continue
+        num = next((x for x in words[i + 1:i + 4] if x.isdigit() and len(x) <= 4), None)
+        return (w, num) if num else None
+    return None
 
 
 def title_pairs(conn):
@@ -478,17 +556,21 @@ def title_pairs(conn):
     import datetime as dt
     today = dt.date.today().isoformat()
     try:
-        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+        rows = conn.execute(f"""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon, {_address_col(conn)}
               FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
               WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
     except sqlite3.DatabaseError:
         return []
     groups = {}
-    for source, rid, title, start, end, venue, lat, lon in rows:
-        for key in _title_keys(title):
-            if len(key) < 6 or len(key.split()) < 1: continue
-            groups.setdefault((start, end, key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
-                                                             "route": bool(ROUTE.match(_clean(title)))})
+    for source, rid, title, start, end, venue, lat, lon, address in rows:
+        quoted = QUOTED_WORK.match(str(title or ''))
+        for key, kind in _title_keys_typed(title):
+            # Títulos cortos («Bien», «RITA»): solo si una de las dos fichas lo pone entre comillas tras «Monòleg», «Espectacle»…
+            short_ok = len(key) >= 3 and (bool(quoted) and key in (_clean(quoted.group(1)), _lex(_clean(quoted.group(1)))) or key == _clean(title))
+            if len(key) < 6 and not short_ok: continue
+            groups.setdefault((start, _end_of(source, start, end), key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
+                                                             "address": address or "", "route": bool(ROUTE.match(_clean(title))), "short": len(key) < 6,
+                                                             "quoted": bool(quoted), "kind": kind, "multi": (venue or "").count(",") >= 2})
     pairs = []
     times = {}
     def first_time(item):
@@ -506,6 +588,10 @@ def title_pairs(conn):
         if len(items) < 2: continue
         for i, a in enumerate(items):
             for b in items[i + 1:]:
+                if (a["short"] or b["short"]) and not ((a["quoted"] != b["quoted"]) and _same_site(a, b) and a["source"] != b["source"]): continue
+                # Una ficha en varios centros a la vez («CC La Casa Elizalde, Auditori Sant Martí, CC Vil·la Urània…»): solo con el
+                # título entero, no con la parte tras «:» (si no, la de un solo centro se comería la de los cinco).
+                if (a["multi"] or b["multi"]) and "sub" in (a["kind"], b["kind"]): continue
                 if _same_site(a, b) or _generic_site(a) or _generic_site(b):
                     pairs.append((a["key"], b["key"]))
                 # Itinerarios y visitas: el «lugar» es el centro que lo organiza; misma salida a la misma hora = mismo itinerario.
@@ -529,27 +615,26 @@ def run_pairs(conn):
     import datetime as dt
     today = dt.date.today().isoformat()
     try:
-        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
+        rows = conn.execute(f"""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon, {_address_col(conn)}
               FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
               WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
     except sqlite3.DatabaseError:
         return []
     by_key = {}
-    for source, rid, title, start, end, venue, lat, lon in rows:
+    for source, rid, title, start, end, venue, lat, lon, address in rows:
         # Talleres y cursos fuera: un centro tiene varios grupos con el mismo título («Taller de pilates» de lunes y de
         # jueves) y unirlos de dos en dos entre fuentes acabaría juntando grupos distintos.
         if COURSE_TITLE.match(_clean(title)): continue
-        try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
+        try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(_end_of(source, start, end))
         except (TypeError, ValueError): continue
-        for key in _title_keys(title):
+        for key, kind in _title_keys_typed(title):
             if len(key) < 5 or key in CONTAINED_GENERIC or ROUTE.match(key): continue
             by_key.setdefault(key, []).append({"key": f"{source}:{rid}", "source": source, "start": a, "end": b, "days": (b - a).days,
-                                               "venue": venue or "", "lat": lat, "lon": lon})
+                                               "venue": venue or "", "lat": lat, "lon": lon, "address": address or "", "kind": kind})
     pairs = []
     for items in by_key.values():
         if len(items) < 2: continue
         runs = [x for x in items if x["days"] >= RUN_MIN_DAYS and not _generic_site(x)]
-        if not runs: continue
         for i, a in enumerate(runs):
             for b in runs[i + 1:]:
                 overlap = (min(a["end"], b["end"]) - max(a["start"], b["start"])).days
@@ -557,9 +642,18 @@ def run_pairs(conn):
                 # suelen ser grupos distintos de un curso («Taller de ioga» de mañana y de tarde).
                 if a["source"] != b["source"] and overlap >= 0 and overlap >= RUN_MIN_OVERLAP * min(a["days"], b["days"]) and _same_site(a, b):
                     pairs.append((a["key"], b["key"]))
+        # Funciones y fines de semana sueltos (hasta 6 días) dentro de la temporada de otra fuente (24-10-2026: Generalitat
+        # publica cada fin de semana de «Concert per a nadons», L'Auditori cada función y Open Data la temporada).
+        # Y funciones de un día dentro de un periodo corto (2 a 6 días) de otra fuente: el Liceu publica «Miralls» el 21 y
+        # el 22-11, la Generalitat del 21 al 22.
+        shorts = [x for x in items if 1 <= x["days"] <= 6 and not _generic_site(x)]
         for x in items:
-            if x["days"] != 0 or _generic_site(x): continue
-            host = next((r for r in runs if r["source"] != x["source"] and r["start"] <= x["start"] <= r["end"] and _same_site(r, x)), None)
+            # «Activitat complementària a l'exposició: Juntes i visibles» no es la exposición: dentro de un periodo
+            # solo cuenta el título entero o la obra entre comillas, no la parte tras «:».
+            if x["days"] > 6 or _generic_site(x) or x.get("kind") == "sub": continue
+            host = next((r for r in runs if r["source"] != x["source"] and r.get("kind") != "sub" and r["start"] <= x["start"] and x["end"] <= r["end"] and _same_site(r, x)), None)
+            if not host and x["days"] == 0:
+                host = next((r for r in shorts if r["source"] != x["source"] and r.get("kind") != "sub" and r["start"] <= x["start"] <= r["end"] and _same_site(r, x)), None)
             if host: pairs.append((x["key"], host["key"]))
     return list(dict.fromkeys(pairs))
 
@@ -714,7 +808,11 @@ def _same_site(a, b, km=0.4):
     d = _km((a["lat"], a["lon"]), (b["lat"], b["lon"]))
     if d is not None: return d <= km
     va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
-    return bool(va & vb)
+    if va & vb: return True
+    # Sin coordenadas y con nombres que no comparten nada propio («L'Auditori» y «Sala 3 Tete Montoliu»): la misma
+    # calle y número en las dos direcciones (24-10-2026).
+    ka, kb = _address_key(a.get("address")), _address_key(b.get("address"))
+    return bool(ka and ka == kb)
 
 
 def unconfirmed_by_venue(conn, groups, venues=None, today=None):
