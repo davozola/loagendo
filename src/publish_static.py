@@ -504,12 +504,14 @@ PAST_KEEP_DAYS = 183   # cuánto se conserva la ficha de un acto ya celebrado (d
 PAST_SKIP_SOURCES = ('ticketmaster',)   # los caducados de Ticketmaster se borran (decisión de David)
 
 
-def keep_past_cards(out, cards, today):
+def keep_past_cards(out, cards, today, gone=frozenset()):
     """Actos ya celebrados (23-10-2026): su dirección /e/<fuente>/<id> sigue respondiendo durante
     PAST_KEEP_DAYS con «Ya se celebró» (functions/e/[[path]].js, fuera del índice de los buscadores).
     Se guarda la última tarjeta publicada de cada acto en data/share_archive.json, junto a la carpeta
     publicada, y se vuelve a publicar con 'x': 1 solo si su fecha final ya pasó: lo que desaparece por
-    otro motivo (cancelado, excluido, aplazado) no se conserva. No se borra nada del archivo."""
+    otro motivo (cancelado, excluido, aplazado) no se conserva. No se borra nada del archivo.
+    ``gone``: claves que la fuente da por aplazadas o canceladas (src/event_status.py, 24-10-2026): su tarjeta
+    no vuelve como «Ya se celebró» aunque su fecha ya haya pasado."""
     path = out.parent / 'data' / 'share_archive.json'
     try: archive = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError): archive = {}
@@ -520,7 +522,7 @@ def keep_past_cards(out, cards, today):
     path.write_text(json.dumps(archive, ensure_ascii=False, sort_keys=True), encoding='utf-8')
     limit = (today - dt.timedelta(days=PAST_KEEP_DAYS)).isoformat(); kept = 0
     for k, card in archive.items():
-        if k in current or k.split(':', 1)[0].startswith(PAST_SKIP_SOURCES): continue
+        if k in current or k in gone or k.split(':', 1)[0].startswith(PAST_SKIP_SOURCES): continue
         end = card.get('b') or card.get('a') or ''
         if not end or end >= today.isoformat() or end < limit: continue
         cards.setdefault(shard_of(k), {})[k] = {**card, 'x': 1, 'k': ''}   # sin «añadir al calendario»
@@ -649,7 +651,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media'], 'official_page': public.get('official_page')}, today)
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).
-    keep_past_cards(out, cards, today)
+    from src.event_status import statuses as _statuses
+    keep_past_cards(out, cards, today, gone={f'{s}:{i}' for s, i in _statuses(conn)})
     alerts_new = write_alerts_feed(out, events, today, dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'))
     for name, records in cards.items(): _write_json(out / 'data' / 'share' / f'{name}.json', records)
     phase('dias_y_tarjetas')

@@ -42,5 +42,16 @@ class PastCardsTest(unittest.TestCase):
         self.assertNotIn('web_auditori:9', self.publish({}))
 
 
+class GoneTest(PastCardsTest):
+    def test_aplazado_no_vuelve_como_celebrado(self):
+        cards = {shard_of('opendatabcn_agenda:99400747179'): {'opendatabcn_agenda:99400747179': {'t': 'Dani Martín', 'a': '2026-10-23', 'b': '2026-10-24'}}}
+        keep_past_cards(self.out, cards, TODAY)                      # se archiva mientras se publica
+        later = {}
+        keep_past_cards(self.out, later, dt.date(2026, 10, 30), gone={'opendatabcn_agenda:99400747179'})
+        self.assertFalse(any('opendatabcn_agenda:99400747179' in r for r in later.values()))
+        keep_past_cards(self.out, later, dt.date(2026, 10, 30))     # sin el aviso, sí volvería
+        self.assertTrue(any('opendatabcn_agenda:99400747179' in r for r in later.values()))
+
+
 if __name__ == '__main__':
     unittest.main()
