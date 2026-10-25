@@ -646,6 +646,22 @@ state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state
 const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Arte', 'Art', 'Art'],
   charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities'], deporte: ['Deporte', 'Esport', 'Sport']};
 const CAT_LANDING = {'': '/', musica: '/conciertos', escena: '/teatro', arte: '/exposiciones'};
+// «Cerca de mí» (25-10-2026): la ubicación se pide solo al tocar y se queda en el navegador (ni URL, ni Matomo,
+// ni servidor). Ordena por cercanía dentro de cada hora o día, muestra la distancia y permite «a menos de 1 km».
+const NEAR_PIN = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>';
+const nearFail = () => L('No hemos podido saber dónde estás. Puedes elegir un distrito en Filtros.', 'No hem pogut saber on ets. Pots triar un districte a Filtres.', 'We could not get your location. You can pick a district in Filters.');
+function nearHtml() {
+  const on = !!state.near;
+  return `<button type="button" class="cat-pill near-pill${on ? ' on' : ''}" data-near="toggle" aria-pressed="${on}">${NEAR_PIN}${state.nearWait ? L('Buscando…', 'Cercant…', 'Locating…') : L('Cerca de mí', 'A prop meu', 'Near me')}</button>`
+    + (on ? `<button type="button" class="cat-pill${state.nearKm ? ' on' : ''}" data-near="km" aria-pressed="${!!state.nearKm}">${L('A menos de 1 km', 'A menys d’1 km', 'Under 1 km')}</button>` : '');
+}
+function kmTo(a, b) {
+  const r = x => x * Math.PI / 180, dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+const kmText = k => k < 1 ? `${Math.max(100, Math.round(k * 10) * 100)} m` : `${k < 10 ? k.toFixed(1).replace('.', LANG === 'en' ? '.' : ',') : Math.round(k)} km`;
+const nearSort = list => state.near ? [...list].sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9)) : list;
 function catBarHtml() {
   const only = state.cats.length === 1 ? state.cats[0] : '';
   // Las categorías con página de entrada (src/landings.py) son enlaces reales, para que Google llegue a ellas
@@ -653,7 +669,7 @@ function catBarHtml() {
   const btn = (c, label) => { const on = c ? only === c : !state.cats.length, href = CAT_LANDING[c];
     const attrs = `class="cat-pill${on ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${on}"${c ? ` data-category-color="${c}"` : ''}`, inner = `${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}`;
     return href ? `<a href="${href}" ${attrs}>${inner}</a>` : `<button type="button" ${attrs}>${inner}</button>` };
-  return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}</div>`;
+  return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}${nearHtml()}</div>${state.nearMsg ? `<p class="near-msg">${esc(state.nearMsg)}</p>` : ''}`;
 }
 function chipsHtml(counts) {
   // Antes, los cuatro bloques de tipo; ahora la barra de categorías (en el mismo sitio, fuera de la lista).
@@ -759,7 +775,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta"><span>${esc(venue(e))}</span></span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta"><span>${esc(venue(e))}</span>${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -932,6 +948,7 @@ function wideTab(list, live) {
   const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
+  if (state.near) sorted.sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9));   // con «Cerca de mí», por distancia (a igualdad, el orden de cierre)
   sorted.forEach(e => { e._hl = '' });  // sin destacados: ya va ordenado por cierre
   return (sub ? `<p class="ag-tab-note">${esc(sub)}</p>` : '') + `<div class="ag-rows ag-wide">${rows(sorted, 'wide')}</div>`;
 }
@@ -953,9 +970,9 @@ function renderDay(m) {
   // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
   const nowTimed = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'timed');
   const tabCounts = {agenda: timeline.length + tbcList.length, expo: wideList.length, fest: bigFest.length};
-  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nowTimed)}</div>`;
+  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nearSort(nowTimed))}</div>`;
   let bucket = [];
-  const flush = () => { if (current !== null) groups += seriesFold(bucket) + '</div>'; bucket = [] };
+  const flush = () => { if (current !== null) groups += seriesFold(nearSort(bucket)) + '</div>'; bucket = [] };
   for (const e of timeline) {
     const h = hourOf(e);
     if (h === 'now') continue;
@@ -987,7 +1004,8 @@ function renderRange(m) {
   for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && !inFest.has(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(e => visible(e) && !inFest.has(e))]).filter(([, l]) => l.length);
   const tabCounts = {agenda: buckets.reduce((n, [, l]) => n + l.length, 0), expo: wideAll.length, fest: bigFest.length};
-  const days = buckets.slice(0, state.shown).map(([d, list]) => {
+  const days = buckets.slice(0, state.shown).map(([d, dayList]) => {
+    const list = nearSort(dayList);
     const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
     markHighlights(shown, d);
     return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
@@ -1007,7 +1025,8 @@ function venueView(items) {
   return `<div class="venue-groups">${Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([name, events]) => `<details><summary><span>${esc(name)}</span><b>${events.length}</b></summary><div>${seriesFold(events)}</div></details>`).join('')}</div>`;
 }
 function renderAgenda() {
-  const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
+  for (const e of state.items) e._km = state.near && e.coordinates && onePlace(e) ? kmTo(state.near, e.coordinates) : null;
+  const host = $('agendaList'), items = state.near && state.nearKm ? state.items.filter(e => e._km != null && e._km <= state.nearKm) : state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
   const model = state.model = buildModel(items, win);
   document.getElementById('seoLista')?.remove();   // la lista en HTML de las páginas de entrada (src/landings.py): ya está la de la app
   $('typeTabs').innerHTML = ''; $('typeMini').innerHTML = '';
@@ -1434,6 +1453,17 @@ document.addEventListener('click', e => {
     state.range = span <= 0 ? '' : span <= 7 ? '7' : span <= 30 ? '30' : '90'; refresh({scroll: true}); return
   }
   if (button.dataset.pickrange) { if (button.dataset.pickrange !== state.pickRange) { state.pickRange = button.dataset.pickrange; track('seleccion', 'range_change', state.pickRange); selection() } return }
+  if (button.dataset.near) {
+    if (button.dataset.near === 'km') { state.nearKm = state.nearKm ? 0 : 1; renderAgenda(); return }
+    if (state.near || state.nearWait) { state.near = null; state.nearKm = 0; state.nearWait = false; state.nearMsg = ''; renderAgenda(); return }
+    if (!navigator.geolocation) { state.nearMsg = nearFail(); renderAgenda(); return }
+    state.nearWait = true; state.nearMsg = ''; renderAgenda();
+    navigator.geolocation.getCurrentPosition(pos => {
+      if (!state.nearWait) return;
+      state.nearWait = false; state.near = {lat: pos.coords.latitude, lon: pos.coords.longitude}; track('filtro', 'near_me', 'on'); renderAgenda();
+    }, () => { state.nearWait = false; state.nearMsg = nearFail(); renderAgenda() }, {enableHighAccuracy: false, timeout: 10000, maximumAge: 300000});
+    return
+  }
   if (button.dataset.agtab) {   // pestaña: solo su contenido y vuelta al principio del listado
     if (state.tab !== button.dataset.agtab) { state.tab = button.dataset.agtab; track('filtro', 'agenda_tab', state.tab); syncUrl(); renderAgenda() }
     const top = $('agendaList').getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--daytop')) || 0);

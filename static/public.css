@@ -503,3 +503,8 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .ag-tab-hint{margin:12px 0 0}
 .ag-stick{top:var(--daytop,var(--stick))}
 @media(max-width:420px){.ag-tab{font-size:13px;padding:0 6px}}
+
+/* «Cerca de mí» (25-10-2026) */
+.near-pill svg{flex:none}
+.near-msg{margin:8px 0 0;font-size:14px;color:var(--soft)}
+.ev-meta .ev-dist{font-weight:600;color:var(--fg)}
