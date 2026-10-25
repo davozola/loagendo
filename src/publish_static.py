@@ -40,7 +40,7 @@ MAX_ASSET_BYTES = 25 * 1024 * 1024  # Cloudflare Pages limit per file
 MAX_FILES = 20000                   # Cloudflare Pages limit per deployment
 THUMBNAIL_MAX_PX = 1200
 GATE_MIN_EVENTS_14_DAYS = 300
-STATIC_FILES = ('public.css', 'public.js', 'public-v2.css',
+STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js',
                 'fonts/inter-tight-latin-400-normal.woff2', 'fonts/inter-tight-latin-500-normal.woff2', 'fonts/inter-tight-latin-600-normal.woff2',
                 'fonts/inter-tight-latin-700-normal.woff2', 'fonts/inter-tight-latin-500-italic.woff2', 'fonts/OFL-inter-tight.txt', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp',
                 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png')  # icono «o.» de la pestaña (22-10-2026)
@@ -429,13 +429,15 @@ def credits_html(registry, generated_at='', counts=None, skin_css=''):
     # skin_css: la hoja de la versión 2 (solo claro), como la portada; sin ella, la página de siempre.
     theme, extra = ('light', f'<link rel="stylesheet" href="{html.escape(skin_css)}">') if skin_css else ('dark', '')
     return (f'<!DOCTYPE html><html lang="es" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Ontoca</title>'
-            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css">' + extra + '</head>'
+            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css">' + extra + '<script defer src="/analytics.js"></script></head>'
             '<body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="/">ontoca<span>.</span></a></div></header>'
             '<main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
             '<p>Ontoca recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
             'Los textos descriptivos y las imágenes pertenecen a quien los publica: se muestran con su crédito y su enlace de origen, bajo la licencia o la política de cada fuente que se detalla abajo. '
             'Cada ficha conserva la URL original y la fecha de la última sincronización. Los horarios y precios se reproducen tal y como los publica la fuente; confirma siempre en la fuente antes de ir. '
             'Las fechas de conciertos se contrastan además con directorios de conciertos: esas fichas muestran sólo título, fecha, hora y sala, enlazan a la web de la sala o a la venta de entradas y no reproducen textos ni imágenes de terceros.</p>'
+            '<p><b>Estadísticas de uso.</b> Ontoca mide las visitas y el uso de la agenda (páginas vistas, búsquedas, fichas abiertas, filtros) con Matomo en un servidor propio, sin cookies ni identificadores persistentes. '
+            'No se mide nada si el navegador pide no ser seguido (Do Not Track o Global Privacy Control). Las búsquedas que parecen un dato personal no se registran.</p>'
             f'<p class="credits-meta">Última generación: {html.escape(generated_at)}. Fichas públicas en los próximos seis meses: {counts.get("events", "")}. Imágenes publicadas: {counts.get("images", "")}.</p>'
             '<p><b>Retirada o corrección.</b> Si eres titular de un dato o una imagen y quieres que se corrija o se retire, escribe a <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> indicando el enlace de la ficha: se atiende en la siguiente actualización y el cambio queda registrado con fecha y motivo.</p>'
             + ''.join(rows) +
@@ -460,8 +462,8 @@ def v2_index(index, version):
 
 def headers_file():
     return ('/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n'
-            "  Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' https://tile.openstreetmap.org; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-src https://www.openstreetmap.org; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'\n"
-            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/favicon.svg\n  Cache-Control: public, max-age=86400\n/favicon-32.png\n  Cache-Control: public, max-age=86400\n/apple-touch-icon.png\n  Cache-Control: public, max-age=86400\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
+            "  Content-Security-Policy: default-src 'self'; connect-src 'self' https://autonomoclaro.com; img-src 'self' https://tile.openstreetmap.org https://autonomoclaro.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://autonomoclaro.com; frame-src https://www.openstreetmap.org; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'\n"
+            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/analytics.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/favicon.svg\n  Cache-Control: public, max-age=86400\n/favicon-32.png\n  Cache-Control: public, max-age=86400\n/apple-touch-icon.png\n  Cache-Control: public, max-age=86400\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
 
 
 def _content_hash(out):

@@ -285,6 +285,8 @@ const get = async path => {
   throw Error('Ruta no disponible en la web estática');
 };
 const key = e => `${e.source}:${e.id}`;
+// Analítica (static/analytics.js, Matomo): si no está cargada, bloqueada o desactivada, no hace nada.
+const track = (...args) => { try { window.ontocaAnalytics?.event(...args) } catch (_) {} };
 // Versión 2 del estilo (22-10-2026): la misma app en /v2/ con otra hoja de estilo; las direcciones llevan /v2 delante.
 const SKIN = document.documentElement.dataset.skin || '', BASE = '';   // la v2 se sirve en la portada (antes en /v2/)
 const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
@@ -996,7 +998,9 @@ function renderAgenda() {
   else host.innerHTML = model.mode === 'day' ? renderDay(model) : renderRange(model);
   $('agendaMore').innerHTML = '';
   // Sumatorio = suma exacta de los tres botones del día (hora fija + horario amplio + por confirmar).
-  const s = model.sections, n = (model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc)).toLocaleString('es-ES');
+  const s = model.sections, count = model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc), n = count.toLocaleString('es-ES');
+  // Búsqueda interna (Matomo trackSiteSearch): con los resultados ya pintados; analytics.js espera a que el término se estabilice.
+  if (state.query && !state.savedOnly) { try { window.ontocaAnalytics?.search(state.query, count, state.cats.length === 1 ? state.cats[0] : false) } catch (_) {} }
   const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui', 'plans available today')}</b> ${L('desde las', 'des de les', 'from')} ${clock(model.now.min)}`
     : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(win.label)}`;
   const extra = [state.cats.map(catName).join(' + '), state.chans.map(chanName).join(' + '), state.ages.map(a => byLang(AGE_LABEL[a])).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
@@ -1111,7 +1115,7 @@ function hydrateMap(items) {
   const bounds = [];
   for (const event of located) {
     const point = [event.coordinates.lat, event.coordinates.lon], name = event.venue_names?.[0] || event.title;
-    window.L.circleMarker(point, {radius: 8, color: '#ffffff', weight: 2, fillColor: '#b7a9ff', fillOpacity: 1}).addTo(map).bindTooltip(esc(name), {direction: 'top', offset: [0, -7]}).on('click', () => openDetail(key(event), canvas));
+    window.L.circleMarker(point, {radius: 8, color: '#ffffff', weight: 2, fillColor: '#b7a9ff', fillOpacity: 1}).addTo(map).bindTooltip(esc(name), {direction: 'top', offset: [0, -7]}).on('click', () => openDetail(key(event), canvas, {origin: 'mapa'}));
     bounds.push(point);
   }
   if (bounds.length === 1) map.setView(bounds[0], 15); else map.fitBounds(bounds, {padding: [34, 34], maxZoom: 15});
@@ -1194,6 +1198,13 @@ async function openDetail(k, focus, opts = {}) {
     const sameDay = !opts.sibling && state.day && e.other_days && e.other_days[state.day];
     if (sameDay && sameDay !== k && !(e.start <= state.day && state.day <= e.end)) return openDetail(sameDay, focus, {...opts, sibling: true});
     returnFocus = focus || document.activeElement; state.detail = k; syncUrl(opts.push !== false);
+    // Página vista de la ficha (navegación sin recarga): solo al abrirla de verdad; analytics.js no repite la misma ruta.
+    if (opts.push !== false) { try { window.ontocaAnalytics?.pageview(location.href, `${e.title} · Ontoca`) } catch (_) {} }
+    if (opts.origin) {
+      track('ficha', 'event_open', k);
+      if (opts.origin === 'seleccion') track('seleccion', 'featured_click', k);
+      else if (opts.origin === 'destacado') track('seleccion', 'highlight_click', k);
+    }
     document.getElementById('seoFicha')?.remove();   // la ficha en HTML de /e/* (functions/e): ya está la de la app
     // One descriptive block: the source's own text when it exists (paragraphs
     // kept), otherwise a single factual sentence built from the record.
@@ -1237,13 +1248,13 @@ async function openDetail(k, focus, opts = {}) {
     // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
     const upcoming = realSite && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`, `More at ${site}`))} ›</button></p>` : '';
     const all = sheetLinks(e), main = all[0] || null;
-    const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
+    const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" data-lk="${esc(main.kind)}" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
     // Debajo, el resto en el mismo orden (sin repetir tipo salvo entradas/inscripciones distintas), y la fuente al final.
     // La ficha de la fuente (GRAF, GuiaBCN…) solo sale si no tenemos la página concreta del acto (22-10-2026).
     const hasEventPage = all.some(x => x.kind === 'evento');
     // (Nombres propios: «source» y «rest» ya son el origen y el id del acto, arriba; repetirlos aquí rompía la ficha.)
     const others = all.slice(1), useful = others.filter(x => x.kind !== 'fuente' && x.kind !== 'social').slice(0, 3), social = others.filter(x => x.kind === 'social').slice(0, 1), sourceLink = hasEventPage ? [] : others.filter(x => x.kind === 'fuente').slice(0, 1);
-    const links = [...useful, ...social, ...sourceLink].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
+    const links = [...useful, ...social, ...sourceLink].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" data-lk="${esc(x.kind)}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
     $('sheet').innerHTML = `<div class="sheet-top"><span data-cat="${esc(e.public_category || e.category || '')}">${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}${soldOn(e, e.occurrence_date || state.day) ? ' · ' + L('Entradas agotadas', 'Entrades esgotades', 'Sold out') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${msLine(e)}${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}${priceFact(e)}${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat', 'Age'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada', 'Not stated'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button>${calendarMenu(k, e)}</div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.", 'Details on the venue’s website. Check before you go.') : L('Confirma en la web oficial antes de ir.', "Confirma-ho al web oficial abans d'anar-hi.", 'Check the official website before you go.')}</p>`;
     $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
     $('sheet').scrollTop = 0; mountSheetMap(e);
@@ -1324,7 +1335,7 @@ function calendarMenu(k, e) {
   if (!STATIC) return '';
   const day = e.occurrence_date || (e.start === e.end ? e.start : state.day);
   const base = eventPath(k).replace(/^(?:\/v2)?\/e\//, '/cal/') + '?d=' + encodeURIComponent(day);
-  const apple = `<a class="sheet-link" href="${esc(base)}">iPhone</a>`, gcal = `<a class="sheet-link" target="_blank" rel="noopener noreferrer" href="${esc(base + '&g=1')}">Google Calendar ↗</a>`;
+  const apple = `<a class="sheet-link" data-cal="ics" data-k="${esc(k)}" href="${esc(base)}">iPhone</a>`, gcal = `<a class="sheet-link" data-cal="google" data-k="${esc(k)}" target="_blank" rel="noopener noreferrer" href="${esc(base + '&g=1')}">Google Calendar ↗</a>`;
   const ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
   return `<details class="cal-menu"><summary class="save-link">▦ ${t('Añadir al calendario')}</summary><div class="cal-options">${ios ? apple + gcal : gcal + apple}</div></details>`;
 }
@@ -1333,13 +1344,13 @@ async function shareEvent(k) {
   // En WhatsApp el enlace ya trae foto, título, cuándo y dónde (vista previa); el texto lo resume por si no carga.
   const when = document.querySelector('.facts > div:first-child b')?.textContent || '', where = document.querySelector('.facts > div:nth-child(2) b')?.textContent || '';
   const text = [title, [when, where].filter(Boolean).join(' · ')].filter(Boolean).join('\n');
-  try { if (navigator.share) { await navigator.share({title, text, url}); return } } catch (_) { return }
-  try { await navigator.clipboard.writeText(url); const b = document.querySelector('[data-share]'); if (b) { b.textContent = '✓ ' + t('Enlace copiado'); setTimeout(() => { b.textContent = '⇪ ' + t('Compartir') }, 1800) } } catch (_) { prompt(t('Enlace de la ficha'), url) }
+  try { if (navigator.share) { await navigator.share({title, text, url}); track('nativo', 'event_share', k); return } } catch (_) { return }  // cancelado: no cuenta
+  try { await navigator.clipboard.writeText(url); track('copiar', 'event_share', k); const b = document.querySelector('[data-share]'); if (b) { b.textContent = '✓ ' + t('Enlace copiado'); setTimeout(() => { b.textContent = '⇪ ' + t('Compartir') }, 1800) } } catch (_) { track('manual', 'event_share', k); prompt(t('Enlace de la ficha'), url) }
 }
 function hideSheet() { if ($('overlay').hidden) return false; $('overlay').hidden = true; document.body.style.overflow = ''; state.detail = null; if (sheetMap) { try { sheetMap.remove() } catch (_) {} sheetMap = null } returnFocus?.focus(); return true }
 function closeSheet() { if (!hideSheet()) return; const depth = history.state?.depth || 0; if (depth) history.go(-depth); else syncUrl() }  // closing skips every sheet opened in a row (sala → evento → …) and lands on the list
 window.addEventListener('popstate', () => { const k = detailFromLocation(); if (k) { if (k !== state.detail) openDetail(k, null, {push: false}) } else hideSheet() });
-function toggleSave(k) { state.saved = state.saved.includes(k) ? state.saved.filter(x => x !== k) : [...state.saved, k]; saveState(); renderAgenda(); if (!$('overlay').hidden) openDetail(k, returnFocus) }
+function toggleSave(k) { track('ficha', state.saved.includes(k) ? 'event_unsave' : 'event_save', k); state.saved = state.saved.includes(k) ? state.saved.filter(x => x !== k) : [...state.saved, k]; saveState(); renderAgenda(); if (!$('overlay').hidden) openDetail(k, returnFocus) }
 
 /* ---------- orchestration ---------- */
 async function refresh({scroll = false} = {}) {
@@ -1353,15 +1364,15 @@ document.addEventListener('click', e => {
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
-  if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
+  if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
-  if (button.id === 'filtersClear') { ['query','cat','ch','edad','idioma','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
   if (button.dataset.alerts === 'open') { openAlerts(); return }
-  if (button.id === 'clearAll' || button.dataset.clear === 'all') { ['query','cat','ch','edad','format','free','hours','district'].forEach(clearFilter); refresh(); return }
-  if (button.dataset.clear) { clearFilter(button.dataset.clear); refresh(); return }
-  if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district'].forEach(clearFilter); refresh(); return }
+  if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
+  if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
   if (button.dataset.expand) { state.expanded.add(button.dataset.expand); renderAgenda(); const sec = $('ag-' + button.dataset.expand); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return }
   if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }
@@ -1376,7 +1387,7 @@ document.addEventListener('click', e => {
     hideSheet(); state.detail = null; state.query = button.dataset.festq; $('searchInput').value = state.query; state.day = from;
     state.range = span <= 0 ? '' : span <= 7 ? '7' : span <= 30 ? '30' : '90'; refresh({scroll: true}); return
   }
-  if (button.dataset.quickcat !== undefined) { const c = button.dataset.quickcat; state.cats = !c || (state.cats.length === 1 && state.cats[0] === c) ? [] : [c]; refresh(); return }
+  if (button.dataset.quickcat !== undefined) { const c = button.dataset.quickcat; track('filtro', 'filter_category', c || 'todas', c && !(state.cats.length === 1 && state.cats[0] === c) ? 1 : 0); state.cats = !c || (state.cats.length === 1 && state.cats[0] === c) ? [] : [c]; refresh(); return }
   if (button.dataset.block) {
     const id = button.dataset.block, open = button.getAttribute('aria-expanded') === 'true'; state.collapsed ||= new Set();
     if (open) { state.expanded.delete(id); state.collapsed.add(id); if (id === 'wide') state.expanded.delete('wideAll') } else { state.expanded.add(id); state.collapsed.delete(id) }
@@ -1384,17 +1395,17 @@ document.addEventListener('click', e => {
   }
   if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; if (button.closest('#typeMini')) { state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return } state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
-  if (button.dataset.day) { state.day = button.dataset.day; state.range = ''; refresh(); return }
-  if (button.dataset.period !== undefined) { if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
+  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; refresh(); return }
+  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
   if (button.dataset.category !== undefined) {
-    const c = button.dataset.category;
+    const c = button.dataset.category; track('filtro', 'filter_category', c || 'todas', c && !state.cats.includes(c) ? 1 : 0);
     state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
     refresh(); return
   }
-  if (button.dataset.age) { const a = button.dataset.age; state.ages = state.ages.includes(a) ? state.ages.filter(x => x !== a) : [...state.ages, a]; refresh(); return }
-  if (button.dataset.actlang) { const l = button.dataset.actlang; state.langs = state.langs.includes(l) ? state.langs.filter(x => x !== l) : [...state.langs, l]; refresh(); return }
-  if (button.dataset.channel) { const c = button.dataset.channel; state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; channelView(); refresh(); return }
-  if (button.dataset.district) { state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
+  if (button.dataset.age) { const a = button.dataset.age; track('filtro', 'filter_age', a, state.ages.includes(a) ? 0 : 1); state.ages = state.ages.includes(a) ? state.ages.filter(x => x !== a) : [...state.ages, a]; refresh(); return }
+  if (button.dataset.actlang) { const l = button.dataset.actlang; track('filtro', 'filter_language', l, state.langs.includes(l) ? 0 : 1); state.langs = state.langs.includes(l) ? state.langs.filter(x => x !== l) : [...state.langs, l]; refresh(); return }
+  if (button.dataset.channel) { const c = button.dataset.channel; track('filtro', 'filter_channel', c, state.chans.includes(c) ? 0 : 1); state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; channelView(); refresh(); return }
+  if (button.dataset.district) { track('filtro', 'filter_district', button.dataset.district, state.district === button.dataset.district ? 0 : 1); state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
   if (button.dataset.trtoggle !== undefined) {
     const sec = button.closest('.sheet-copy'), orig = button.getAttribute('aria-expanded') !== 'true';
     sec.querySelector('.tr-text').hidden = orig; sec.querySelector('.tr-orig').hidden = !orig; button.setAttribute('aria-expanded', String(orig));
@@ -1402,21 +1413,31 @@ document.addEventListener('click', e => {
   }
   if (button.dataset.save) { toggleSave(button.dataset.save); return }
   if (button.dataset.share) { shareEvent(button.dataset.share); return }
-  if (button.dataset.open) { openDetail(button.dataset.open, button); return }
+  if (button.dataset.open) {
+    const origin = button.closest('#curated') ? 'seleccion' : button.closest('.ev-hl') ? 'destacado' : button.closest('#sheet') ? 'ficha' : 'agenda';
+    openDetail(button.dataset.open, button, {origin}); return
+  }
   if (button.classList.contains('close') && !button.classList.contains('small')) closeSheet();
   if (button.id === 'retry') agenda();
+});
+// Conversión (Matomo): clic hacia entradas o inscripción, o hacia la web del organizador/sala/fuente. Un solo evento
+// propio por clic; Matomo registra además la salida automáticamente (enableLinkTracking).
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('#sheet a[data-lk], #sheet a[data-cal]'); if (!a || !state.detail) return;
+  if (a.dataset.cal) { track(a.dataset.cal, 'event_calendar', a.dataset.k || state.detail); return }
+  track('conversion', ['entradas', 'inscripcion'].includes(a.dataset.lk) ? 'ticket_click' : 'organizer_click', state.detail);
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); if ($('filters').classList.contains('open')) openDrawer(false) } });
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet() });
 $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
-$('formatFilter').addEventListener('change', e => { state.format = e.target.value; refresh() });
+$('formatFilter').addEventListener('change', e => { track('filtro', 'filter_format', e.target.value || 'todos', e.target.value ? 1 : 0); state.format = e.target.value; refresh() });
 $('lang')?.addEventListener('change', ev => { const next = ev.target.value; try { localStorage.setItem('brollant-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href) });
-$('districtFilter').addEventListener('change', e => { state.district = e.target.value; refresh() });
-$('freeOnly').addEventListener('change', e => { state.free = e.target.checked; refresh() });
+$('districtFilter').addEventListener('change', e => { track('filtro', 'filter_district', e.target.value || 'todos', e.target.value ? 1 : 0); state.district = e.target.value; refresh() });
+$('freeOnly').addEventListener('change', e => { track('filtro', 'filter_free', 'gratis', e.target.checked ? 1 : 0); state.free = e.target.checked; refresh() });
 // El campo de fecha va invisible encima del botón «Fecha»: en Chrome y Safari de escritorio un clic
 // en él no abre el calendario (solo su icono, que no se ve). Se abre explícitamente.
 $('dayPicker').addEventListener('click', e => { try { e.target.showPicker() } catch (_) { /* navegador sin showPicker: comportamiento nativo */ } });
-$('dayPicker').addEventListener('change', e => { if (!e.target.value) return; state.day = e.target.value; state.range = ''; refresh() });
+$('dayPicker').addEventListener('change', e => { if (!e.target.value) return; track('filtro', 'filter_date', 'fecha_concreta'); state.day = e.target.value; state.range = ''; refresh() });
 $('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
 $('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });
 $('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.query = e.target.value.trim(); channelView(); syncUrl(); days(); renderActive(); agenda() }, 250) });
@@ -1425,7 +1446,7 @@ $('searchForm').addEventListener('submit', e => { e.preventDefault(); clearTimeo
 function setHours(changed) {
   let from = Number($('hourFrom').value), to = Number($('hourTo').value);
   if (changed === 'from' && from > to) { to = from; $('hourTo').value = to } if (changed === 'to' && to < from) { from = to; $('hourFrom').value = from }
-  state.hourFrom = from; state.hourTo = to; refresh();
+  state.hourFrom = from; state.hourTo = to; track('filtro', 'filter_hours', `${from}-${to}`, 1); refresh();   // al soltar el control (change), no en cada movimiento
 }
 $('hourFrom').addEventListener('change', () => setHours('from')); $('hourTo').addEventListener('change', () => setHours('to'));
 $('hourFrom').addEventListener('input', e => { $('hourFromLabel').textContent = hourLabel(e.target.value) }); $('hourTo').addEventListener('input', e => { $('hourToLabel').textContent = hourLabel(e.target.value) });
@@ -1461,6 +1482,6 @@ function typeHero() {
   document.documentElement.dataset.theme = theme; translatePage(); typeHero();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();
-  if (initial) { state.detail = null; syncUrl(); openDetail(initial) }  // list entry first, then the sheet: Back shows the agenda
+  if (initial) { state.detail = null; syncUrl(); openDetail(initial, null, {origin: 'enlace'}) }  // list entry first, then the sheet: Back shows the agenda
   if (STATIC) { const warm = () => loadCatalog().catch(() => {}); 'requestIdleCallback' in window ? requestIdleCallback(warm) : setTimeout(warm, 800) }
 })();
