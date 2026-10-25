@@ -82,7 +82,10 @@ class StaticExportTests(unittest.TestCase):
         index = (dist / 'index.html').read_text(encoding='utf-8')
         self.assertIn('data-static="1"', index); self.assertIn('rel="canonical" href="https://loagendo.example/"', index)
         credits = (dist / 'creditos.html').read_text(encoding='utf-8')
-        self.assertIn('Ajuntament de Barcelona', credits); self.assertIn('decisión editorial de prueba', credits); self.assertIn('No se publican imágenes de esta fuente', credits)
+        self.assertIn('Ajuntament de Barcelona', credits); self.assertIn('CC BY 4.0', credits); self.assertNotIn('decisión editorial de prueba', credits)
+        privacy = (dist / 'privacidad.html').read_text(encoding='utf-8'); legal = (dist / 'aviso-legal.html').read_text(encoding='utf-8')
+        self.assertIn('Numhaus', privacy); self.assertIn('Brevo', privacy); self.assertIn('lang="en"', privacy); self.assertIn('Numhaus', legal)
+        self.assertTrue((dist / 'legal.js').exists()); self.assertNotIn('seo-nav', index)
         self.assertRegex(index, r'href="/public\.css\?v=[0-9a-f]{10}"'); self.assertRegex(index, r'src="/public\.js\?v=[0-9a-f]{10}"')
         headers = (dist / '_headers').read_text(encoding='utf-8')
         self.assertIn('Cache-Control: public, max-age=2592000, immutable', headers); self.assertIn('/public.js\n  Cache-Control: public, max-age=0, must-revalidate', headers)
@@ -167,9 +170,11 @@ class StaticExportTests(unittest.TestCase):
         finally:
             ps.ROOT, ps.GATE_MIN_EVENTS_14_DAYS, ps.export = original_root, original_gate, original_export
 
-    def test_credits_page_escapes_and_lists_every_source(self):
-        page = credits_html({'x': {'owner': '<b>', 'attribution': 'A & B', 'data_reuse_status': 'cc', 'license_url': 'https://l.test/'}}, '2026-10-12T10:00:00+00:00', {'events': 5, 'images': 2})
-        self.assertIn('&lt;b&gt;', page); self.assertIn('A &amp; B', page); self.assertIn('Fichas públicas en los próximos seis meses: 5', page)
+    def test_credits_page_is_minimal_and_trilingual(self):
+        # 25-10-2026: Fuentes con lo mínimo que piden las licencias; no se publica el registro de fuentes.
+        page = credits_html({'x': {'owner': 'Ticketera secreta', 'attribution': 'A & B'}})
+        self.assertNotIn('Ticketera secreta', page); self.assertIn('Open Data BCN', page); self.assertIn('OpenStreetMap', page)
+        for lang in ('es', 'ca', 'en'): self.assertIn(f'<section lang="{lang}">', page)
 
 
 if __name__ == '__main__':

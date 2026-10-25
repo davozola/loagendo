@@ -40,7 +40,7 @@ MAX_ASSET_BYTES = 25 * 1024 * 1024  # Cloudflare Pages limit per file
 MAX_FILES = 20000                   # Cloudflare Pages limit per deployment
 THUMBNAIL_MAX_PX = 1200
 GATE_MIN_EVENTS_14_DAYS = 300
-STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js',
+STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js', 'legal.js',
                 'fonts/inter-tight-latin-400-normal.woff2', 'fonts/inter-tight-latin-500-normal.woff2', 'fonts/inter-tight-latin-600-normal.woff2',
                 'fonts/inter-tight-latin-700-normal.woff2', 'fonts/inter-tight-latin-500-italic.woff2', 'fonts/OFL-inter-tight.txt', 'vendor/leaflet.css', 'vendor/leaflet.js', 'img/hero-light.webp', 'img/hero-light-m.webp', 'img/hero-dark.webp', 'img/hero-dark-m.webp',
                 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png')  # icono «o.» de la pestaña (22-10-2026)
@@ -412,37 +412,11 @@ def _write_json(path, data):
 CONTACT_EMAIL = 'hola@ontoca.com'   # buzón de contacto (Cloudflare Email Routing → Gmail; responde vía Brevo), 23-10-2026
 
 
-def credits_html(registry, generated_at='', counts=None, skin_css=''):
-    """The public Fuentes y créditos page: who publishes each dataset, under what terms."""
-    rows = []
-    for source, entry in registry.items():
-        if entry.get('public_credit') is False: continue  # discovery-only directories: facts only, never linked or named in public
-        label = catalog.SOURCES.get(source) or {'venue_*': 'Recintos (config/venues.json)', 'ticketing_*': 'Ticketeras y agregadores'}.get(source, source)
-        link = f'<a href="{html.escape(entry["catalog_url"])}" rel="noopener noreferrer" target="_blank">{html.escape(entry["catalog_url"])}</a>' if entry.get('catalog_url', '').startswith('https://') else ''
-        licence = f'<a href="{html.escape(entry["license_url"])}" rel="noopener noreferrer" target="_blank">{html.escape(entry.get("data_reuse_status", ""))}</a>' if entry.get('license_url', '').startswith('https://') else html.escape(entry.get('data_reuse_status', ''))
-        images = 'Sí — ' + html.escape(entry.get('image_reuse_basis', '')) if entry.get('image_reuse_confirmed') is True else 'No se publican imágenes de esta fuente'
-        if entry.get('public_listing') is False:
-            rows.append(f'<article class="credit credit-retired"><h2>{html.escape(label)}</h2><p><b>Fuente retirada{" el " + html.escape(entry["retired_on"]) if entry.get("retired_on") else ""}.</b> {html.escape(entry.get("public_listing_reason", ""))}</p></article>'); continue
-        rows.append(f'<article class="credit"><h2>{html.escape(label)}</h2><p><b>Titular:</b> {html.escape(entry.get("owner", ""))}</p><p><b>Dataset:</b> {html.escape(entry.get("dataset", ""))} {link}</p>'
-                    f'<p><b>Licencia / base de reutilización:</b> {licence}. {html.escape(entry.get("license_basis", ""))}</p><p><b>Atribución:</b> {html.escape(entry.get("attribution", ""))}</p><p><b>Imágenes:</b> {images}</p></article>')
-    counts = counts or {}
-    # skin_css: la hoja de la versión 2 (solo claro), como la portada; sin ella, la página de siempre.
-    theme, extra = ('light', f'<link rel="stylesheet" href="{html.escape(skin_css)}">') if skin_css else ('dark', '')
-    return (f'<!DOCTYPE html><html lang="es" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fuentes y créditos · Ontoca</title>'
-            '<meta name="description" content="De dónde salen los datos y las imágenes de Ontoca, con qué licencia y cómo pedir una corrección o retirada."><link rel="stylesheet" href="/public.css">' + extra + '<script defer src="/analytics.js"></script></head>'
-            '<body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="/">ontoca<span>.</span></a></div></header>'
-            '<main class="credits"><a class="back" href="/">← Volver a la agenda</a><h1>Fuentes y créditos</h1>'
-            '<p>Ontoca recoge automáticamente la programación cultural de Barcelona a partir de fuentes públicas y la enlaza siempre a la página oficial de cada actividad. '
-            'Los textos descriptivos y las imágenes pertenecen a quien los publica: se muestran con su crédito y su enlace de origen, bajo la licencia o la política de cada fuente que se detalla abajo. '
-            'Cada ficha conserva la URL original y la fecha de la última sincronización. Los horarios y precios se reproducen tal y como los publica la fuente; confirma siempre en la fuente antes de ir. '
-            'Las fechas de conciertos se contrastan además con directorios de conciertos: esas fichas muestran sólo título, fecha, hora y sala, enlazan a la web de la sala o a la venta de entradas y no reproducen textos ni imágenes de terceros.</p>'
-            '<p><b>Estadísticas de uso.</b> Ontoca mide las visitas y el uso de la agenda (páginas vistas, búsquedas, fichas abiertas, filtros) con Matomo en un servidor propio, sin cookies ni identificadores persistentes. '
-            'No se mide nada si el navegador pide no ser seguido (Do Not Track o Global Privacy Control). Las búsquedas que parecen un dato personal no se registran.</p>'
-            f'<p class="credits-meta">Última generación: {html.escape(generated_at)}. Fichas públicas en los próximos seis meses: {counts.get("events", "")}. Imágenes publicadas: {counts.get("images", "")}.</p>'
-            '<p><b>Retirada o corrección.</b> Si eres titular de un dato o una imagen y quieres que se corrija o se retire, escribe a <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> indicando el enlace de la ficha: se atiende en la siguiente actualización y el cambio queda registrado con fecha y motivo.</p>'
-            + ''.join(rows) +
-            '<p class="credits-meta">Mapa: © colaboradores de <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">OpenStreetMap</a>. ' + ('Tipografía Inter Tight (licencia SIL Open Font License).' if skin_css else 'Tipografías del sistema.') + ' Sin cookies de terceros ni rastreadores.</p>'
-            '</main></body></html>')
+def credits_html(registry=None, generated_at='', counts=None, skin_css=''):
+    """La página pública de Fuentes (25-10-2026): lo mínimo que piden las licencias, en tres idiomas.
+    El detalle por fuente sigue en docs/source_registry.json; ya no se publica (decisión de David)."""
+    from src import legal_pages
+    return legal_pages.page_html('creditos', skin_css)
 
 
 # Estilo de la web pública. 'v2' (por defecto desde el 23-10-2026): public-v2.css encima de
@@ -463,7 +437,7 @@ def v2_index(index, version):
 def headers_file():
     return ('/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n'
             "  Content-Security-Policy: default-src 'self'; connect-src 'self' https://autonomoclaro.com; img-src 'self' https://tile.openstreetmap.org https://autonomoclaro.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://autonomoclaro.com; frame-src https://www.openstreetmap.org; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'\n"
-            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/analytics.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/favicon.svg\n  Cache-Control: public, max-age=86400\n/favicon-32.png\n  Cache-Control: public, max-age=86400\n/apple-touch-icon.png\n  Cache-Control: public, max-age=86400\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
+            '/img/*\n  Cache-Control: public, max-age=2592000, immutable\n/data/*\n  Cache-Control: public, max-age=600\n/vendor/*\n  Cache-Control: public, max-age=604800\n/public.js\n  Cache-Control: public, max-age=0, must-revalidate\n/analytics.js\n  Cache-Control: public, max-age=0, must-revalidate\n/legal.js\n  Cache-Control: public, max-age=0, must-revalidate\n/public.css\n  Cache-Control: public, max-age=0, must-revalidate\n/public-v2.css\n  Cache-Control: public, max-age=0, must-revalidate\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n/favicon.svg\n  Cache-Control: public, max-age=86400\n/favicon-32.png\n  Cache-Control: public, max-age=86400\n/apple-touch-icon.png\n  Cache-Control: public, max-age=86400\n/v2/*\n  Cache-Control: public, max-age=0, must-revalidate\n/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n/e/*\n  Cache-Control: public, max-age=0, must-revalidate\n')
 
 
 def _content_hash(out):
@@ -590,7 +564,7 @@ def write_sitemaps(out, site_url, events, cards, today, landing_paths=()):
     def urlset(rows):
         return ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                 + ''.join(f'<url><loc>{html.escape(u)}</loc>' + (f'<lastmod>{m}</lastmod>' if m else '') + '</url>' for u, m in rows) + '</urlset>')
-    files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat()), (f'{base}/creditos.html', '')] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
+    files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat()), (f'{base}/creditos', ''), (f'{base}/aviso-legal', ''), (f'{base}/privacidad', '')] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
     def event_url(e):   # igual que eventPath() en public.js (encodeURIComponent)
         return f"{base}/e/{quote(e['source'], safe=URI_SAFE)}/{quote(str(e['id']), safe=URI_SAFE)}"
     rows = [(event_url(e), seen.get(e['key'], '')) for e in sorted(events, key=lambda e: (e['start'], e['key']))]
@@ -711,15 +685,18 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     alerts = alerts or {}
     if alerts.get('enabled') and alerts.get('turnstile_site_key'):
         index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
-    from src import landings
-    index = index.replace('</footer>', landings.nav_html() + '</footer>', 1)   # enlaces a las páginas de entrada
+    from src import landings   # las páginas de entrada ya no se enlazan en el pie (25-10-2026); siguen en el sitemap
     (out / 'index.html').write_text(index, encoding='utf-8')
     # Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…): la app con su filtro y la lista en el HTML.
     landing_pages = landings.pages(today)
     for page in landing_pages:
         target = out / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
-    (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts, skin_css=f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else ''), encoding='utf-8')
+    skin = f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else ''
+    (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts, skin_css=skin), encoding='utf-8')
+    from src import legal_pages   # Aviso legal y Privacidad (25-10-2026); /privacidad la piden las alertas
+    for slug in ('aviso-legal', 'privacidad'):
+        (out / f'{slug}.html').write_text(legal_pages.page_html(slug, skin), encoding='utf-8')
     (out / '_headers').write_text(headers_file(), encoding='utf-8')
     # Every record has its own address (/e/<source>/<id>); the static host serves the app for it.
     # /e/* lo sirve la función functions/e/[[path]].js: la app con la vista previa para compartir
