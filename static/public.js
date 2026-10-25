@@ -925,6 +925,8 @@ function foldBlock(id, title, list, sub, openByDefault = false, cls = '') {
 }
 // Pestañas Agenda · Exposiciones · Festivales (25-10-2026, David): sustituyen a los bloques de exposiciones y
 // festivales. Cada ficha sale en una sola pestaña; la búsqueda y los filtros se aplican a las tres.
+// Al buscar (25-10-2026, David) no hay pestañas: se ven las tres a la vez, cada una con su título y su número.
+const searching = () => Boolean(String(state.query || '').trim()) && !state.savedOnly;
 const TABS = {agenda: ['Agenda', 'Agenda', 'Events'], expo: ['Expos', 'Expos', 'Exhibits'], fest: ['Festivales', 'Festivals', 'Festivals']};
 // Festivales con FEST_FOLD actividades o más: un desplegable por festival (la regla del antiguo bloque «Festivales»).
 function festSplit(list) {
@@ -938,6 +940,7 @@ function tabsHtml(counts) {
 }
 // Sin resultados en la pestaña activa: enlaces a las que sí tienen (así una búsqueda nunca se pierde).
 function tabHint(counts) {
+  if (searching()) return '';   // al buscar se ven las tres a la vez
   const others = Object.keys(TABS).filter(k => k !== state.tab && counts[k]);
   return others.length ? `<p class="ag-tab-hint">${others.map(k => `<button class="linklike" type="button" data-agtab="${k}">${L('Ver', 'Mostra', 'See')} ${counts[k].toLocaleString('es-ES')} ${L('en', 'a', 'in')} ${esc(byLang(TABS[k]))}</button>`).join(' · ')}</p>` : '';
 }
@@ -1049,8 +1052,10 @@ function renderAgenda() {
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
   else {
     const r = model.mode === 'day' ? renderDay(model) : renderRange(model);
-    tabs.innerHTML = tabsHtml(r.counts); tabs.hidden = false;
-    host.innerHTML = r.counts[state.tab] || state.tab === 'agenda' ? r.html[state.tab]
+    tabs.innerHTML = tabsHtml(r.counts); tabs.hidden = searching();
+    const parts = Object.keys(TABS).filter(k => r.counts[k]);
+    if (searching()) host.innerHTML = parts.length ? parts.map(k => `<section class="ag-part" id="ag-part-${k}"><h3 class="ag-part-head">${esc(byLang(TABS[k]))} <span>${r.counts[k].toLocaleString('es-ES')}</span></h3>${r.html[k]}</section>`).join('') : r.html.agenda;
+    else host.innerHTML = r.counts[state.tab] || state.tab === 'agenda' ? r.html[state.tab]
       : `<div class="empty">${state.tab === 'expo' ? L('No hay exposiciones con estos filtros.', 'No hi ha exposicions amb aquests filtres.', 'No exhibitions with these filters.') : L('No hay festivales con estos filtros.', 'No hi ha festivals amb aquests filtres.', 'No festivals with these filters.')}${tabHint(r.counts)}</div>`;
   }
   $('agendaMore').innerHTML = '';

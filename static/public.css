@@ -508,3 +508,8 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .near-pill svg{flex:none}
 .near-msg{margin:8px 0 0;font-size:14px;color:var(--soft)}
 .ev-meta .ev-dist{font-weight:600;color:var(--fg)}
+
+/* Búsqueda: las tres pestañas a la vez (25-10-2026) */
+.ag-part+.ag-part{margin-top:28px}
+.ag-part-head{margin:16px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line2);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.ag-part-head span{font-weight:500;opacity:.65;font-variant-numeric:tabular-nums}
