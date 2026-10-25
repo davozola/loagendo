@@ -88,6 +88,7 @@ class StaticExportTests(unittest.TestCase):
         self.assertTrue((dist / 'legal.js').exists()); self.assertNotIn('seo-nav', index)
         self.assertRegex(index, r'href="/public\.css\?v=[0-9a-f]{10}"'); self.assertRegex(index, r'src="/public\.js\?v=[0-9a-f]{10}"')
         headers = (dist / '_headers').read_text(encoding='utf-8')
+        self.assertIn("script-src 'self' https://autonomoclaro.com https://challenges.cloudflare.com", headers); self.assertIn('frame-src https://www.openstreetmap.org https://challenges.cloudflare.com', headers)
         self.assertIn('Cache-Control: public, max-age=2592000, immutable', headers); self.assertIn('/public.js\n  Cache-Control: public, max-age=0, must-revalidate', headers)
         self.assertIn('Sitemap: https://loagendo.example/sitemap.xml', (dist / 'robots.txt').read_text(encoding='utf-8'))
         # Sitemap por partes (23-10-2026): índice, páginas y fichas, siempre con el dominio completo,
