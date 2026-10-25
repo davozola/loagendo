@@ -599,9 +599,21 @@ function availability(e, day) {
   if (span > SHORT_DAYS && !dayKnown) return {kind: 'run', until: e.end};
   return {kind: 'tbc', run: true, until: e.end};
 }
+// Sesiones de madrugada (25-10-2026, David): un acto de un día (o que acaba al día siguiente) a las 00:00–05:59
+// es la noche de esa fecha («PleaseQuiet», vie 30 · 00:00, es la noche del viernes): va al final del día, cuenta
+// como pendiente hasta entonces y, si la fuente lo alarga al día siguiente, no se repite a primera hora de ese día.
+const NIGHT_END = 6 * 60;
+function nightAware(e, day, a) {
+  if (a.kind !== 'timed' || !a.times?.length || !a.times.every(x => (minutesOf(x) ?? 1e4) < NIGHT_END)) return a;
+  if ((e.occurrences || []).length) return a;
+  const span = daysBetween(e.start, e.end);
+  if (span === 0 && day === e.start) return {...a, night: true};
+  if (span === 1) return day === e.start ? {...a, night: true} : day === e.end ? {kind: 'skip'} : a;
+  return a;
+}
 function status(a, now) {
   if (a.kind === 'timed') {
-    const mins = a.times.map(minutesOf);
+    const mins = a.times.map(minutesOf).map(m => a.night && m !== null && m < NIGHT_END ? m + 1440 : m);
     if (now === null) return {state: 'scheduled', next: mins[0], sort: mins[0], rest: mins.slice(1)};
     const ahead = mins.filter(m => m >= now), recent = mins.filter(m => m < now && now - m < GRACE);
     if (recent.length && !ahead.length && !a.season) return {state: 'started', next: recent[recent.length - 1], sort: now - 1, ago: now - recent[recent.length - 1], rest: []};
@@ -707,13 +719,14 @@ function chipsHtmlOld(counts) {
 function bucketOf(e) { const k = e._a.kind; return k === 'timed' ? 'fixed' : k }
 function buildModel(items, win) {
   const now = madridNow();
-  const decorate = (e, day, nowMin) => { const a = availability(e, day); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
+  const decorate = (e, day, nowMin) => { const a = nightAware(e, day, availability(e, day)); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
   const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
   const place = e => {
     const k = e._a.kind;
     if ((k === 'timed' || k === 'wide') && e._st.state === 'past') s.past.push(e);
     else if (k === 'timed') s.fixed.push(e);
     else if (k === 'wide') (e._a.noHours ? s.wideNoHours : s.wide).push(e);
+    else if (k === 'skip') return;
     else if (s[k]) s[k].push(e); else s.other.push(e);
   };
   if (!win) {
@@ -732,6 +745,7 @@ function buildModel(items, win) {
     if (day === now.day && inside.length > 1 && status(availability(e, day), now.min).state === 'past') day = inside.find(d => d > now.day) || day;
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
     decorate(e, day, day === now.day ? now.min : null);
+    if (e._a.kind === 'skip') continue;
     if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && e._st.state === 'past') { place(e); continue }
     if (!buckets.has(day)) buckets.set(day, []);
     buckets.get(day).push(e);
@@ -994,7 +1008,7 @@ function renderDay(m) {
   for (const e of timeline) {
     const h = hourOf(e);
     if (h === 'now') continue;
-    if (h !== current) { flush(); groups += `<div class="ag-group">${groupHead(`${h} h`)}`; current = h }
+    if (h !== current) { flush(); groups += `<div class="ag-group">${groupHead(Number(h) >= 24 ? `${String(Number(h) - 24).padStart(2, '0')} h · ${L('madrugada', 'matinada', 'after midnight')}` : `${h} h`)}`; current = h }
     bucket.push(e);
   }
   flush();
