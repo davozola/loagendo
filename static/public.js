@@ -909,7 +909,7 @@ function foldBlock(id, title, list, sub, openByDefault = false, cls = '') {
 }
 // Pestañas Agenda · Exposiciones · Festivales (25-10-2026, David): sustituyen a los bloques de exposiciones y
 // festivales. Cada ficha sale en una sola pestaña; la búsqueda y los filtros se aplican a las tres.
-const TABS = {agenda: ['Agenda', 'Agenda', 'Listings'], expo: ['Expos', 'Expos', 'Exhibits'], fest: ['Festivales', 'Festivals', 'Festivals']};
+const TABS = {agenda: ['Agenda', 'Agenda', 'Events'], expo: ['Expos', 'Expos', 'Exhibits'], fest: ['Festivales', 'Festivals', 'Festivals']};
 // Festivales con FEST_FOLD actividades o más: un desplegable por festival (la regla del antiguo bloque «Festivales»).
 function festSplit(list) {
   const members = {};
