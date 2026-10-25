@@ -1,0 +1,1535 @@
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeurl = s => { try { const u = new URL(s); return ['http:','https:'].includes(u.protocol) ? u.href : null } catch (_) { return null } };
+// Clasificación pública (19-10-2026, src/taxonomy.py): 8 categorías —cada ficha tiene una sola,
+// según su naturaleza— y 5 canales de descubrimiento —colecciones transversales; una ficha puede
+// estar en varios—. Se combinan: categorías marcadas (se suman) × canales marcados (se suman).
+// Sin tercer nivel: los subtipos y el «Con niños» antiguos pasan a ser el canal «En familia».
+const CATS = {musica: ['Música y conciertos', 'Música i concerts', 'Music and concerts'], escena: ['Teatro y danza', 'Teatre i dansa', 'Theatre and dance'], cine: ['Cine', 'Cinema', 'Cinema'],
+  arte: ['Arte y exposiciones', 'Art i exposicions', 'Art and exhibitions'], charlas: ['Charlas y visitas', 'Xerrades i visites', 'Talks and visits'], talleres: ['Talleres y experiencias', 'Tallers i experiències', 'Workshops and experiences'],
+  fiestas: ['Fiestas y mercados', 'Festes i mercats', 'Festivities and markets'], deporte: ['Deporte', 'Esport', 'Sport']};
+const CHANS = {familia: ['En familia', 'En família', 'With family'], barrio: ['Vida de barrio', 'Vida de barri', 'Neighbourhood life'], aire: ['Al aire libre', "A l'aire lliure", 'Outdoors'],
+  galerias: ['Arte y galerías', 'Art i galeries', 'Art and galleries'], festivales: ['Festivales', 'Festivals', 'Festivals']};
+// Enlaces antiguos (?cat=Conciertos, ?kids=1) siguen funcionando.
+const LEGACY_CAT = {Conciertos: 'musica', 'Música': 'musica', Teatro: 'escena', Cine: 'cine', Exposiciones: 'arte', Talleres: 'talleres', Deporte: 'deporte'};
+const LEGACY_CHAN = {Familia: 'familia', Barrio: 'barrio'};
+const byLang = pair => pair[LANG === 'ca' ? 1 : LANG === 'en' ? 2 : 0] ?? pair[0];
+const catName = c => CATS[c] ? byLang(CATS[c]) : CATS[LEGACY_CAT[c]] ? byLang(CATS[LEGACY_CAT[c]]) : t(c || '');
+const chanName = c => CHANS[c] ? byLang(CHANS[c]) : c;
+const catMatch = (e, cats) => !cats || !cats.length || cats.includes(e.public_category);
+const chanMatch = (e, chans) => !chans || !chans.length || chans.some(c => (e.channels || []).includes(c));
+// Idioma en que se hace la actividad (23-10-2026): solo lo declaran algunas fuentes (Open Data BCN).
+const ACT_LANGS = {en: ['En inglés', 'En anglès', 'In English'], es: ['En castellano', 'En castellà', 'In Spanish'], ca: ['En catalán', 'En català', 'In Catalan'], other: ['Más idiomas', 'Més idiomes', 'Other languages']};
+const langMatch = (e, langs) => !langs || !langs.length || langs.some(l => l === 'other' ? (e.languages || []).some(x => ['fr', 'it', 'other'].includes(x)) : (e.languages || []).includes(l));
+// Franjas de edad del canal «En familia» (20-10-2026). La edad sale de la fuente (título o texto) o
+// del texto leído por IA con cita comprobada; si nadie la dice, la ficha es «Edad no indicada».
+const AGE_BANDS = {'0-3': [0, 3], '4-6': [4, 6], '7-12': [7, 12], '13-17': [13, 17], nd: null};
+const AGE_LABEL = {'0-3': ['0–3 años', '0–3 anys', 'Ages 0–3'], '4-6': ['4–6 años', '4–6 anys', 'Ages 4–6'], '7-12': ['7–12 años', '7–12 anys', 'Ages 7–12'], '13-17': ['13–17 años', '13–17 anys', 'Ages 13–17'], nd: ['Edad no indicada', 'Edat no indicada', 'Age not stated']};
+const hasAge = e => e.age_min !== null && e.age_min !== undefined;
+const ageMatch = (e, bands) => !bands || !bands.length || bands.some(b => b === 'nd' ? !hasAge(e) : hasAge(e) && e.age_min <= AGE_BANDS[b][1] && (e.age_max ?? 99) >= AGE_BANDS[b][0]);
+const ageText = e => !hasAge(e) ? '' : e.age_max === null || e.age_max === undefined ? L(`Desde ${e.age_min} años`, `A partir de ${e.age_min} anys`, `From age ${e.age_min}`) : e.age_min === 0 && e.age_max <= 1 ? L('Bebés', 'Nadons', 'Babies') : L(`${e.age_min}–${e.age_max} años`, `${e.age_min}–${e.age_max} anys`, `Ages ${e.age_min}–${e.age_max}`);
+const FORMATS = {one_shot:'Actos y funciones',workshop:'Talleres',course:'Cursos',program:'Ciclos y programas',festival:'Festivales',exhibition:'Exposiciones',ongoing:'Actividades continuadas'};
+const PAGE = 50;
+const params = new URLSearchParams(location.search);
+
+/* ---------- idioma ----------
+   La interfaz se muestra en castellano o catalán; el contenido de cada ficha
+   (título, descripción, horarios) se deja en el idioma en que lo publica la
+   fuente, nunca se traduce automáticamente. */
+// Preferencias del navegador: nombre nuevo (brollant-*) y, si no existe, el de Loagendo, para no perder eventos guardados.
+function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
+const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca','en'].includes(q) ? q : ['es','ca','en'].includes(saved) ? saved : 'es' })();
+const CA = {'Vista de la agenda': 'Vista de l’agenda', 'Hecho en Barcelona': 'Fet a Barcelona', 'Aviso legal': 'Avís legal', 'Privacidad': 'Privacitat', 'Fuentes': 'Fonts', 'Este fin de semana': 'Aquest cap de setmana', 
+  'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Cartel':'Cartell','Con':'Amb','Público y precio':'Públic i preu','Solo planes para ir con niños':'Només plans per anar amb canalla','Baile':'Ball','Teatro y circo':'Teatre i circ','Temporadas y ciclos':'Temporades i cicles',
+  'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
+  'Arquitectura y diseño':'Arquitectura i disseny','Arte contemporáneo':'Art contemporani','Arte y manualidades':'Art i manualitats','Ciencia y naturaleza':'Ciència i natura','Clásica y ópera':'Clàssica i òpera','Cocina':'Cuina','Coral y tradicional':'Coral i tradicional','Cuerpo y salud':'Cos i salut','Electrónica':'Electrònica','Flamenco y músicas del mundo':'Flamenc i músiques del món','Fotografía':'Fotografia','Historia y patrimonio':'Història i patrimoni','Humanidades y ciencia':'Humanitats i ciència','Idiomas':'Idiomes','Jazz y blues':'Jazz i blues','Música, danza y teatro':'Música, dansa i teatre','Pintura y dibujo':'Pintura i dibuix','Pop y rock':'Pop i rock','Tecnología':'Tecnologia','Sin clasificar':'Sense classificar','Varios distritos':'Diversos districtes',
+  'Hoy':'Avui','Fecha':'Data','planes':'plans','guardados':'desats','Todos los días':'Tots els dies','Próximos 7 días':'Propers 7 dies','Periodo de la selección':'Període de la selecció','Selección Ontoca':'Selecció Ontoca','Próximos 30 días':'Propers 30 dies','Próximos 3 meses':'Propers 3 mesos','Próximos 6 meses':'Propers 6 mesos','Próximos':'Propers','días':'dies',
+  'Varios días':'Diversos dies','Hora no indicada':'Hora no indicada','Gratis':'Gratis','Todo':'Tot','Todos':'Tots','Todos los distritos':'Tots els districtes','Cualquier hora':'Qualsevol hora','Con cursos ya empezados':'Amb cursos ja començats',
+  'Limpiar todo':'Esborra-ho tot','Quitar filtro':'Treu el filtre','Ver':'Mostra','más':'més','restantes':'restants','Reintentar':'Torna-ho a provar',
+  'Nada con estos filtros este día. Prueba otro día o quita algún filtro.':'Res amb aquests filtres aquest dia. Prova un altre dia o treu algun filtre.',
+  'No se pudo cargar la agenda.':'No s\'ha pogut carregar l\'agenda.','No se pudo cargar la selección.':'No s\'ha pogut carregar la selecció.','Aún no hay actividades destacadas para estas fechas.':'Encara no hi ha activitats destacades per a aquestes dates.',
+  'No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.':'No hi ha ubicacions geogràfiques per a aquests filtres. Prova un altre dia o consulta la llista.','Mapa de actividades geolocalizadas':'Mapa d\'activitats geolocalitzades','lugares con ubicación · pulsa un punto para abrir la ficha':'llocs amb ubicació · prem un punt per obrir la fitxa','Sin recinto identificado':'Sense recinte identificat',
+  'Cerrar ficha':'Tanca la fitxa','Ver en la fuente oficial':'Mostra a la font oficial','Web del evento':'Web de l’esdeveniment','Web de la sala':'Web de la sala','Cómo llegar':'Com arribar-hi','Cuándo':'Quan','Dónde':'On','Organiza':'Organitza','Consultar fuente':'Consulta la font','Precio':'Preu','Descubre':'Descobreix','Consultar en la fuente':'Consulta-ho a la font','Contraste':'Contrast','Fecha coincidente en':'Data coincident a','fuentes':'fonts',
+  'Horario':'Horari','Horas publicadas':'Hores publicades','las fuentes no coinciden; confirma en la sala':'les fonts no coincideixen; confirma-ho a la sala','Requiere inscripción':'Cal inscripció','Texto de':'Text de','Imagen del equipamiento':'Imatge de l\'equipament','Imagen de la fuente':'Imatge de la font','Más imágenes':'Més imatges','Ubicación':'Ubicació','Mapa de':'Mapa de','la ubicación':'la ubicació','Próximamente en':'Properament a','esta sala':'aquesta sala',
+  'Guardado':'Desat','Guardar':'Desa','Compartir':'Comparteix','Añadir al calendario':'Afegeix al calendari','Enlace copiado':'Enllaç copiat','Enlace de la ficha':'Enllaç de la fitxa',
+  'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
+  // index.html
+  'Saltar a la agenda':'Salta a l\'agenda','Agenda':'Agenda','Selección':'Selecció','Barrios':'Barris','Guardados':'Desats','Ver guardados':'Mostra els desats','Cambiar modo claro u oscuro':'Canvia el mode clar o fosc',
+  'Qué hacer en Barcelona':'Què fer a Barcelona','hoy.':'avui.','Mil maneras de vivir la ciudad.':'Mil maneres de viure la ciutat.',
+  'Selección de la semana':'Selecció de la setmana','Buscar en la agenda':'Cerca a l\'agenda','Artista, sala, barrio, obra…':'Artista, sala, barri, obra…','7 días':'7 dies','30 días':'30 dies','6 meses':'6 mesos','Elegir una fecha concreta':'Tria una data concreta','Días anteriores':'Dies anteriors','Días siguientes':'Dies següents','Días de agenda':'Dies d\'agenda','Periodo':'Període',
+  'Filtros':'Filtres','Filtros activos':'Filtres actius','Planes':'Plans','Limpiar':'Esborra','Cerrar filtros':'Tanca els filtres','Qué te apetece':'Què et ve de gust','Categoría':'Categoria','Tipo':'Tipus','Distrito':'Districte','Filtrar por distrito':'Filtra per districte','Formato':'Format','Filtrar por formato':'Filtra per format','Todos los formatos':'Tots els formats','Idioma de la actividad':'Idioma de l\'activitat','Incluir cursos ya empezados':'Inclou cursos ja començats','Solo gratis':'Només gratis','Filtrar por horario':'Filtra per horari','Franja horaria':'Franja horària','Mañana':'Matí','Tarde':'Tarda','Noche':'Nit','Desde':'Des de','Hasta':'Fins a','Hora desde':'Hora des de','Hora hasta':'Hora fins a','Quitar horario':'Treu l\'horari','Vista':'Vista','Modo de vista':'Mode de vista','Lista':'Llista','Mapa':'Mapa','Por sitio':'Per lloc',
+  'Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.':'Els horaris i preus es mostren tal com els publica cada font. Confirma\'ls abans d\'anar-hi.','Por distritos':'Per districtes','Próximos 14 días':'Propers 14 dies','Fuentes y créditos':'Fonts i crèdits',
+  'Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.':'Dades: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) i agendes dels equipaments. Confirma els horaris a la font.',
+  'Cambiar idioma':'Canvia l\'idioma','mañana.':'demà.','este fin de semana.':'aquest cap de setmana.','esta semana.':'aquesta setmana.','este mes.':'aquest mes.','Exposición':'Exposició','Hoy, lunes':'Avui, dilluns'
+};
+// Inglés (23-10-2026): mismas claves que CA (el texto en castellano).
+const EN = {"Vista de la agenda":"Listings view","Hecho en Barcelona":"Made in Barcelona","Aviso legal":"Legal notice","Privacidad":"Privacy","Fuentes":"Sources","Este fin de semana":"This weekend","Conciertos":"Concerts","Música":"Music","Teatro":"Theatre","Exposiciones":"Exhibitions","Cine":"Cinema","Familia":"Family","Talleres":"Workshops","Deporte":"Sport","Barrio":"Neighbourhood","Teatro y danza":"Theatre and dance","Charlas, visitas y barrio":"Talks, visits and neighbourhood","Talleres y cursos":"Workshops and courses","Con niños":"With kids","Cartel":"Line-up","Con":"With","Público y precio":"Audience and price","Solo planes para ir con niños":"Only plans for kids","Baile":"Dance","Teatro y circo":"Theatre and circus","Temporadas y ciclos":"Seasons and series","Actos y funciones":"Events and shows","Cursos":"Courses","Ciclos y programas":"Series and programmes","Festivales":"Festivals","Actividades continuadas":"Ongoing activities","Arquitectura y diseño":"Architecture and design","Arte contemporáneo":"Contemporary art","Arte y manualidades":"Arts and crafts","Ciencia y naturaleza":"Science and nature","Clásica y ópera":"Classical and opera","Cocina":"Cooking","Coral y tradicional":"Choral and traditional","Cuerpo y salud":"Body and health","Electrónica":"Electronic","Flamenco y músicas del mundo":"Flamenco and world music","Fotografía":"Photography","Historia y patrimonio":"History and heritage","Humanidades y ciencia":"Humanities and science","Idiomas":"Languages","Jazz y blues":"Jazz and blues","Música, danza y teatro":"Music, dance and theatre","Pintura y dibujo":"Painting and drawing","Pop y rock":"Pop and rock","Tecnología":"Technology","Sin clasificar":"Unclassified","Varios distritos":"Several districts","Hoy":"Today","Fecha":"Date","planes":"plans","guardados":"saved","Todos los días":"Every day","Próximos 7 días":"Next 7 days","Periodo de la selección":"Selection period","Selección Ontoca":"Ontoca picks","Próximos 30 días":"Next 30 days","Próximos 3 meses":"Next 3 months","Próximos 6 meses":"Next 6 months","Próximos":"Next","días":"days","Varios días":"Several days","Hora no indicada":"Time not stated","Gratis":"Free","Todo":"All","Todos":"All","Todos los distritos":"All districts","Cualquier hora":"Any time","Con cursos ya empezados":"Including courses under way","Limpiar todo":"Clear all","Quitar filtro":"Remove filter","Ver":"See","más":"more","restantes":"remaining","Reintentar":"Try again","Nada con estos filtros este día. Prueba otro día o quita algún filtro.":"Nothing with these filters on this day. Try another day or remove a filter.","No se pudo cargar la agenda.":"The listings could not be loaded.","No se pudo cargar la selección.":"The selection could not be loaded.","Aún no hay actividades destacadas para estas fechas.":"No featured activities for these dates yet.","No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.":"No locations for these filters. Try another day or check the list.","Mapa de actividades geolocalizadas":"Map of activities","lugares con ubicación · pulsa un punto para abrir la ficha":"places with a location · tap a point to open it","Sin recinto identificado":"No venue identified","Cerrar ficha":"Close","Ver en la fuente oficial":"See on the official source","Web del evento":"Event website","Web de la sala":"Venue website","Cómo llegar":"Directions","Cuándo":"When","Dónde":"Where","Organiza":"Organiser","Consultar fuente":"Check the source","Precio":"Price","Descubre":"Discover","Consultar en la fuente":"Check with the source","Contraste":"Cross-check","Fecha coincidente en":"Same date on","fuentes":"sources","Horario":"Times","Horas publicadas":"Published times","las fuentes no coinciden; confirma en la sala":"sources disagree; check with the venue","Requiere inscripción":"Registration required","Texto de":"Text by","Imagen del equipamiento":"Venue photo","Imagen de la fuente":"Source image","Más imágenes":"More images","Ubicación":"Location","Mapa de":"Map of","la ubicación":"the location","Próximamente en":"Coming up at","esta sala":"this venue","Guardado":"Saved","Guardar":"Save","Compartir":"Share","Añadir al calendario":"Add to calendar","Enlace copiado":"Link copied","Enlace de la ficha":"Link","Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.":"Date and venue collected automatically and cross-checked between sources; details on the venue’s website.","Fuente":"Source","Información recogida automáticamente":"Information collected automatically","confirma horario y precio antes de ir.":"check times and prices before you go.","Saltar a la agenda":"Skip to the listings","Agenda":"Listings","Selección":"Picks","Barrios":"Neighbourhoods","Guardados":"Saved","Ver guardados":"See saved","Cambiar modo claro u oscuro":"Switch light or dark mode","Qué hacer en Barcelona":"What to do in Barcelona","hoy.":"today.","Mil maneras de vivir la ciudad.":"A thousand ways to live the city.","Selección de la semana":"This week’s picks","Buscar en la agenda":"Search the listings","Artista, sala, barrio, obra…":"Artist, venue, neighbourhood, show…","7 días":"7 days","30 días":"30 days","6 meses":"6 months","Elegir una fecha concreta":"Pick a date","Días anteriores":"Previous days","Días siguientes":"Next days","Días de agenda":"Listing days","Periodo":"Period","Filtros":"Filters","Filtros activos":"Active filters","Planes":"Plans","Limpiar":"Clear","Cerrar filtros":"Close filters","Qué te apetece":"What do you fancy","Categoría":"Category","Tipo":"Type","Distrito":"District","Filtrar por distrito":"Filter by district","Formato":"Format","Filtrar por formato":"Filter by format","Todos los formatos":"All formats","Idioma de la actividad":"Language of the activity","Incluir cursos ya empezados":"Include courses under way","Solo gratis":"Free only","Filtrar por horario":"Filter by time","Franja horaria":"Time of day","Mañana":"Morning","Tarde":"Afternoon","Noche":"Evening","Desde":"From","Hasta":"Until","Hora desde":"From time","Hora hasta":"Until time","Quitar horario":"Remove time filter","Vista":"View","Modo de vista":"View mode","Lista":"List","Mapa":"Map","Por sitio":"By venue","Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.":"Times and prices are shown as each source publishes them. Check them before you go.","Por distritos":"By district","Próximos 14 días":"Next 14 days","Fuentes y créditos":"Sources and credits","Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.":"Data: Barcelona City Council (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Barcelona Provincial Council (CC BY 4.0) and venue listings. Check times with the source.","Cambiar idioma":"Change language","mañana.":"tomorrow.","este fin de semana.":"this weekend.","esta semana.":"this week.","este mes.":"this month.","Exposición":"Exhibition","Hoy, lunes":"Today, Monday"};
+const t = s => LANG === 'ca' ? (CA[s] ?? s) : LANG === 'en' ? (EN[s] ?? s) : s;
+const months = LANG === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : LANG === 'ca' ? ['gen','febr','març','abr','maig','juny','jul','ag','set','oct','nov','des'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const weekdays = LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : LANG === 'ca' ? ['dg','dl','dt','dc','dj','dv','ds'] : ['dom','lun','mar','mié','jue','vie','sáb'];
+function translatePage() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n || el.textContent.trim(); if (CA[key] !== undefined) el.textContent = t(key) });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(',').forEach(a => { const v = el.getAttribute(a); if (v && CA[v] !== undefined) el.setAttribute(a, t(v)) }));
+  const sw = $('lang'); if (sw) sw.value = LANG;
+}
+// Búsqueda bilingüe: una palabra encuentra también su equivalente en el otro
+// idioma (y sus derivados, por prefijo), sin tocar el texto de las fichas.
+const SYN = [['exposicion','exposicio','mostra','muestra'],['taller','tallers'],['nino','nen','infantil','familiar','familia'],['teatro','teatre'],['concierto','concert'],['cine','cinema'],['danza','dansa','baile','ball'],['charla','xerrada','conferencia'],['museo','museu'],['mercado','mercat'],['fiesta','festa'],['barrio','barri'],['gratis','gratuit'],['noche','nit'],['cuento','conte'],['titere','titella'],['circo','circ'],['poesia','poesia'],['libro','llibre'],['fotografia','foto'],['jardin','jardi'],['paseo','passeig','passejada'],['cocina','cuina'],['canto','cant'],['coro','cor '],['mujeres','dones'],['jovenes','joves'],['mayores','gent gran'],['espectaculo','espectacle'],['feria','fira'],['navidad','nadal'],['verano','estiu'],['invierno','hivern'],['primavera','primavera'],['otono','tardor'],['lectura','lectura','club'],['historia','historia'],['ciencia','ciencia'],['pintura','pintura'],['escuela','escola'],['biblioteca','biblioteca'],['centro civico','centre civic'],['visita','visita'],['ruta','ruta','itinerari','itinerario'],['musica','musica'],['opera','opera'],['flamenco','flamenc'],['electronica','electronica'],['juego','joc'],['magia','magia'],['humor','humor','monolog'],['cuentacuentos','contacontes']];
+// El buscador mira título, recinto y cartel: un artista encuentra el festival en que toca.
+const searchText = e => fold(e.title + ' ' + (e.venue_names || []).join(' ') + ' ' + (e.lineup || []).join(' ') + ' ' + (e.festival?.name || ''));
+// Artista del cartel que explica el resultado cuando el título no lo dice.
+function lineupHit(e) {
+  if (!state.query || !e.lineup?.length) return '';
+  const q = fold(state.query);
+  if (queryMatches(fold(e.title + ' ' + (e.venue_names || []).join(' ')), q)) return '';
+  return e.lineup.find(n => queryMatches(fold(n), q)) || '';
+}
+// Raíz de palabra (24-10-2026): se quita la terminación de la palabra buscada (raíz de 4
+// letras o más) y se aceptan, como palabra entera, las terminaciones de su misma familia:
+// «castellers» encuentra «castellera» pero no «castell», «Castelló» ni «castellà»;
+// «sardanes», «sardana»; «exposiciones», «exposició»; «castells», «castellera». La coincidencia exacta de antes
+// (también dentro de otra palabra) se mantiene. Igual que mvp/catalog.word_stem.
+const ENDING_FAMILIES = [['er','ers','era','eres','ero','eros'], ['or','ors','ora','ores'], ['al','als','ales'], ['io','ion','ions','iones'], ['','a','as','e','es','o','os','s']];
+const ENDINGS = ENDING_FAMILIES.flat().filter(Boolean).sort((x, y) => y.length - x.length);
+// La familia nominal (-a, -es, -s…) acepta también la de oficio: «castells» encuentra «castellera».
+const familyOf = x => { const f = ENDING_FAMILIES.find(g => g.includes(x)); return f === ENDING_FAMILIES[4] ? [...f, ...ENDING_FAMILIES[0]] : f };
+const wordStem = w => { for (const x of ENDINGS) if (w.endsWith(x) && w.length - x.length >= 4) return [w.slice(0, -x.length), familyOf(x)]; return [w, ['','s','es']] };
+const STEM_RE = new Map();
+const stemRe = w => {
+  if (!STEM_RE.has(w)) { const [st, fam] = wordStem(w); const clean = st.replace(/[^a-z0-9]/g, ''); STEM_RE.set(w, clean.length >= 4 ? new RegExp(`(?:^|[^a-z0-9])${clean}(?:${fam.join('|')})(?![a-z0-9])`) : null) }
+  return STEM_RE.get(w);
+};
+function queryMatches(text, query) {
+  return query.split(' ').every(word => {
+    const re = stemRe(word); if (re && re.test(text)) return true;
+    const alts = new Set([word]);
+    for (const g of SYN) if (g.some(m => word.startsWith(m) || m.startsWith(word))) g.forEach(m => alts.add(m));
+    return [...alts].some(a => text.includes(a));
+  });
+}
+const iso = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10) };
+const today = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Madrid'}).format(new Date());  // el día de Barcelona, aunque el dispositivo esté en otra zona
+const MAX_DAYS = 183;
+const addDays = (v, n) => { const d = new Date(v + 'T12:00:00'); d.setDate(d.getDate() + n); return iso(d) };
+const RANGE_LABELS = {finde: t('Este fin de semana'), '7': t('Próximos 7 días'), '30': t('Próximos 30 días'), '90': t('Próximos 3 meses'), '183': t('Próximos 6 meses'), all: t('Todos los días')};
+function rangeWindow() {
+  // Returns {from,to,label} for the active period, or null in single-day mode.
+  // A search without a chosen period looks across the whole public horizon.
+  const r = state.range || (state.query ? 'all' : '');
+  if (!r) return null;
+  if (r === 'finde') {   // de lunes a jueves, viernes a domingo de esa semana; de viernes a domingo, de hoy al domingo (src/landings.py)
+    const wd = (new Date(today + 'T12:00:00').getDay() + 6) % 7;
+    return {from: wd < 4 ? addDays(today, 4 - wd) : today, to: addDays(today, 6 - wd), label: RANGE_LABELS.finde};
+  }
+  const n = r === 'all' ? MAX_DAYS : Math.min(Number(r) || 7, MAX_DAYS);
+  return {from: today, to: addDays(today, n), label: RANGE_LABELS[r] || `${t('Próximos')} ${n} ${t('días')}`};
+}
+
+// Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…, src/landings.py): arrancan con su filtro.
+// Solo cuando se llega sin parámetros; la dirección se mantiene mientras el filtro sea ese (syncUrl).
+const LANDING = (() => { try { return location.search ? {} : JSON.parse(document.documentElement.dataset.landing || '{}') } catch (_) { return {} } })();
+const landingDay = () => LANDING.day === 'today' ? today : LANDING.day === 'tomorrow' ? addDays(today, 1) : (LANDING.day || '');
+let state = {
+  pickRange: 'week',   // «Selección Ontoca»: 'today' o 'week' (próximos 7 días)
+  day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
+  chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
+  free: params.get('free') === '1', query: params.get('q') || '',
+  hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
+  view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
+  range: params.get('range') || LANDING.range || '',
+  // Pestaña de la agenda (25-10-2026): Agenda (por defecto), Exposiciones o Festivales; /exposiciones abre en la suya.
+  tab: ['agenda', 'expo', 'fest'].includes(params.get('vista')) ? params.get('vista') : LANDING.path === '/exposiciones' ? 'expo' : 'agenda',
+  started: params.get('started') === '1', langs: params.getAll('idioma').filter(l => ACT_LANGS[l]),
+  savedOnly: false, saved: [], detail: null, page: 1, items: [], total: 0,
+};
+const LANDING_Q = LANDING.path ? stateQuery() : null;   // el filtro con que arrancó la página de entrada (syncUrl)
+try { state.saved = JSON.parse(pref('saved') || '[]') } catch (_) { state.saved = [] }
+let returnFocus = null, agendaRequest = 0;
+
+const fetchJson = async (path, opts) => { const r = await fetch(path, opts); const d = await r.json(); if (!r.ok) throw Error(d.error || 'Error'); return d };
+
+/* ---------- data layer ----------
+   Live mode asks the local server (/api/...). Static mode (data-static="1" on <html>,
+   the published site) reads the exported files: one ranked first page per day in
+   /data/day/, the compact catalogue in /data/catalog.json for every filtered or
+   multi-day query, and detail records sharded by key in /data/detail/. The ranking
+   below mirrors mvp/catalog.query_events so both modes order a day the same way. */
+const STATIC = document.documentElement.dataset.static === '1';
+const store = {catalog: null, loading: null, days: {}, shards: {}, tr: {}};
+const fold = s => String(s ?? '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').split(/\s+/).filter(Boolean).join(' ');
+function expand(c) {
+  return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
+    district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
+    coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+}
+async function loadCatalog() {
+  if (store.catalog) return store.catalog;
+  store.loading ||= fetchJson('/data/catalog.json').then(d => { store.catalog = d.items.map(expand); return store.catalog }).catch(err => { store.loading = null; throw err });
+  return store.loading;
+}
+async function dayFile(day) {
+  store.days[day] ||= fetchJson(`/data/day/${day}.json`).catch(err => { delete store.days[day]; throw err });
+  return store.days[day];
+}
+async function shardName(k) {
+  const bytes = new TextEncoder().encode(k), digest = await crypto.subtle.digest('SHA-1', bytes);
+  return Array.from(new Uint8Array(digest).slice(0, 1)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// Traducción automática de la descripción (inglés o castellano; el original suele ser catalán): solo las
+// que pasaron la comprobación (src/ai_translate.py). Sin traducción, la ficha enseña el original.
+async function translationFor(k) {
+  if (!STATIC || !['en', 'es'].includes(LANG)) return null;
+  try {
+    const name = await shardName(k);
+    store.tr[name] ||= fetchJson(`/data/tr/${LANG}/${name}.json`).catch(() => ({}));
+    return (await store.tr[name])[k] || null;
+  } catch (_) { return null }
+}
+async function shardFor(k) {
+  const name = await shardName(k);
+  store.shards[name] ||= fetchJson(`/data/detail/${name}.json`).catch(err => { delete store.shards[name]; throw err });
+  return store.shards[name];
+}
+// La hora de un día concreto: la sesión fechada si la hay; si no, el horario
+// oficial de ese día cuando la fuente lo publica por días (GuiaBCN).
+// El horario por día: {fecha: etiqueta} desde la API local, o empaquetado
+// {etiqueta: [días desde el inicio]} en la web estática.
+function unpackByDay(e, packed) {
+  if (!packed) return null;
+  if (Object.values(packed).every(v => typeof v === 'string')) return packed;
+  const out = {}, base = new Date(e.start + 'T12:00:00');
+  for (const [label, offsets] of Object.entries(packed)) for (const n of offsets) { const d = new Date(base); d.setDate(d.getDate() + n); out[d.toISOString().slice(0, 10)] = label }
+  return out;
+}
+function hoursByDay(e) { return e._hours || (e._hours = unpackByDay(e, e.hours_by_day)) }
+// Actividad de cada día cuando la fuente la da por filas («Dijous: vermut comunitari»).
+function noteOfDay(e, day) { return (e._notes || (e._notes = unpackByDay(e, e.notes_by_day) || {}))[day] || '' }
+// Entradas agotadas según la fuente (24-10-2026): para todas las fechas o solo para las que nombra el aviso.
+const soldOn = (e, day) => { const so = e.sold_out; if (!so) return false; const days = Array.isArray(so) ? so : (so.dias || []); return !days.length || days.includes(day) };
+function atDay(e, day) {
+  const t = e.occurrences?.find(o => o.date === day && o.time);
+  if (t) return {...e, time: t.time};
+  const h = hoursByDay(e)?.[day];
+  return h ? {...e, time: (h.match(/\b\d{2}:\d{2}\b/) || [h])[0], time_label: h} : e;
+}
+const shortSpan = e => { const d = (new Date(e.end + 'T12:00:00') - new Date(e.start + 'T12:00:00')) / 86400000; return d > 0 && d < 4 };
+const hoursOf = v => (String(v || '').match(/\b(?:[01]\d|2[0-3]):[0-5]\d\b/g) || []).map(x => Number(x.slice(0, 2)));
+async function staticEvents(p) {
+  const day = p.get('day') || '', from = p.get('date_from') || '', to = p.get('date_to') || '';
+  const page = Number(p.get('page') || 1), size = Number(p.get('page_size') || PAGE);
+  if (p.get('featured') === '1') { const d = await dayFile(day || today); const list = p.get('featured_days') === '1' ? (d.featured_today || []) : d.featured; return {items: list.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: list.length, ai: p.get('featured_days') !== '1' && Boolean(d.featured_ai)} }
+  const filters = {cat: p.getAll('public_category').filter(Boolean), chans: p.getAll('channel').filter(Boolean), ages: p.getAll('edad').filter(Boolean), langs: p.getAll('idioma').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
+    hourFrom: p.get('hour_from') ? Number(p.get('hour_from')) : null, hourTo: p.get('hour_to') ? Number(p.get('hour_to')) : null, started: p.get('started') !== '0'};
+  const plain = !filters.cat.length && !filters.chans.length && !filters.ages.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
+  const startedCutoff = addDays(today, -7);
+  if (day && plain && page === 1 && size <= PAGE) { try { const d = await dayFile(day); return {items: d.items.map(expand), total: d.total, page: 1} } catch (_) {} }
+  const all = await loadCatalog(), out = [];
+  for (const base of all) {
+    let e = base;
+    if (day) {
+      if (!(e.start <= day && day <= e.end)) continue;
+      // Con horario por día, un programa solo sale los días en que hay actividad.
+      const byDay = e.start !== e.end ? hoursByDay(e) : null;
+      if (byDay && Object.keys(byDay).length && !(day in byDay)) continue;
+      e = atDay(e, day);
+    } else if (from) {
+      if (!(e.start <= to && e.end >= from)) continue;
+      // Con horario por día (feria de unos días al mes), solo si alguno de esos días cae en el periodo.
+      const byDay = e.start !== e.end ? hoursByDay(e) : null;
+      if (byDay && Object.keys(byDay).length) {
+        const first = Object.keys(byDay).sort().find(d => from <= d && d <= to);
+        if (!first) continue;
+        if (!e.occurrences.some(o => from <= o.date && o.date <= to)) { e = {...atDay(e, first), occurrence_date: first}; }
+      }
+      const inside = e.occurrences.filter(o => from <= o.date && o.date <= to);
+      if (inside.length || !e.occurrence_date) e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
+    }
+    if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff && !e.open_enrollment) continue;  // los de inscripción abierta siguen
+    if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
+    if (!catMatch(e, filters.cat) || !chanMatch(e, filters.chans) || !ageMatch(e, filters.ages) || !langMatch(e, filters.langs)) continue;
+    if (filters.format && e.format !== filters.format) continue;
+    if (filters.free && !e.is_free) continue;
+    if (filters.district && e.district !== filters.district) continue;
+    if (filters.hourFrom !== null || filters.hourTo !== null) { const hs = hoursOf(e.time); if (!hs.some(h => h >= (filters.hourFrom ?? 0) && h <= (filters.hourTo ?? 23))) continue }
+    out.push(e);
+  }
+  const byTitle = (a, b) => a.title.localeCompare(b.title, 'es', {sensitivity: 'base'});
+  if (day) {
+    const rank = e => (e.occurrences.some(o => o.date === day) || (shortSpan(e) && e.time)) ? 0 : e.start === e.end && e.end === day ? 1 : e.kind === 'exhibition' ? 2 : e.kind === 'program' ? 3 : 4;
+    out.sort((a, b) => { const ra = rank(a), rb = rank(b); if (ra !== rb) return ra - rb; if (ra === 0) { const t = (a.time || '99:99').localeCompare(b.time || '99:99'); if (t) return t } if (ra >= 2) { const d = b.start.localeCompare(a.start); if (d) return d } return byTitle(a, b) });
+  } else {
+    const rank = e => e.occurrence_date ? 0 : (e.start === e.end || (shortSpan(e) && e.time)) ? 1 : e.kind === 'program' ? 2 : e.kind === 'exhibition' ? 3 : 4;
+    const when = e => e.occurrence_date || (e.start > from ? e.start : from);
+    const runningBefore = e => !e.occurrence_date && e.start < from;
+    out.sort((a, b) => { const ra = runningBefore(a), rb = runningBefore(b); if (ra !== rb) return ra - rb; if (ra) { const d = b.start.localeCompare(a.start); if (d) return d } else { const w = when(a).localeCompare(when(b)); if (w) return w } return rank(a) - rank(b) || byTitle(a, b) });
+  }
+  return {items: out.slice((page - 1) * size, page * size), total: out.length, page};
+}
+async function staticDistricts(day) {
+  try { return (await dayFile(day)).districts } catch (_) {}
+  const all = await loadCatalog(), until = addDays(day, 13), counts = {};
+  for (const e of all) if (e.district && e.district !== 'Varios distritos' && e.end >= day && e.start <= until) counts[e.district] = (counts[e.district] || 0) + 1;
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => ({name, count}));
+}
+async function staticDetail(source, id, day) {
+  const k = `${source}:${id}`, shard = await shardFor(k), e = shard[k];
+  if (!e) throw Error('No encontrado');
+  return day ? atDay(e, day) : e;
+}
+const get = async path => {
+  if (!STATIC) return fetchJson(path, {cache: 'no-store'});
+  const [route, query] = path.split('?'), p = new URLSearchParams(query || '');
+  if (route === '/api/events') return staticEvents(p);
+  if (route === '/api/districts') return staticDistricts(p.get('day') || today);
+  if (route === '/api/event') return staticDetail(p.get('source'), p.get('id'), p.get('day') || '');
+  throw Error('Ruta no disponible en la web estática');
+};
+const key = e => `${e.source}:${e.id}`;
+// Analítica (static/analytics.js, Matomo): si no está cargada, bloqueada o desactivada, no hace nada.
+const track = (...args) => { try { window.ontocaAnalytics?.event(...args) } catch (_) {} };
+// Versión 2 del estilo (22-10-2026): la misma app en /v2/ con otra hoja de estilo; las direcciones llevan /v2 delante.
+const SKIN = document.documentElement.dataset.skin || '', BASE = '';   // la v2 se sirve en la portada (antes en /v2/)
+const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
+const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
+function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate()} ${months[d.getMonth()]}` }
+function labelDay(v) { if (v === today) return t('Hoy'); const d = new Date(v + 'T12:00:00'); return `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` }
+function timeLabel(e) { return t(e.time_label) || e.time || (e.start !== e.end ? t('Varios días') : t('Hora no indicada')) }
+function venue(e) { return [e.venue_names?.[0] || e.venues?.[0]?.name, t(e.district)].filter(Boolean).join(' · ') || 'Barcelona' }
+// One label per record: the category, then the format when it is not a plain one-off act ("Talleres y experiencias · Cursos").
+function catLabel(e) {
+  const cat = catName(e.public_category || e.category || '');
+  // Sin repetir lo que ya dice la categoría («Talleres y experiencias · Talleres»).
+  if (e.format_label && e.format !== 'one_shot' && e.format_label !== 'Actos y funciones' && !fold(cat).includes(fold(t(e.format_label)))) return `${cat} · ${t(e.format_label)}`;
+  return cat;
+}
+
+// The sheet is a history entry of its own: opening it pushes /e/<source>/<id>,
+// so the browser's Back closes the sheet and returns to the list instead of
+// leaving the site; Back from a shared link lands on the agenda.
+function stateQuery() {
+  const p = new URLSearchParams();
+  if (state.day !== today) p.set('day', state.day);
+  state.cats.forEach(c => p.append('cat', c)); state.chans.forEach(c => p.append('ch', c)); state.ages.forEach(a => p.append('edad', a)); state.langs.forEach(l => p.append('idioma', l)); if (state.format) p.set('format', state.format); if (state.district) p.set('district', state.district);
+  if (state.free) p.set('free', '1'); if (state.query) p.set('q', state.query);
+  if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
+  if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
+  if (state.tab !== 'agenda') p.set('vista', state.tab);
+  return p.toString();
+}
+function syncUrl(push) {
+  const q = stateQuery();
+  const onLanding = !state.detail && LANDING_Q !== null && q === LANDING_Q;
+  const path = state.detail ? eventPath(state.detail) : onLanding ? LANDING.path : BASE + '/', url = onLanding ? path : path + (q ? '?' + q : '');
+  if (push) history.pushState({sheet: state.detail, depth: (history.state?.depth || 0) + 1}, '', url); else history.replaceState(history.state, '', url);
+}
+const detailFromLocation = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
+function scrollToId(id) { const el = $(id); if (el) window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth'}) }
+function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
+
+/* ---------- avisos por correo (alertas/, functions/api/alertas) ---------- */
+// Apagados hasta que la publicación los activa (data-alerts="1" y la clave pública de Turnstile).
+const ALERTS = document.documentElement.dataset.alerts === '1', TURNSTILE_KEY = document.documentElement.dataset.turnstile || '';
+// Los filtros que admite un aviso (los mismos que alertas/lib.js): sin ninguno no se ofrece.
+function alertFilters() {
+  const f = {cats: state.cats, chans: state.chans, district: state.district || '', free: state.free, q: (state.query || '').trim()};
+  return f.cats.length || f.chans.length || f.district || f.free || f.q ? f : null;
+}
+const alertLabel = f => [...f.cats.map(catName), ...f.chans.map(chanName), f.district ? t(f.district) : '', f.free ? t('Gratis') : '', f.q ? `«${f.q}»` : ''].filter(Boolean).join(' · ');
+let turnstileToken = '', turnstileWidget = null;
+function loadTurnstile() {
+  if (!TURNSTILE_KEY) return;
+  const render = () => { try { turnstileWidget = window.turnstile.render('#alertsTurnstile', {sitekey: TURNSTILE_KEY, language: LANG, callback: tok => { turnstileToken = tok }, 'expired-callback': () => { turnstileToken = '' }}) } catch (_) {} };
+  if (window.turnstile) { if (turnstileWidget !== null) { try { window.turnstile.reset(turnstileWidget) } catch (_) {} } else render(); return }
+  const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = render; document.head.append(sc);
+}
+function openAlerts() {
+  const f = alertFilters(); if (!f) return;
+  let dlg = $('alertsDialog');
+  if (!dlg) {
+    dlg = document.createElement('dialog'); dlg.id = 'alertsDialog'; dlg.className = 'alerts-dialog'; dlg.setAttribute('aria-labelledby', 'alertsTitle');
+    dlg.innerHTML = `<form id="alertsForm" method="dialog" novalidate>
+<div class="alerts-head"><h2 id="alertsTitle">${L('Avisos de novedades', 'Avisos de novetats', 'Email alerts')}</h2><button type="button" class="alerts-close" data-alerts="close" aria-label="${L('Cerrar', 'Tanca', 'Close')}">✕</button></div>
+<p class="alerts-lead">${L('Te escribimos solo cuando aparezcan planes nuevos para esta búsqueda:', 'T\'escrivim només quan apareguin plans nous per a aquesta cerca:', 'We only write when new plans appear for this search:')}</p>
+<p class="alerts-search" id="alertsSearch"></p>
+<label class="alerts-field" for="alertsEmail">${L('Tu correo', 'El teu correu', 'Your email')}</label>
+<input id="alertsEmail" type="email" autocomplete="email" required inputmode="email">
+<fieldset class="alerts-freq"><legend>${L('¿Cada cuánto?', 'Cada quan?', 'How often?')}</legend>
+<label><input type="radio" name="alertsFreq" value="bisemanal" checked> ${L('Lunes y jueves', 'Dilluns i dijous', 'Mondays and Thursdays')}</label>
+<label><input type="radio" name="alertsFreq" value="semanal"> ${L('Solo los lunes', 'Només els dilluns', 'Mondays only')}</label></fieldset>
+<label class="alerts-privacy"><input id="alertsPrivacy" type="checkbox" required> <span>${L('Acepto la <a href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>. Puedes darte de baja en cada correo.', 'Accepto la <a href="/privacidad" target="_blank" rel="noopener">política de privacitat</a>. Et pots donar de baixa a cada correu.', 'I accept the <a href="/privacidad" target="_blank" rel="noopener">privacy policy</a>. You can unsubscribe in every email.')}</span></label>
+<div id="alertsTurnstile" class="alerts-turnstile"></div>
+<p id="alertsMsg" class="alerts-msg" role="status" aria-live="polite"></p>
+<button id="alertsSend" class="alerts-send" type="submit">${L('Quiero los avisos', 'Vull els avisos', 'Send me alerts')}</button></form>`;
+    document.body.append(dlg);
+    dlg.addEventListener('click', ev => { if (ev.target === dlg || ev.target.closest('[data-alerts="close"]')) dlg.close() });
+    $('alertsForm').addEventListener('submit', sendAlerts);
+  }
+  $('alertsSearch').textContent = alertLabel(f); $('alertsMsg').textContent = ''; $('alertsMsg').className = 'alerts-msg';
+  $('alertsSend').disabled = false; $('alertsForm').hidden = false;
+  dlg.showModal(); $('alertsEmail').focus(); loadTurnstile();
+}
+async function sendAlerts(ev) {
+  ev.preventDefault();
+  const f = alertFilters(), msg = $('alertsMsg'), btn = $('alertsSend'), email = $('alertsEmail').value.trim();
+  const fail = text => { msg.textContent = text; msg.className = 'alerts-msg is-error'; btn.disabled = false };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(L('Revisa el correo electrónico.', 'Revisa el correu electrònic.', 'Please check your email address.'));
+  if (!$('alertsPrivacy').checked) return fail(L('Tienes que aceptar la política de privacidad.', 'Has d\'acceptar la política de privacitat.', 'Please accept the privacy policy.'));
+  if (TURNSTILE_KEY && !turnstileToken) return fail(L('Espera un momento a que termine la comprobación antirrobots.', 'Espera un moment que acabi la comprovació antirobots.', 'Please wait for the bot check to finish.'));
+  btn.disabled = true; msg.textContent = L('Enviando…', 'Enviant…', 'Sending…'); msg.className = 'alerts-msg';
+  try {
+    const r = await fetch('/api/alertas/alta', {method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({email, freq: document.querySelector('input[name="alertsFreq"]:checked')?.value || 'bisemanal', filters: f, privacy: true, turnstile: turnstileToken})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) { turnstileToken = ''; loadTurnstile(); return fail(d.error || L('No se ha podido guardar. Prueba más tarde.', 'No s\'ha pogut desar. Prova-ho més tard.', 'Could not save. Please try later.')) }
+    msg.textContent = L('Listo. Te hemos enviado un correo: confírmalo para empezar a recibir los avisos.', 'Fet. T\'hem enviat un correu: confirma\'l per començar a rebre els avisos.', 'Done. We have sent you an email: confirm it to start getting alerts.');
+    msg.className = 'alerts-msg is-ok';
+  } catch (_) { fail(L('Sin conexión. Prueba otra vez.', 'Sense connexió. Torna-ho a provar.', 'No connection. Please try again.')) }
+}
+
+/* ---------- filters panel ---------- */
+function activeFilterList() {
+  const out = [];
+  if (state.query) out.push({k: 'query', label: `“${state.query}”`});
+  if (state.cats.length) out.push({k: 'cat', label: state.cats.map(catName).join(' + ')});
+  if (state.chans.length) out.push({k: 'ch', label: state.chans.map(chanName).join(' + ')});
+  if (state.langs.length) out.push({k: 'idioma', label: state.langs.map(l => byLang(ACT_LANGS[l])).join(' + ')});
+  if (state.ages.length) out.push({k: 'edad', label: state.ages.map(a => byLang(AGE_LABEL[a])).join(' + ')});
+  if (state.format) out.push({k: 'format', label: t(FORMATS[state.format] || state.format)});
+  if (state.free) out.push({k: 'free', label: t('Gratis')});
+  if (state.hourFrom !== null || state.hourTo !== null) out.push({k: 'hours', label: `${hourLabel(state.hourFrom ?? 0)}–${hourLabel(state.hourTo ?? 23)}`});
+  if (state.district) out.push({k: 'district', label: t(state.district)});
+  if (state.started) out.push({k: 'started', label: t('Con cursos ya empezados')});
+  if (state.range) out.push({k: 'range', label: RANGE_LABELS[state.range] || state.range});
+  return out;
+}
+function clearFilter(k) {
+  if (k === 'range') state.range = '';
+  if (k === 'query') { state.query = ''; $('searchInput').value = '' }
+  if (k === 'cat') state.cats = []; if (k === 'ch') { state.chans = []; state.ages = [] } if (k === 'edad') state.ages = []; if (k === 'idioma') state.langs = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
+  if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
+  if (k === 'started') state.started = false
+}
+function renderActive() {
+  const list = activeFilterList();
+  $('activeFilters').innerHTML = list.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (list.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
+  if (ALERTS && alertFilters()) $('activeFilters').insertAdjacentHTML('beforeend', `<button class="alert-cta" type="button" data-alerts="open"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}</button>`);
+  const n = list.length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
+  $('openFilters').classList.toggle('has-filters', n > 0);
+}
+function chips() {
+  // La categoría se elige en la barra rápida de encima de la lista (23-10-2026): fuera de la columna de filtros.
+  const catGroup = $('categories')?.closest('fieldset'); if (catGroup) catGroup.hidden = true;
+  $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
+    .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
+  // Franjas de edad: solo con «En familia» activo.
+  const fam = state.chans.includes('familia'); if (!fam) state.ages = [];
+  $('ages').hidden = !fam;
+  $('ages').innerHTML = fam ? Object.keys(AGE_BANDS).map(a => `<button class="age-chip${a === 'nd' ? ' age-nd' : ''} ${state.ages.includes(a) ? 'active' : ''}" type="button" data-age="${a}" aria-pressed="${state.ages.includes(a)}">${esc(byLang(AGE_LABEL[a]))}</button>`).join('') : '';
+  $('channels').innerHTML = Object.keys(CHANS).map(c => `<button class="channel-chip ch-${c} ${state.chans.includes(c) ? 'active' : ''}" type="button" data-channel="${esc(c)}" aria-pressed="${state.chans.includes(c)}">${esc(chanName(c))}</button>`).join('');
+  if ($('actLangs')) $('actLangs').innerHTML = Object.keys(ACT_LANGS).map(l => `<button class="channel-chip ${state.langs.includes(l) ? 'active' : ''}" type="button" data-actlang="${l}" aria-pressed="${state.langs.includes(l)}">${esc(byLang(ACT_LANGS[l]))}</button>`).join('');
+  $('formatFilter').value = state.format; $('freeOnly').checked = state.free; $('searchInput').value = state.query;
+  ['List','Map','Venue'].forEach(v => $('view' + v).setAttribute('aria-pressed', String(state.view === v.toLowerCase())));
+}
+function hourLabel(h) { return String(h).padStart(2, '0') + ':00' }
+function hours() {
+  const from = state.hourFrom ?? 0, to = state.hourTo ?? 23, active = state.hourFrom !== null || state.hourTo !== null;
+  $('hourFrom').value = from; $('hourTo').value = to; $('hourFromLabel').textContent = hourLabel(from); $('hourToLabel').textContent = hourLabel(to); $('hourLabel').textContent = active ? `${hourLabel(from)} — ${hourLabel(to)}` : t('Cualquier hora'); $('clearHours').hidden = !active;
+  document.querySelectorAll('#hourPresets [data-hours]').forEach(b => b.setAttribute('aria-pressed', String(active && b.dataset.hours === `${from}-${to}`)));
+}
+function hourMatches(e) {
+  if (state.hourFrom === null && state.hourTo === null) return true;
+  const hs = String(e.time || '').match(/\b(?:[01]\d|2[0-3]):[0-5]\d\b/g) || [];
+  return hs.some(v => { const h = Number(v.slice(0, 2)); return h >= (state.hourFrom ?? 0) && h <= (state.hourTo ?? 23) });
+}
+function openDrawer(open) {
+  const panel = $('filters'); panel.classList.toggle('open', open); $('drawerBackdrop').hidden = !open; $('openFilters').setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('drawer-open', open);
+  if (open) $('closeFilters').focus(); else $('openFilters').focus();
+}
+
+/* ---------- days ---------- */
+function days() {
+  const host = $('days'); host.innerHTML = '';
+  const win = rangeWindow();
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() + i); const value = iso(d), b = document.createElement('button');
+    const weekend = d.getDay() === 0 || d.getDay() === 6;
+    b.type = 'button'; b.className = 'day' + (value === state.day && !win ? ' active' : '') + (weekend ? ' weekend' : ''); b.dataset.day = value; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(value === state.day && !win));
+    b.innerHTML = `<span>${i ? weekdays[d.getDay()] : t('Hoy')}</span><b>${d.getDate()}</b><small>${months[d.getMonth()]}</small>`; host.append(b);
+  }
+  const active = host.querySelector('.day.active'); if (active) active.scrollIntoView({inline: 'center', block: 'nearest'});
+  host.parentElement.classList.toggle('range-mode', Boolean(win));
+  // Period tabs: the active one is the range, or "Hoy" in day mode on today, or the date tab for any other day.
+  const current = win ? state.range : state.day === today ? 'today' : 'date';
+  document.querySelectorAll('#periods .period-tab').forEach(tab => { const on = tab.dataset.period ? tab.dataset.period === current : current === 'date'; tab.classList.toggle('active', on); tab.setAttribute('aria-selected', String(on)) });
+  $('pickDateLabel').textContent = current === 'date' ? labelDate(state.day) : t('Fecha');
+  const picker = $('dayPicker'); picker.min = today; picker.max = addDays(today, MAX_DAYS); picker.value = win ? '' : state.day;
+}
+
+/* ---------- selection ---------- */
+function pick(e, i) {
+  const d = new Date((e.featured_date || e.start) + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
+  const meta = esc(catLabel(e));
+  const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
+  return `<button class="${i ? 'pick-small' : 'pick-large'}" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
+}
+async function selection() {
+  try {
+    // «Selección Ontoca»: hoy (el día que se mira) o los próximos 7 días (25-10-2026).
+    const one = state.pickRange === 'today';
+    document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === state.pickRange)));
+    const d = await get('/api/events?' + new URLSearchParams({day: state.day, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
+    const ranked = d.items.slice();  // already ordered by score and daily rotation
+    // Elegida por la IA (src/ai_select.py): se respeta su orden. Si no, las reglas, con imagen y texto primero.
+    const complete = ranked.filter(e => e.media?.length && e.has_description);
+    const items = (d.ai ? ranked : complete.concat(ranked.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)))).slice(0, 7);
+    const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
+    $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
+    $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
+  } catch (_) { $('curated').innerHTML = `<div class="empty">${t('No se pudo cargar la selección.')}</div>` }
+}
+
+/* ---------- agenda (v3: una sola línea de tiempo) ----------
+   Cada ficha se clasifica para el día mirado en un tipo de disponibilidad:
+     timed   → «Empiezan a una hora»: hora de inicio de ese día, o temporada/obra con hora propia
+               (si la fuente da varias horas de temporada sin decir cuál toca hoy, se coloca en el
+               próximo pase y se avisa «confirma el de hoy»)
+     wide    → «Horario amplio»: exposiciones, ferias y espacios abiertos 4 h o más
+     tbc     → «Hora por confirmar»: pasa ese día (o está en cartel) pero la fuente no da la hora
+     soon    → «Talleres y cursos»: periódicos que empiezan en los próximos 30 días
+     started → talleres y cursos ya en marcha: solo con el filtro «Incluir talleres y cursos ya empezados»
+   Los botones de arriba muestran u ocultan cada tipo (por defecto: hora fija y por confirmar);
+   cada botón lleva su número, así nada queda oculto sin que se pueda recuperar.
+   Color = tipo: violeta (hora fija, punto), turquesa (horario amplio, barra), gris discontinuo
+   (por confirmar); ámbar solo para lo inmediato (ahora, en 20 min, cierra pronto, último día). */
+// Textos en tres idiomas (23-10-2026: inglés): L(castellano, catalán, inglés).
+const L = (es, ca, en) => LANG === 'ca' ? ca : LANG === 'en' ? (en ?? es) : es;
+const TZ = 'Europe/Madrid', GRACE = 15, SOON = 60, WIDE_MIN = 240, SHORT_DAYS = 7, COURSE_AHEAD = 30, STEP = 60, PER_DAY = 15, DAY_CHUNK = 7;
+const weekdaysLong = LANG === 'en' ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] : LANG === 'ca' ? ['diumenge','dilluns','dimarts','dimecres','dijous','divendres','dissabte'] : ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function madridNow() {
+  const parts = new Intl.DateTimeFormat('en-CA', {timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date());
+  const g = k => parts.find(x => x.type === k).value;
+  return {day: `${g('year')}-${g('month')}-${g('day')}`, min: Number(g('hour')) * 60 + Number(g('minute'))};
+}
+const clock = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const minutesOf = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null };
+function timesIn(s) { return [...new Set((String(s || '').match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\b/g) || []).map(x => x.padStart(5, '0')))].sort() }
+// Todos los tramos del día («10:00–13:00 · 16:00–19:00»): abre con el primero, cierra con el último,
+// y entre medias está cerrado (ranges).
+function rangeIn(s) {
+  const ranges = [...String(s || '').matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\s*[–-]\s*([01]?\d|2[0-3]):([0-5]\d)\b/g)]
+    .map(m => ({open: Number(m[1]) * 60 + Number(m[2]), close: Number(m[3]) * 60 + Number(m[4])}))
+    // «19:00–00:00», «22:00–03:00»: cierra pasada la medianoche, no a primera hora de ese mismo día.
+    .map(r => r.close <= r.open && r.close <= 6 * 60 && r.open >= 12 * 60 ? {...r, close: r.close + 1440} : r).filter(r => r.close > r.open);
+  if (!ranges.length) return null;
+  return {open: ranges[0].open, close: ranges[ranges.length - 1].close, ranges};
+}
+const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format === 'course';
+const isOpenFormat = e => e.kind === 'exhibition' || e.format === 'exhibition' || e.format === 'ongoing';
+// Programas de barrio, talleres o deporte que duran semanas: actividad periódica (como un taller), no una obra en cartel.
+const PERIODIC_CATS = new Set(['charlas', 'talleres', 'deporte']);
+const isPeriodic = e => isCourse(e) || (e.format === 'program' && PERIODIC_CATS.has(e.public_category));
+const collator = new Intl.Collator('es', {sensitivity: 'base'}), byTitle = (a, b) => collator.compare(a.title, b.title);
+
+// Parte del día sin hora («Matinal», «Tarda»).
+const PARTS = {mañana: () => L('Por la mañana', 'Al matí', 'In the morning'), tarde: () => L('Por la tarde', 'A la tarda', 'In the afternoon'), noche: () => L('Por la noche', 'A la nit', 'In the evening'), 'mañana y tarde': () => L('Mañana y tarde', 'Matí i tarda', 'Morning and afternoon'), programa: () => L('Varias sesiones', 'Diverses sessions', 'Several sessions')};
+function availability(e, day) {
+  const occ = (e.occurrences || []).filter(o => o.date === day);
+  const occTimes = [...new Set(occ.map(o => o.time).filter(Boolean).map(x => String(x).padStart(5, '0')))].sort();
+  const label = e.time_label || '', raw = e.base_time ?? e.time ?? '';
+  if (occTimes.length) return {kind: 'timed', times: occTimes};
+  const part = hoursByDay(e)?.[day];
+  if (PARTS[part]) return {kind: 'tbc', part, until: e.end};
+  // Días con sesión según la fuente (23-10-2026): si la tabla por días cubre esta fecha y no la nombra,
+  // ese día no hay sesión (la «Jamboree Jam Session» de Open Data es los lunes 19 y 26: no sale el viernes 23).
+  const hbd = hoursByDay(e), hbDays = hbd ? Object.keys(hbd).sort() : [];
+  if (e.start !== e.end && hbDays.length && !(day in hbd) && day >= hbDays[0] && day <= hbDays[hbDays.length - 1]) return {kind: 'run', until: e.end};
+  if (e.start === e.end) {
+    const range = rangeIn(label) || rangeIn(raw);
+    if (range) return range.close - range.open >= WIDE_MIN ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
+    const times = timesIn(raw);
+    return times.length ? {kind: 'timed', times} : {kind: 'tbc'};
+  }
+  if (occ.length) return {kind: 'tbc'};
+  const span = daysBetween(e.start, e.end);
+  // Horario oficial de ese día (tabla por días de la fuente): manda sobre la etiqueta general.
+  const dayHours = hoursByDay(e)?.[day];
+  if (dayHours && !(isPeriodic(e) && !isOpenFormat(e) && span > SHORT_DAYS)) {
+    const r = rangeIn(dayHours), ts = timesIn(dayHours);
+    // Una exposición o un espacio con horario de apertura es «horario amplio», aunque cada tramo sea corto.
+    if (r) return (r.close - r.open >= WIDE_MIN || isOpenFormat(e)) ? {kind: 'wide', ...r, until: e.end} : {kind: 'timed', times: [clock(r.open)], endsAt: r.close};
+    if (ts.length) return {kind: 'timed', times: ts};
+  }
+  const range = rangeIn(label), times = timesIn(raw);
+  // La fuente confirma actividad ese día pero no da la hora.
+  const dayKnown = hoursByDay(e)?.[day] === '';
+  if (isPeriodic(e) && !isOpenFormat(e)) {
+    if (span > SHORT_DAYS) return {kind: day <= e.start ? 'soon' : 'started', until: e.end, ...(range || {})};
+    if (times.length || range) return {kind: 'timed', times: times.length ? times : [clock(range.open)], confirmDay: true, until: e.end, endsAt: range?.close};
+    return {kind: 'tbc', until: e.end};
+  }
+  if (isOpenFormat(e) || (range && range.close - range.open >= WIDE_MIN)) return {kind: 'wide', until: e.end, ...(range || {noHours: true})};
+  // Temporada de semanas con una hora general pero sin saber qué días hay función (24-10-2026): no se
+  // presenta como sesión de ese día («temporada · confirma el pase»): va a «planes sin hora confirmada».
+  // Las de pocos días (festivales cortos) siguen con su hora.
+  if ((range || times.length) && span > SHORT_DAYS && !dayKnown) return {kind: 'tbc', until: e.end};
+  if (range) return {kind: 'timed', times: [clock(range.open)], season: true, until: e.end, endsAt: range.close};
+  if (times.length) return {kind: 'timed', times, season: true, until: e.end};
+  // Ciclos, temporadas y programas de semanas sin fechas ni hora de sus sesiones: no se sabe si hay
+  // algo ese día, así que no salen en la agenda; solo al buscarlos por nombre.
+  if (span > SHORT_DAYS && !dayKnown) return {kind: 'run', until: e.end};
+  return {kind: 'tbc', run: true, until: e.end};
+}
+function status(a, now) {
+  if (a.kind === 'timed') {
+    const mins = a.times.map(minutesOf);
+    if (now === null) return {state: 'scheduled', next: mins[0], sort: mins[0], rest: mins.slice(1)};
+    const ahead = mins.filter(m => m >= now), recent = mins.filter(m => m < now && now - m < GRACE);
+    if (recent.length && !ahead.length && !a.season) return {state: 'started', next: recent[recent.length - 1], sort: now - 1, ago: now - recent[recent.length - 1], rest: []};
+    if (!ahead.length) return {state: 'past', next: mins[mins.length - 1], sort: mins[mins.length - 1], rest: []};
+    return {state: ahead[0] - now <= SOON ? 'soon' : 'later', next: ahead[0], sort: ahead[0], in: ahead[0] - now, rest: ahead.slice(1), done: mins.length - ahead.length};
+  }
+  if (a.kind === 'wide' && !a.noHours) {
+    if (now === null) return {state: 'scheduled', sort: a.open};
+    if (now < a.open) return {state: a.open - now <= SOON ? 'soon' : 'later', sort: a.open, in: a.open - now};
+    const parts = a.ranges || [{open: a.open, close: a.close}];
+    const current = parts.find(r => r.open <= now && now < r.close);
+    if (current) return {state: 'open', sort: now - 2, closesIn: current.close - now, closesAt: current.close};
+    const next = parts.find(r => r.open > now);
+    if (next) return {state: next.open - now <= SOON ? 'soon' : 'later', sort: next.open, in: next.open - now, opensAt: next.open, reopens: true};
+    return {state: 'past', sort: a.close};
+  }
+  return {state: 'none', sort: 1e4};
+}
+
+// De dónde salen los datos de la ficha (src/data_origin.py).
+const ORIGIN = {centro: () => L('datos del propio centro', 'dades del mateix centre', 'data from the venue itself'), web_oficial: () => L('datos de la web oficial del acto', "dades de la web oficial de l'acte", 'data from the event’s official website'),
+  red_publica: () => L('datos de la red municipal que lo organiza', 'dades de la xarxa municipal que l\'organitza', 'data from the municipal network that organises it'), agenda: () => L('datos de una agenda pública, no del centro', "dades d'una agenda pública, no del centre", 'data from a public listing, not the venue'),
+  eventbrite: () => L('publicado en Eventbrite', 'publicat a Eventbrite', 'published on Eventbrite'), directorio: () => L('datos de un directorio de conciertos, no de la sala', "dades d'un directori de concerts, no de la sala", 'data from a concert directory, not the venue')};
+/* ---------- botones de tipo ---------- */
+const CHIPS = [
+  {k: 'fixed', label: () => L('Empiezan a una hora', 'Comencen a una hora', 'Set start time'), short: () => L('Con hora', 'Amb hora', 'Timed'), desc: () => L('Conciertos, funciones, charlas', 'Concerts, funcions, xerrades', 'Concerts, shows, talks'), mark: 'dot'},
+  {k: 'wide', label: () => L('Horario amplio', 'Horari ampli', 'Open hours'), short: () => L('Abierto', 'Obert', 'Ongoing'), desc: () => L('Exposiciones, ferias y espacios', 'Exposicions, fires i espais', 'Exhibitions, fairs and venues'), mark: 'bar'},
+  {k: 'soon', label: () => L('Talleres y cursos', 'Tallers i cursos', 'Workshops and courses'), short: () => L('Talleres', 'Tallers', 'Workshops'), desc: () => L(`Que empiezan en los próximos ${COURSE_AHEAD} días`, `Que comencen en els propers ${COURSE_AHEAD} dies`, `Starting in the next ${COURSE_AHEAD} days`), mark: ''},
+  {k: 'tbc', label: () => L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed'), short: () => L('Sin hora', 'Sense hora', 'No time'), desc: () => '', mark: 'dash'},
+];
+state.show = {fixed: true, wide: true, tbc: true, soon: true};  // sin bloques de tipo: todo se ve, plegado donde toca (23-10-2026)
+// «Arte y galerías» vive sobre todo de exposiciones (horario amplio) y de talleres de varias
+// sesiones: al entrar en el canal se ven todos los tipos; al salir vuelve la vista de cada uno.
+// (Cambios hechos dentro del canal no se guardan como preferencia general.)
+// Con el buscador también se ven los cuatro tipos (22-10-2026): quien busca «MIRA» no tiene
+// por qué saber si es un concierto con hora o una feria de horario amplio. Al borrar la
+// búsqueda vuelve la vista que tenía.
+const ALL_TYPES = {fixed: true, wide: true, soon: true, tbc: true};
+const CHANNEL_VIEW = {galerias: ALL_TYPES};
+let savedShow = null, viewKey = '';
+function channelView() { return }
+function channelViewOld() {
+  // Guardados (22-10-2026): también los cuatro tipos; lo que guardaste se ve siempre, sea del tipo que sea.
+  // Con cualquier filtro (categoría, plan, edad, idioma, distrito, formato, gratis u horario) también los cuatro
+  // tipos (23-10-2026, David): quien filtra «Teatro en Gràcia» quiere verlo todo, tenga hora fija o no.
+  const filtered = state.cats.length || state.chans.length || state.ages.length || state.langs.length || state.district || state.format || state.free || state.hourFrom !== null || state.hourTo !== null;
+  const key = state.savedOnly ? 'saved' : String(state.query || '').trim() ? 'search' : state.chans.length === 1 && CHANNEL_VIEW[state.chans[0]] ? state.chans[0] : filtered ? 'filter' : '';
+  if (key === viewKey) return;
+  if (!key) { if (savedShow) { state.show = savedShow; savedShow = null } }
+  else { if (!savedShow) savedShow = {...state.show}; Object.assign(state.show, CHANNEL_VIEW[key] || ALL_TYPES) }
+  viewKey = key;
+}
+channelView();
+state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
+// Barra rápida de categorías (23-10-2026, propuesta A + B): un toque elige una categoría (o «Todo»);
+// los cuatro bloques de tipo de horario desaparecen y la lista se ordena por su naturaleza.
+const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Arte', 'Art', 'Art'],
+  charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities'], deporte: ['Deporte', 'Esport', 'Sport']};
+const CAT_LANDING = {'': '/', musica: '/conciertos', escena: '/teatro', arte: '/exposiciones'};
+function catBarHtml() {
+  const only = state.cats.length === 1 ? state.cats[0] : '';
+  // Las categorías con página de entrada (src/landings.py) son enlaces reales, para que Google llegue a ellas
+  // desde la portada (25-10-2026); al tocarlas se filtra igual que antes, sin cambiar de página.
+  const btn = (c, label) => { const on = c ? only === c : !state.cats.length, href = CAT_LANDING[c];
+    const attrs = `class="cat-pill${on ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${on}"${c ? ` data-category-color="${c}"` : ''}`, inner = `${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}`;
+    return href ? `<a href="${href}" ${attrs}>${inner}</a>` : `<button type="button" ${attrs}>${inner}</button>` };
+  return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}</div>`;
+}
+function chipsHtml(counts) {
+  // Antes, los cuatro bloques de tipo; ahora la barra de categorías (en el mismo sitio, fuera de la lista).
+  const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = catBarHtml();
+  const mini = $('typeMini'); if (mini) mini.innerHTML = '';
+  return '';
+}
+function chipsHtmlOld(counts) {
+  const html = `<div class="ag-chips" role="group" aria-label="${L('Qué tipo de planes ver', 'Quin tipus de plans veure', 'Which kinds of plans to show')}">${CHIPS.map(c => `<button type="button" class="ag-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}"><span class="ag-chip-top">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.label())} <b>${(counts[c.k] || 0).toLocaleString('es-ES')}</b></span>${c.desc() ? `<span class="ag-chip-desc">${esc(c.desc())}</span>` : ''}</button>`).join('')}</div>`;
+  // Los botones de tipo viven fuera de la lista (#typeTabs): al activarlos no se mueven de sitio.
+  const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = html;
+  // Versión corta, fija bajo «Filtros» cuando las tarjetas grandes salen de la pantalla (móvil).
+  const mini = $('typeMini');
+  if (mini) mini.innerHTML = CHIPS.map(c => `<button type="button" class="mini-chip c-${c.k}${state.show[c.k] ? ' on' : ''}" data-chip="${c.k}" aria-pressed="${state.show[c.k]}">${c.mark ? `<i class="m-${c.mark}" aria-hidden="true"></i>` : ''}${esc(c.short())}</button>`).join('');
+  requestAnimationFrame(syncMini);
+  return '';
+}
+
+/* ---------- modelo ---------- */
+function bucketOf(e) { const k = e._a.kind; return k === 'timed' ? 'fixed' : k }
+function buildModel(items, win) {
+  const now = madridNow();
+  const decorate = (e, day, nowMin) => { const a = availability(e, day); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
+  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
+  const place = e => {
+    const k = e._a.kind;
+    if ((k === 'timed' || k === 'wide') && e._st.state === 'past') s.past.push(e);
+    else if (k === 'timed') s.fixed.push(e);
+    else if (k === 'wide') (e._a.noHours ? s.wideNoHours : s.wide).push(e);
+    else if (s[k]) s[k].push(e); else s.other.push(e);
+  };
+  if (!win) {
+    const day = state.day, live = day === now.day, nowMin = live ? now.min : null;
+    for (const e of items) { decorate(e, day, nowMin); place(e) }
+    const tl = (a, b) => a._st.sort - b._st.sort || byTitle(a, b);
+    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
+    s.soon.sort((a, b) => a.start.localeCompare(b.start) || byTitle(a, b)); s.started.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.other.sort(byTitle);
+    return {mode: 'day', day, live, now, sections: s, total: items.length};
+  }
+  // Periodo: cada ficha una sola vez, en su primer día dentro del periodo.
+  const buckets = new Map();
+  for (const e of items) {
+    const inside = (e.occurrences || []).map(o => o.date).filter(d => d >= win.from && d <= win.to).sort();
+    let day = inside[0] || (e.start >= win.from && e.start <= win.to ? e.start : null);
+    if (day === now.day && inside.length > 1 && status(availability(e, day), now.min).state === 'past') day = inside.find(d => d > now.day) || day;
+    if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
+    decorate(e, day, day === now.day ? now.min : null);
+    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && e._st.state === 'past') { place(e); continue }
+    if (!buckets.has(day)) buckets.set(day, []);
+    buckets.get(day).push(e);
+  }
+  const rank = e => ({timed: 0, wide: 1, tbc: 2, run: 3}[e._a.kind] ?? 4);
+  for (const list of buckets.values()) list.sort((a, b) => rank(a) - rank(b) || a._st.sort - b._st.sort || byTitle(a, b));
+  s.past.sort((a, b) => a._st.sort - b._st.sort || byTitle(a, b)); s.soon.sort((a, b) => a.start.localeCompare(b.start)); s.started.sort((a, b) => a.end.localeCompare(b.end));
+  const counts = {fixed: 0, wide: 0, tbc: 0, run: 0};
+  for (const list of buckets.values()) for (const e of list) { const b = bucketOf(e); if (counts[b] !== undefined) counts[b]++; else s.other.push(e) }
+  return {mode: 'range', win, now, buckets: [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0])), sections: s, counts, total: items.length};
+}
+
+/* ---------- fila ---------- */
+// «Último día» (23-10-2026): aparte del «hasta las 21:00» de hoy, para no juntar dos «hasta» distintos.
+const lastText = (e, d) => daysBetween(e._day || today, d) <= 0 ? L('Último día', 'Últim dia', 'Last day') : L('Último día: mañana', 'Últim dia: demà', 'Last day: tomorrow');
+const untilText = (e, d) => { const n = daysBetween(e._day || today, d); return n <= 0 ? L('último día', 'últim dia', 'last day') : n === 1 ? L('hasta mañana', 'fins demà', 'until tomorrow') : `${L('hasta el', 'fins al', 'until')} ${labelDate(d)}` };
+function bar(a, st) {
+  const from = 8 * 60, span = 16 * 60, pct = m => Math.max(0, Math.min(100, (m - from) / span * 100)).toFixed(1);
+  const nowTick = st.state !== 'scheduled' ? `<i class="w-tick" style="left:${pct(madridNow().min)}%"></i>` : '';
+  return `<span class="w-bar" aria-hidden="true">${(a.ranges || [a]).map(r => `<i class="w-fill" style="left:${pct(r.open)}%;width:${Math.max(0, Math.min(r.close, from + span) - Math.max(r.open, from)) / span * 100}%"></i>`).join('')}${nowTick}</span>`;
+}
+function whenCell(e) {
+  const a = e._a, st = e._st || {state: 'none'};
+  if (a.ranges && a.ranges.length > 1) a.ranges = [...a.ranges].sort((x, y) => x.open - y.open);  // franjas en orden (09:00–13:00 · 16:00–23:00)
+  if (a.kind === 'timed') {
+    const multi = a.times.length > 1 || a.season;
+    let note = '', cls = '';
+    if (a.season) { note = L('temporada · confirma el pase', 'temporada · confirma el passi', 'season · check the show time'); cls = 'hint' }
+    else if (st.state === 'soon') { note = st.in <= 1 ? L('ahora', 'ara', 'now') : `${L('en', 'd\'aquí a', 'in')} ${st.in} min`; cls = 'urgent' }
+    else if (st.state === 'started') { note = `${L('empezó hace', 'va començar fa', 'started')} ${st.ago} min`; cls = 'urgent' }
+    else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia', 'check the day'); cls = 'hint' }
+    else if (a.endsAt) note = `${L('hasta las', 'fins a les', 'until')} ${clock(a.endsAt)}`;
+    else if ((st.rest || []).length) note = `${L('después', 'després', 'later')} ${st.rest.slice(0, 2).map(clock).join(' · ')}${st.rest.length > 2 ? '…' : ''}`;
+    return `<div class="when w-timed"><span class="w-line"><i class="${multi ? 'm-dots' : 'm-dot'}" aria-hidden="true"></i><time class="w-big">${(m => m === 1439 ? '00:00' : clock(m))(st.next ?? minutesOf(a.times[0]))}</time></span>${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}</div>`;
+  }
+  if (a.kind === 'wide') {
+    const last = daysBetween(e._day || today, a.until) <= 1;
+    if (!a.noHours && a.open === 0 && a.close >= 1439 && !(a.ranges || []).some(r => r.open > 0 || r.close < 1439)) return `<div class="when w-wide"><span class="w-state-wide">${L('Todo el día', 'Tot el dia', 'All day')}</span>${e.start !== e.end ? `<span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span>` : ''}</div>`;
+    if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? L('Exposición', 'Exposició', 'Exhibition') : L('Todo el día', 'Tot el dia', 'All day')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
+    let main, note = '', cls = '';
+    if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert', 'Open')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a', 'closes in')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les', 'until')} ${clock(st.closesAt ?? a.close)}` }
+    else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${st.reopens ? L('Reabre', 'Reobre', 'Reopens') : L('Abre', 'Obre', 'Opens')} ${clock(st.opensAt ?? a.open)}</span>`; note = (a.ranges || []).length > 1 ? a.ranges.map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ') : `${L('hasta las', 'fins a les', 'until')} ${clock(a.close)}` }
+    else if (st.state === 'past') { main = `<span class="w-mid w-dim">${L('Cerrado ya', 'Ja tancat', 'Closed now')}</span>`; note = `${clock(a.open)}–${clock(a.close)}` }
+    else { main = `<span class="w-mid">${(a.ranges || [a]).map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ')}</span>` }
+    const lastNote = e.start !== e.end && last && cls !== 'urgent' ? `<span class="w-note urgent">${esc(lastText(e, a.until))}</span>` : '';
+    return `<div class="when w-wide">${bar(a, st)}${main}${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}${lastNote}</div>`;
+  }
+  if (a.kind === 'soon') return `<div class="when w-course"><span class="w-kind">${L('Empieza', 'Comença', 'Starts')}</span><span class="w-mid">${esc(e.start === (e._day || today) ? L('hoy', 'avui', 'today') : labelDate(e.start))}</span>${a.open !== undefined ? `<span class="w-note">${clock(a.open)}–${clock(a.close)}</span>` : ''}</div>`;
+  if (a.kind === 'started') return `<div class="when w-course"><span class="w-kind">${L('En marcha', 'En marxa', 'Under way')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
+  if (a.kind === 'run') return `<div class="when w-course"><span class="w-kind">${L('En programación', 'En programació', 'On the programme')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
+  if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa', 'times in its programme') : L('hora por confirmar', 'hora per confirmar', 'time to be confirmed')}</span></div>`;
+  const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar', 'Time to be announced'), 'Horario próximamente': L('Horario próximamente', 'Horari properament', 'Times coming soon')}[e.time_label];
+  if (fixedLater) return `<div class="when w-tbc"><span class="w-mid">${esc(fixedLater)}</span><span class="w-note">${L('según la fuente', 'segons la font', 'according to the source')}</span></div>`;
+  return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
+}
+function row(e) {
+  if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
+  const k = key(e), saved = state.saved.includes(k);
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta"><span>${esc(venue(e))}</span></span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+}
+
+/* ---------- render ---------- */
+const hourKey = (e, live) => (live && (e._st.state === 'started' || e._st.state === 'open')) ? 'now' : String(Math.floor(e._st.sort / 60)).padStart(2, '0');
+function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>${esc(label)}</span></div>` }
+// Series de fichas casi iguales (p. ej. un patio escolar abierto por escuela): una fila y el resto plegado.
+// Destacados (21-10-2026): pocas filas, con motivo visible. «Selección Ontoca» (la de la portada) y
+// «Últimos días» (exposiciones y obras que cierran en una semana). Como mucho una de cada diez filas del
+// día y nunca dos seguidas.
+state.picks = new Set();
+// Funciones que la sala publica una a una (cada día una ficha): mismo título y sala → primera y última fecha.
+let runsIndex = null;
+function runOf(e) {
+  if (!store.catalog) return null;  // sin catálogo completo cargado no se puede saber la primera/última función
+  if (!runsIndex) {
+    runsIndex = new Map();
+    for (const x of store.catalog || []) {
+      if (x.start !== x.end) continue;
+      const k = fold(x.title) + '|' + fold(x.venue_names?.[0] || ''), r = runsIndex.get(k);
+      if (r) { r.n++; if (x.start < r.first) r.first = x.start; if (x.start > r.last) r.last = x.start } else runsIndex.set(k, {n: 1, first: x.start, last: x.start});
+    }
+  }
+  const r = runsIndex.get(fold(e.title) + '|' + fold(e.venue_names?.[0] || ''));
+  return r && r.n >= 3 ? r : null;
+}
+function hlReason(e, day) {
+  // Selección Ontoca: la de la portada, o lo que anuncian tres fuentes o más.
+  if (state.picks.has(key(e)) || (e.confirmations || 1) >= 3) return 'pick';
+  if (!e.relevant || !day) return '';  // el resto, solo en salas y centros de referencia
+  const cat = e.public_category || e.category;
+  const runs = e.start !== e.end, longRun = runs && daysBetween(e.start, e.end) >= 14;
+  // Estreno: primer día de una obra o espectáculo con varias funciones.
+  const firstDay = (e.occurrences || []).map(o => o.date).sort()[0] || e.start;
+  if (runs && cat === 'escena' && e.kind !== 'exhibition' && day === firstDay) return 'premiere';
+  const run = !runs && (cat === 'escena' || cat === 'arte') ? runOf(e) : null;
+  if (run && day === run.first && run.first > today) return 'premiere';
+  if (run && day >= addDays(run.last, -6) && day <= run.last && daysBetween(run.first, run.last) >= 14) return day === run.last ? 'lastday' : 'last';
+  // Últimos días: exposiciones y obras que cierran en una semana.
+  if (longRun && e.end >= day && daysBetween(day, e.end) <= 6 && (e.kind === 'exhibition' || cat === 'arte' || (cat === 'escena' && e.kind !== 'course'))) return e.end === day ? 'lastday' : 'last';
+  // («Solo hoy» se descartó: muchas salas publican cada función como ficha de un día y no podemos asegurar que sea única.)
+  return '';
+}
+const HL_LABEL = {pick: () => L('Selección Ontoca', 'Selecció Ontoca', 'Ontoca pick'), premiere: () => L('Estreno', 'Estrena', 'Premiere'), last: () => L('Últimos días', 'Últims dies', 'Last days'), lastday: () => L('Último día', 'Últim dia', 'Last day'), onlytoday: () => L('Solo hoy', 'Només avui', 'Today only')};
+const HL_ORDER = {pick: 0, premiere: 1, lastday: 2, last: 3, onlytoday: 4};
+function markHighlights(list, day) {
+  list.forEach(e => { e._hl = '' });
+  const cands = list.filter(e => !e._inFest && hlReason(e, day)).sort((a, b) => HL_ORDER[hlReason(a, day)] - HL_ORDER[hlReason(b, day)] || (b.confirmations || 1) - (a.confirmations || 1));
+  // Por orden de motivo (Selección, Estreno, Último día…), sin dos filas destacadas seguidas.
+  const cap = Math.max(1, Math.floor(list.length / 10)), pos = new Map(list.map((e, i) => [e, i]));
+  let used = 0;
+  for (const e of cands) {
+    if (used >= cap) break;
+    const i = pos.get(e);
+    if (list[i - 1]?._hl || list[i + 1]?._hl) continue;
+    e._hl = hlReason(e, day); used++;
+  }
+}
+// Imagen de un destacado que no carga (23-10-2026): fuera el recuadro vacío. Los errores de carga no suben
+// por el DOM, así que se escuchan en captura; y nada de onerror en línea, que la CSP de la web no permite.
+document.addEventListener('error', ev => {
+  const img = ev.target;
+  if (img && img.tagName === 'IMG' && img.closest) { const box = img.closest('.hl-img'); if (box) box.remove() }
+}, true);
+function hlHead(e) {
+  if (!e._hl) return '';
+  const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
+  return `${url ? `<span class="hl-img"><img src="${esc(url)}" alt="" loading="lazy"></span>` : ''}<span class="hl-tag hl-${e._hl}">${esc(HL_LABEL[e._hl]())}</span>`;
+}
+
+// Festival: las actividades del mismo festival en un bloque plegado con su nombre y cuántas hay
+// (48h Open House: decenas de edificios el mismo día); con una o dos, filas normales con la etiqueta.
+const FEST_FOLD = 3;
+// Inauguración o clausura de una exposición (22-10-2026, src/milestones.py).
+const MS_LABEL = {opening: () => L('Inauguración', 'Inauguració', 'Opening'), closing: () => L('Clausura', 'Cloenda', 'Closing')};
+function msTag(e) { const k = e.milestone?.kind; return MS_LABEL[k] ? `<span class="ms-tag ms-${k}">${esc(MS_LABEL[k]())}</span>` : '' }
+// En la ficha: la inauguración dice hasta cuándo sigue la exposición, y la exposición, cuándo se inaugura.
+function msLine(e) {
+  const k = e.milestone?.kind, link = e.milestone_link, op = e.opening;
+  if (MS_LABEL[k]) {
+    const more = link ? ` · <button class="linklike" type="button" data-open="${esc(link.key)}">${esc(k === 'opening' ? L(`La exposición sigue hasta el ${labelDate(link.end)}`, `L'exposició continua fins al ${labelDate(link.end)}`, `The exhibition runs until ${labelDate(link.end)}`) : L(`Exposición del ${labelDate(link.start)} al ${labelDate(link.end)}`, `Exposició del ${labelDate(link.start)} al ${labelDate(link.end)}`, `Exhibition from ${labelDate(link.start)} to ${labelDate(link.end)}`))} ›</button>` : '';
+    return `<p class="sheet-ms"><span class="ms-tag ms-${k}">${esc(MS_LABEL[k]())}</span>${esc(L(' de la exposición', " de l'exposició", ' of the exhibition'))}${more}</p>`;
+  }
+  if (op && MS_LABEL[op.kind]) {
+    const when = `${labelDay(op.date)}${op.time ? ' · ' + op.time : ''}`;
+    return `<p class="sheet-ms"><span class="ms-tag ms-${op.kind}">${esc(MS_LABEL[op.kind]())}</span> ${esc(when)} · <button class="linklike" type="button" data-open="${esc(op.key)}">${esc(L('Ver', 'Mostra', 'See'))} ›</button></p>`;
+  }
+  return '';
+}
+function festTag(e) {
+  const f = e.festival;
+  const bare = x => fold(x).replace(/[^a-z0-9]+/g, '');
+  // Dentro del desplegable del festival, la primera fila es la ficha general (24-10-2026).
+  if (f && f.umbrella && e._inFest) return `<span class="ev-hit ev-fest">${esc(L('Ficha general del festival', 'Fitxa general del festival', 'Festival overview'))}</span>`;
+  return f && !f.umbrella && !e._inFest && !bare(e.title).includes(bare(f.name)) ? `<span class="ev-hit ev-fest">${esc(f.name)}</span>` : '';
+}
+// Dentro del bloque del festival, el título sin el nombre del festival delante («…: Fira de vins» → «Fira de vins»).
+function festShort(e) {
+  const m = String(e.title).match(/^.{6,120}?["'»”]?\s*:\s+(\S.*)$/);
+  return m ? m[1].replace(/^["'«“]|["'»”]$/g, '') : e.title;
+}
+function festGroup(list) {
+  list.forEach(e => { e._inFest = true });
+  // Primero la ficha general del festival; luego sus actividades por hora, con las de madrugada (00:00–05:59) al final
+  // de la noche, no al principio (MIRA: Arca a la 01:15 va después de Tortoise a las 22:15). 24-10-2026.
+  const tm = e => String(e._a?.times?.[0] || e.time || ''), night = t => !t ? '9' : (t < '06:00' ? '2' : '1') + t;
+  const general = list.filter(e => e.festival?.umbrella), acts = list.filter(e => !e.festival?.umbrella);
+  acts.sort((a, b) => String(a._day || '').localeCompare(String(b._day || '')) || night(tm(a)).localeCompare(night(tm(b))) || byTitle(a, b));
+  const f = (general[0] || list[0]).festival, first = acts.find(e => tm(e));
+  const n = acts.length || list.length;
+  return `<details class="ev-fest-group"><summary><span class="fest-text"><span class="fest-name">${esc(f.name)}</span><span class="fest-count">${n.toLocaleString('es-ES')} ${L('actividades', 'activitats', 'activities')}${first ? ' · ' + L('desde las', 'des de les', 'from') + ' ' + esc(tm(first)) : ''}</span></span><i aria-hidden="true">+</i></summary>${[...general, ...acts].map(row).join('')}</details>`;
+}
+function seriesFold(list) {
+  const out = [], seen = {};
+  for (const e of list) {
+    if (!e.series) { out.push(e); continue }
+    if (seen[e.series]) { seen[e.series].more.push(e); continue }
+    out.push(seen[e.series] = {first: e, more: []});
+  }
+  return out.map(x => {
+    if (!x.first) return row(x);
+    if (!x.more.length) return row(x.first);
+    const f = x.first.festival;
+    if (String(x.first.series).startsWith('festival:') && f) {
+      const all = [x.first, ...x.more];
+      if (all.length < FEST_FOLD) return all.map(row).join('');
+      return festGroup(all);
+    }
+    return `<div class="ev-series">${row(x.first)}<details class="ev-more"><summary>${L('Ver', 'Mostra', 'See')} ${x.more.length} ${L('más de esta serie', 'més d’aquesta sèrie', 'more in this series')}</summary>${x.more.map(row).join('')}</details></div>`;
+  }).join('');
+}
+function rows(list, id) {
+  const limit = state.limits[id] || STEP, shown = list.slice(0, limit), left = list.length - shown.length;
+  return seriesFold(shown) + (left > 0 ? `<button class="ag-toggle" type="button" data-step="${id}">${L('Ver', 'Mostra', 'See')} ${Math.min(STEP, left)} ${L('más', 'més', 'more')} · ${L('quedan', 'en queden', 'left')} ${left.toLocaleString('es-ES')}</button>` : '');
+}
+function foldHtml(id, title, list, sub = '') {
+  if (!list.length) return '';
+  const open = state.expanded.has(id);
+  return `<section class="ag-fold${open ? ' open' : ''}" id="ag-${id}"><button class="ag-fold-head" type="button" data-${open ? 'collapse' : 'expand'}="${id}" aria-expanded="${open}"><span>${esc(title)} · <b>${list.length.toLocaleString('es-ES')}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><i aria-hidden="true">${open ? '−' : '+'}</i></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
+}
+// Al buscar, en Guardados o en «Arte y galerías» lo que se busca puede estar en cualquier bloque: todos abiertos.
+const openAll = () => Boolean(String(state.query || '').trim()) || state.savedOnly || state.chans.includes('galerias');
+// Bloque plegable de lista entera (talleres, sin hora): cerrado salvo que se abra o que sea lo principal.
+function foldBlock(id, title, list, sub, openByDefault = false, cls = '') {
+  if (!list.length) return '';
+  const open = state.expanded.has(id) || ((openByDefault || openAll()) && !state.collapsed?.has(id));
+  return `<section class="ag-block${open ? ' open' : ''}${cls}" id="ag-${id}"><button class="ag-block-head" type="button" data-block="${id}" aria-expanded="${open}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span><em>${open ? L('Plegar', 'Plega', 'Hide') : L('Ver', 'Mostra', 'See')} ${open ? '−' : '›'}</em></button>${open ? `<div class="ag-rows">${rows(list, id)}</div>` : ''}</section>`;
+}
+// Pestañas Agenda · Exposiciones · Festivales (25-10-2026, David): sustituyen a los bloques de exposiciones y
+// festivales. Cada ficha sale en una sola pestaña; la búsqueda y los filtros se aplican a las tres.
+const TABS = {agenda: ['Agenda', 'Agenda', 'Listings'], expo: ['Exposiciones', 'Exposicions', 'Exhibitions'], fest: ['Festivales', 'Festivals', 'Festivals']};
+// Festivales con FEST_FOLD actividades o más: un desplegable por festival (la regla del antiguo bloque «Festivales»).
+function festSplit(list) {
+  const members = {};
+  for (const e of list) if (e.festival && String(e.series).startsWith('festival:')) (members[e.series] ||= []).push(e);
+  const big = Object.values(members).filter(l => l.length >= FEST_FOLD);
+  return {big, inFest: new Set(big.flat())};
+}
+function tabsHtml(counts) {
+  return Object.keys(TABS).map(k => `<button class="period-tab ag-tab${state.tab === k ? ' active' : ''}" type="button" role="tab" aria-selected="${state.tab === k}" data-agtab="${k}">${esc(byLang(TABS[k]))}<span class="ag-tab-n">${counts[k].toLocaleString('es-ES')}</span></button>`).join('');
+}
+// Sin resultados en la pestaña activa: enlaces a las que sí tienen (así una búsqueda nunca se pierde).
+function tabHint(counts) {
+  const others = Object.keys(TABS).filter(k => k !== state.tab && counts[k]);
+  return others.length ? `<p class="ag-tab-hint">${others.map(k => `<button class="linklike" type="button" data-agtab="${k}">${L('Ver', 'Mostra', 'See')} ${counts[k].toLocaleString('es-ES')} ${L('en', 'a', 'in')} ${esc(byLang(TABS[k]))}</button>`).join(' · ')}</p>` : '';
+}
+// Exposiciones y espacios abiertos: el orden de siempre (último día y cierre más cercano primero).
+function wideTab(list, live) {
+  const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0;
+  const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
+  const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
+  const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
+  sorted.forEach(e => { e._hl = '' });  // sin destacados: ya va ordenado por cierre
+  return (sub ? `<p class="ag-tab-note">${esc(sub)}</p>` : '') + `<div class="ag-rows ag-wide">${rows(sorted, 'wide')}</div>`;
+}
+function festTab(big) {
+  return `<div class="ag-fests">${[...big].sort((a, b) => b.length - a.length || byTitle(a[0], b[0])).map(festGroup).join('')}</div>`;
+}
+function renderDay(m) {
+  const s = m.sections, show = state.show, live = m.live;
+  const counts = {fixed: s.fixed.length, wide: s.wide.length + s.wideNoHours.length, tbc: s.tbc.length, soon: s.soon.length};
+  const hourOf = e => hourKey(e, live), seasonLast = e => e._a.season ? 1 : 0;
+  let timeline = [...s.fixed].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
+  let html = chipsHtml(counts), current = null, groups = '';
+  // Festivales con varias actividades este día: un bloque plegado por festival, arriba, en vez de
+  // repartir sus actividades por todas las horas (48h Open House, una fiesta mayor…).
+  const {big: bigFest, inFest} = festSplit([...timeline, ...s.tbc, ...s.wide, ...s.wideNoHours]);
+  timeline = timeline.filter(e => !inFest.has(e));
+  const tbcList = s.tbc.filter(e => !inFest.has(e)), wideList = [...s.wide, ...s.wideNoHours].filter(e => !inFest.has(e));
+  markHighlights(timeline, state.day);
+  // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
+  const nowTimed = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'timed');
+  const tabCounts = {agenda: timeline.length + tbcList.length, expo: wideList.length, fest: bigFest.length};
+  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nowTimed)}</div>`;
+  let bucket = [];
+  const flush = () => { if (current !== null) groups += seriesFold(bucket) + '</div>'; bucket = [] };
+  for (const e of timeline) {
+    const h = hourOf(e);
+    if (h === 'now') continue;
+    if (h !== current) { flush(); groups += `<div class="ag-group">${groupHead(`${h} h`)}`; current = h }
+    bucket.push(e);
+  }
+  flush();
+  if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió', 'Series and seasons without session dates'))}${rows(s.run, 'run')}</div>`;
+  if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
+  if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
+  html += `<div class="ag-timeline">${groups}</div>`;
+  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, L(`En los próximos ${COURSE_AHEAD} días`, `En els propers ${COURSE_AHEAD} dies`, `In the next ${COURSE_AHEAD} days`), state.cats.length === 1 && state.cats[0] === 'talleres');
+  html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
+  html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past);
+  html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
+  return {html: {agenda: html, expo: wideTab(wideList, live), fest: festTab(bigFest)}, counts: tabCounts};
+}
+function dayHeading(d) {
+  const date = new Date(d + 'T12:00:00'), rel = d === today ? L('Hoy', 'Avui', 'Today') : d === addDays(today, 1) ? L('Mañana', 'Demà', 'Tomorrow') : '';
+  const weekend = date.getDay() === 0 || date.getDay() === 6;
+  return `<div class="ag-stick ag-daystick${weekend ? ' is-weekend' : ''}"><span>${rel ? `<b>${rel}</b> · ` : ''}${esc(`${weekdaysLong[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`)}</span>${weekend ? `<em>${L('fin de semana', 'cap de setmana', 'weekend')}</em>` : ''}</div>`;
+}
+function renderRange(m) {
+  const show = state.show, s = m.sections;
+  const visible = e => e._a.kind !== 'wide' && (e._a.kind !== 'run' || Boolean(state.query));
+  const counts = {...m.counts, soon: s.soon.length};
+  const seenWide = new Set(), wideAll = [];
+  const {big: bigFest, inFest} = festSplit(m.buckets.flatMap(([, l]) => l));
+  for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && !inFest.has(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }
+  const buckets = m.buckets.map(([d, l]) => [d, l.filter(e => visible(e) && !inFest.has(e))]).filter(([, l]) => l.length);
+  const tabCounts = {agenda: buckets.reduce((n, [, l]) => n + l.length, 0), expo: wideAll.length, fest: bigFest.length};
+  const days = buckets.slice(0, state.shown).map(([d, list]) => {
+    const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
+    markHighlights(shown, d);
+    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
+  }).join('');
+  const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
+  let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`}</div>`;
+  if (rest) html += `<button class="ag-toggle ag-moredays" type="button" data-moredays="1">${L('Ver más días', 'Mostra més dies', 'See more days')} · ${rest.toLocaleString('es-ES')} ${L('actividades más', 'activitats més', 'more activities')}</button>`;
+  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, '', state.cats.length === 1 && state.cats[0] === 'talleres');
+  if (state.started && s.started.length) html += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
+  html += foldHtml('past', L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today'), s.past);
+  html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other);
+  return {html: {agenda: html, expo: wideTab(wideAll, false), fest: festTab(bigFest)}, counts: tabCounts};
+}
+function venueView(items) {
+  const groups = {};
+  for (const e of items) { const name = e.venue_names?.[0] || t('Sin recinto identificado'); (groups[name] ??= []).push(e) }
+  return `<div class="venue-groups">${Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([name, events]) => `<details><summary><span>${esc(name)}</span><b>${events.length}</b></summary><div>${seriesFold(events)}</div></details>`).join('')}</div>`;
+}
+function renderAgenda() {
+  const host = $('agendaList'), items = state.items, win = state.savedOnly ? {from: today, to: addDays(today, MAX_DAYS)} : rangeWindow();
+  const model = state.model = buildModel(items, win);
+  document.getElementById('seoLista')?.remove();   // la lista en HTML de las páginas de entrada (src/landings.py): ya está la de la app
+  $('typeTabs').innerHTML = ''; $('typeMini').innerHTML = '';
+  // El filtro «Formato» se solapa con los botones de tipo: se retira y su apartado queda solo para los talleres ya empezados.
+  const fmt = $('formatFilter'), group = fmt?.closest('fieldset');
+  if (group && !group.dataset.v3) {
+    group.dataset.v3 = '1'; fmt.hidden = true; fmt.value = '';
+    // Sin el desplegable, el apartado solo serviría para los talleres ya empezados, que no son
+    // información útil (22-10-2026): se oculta entero.
+    group.hidden = true;
+  }
+  let tabs = $('agTabs');
+  if (!tabs) { tabs = document.createElement('div'); tabs.id = 'agTabs'; tabs.className = 'period-tabs ag-tabs'; tabs.setAttribute('role', 'tablist'); host.before(tabs) }
+  tabs.hidden = true;
+  if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
+  else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].filter(onePlace).slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
+  else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
+  else {
+    const r = model.mode === 'day' ? renderDay(model) : renderRange(model);
+    tabs.innerHTML = tabsHtml(r.counts); tabs.hidden = false;
+    host.innerHTML = r.counts[state.tab] || state.tab === 'agenda' ? r.html[state.tab]
+      : `<div class="empty">${state.tab === 'expo' ? L('No hay exposiciones con estos filtros.', 'No hi ha exposicions amb aquests filtres.', 'No exhibitions with these filters.') : L('No hay festivales con estos filtros.', 'No hi ha festivals amb aquests filtres.', 'No festivals with these filters.')}${tabHint(r.counts)}</div>`;
+  }
+  $('agendaMore').innerHTML = '';
+  // Sumatorio = suma exacta de los tres botones del día (hora fija + horario amplio + por confirmar).
+  const s = model.sections, count = model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc), n = count.toLocaleString('es-ES');
+  // Búsqueda interna (Matomo trackSiteSearch): con los resultados ya pintados; analytics.js espera a que el término se estabilice.
+  if (state.query && !state.savedOnly) { try { window.ontocaAnalytics?.search(state.query, count, state.cats.length === 1 ? state.cats[0] : false) } catch (_) {} }
+  const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui', 'plans available today')}</b> ${L('desde las', 'des de les', 'from')} ${clock(model.now.min)}`
+    : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(win.label)}`;
+  const extra = [state.cats.map(catName).join(' + '), state.chans.map(chanName).join(' + '), state.ages.map(a => byLang(AGE_LABEL[a])).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
+  $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
+  stick(); mountFilterUi();
+}
+// Móvil: pie fijo en el panel de filtros («Ver N planes» cierra y deja claro que ya están aplicados)
+// (la barra de filtros fija hace de acceso permanente; ya no hay botón flotante).
+function mountFilterUi() {
+  if (!$('filtersFoot')) {
+    const foot = document.createElement('div'); foot.id = 'filtersFoot'; foot.className = 'filters-foot';
+    foot.innerHTML = `<button id="filtersClear" class="filters-clear" type="button">${L('Limpiar', 'Esborra', 'Clear')}</button><button id="filtersApply" class="filters-apply" type="button"></button>`;
+    $('filters').append(foot);
+  }
+  const n = state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
+  $('filtersApply').textContent = `${L('Ver', 'Mostra', 'See')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans', 'plans')}`;
+}
+function syncMini() {
+  const tabs = $('typeTabs'), mini = $('typeMini'), bar = $('filterBar'); if (!mini || !bar) return;
+  const r = tabs.getBoundingClientRect(), on = getComputedStyle(bar).position === 'sticky' && !!mini.innerHTML && r.height > 0 && r.bottom < bar.getBoundingClientRect().top + 60;
+  if (mini.hidden === on) { mini.hidden = !on; bar.classList.toggle('compact', on); stick() }
+}
+document.addEventListener('scroll', () => requestAnimationFrame(syncMini), {passive: true});
+// --stick: cabecera; --agtop: cabecera + barra de filtros fija (móvil), donde se pegan las pestañas; --daytop: debajo de las pestañas.
+function stick() {
+  const root = document.documentElement.style, h = document.querySelector('.site-header'), hh = h ? h.getBoundingClientRect().height : 0;
+  const bar = $('filterBar'), fb = bar && getComputedStyle(bar).position === 'sticky' ? bar.getBoundingClientRect().height : 0;
+  const tabs = $('agTabs'), th = tabs && !tabs.hidden ? tabs.getBoundingClientRect().height : 0;
+  root.setProperty('--stick', hh + 'px'); root.setProperty('--agtop', hh + fb + 'px'); root.setProperty('--daytop', hh + fb + th + 'px');
+}
+window.addEventListener('resize', () => requestAnimationFrame(stick), {passive: true});
+function stableRender() {
+  const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
+  const anchor = rowsEls.find(r => r.getBoundingClientRect().bottom > top + 40), k = anchor?.querySelector('[data-open]')?.dataset.open, y = anchor?.getBoundingClientRect().top;
+  renderAgenda();
+  if (k) { const again = document.querySelector(`#agendaList [data-open="${CSS.escape(k)}"]`)?.closest('.ev'); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y) }
+}
+let liveMinute = null;
+setInterval(() => {
+  const now = madridNow(); if (now.min === liveMinute) return; liveMinute = now.min;
+  if (state.model && !state.savedOnly && state.view === 'list' && (state.model.mode === 'range' || state.model.live) && $('overlay').hidden) stableRender();
+}, 20000);
+
+function collectStatic(all, win, p) {
+  const filters = {cat: p.cats, chans: p.chans, ages: p.ages, langs: p.langs, format: p.format, district: p.district, free: p.free, query: fold(p.query || ''), hourFrom: p.hourFrom, hourTo: p.hourTo};
+  const from = win ? win.from : state.day, to = win ? win.to : state.day, ahead = addDays(from, COURSE_AHEAD);
+  const out = [];
+  for (const base of all) {
+    const active = base.start <= to && base.end >= from;
+    const upcomingCourse = !active && isPeriodic(base) && !isOpenFormat(base) && base.start > to && base.start <= ahead && daysBetween(base.start, base.end) > SHORT_DAYS;
+    if (!active && !upcomingCourse) continue;
+    if (filters.query && !queryMatches(searchText(base), filters.query)) continue;
+    if (!catMatch(base, filters.cat) || !chanMatch(base, filters.chans) || !ageMatch(base, filters.ages) || !langMatch(base, filters.langs)) continue;
+    if (filters.format && base.format !== filters.format) continue;
+    if (filters.free && !base.is_free) continue;
+    if (filters.district && base.district !== filters.district) continue;
+    const e = {...base, base_time: base.time};
+    if (filters.hourFrom !== null || filters.hourTo !== null) {
+      const inRange = x => { const h = Number(String(x).slice(0, 2)); return h >= (filters.hourFrom ?? 0) && h <= (filters.hourTo ?? 23) };
+      const inWindow = o => win || o.date === state.day;
+      const occ = (e.occurrences || []).filter(o => inWindow(o) && o.time);
+      if (occ.length) {
+        if (!occ.some(o => inRange(o.time))) continue;
+        // Varios pases: se muestra el primero dentro de la franja elegida, no el primero del día.
+        e.occurrences = (e.occurrences || []).filter(o => !o.time || !inWindow(o) || inRange(o.time));
+        const first = e.occurrences.find(o => inWindow(o) && o.time);
+        if (first && !win) { e.time = first.time; e.base_time = first.time }
+      } else {
+        const label = String(e.time_label || '') + ' ' + String(e.time || ''), ts = timesIn(label);
+        if (!ts.some(inRange)) continue;
+        // Pases en texto («20:30 · 22:30»): el primero de la franja. Un horario de apertura («12:00–21:00») no se toca.
+        if (ts.length > 1 && !/[–-]/.test(label)) { const kept = ts.filter(inRange); e.time = kept[0]; e.base_time = kept.join(' · ') }
+      }
+    }
+    out.push(e);
+  }
+  return out;
+}
+async function agenda(append = false) {
+  const host = $('agendaList'), request = ++agendaRequest; host.setAttribute('aria-busy', 'true');
+  if (!append) { state.shown = DAY_CHUNK; state.limits = {}; state.openDays = new Set() }
+  try {
+    if (state.savedOnly) {
+      const items = await Promise.all(state.saved.map(async k => { const [source, ...id] = k.split(':'); try { return await get('/api/event?' + new URLSearchParams({source, id: id.join(':')})) } catch (_) { return null } }));
+      state.items = items.filter(Boolean).filter(hourMatches).map(e => ({...e, base_time: e.time})); state.total = state.items.length;
+    } else {
+      const win = rangeWindow();
+      if (STATIC) {
+        if (!store.catalog) host.innerHTML ||= `<div class="ag-loading">${L('Cargando la agenda…', 'Carregant l\'agenda…', 'Loading the listings…')}</div>`;
+        const all = await loadCatalog();
+        if (request !== agendaRequest) return;
+        state.items = collectStatic(all, win, state);
+        // Selección Ontoca de ese día (la de la portada): se destaca también en la lista.
+        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set() }
+        if (request !== agendaRequest) return;
+      } else {
+        const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
+        const d = await get('/api/events?' + p);
+        if (request !== agendaRequest) return;
+        state.items = d.items.filter(e => catMatch(e, state.cats) && chanMatch(e, state.chans) && ageMatch(e, state.ages) && langMatch(e, state.langs)).map(e => ({...e, base_time: e.time}));
+      }
+      state.total = state.items.length;
+    }
+    renderAgenda();
+  } catch (_) { host.innerHTML = `<div class="empty">${t('No se pudo cargar la agenda.')} <button id="retry" class="linklike" type="button">${t('Reintentar')}</button></div>` }
+  finally { host.removeAttribute('aria-busy') }
+}
+
+function mapView(items) {
+  const located = items.filter(e => e.coordinates && Number.isFinite(e.coordinates.lat) && Number.isFinite(e.coordinates.lon));
+  if (!located.length) return `<div class="empty">${t('No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.')}</div>`;
+  return `<div class="event-map" role="group" aria-label="${t('Mapa de actividades geolocalizadas')}"><div id="eventMap" class="map-canvas"></div><div class="map-note">${located.length} ${t('lugares con ubicación · pulsa un punto para abrir la ficha')}</div></div>`;
+}
+function hydrateMap(items) {
+  const canvas = $('eventMap'), located = items.filter(e => e.coordinates && Number.isFinite(e.coordinates.lat) && Number.isFinite(e.coordinates.lon));
+  if (!canvas || !window.L || !located.length) return;
+  const map = window.L.map(canvas, {scrollWheelZoom: true, zoomControl: true, attributionControl: true});
+  window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap contributors'}).addTo(map);
+  const bounds = [];
+  for (const event of located) {
+    const point = [event.coordinates.lat, event.coordinates.lon], name = event.venue_names?.[0] || event.title;
+    window.L.circleMarker(point, {radius: 8, color: '#ffffff', weight: 2, fillColor: '#b7a9ff', fillOpacity: 1}).addTo(map).bindTooltip(esc(name), {direction: 'top', offset: [0, -7]}).on('click', () => openDetail(key(event), canvas, {origin: 'mapa'}));
+    bounds.push(point);
+  }
+  if (bounds.length === 1) map.setView(bounds[0], 15); else map.fitBounds(bounds, {padding: [34, 34], maxZoom: 15});
+}
+function sortItems(items) { return items.sort((a, b) => Boolean(b.time) - Boolean(a.time) || String(a.time || '').localeCompare(String(b.time || '')) || b.start.localeCompare(a.start)) }
+async function loadDistricts() {
+  try {
+    const rows = await get('/api/districts?day=' + state.day);
+    // 23-10-2026: el bloque «Por distritos» ya no está en la página; solo se rellena el desplegable del panel.
+    if ($('districts')) $('districts').innerHTML = rows.map(x => `<button class="district ${state.district === x.name ? 'active' : ''}" type="button" data-district="${esc(x.name)}"><b>${esc(t(x.name))}</b><span>${x.count}</span></button>`).join('');
+    $('districtFilter').innerHTML = `<option value="">${t('Todos los distritos')}</option>${[...rows].sort((x, y) => collator.compare(t(x.name), t(y.name))).map(x => `<option value="${esc(x.name)}" ${state.district === x.name ? 'selected' : ''}>${esc(t(x.name))}</option>`).join('')}`;
+  } catch (_) { if ($('districts')) $('districts').innerHTML = '' }
+}
+
+/* ---------- detail ---------- */
+// «23:59» es como Xceed escribe «medianoche».
+// «00:00–23:59» (fachadas, espacios al aire libre: «Cada dia de 00.00 h a 23.59 h») es todo el día.
+const showTime = v => String(v || '').replace(/\b0?0[:.]00\s*[–-]\s*23[:.]59\b/g, L('todo el día', 'tot el dia', 'all day')).replace(/\b23:59\b/g, L('medianoche', 'mitjanit', 'midnight'));
+// «Forma parte de 48h Open House BCN · Ver todo el festival»; en la ficha del festival, cuántas actividades tiene.
+function festLine(e) {
+  const f = e.festival || (store.catalog || []).find(x => x.key === e.key)?.festival; if (!f) return '';
+  const n = (store.catalog || []).filter(x => x.festival?.slug === f.slug && !x.festival.umbrella).length;
+  const label = f.umbrella ? L(`Ver sus ${n} actividades`, `Mostra les seves ${n} activitats`, `See its ${n} activities`) : L('Ver todo el festival', 'Mostra tot el festival', 'See the whole festival');
+  return `<p class="sheet-fest">${f.umbrella ? L('Festival', 'Festival', 'Festival') : L('Forma parte de', 'Forma part de', 'Part of')} <b>${esc(f.name)}</b>${n ? ` · <button class="linklike" type="button" data-festq="${esc(f.name)}" data-fesfrom="${esc(e.start)}" data-festo="${esc(e.end)}">${label}</button>` : ''}</p>`;
+}
+function detailWhen(e) {
+  const day = e.start === e.end ? e.start : state.day;
+  const when = e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`;
+  // Horario oficial del día («09:00–18:00»); si cambia según el día, se dice de qué día es.
+  const byDay = hoursByDay(e) || {}, rawDay = e.occurrence_date ? null : byDay[day], dayHours = PARTS[rawDay] ? PARTS[rawDay]().toLowerCase() : rawDay;
+  const t = dayHours || (e.time ? e.time : (e.time_label && !/^(Hora no indicada|Varios días|Exposición)$/.test(e.time_label) ? e.time_label : ''));
+  if (e.start !== e.end && dayHours && new Set(Object.values(byDay)).size > 1) return `${when} · ${labelDay(day)} ${dayHours}`;
+  // Programa de días sueltos (una feria tres días al mes): se dicen los próximos días, no «10 abr – 21 dic».
+  const days = Object.keys(byDay).sort(), span = (new Date(e.end + 'T12:00:00') - new Date(e.start + 'T12:00:00')) / 86400000 + 1;
+  if (e.start !== e.end && days.length && days.length < span) {
+    if (!e.occurrence_date && byDay[day]) return `${labelDay(day)}${t ? ' · ' + showTime(t) : ''}`;
+    const next = days.filter(d => d >= today).slice(0, 3);
+    if (next.length) return `${L('Próximos días', 'Propers dies', 'Upcoming days')}: ${next.map(labelDay).join(', ')}${t ? ' · ' + showTime(t) : ''}`;
+  }
+  if (e.occurrence_date) return `${labelDay(e.occurrence_date)}${t ? ' · ' + showTime(t) : ''}`;
+  return t ? `${when} · ${showTime(t)}` : when;
+}
+// Lugar que no es un sitio («Diferents espais», «Diversos centres cívics», «Recorregut: …», 22-10-2026).
+const MANY_PLACES = /^(?:diferents|diferentes|diversos|diversas|diverses|varis|varies|varios|varias|distints|distintos|m[uú]ltiples|recorregut|recorrido)\b/i;
+const onePlace = e => !MANY_PLACES.test(String(e.venue_names?.[0] || '').trim());
+// Precio en la ficha (22-10-2026): si la fuente da varias tarifas («Entrada 1 dia: 50 € · Abonament 2 dies: 95 €»),
+// la caja ocupa toda la fila y cada tarifa va en su línea. El texto es el de la fuente, solo partido por «·».
+function priceFact(e) {
+  const text = e.is_free ? t('Gratis') : String(e.price_text || e.price_label || L('Consultar', 'Consultar', 'Check'));
+  const parts = text.split(/\s+·\s+/).map(x => x.trim()).filter(Boolean);
+  if (text.length <= 32 && parts.length < 2) return `<div><small>${t('Precio')}</small><b>${esc(text)}</b></div>`;
+  return `<div class="fact-wide"><small>${t('Precio')}</small><ul class="fact-lines">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+}
+// Crédito de la imagen (22-10-2026): quien tiene la imagen, no el agregador que la recoge. GRAF publica
+// la imagen que manda cada espacio → el espacio; las fuentes municipales → el Ajuntament (CC BY en Open Data);
+// la foto del equipamiento conserva su crédito y su enlace al original. La fuente sigue en los datos y en Créditos.
+function imageCredit(e, m) {
+  const c = m.credit || {}, attr = String(c.attribution || c || '');
+  if (!attr && !c.source) return '';
+  if (m.fallback) return `© ${attr}`;
+  let who = attr.split(' — ')[0].replace(/\s*\([^)]*\)/g, '').trim();
+  if (c.source === 'web_graf') who = e.organizers?.[0] || String(e.venue_names?.[0] || '').split(' · ')[0] || who;
+  else if (c.source === 'opendatabcn_agenda' || c.source === 'guiabcn') who = 'Ajuntament de Barcelona';
+  return who ? `${L('Imagen', 'Imatge', 'Image')}: ${who}` : '';
+}
+// «Horario» solo si dice algo que «Cuándo» no dice (22-10-2026): «18:00» o «18:00–21:00» ya están arriba;
+// «Divendres i dissabte · de 17.30 h a 05.30 h» o «sessions a les 18 i a les 20» sí se muestran.
+function scheduleExtra(e) {
+  const text = String(e.time_text || '').trim(); if (!text) return '';
+  const when = detailWhen(e), clocks = text.match(/\b\d{1,2}[:.]\d{2}\b/g) || [];
+  const rest = text.replace(/\b\d{1,2}[:.]\d{2}\b/g, '').replace(/[\s·–\-—,;/h]+/g, '');
+  return !rest && clocks.length && clocks.every(c => when.includes(c.replace('.', ':').padStart(5, '0'))) ? '' : text;
+}
+async function openDetail(k, focus, opts = {}) {
+  const [source, ...rest] = k.split(':'), id = rest.join(':');
+  try {
+    const e = await get('/api/event?' + new URLSearchParams({source, id, day: state.day}));
+    // El mismo acto tiene su propia ficha en el día que se está mirando (otra fecha de la misma página del
+    // acto, 24-10-2026): se abre esa, no la de otro día.
+    const sameDay = !opts.sibling && state.day && e.other_days && e.other_days[state.day];
+    if (sameDay && sameDay !== k && !(e.start <= state.day && state.day <= e.end)) return openDetail(sameDay, focus, {...opts, sibling: true});
+    returnFocus = focus || document.activeElement; state.detail = k; syncUrl(opts.push !== false);
+    // Página vista de la ficha (navegación sin recarga): solo al abrirla de verdad; analytics.js no repite la misma ruta.
+    if (opts.push !== false) { try { window.ontocaAnalytics?.pageview(location.href, `${e.title} · Ontoca`) } catch (_) {} }
+    if (opts.origin) {
+      track('ficha', 'event_open', k);
+      if (opts.origin === 'seleccion') track('seleccion', 'featured_click', k);
+      else if (opts.origin === 'destacado') track('seleccion', 'highlight_click', k);
+    }
+    document.getElementById('seoFicha')?.remove();   // la ficha en HTML de /e/* (functions/e): ya está la de la app
+    // One descriptive block: the source's own text when it exists (paragraphs
+    // kept), otherwise a single factual sentence built from the record.
+    const text = (e.description || '').trim();
+    const para = s => s.slice(0, 3000).split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('');
+    const paragraphs = text ? para(text) : `<p>${esc(e.editorial_summary || '')}</p>`;
+    const tr = text ? await translationFor(k) : null;
+    // Descripción breve automática (IA) encima del texto original, para comparar; nunca lo sustituye.
+    // Resumen y recomendación escritos por IA: fuera de la ficha pública hasta evaluarlos (22-10-2026).
+    const brief = '';
+    // Con traducción: se dice que es automática y el original queda a un clic (24-10-2026).
+    const description = tr ? `${brief}<section class="sheet-copy"><div class="tr-note">${tr.o ? L('Texto de la web oficial', 'Text del web oficial', 'Text from the official website') : L('Traducción automática', 'Traducció automàtica', 'Machine translation')} · <button type="button" class="tr-toggle" data-trtoggle aria-expanded="false">${L('Ver original', "Veure l'original", 'Show original')}</button></div><div class="tr-text" lang="${LANG}">${para(tr.t)}</div><div class="tr-orig" hidden>${paragraphs}</div></section>`
+      : `${brief}<section class="sheet-copy">${paragraphs}</section>`;
+    const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
+    // Hora que dio una lectura anterior de la fuente y la actual ya no trae (23-10-2026): se dice.
+    const carried = (e.occurrences || []).find(o => o.evidence_field === 'ultima_hora_conocida' && o.date === (e.occurrence_date || state.day));
+    const carriedNote = carried ? L(`La fuente publicó esta hora${carried.seen_at ? ' el ' + labelDate(carried.seen_at) : ''} y ahora no la muestra: confírmala`, `La font va publicar aquesta hora${carried.seen_at ? ' el ' + labelDate(carried.seen_at) : ''} i ara no la mostra: confirma-la`, `The source published this time${carried.seen_at ? ' on ' + labelDate(carried.seen_at) : ''} and no longer shows it: please check`) : '';
+    // Hora de otra agenda del mismo acto, porque la sala no la publica (23-10-2026): sin nombrar el agregador.
+    const borrowed = (e.occurrences || []).find(o => o.evidence_field === 'otra_fuente' && o.date === (e.occurrence_date || state.day));
+    const borrowedNote = borrowed ? L('La sala no publica la hora; esta sale de otra agenda: confírmala', 'La sala no publica l\'hora; aquesta surt d\'una altra agenda: confirma-la', 'The venue does not publish the time; this one comes from another listing: please check') : '';
+    // Hora leída en la página del propio acto porque el listado de la fuente dejó de darla (src/time_rescue.py).
+    const rescued = (e.occurrences || []).find(o => o.evidence_field === 'rescate' && o.date === (e.occurrence_date || state.day));
+    const rescuedNote = rescued ? L('Hora leída en la página del acto: confírmala antes de ir', "Hora llegida a la pàgina de l'acte: confirma-la abans d'anar-hi", 'Time read from the event page: please check before you go') : '';
+    const scheduleBits = [carriedNote, borrowedNote, rescuedNote, conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`, `Sources give different times (${conflict.join(' and ')}): check with the venue`) : '', e.schedule_days, scheduleExtra(e), e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta', 'Registration open') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`, `This date is not yet on ${e.venue_unconfirmed}’s listings: check it before you go`) : ''].filter(Boolean);
+    const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
+    // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
+    const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));
+    const names = e.lineup || [];
+    const lineup = timed.length ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${timed.map(x => `${esc(x.time)} ${esc(x.name)}`).join(' · ')}${names.length > timed.length ? ` · ${esc(names.filter(n => !timed.some(x => x.name === n)).join(' · '))}` : ''}</p>`
+      : names.length > 1 || (names.length === 1 && fold(names[0]) !== fold(e.title)) ? `<p class="sheet-schedule sheet-lineup"><span>${t('Cartel')}</span>${esc(names.join(' · '))}</p>` : '';
+    const cover = e.media?.[0] ? `<figure class="detail-hero"><img src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="eager"><figcaption>${e.media[0].fallback ? `<span class="venue-photo-tag">${t('Imagen del equipamiento')}</span>` : ''}${[e.media[0].alt && fold(e.media[0].alt) !== fold(e.title) ? esc(e.media[0].alt) : '', esc(imageCredit(e, e.media[0]))].filter(Boolean).join(' · ')}${e.media[0].fallback && safeurl(e.media[0].credit?.original_url) ? ` · <a href="${esc(safeurl(e.media[0].credit.original_url))}" target="_blank" rel="noopener noreferrer">original ↗</a>` : ''}</figcaption></figure>` : `<div class="detail-poster"><span>Ontoca · ${esc(catName(e.public_category || e.category))}</span><strong>${esc(e.title)}</strong></div>`;
+    const gallery = e.media?.length > 1 ? `<section class="sheet-gallery"><h3>${t('Más imágenes')}</h3><div>${e.media.slice(1, 7).map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || e.title)}" loading="lazy"></figure>`).join('')}</div></section>` : '';
+    const site = String(e.venue_names?.[0] || e.venues?.[0]?.name || '').split(' · ')[0];
+    // «Diferents espais», «Diversos centres cívics», «Recorregut: …» no son un espacio (22-10-2026):
+    // sin «Más planes en…», sin mapa y sin «Cómo llegar», porque el punto de la fuente no es el sitio del acto.
+    const manyPlaces = MANY_PLACES.test(site.trim());
+    const realSite = site && !manyPlaces;
+    // «Cómo llegar»: ruta en Google Maps hasta las coordenadas del lugar (en el móvil abre la app).
+    const osm = e.coordinates && !manyPlaces ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
+    const map = e.coordinates && !manyPlaces ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div></a></section><div class="sheet-cta sheet-cta-map"><a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a></div>` : '';
+    // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
+    const upcoming = realSite && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`, `More at ${site}`))} ›</button></p>` : '';
+    const all = sheetLinks(e), main = all[0] || null;
+    const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" data-lk="${esc(main.kind)}" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
+    // Debajo, el resto en el mismo orden (sin repetir tipo salvo entradas/inscripciones distintas), y la fuente al final.
+    // La ficha de la fuente (GRAF, GuiaBCN…) solo sale si no tenemos la página concreta del acto (22-10-2026).
+    const hasEventPage = all.some(x => x.kind === 'evento');
+    // (Nombres propios: «source» y «rest» ya son el origen y el id del acto, arriba; repetirlos aquí rompía la ficha.)
+    const others = all.slice(1), useful = others.filter(x => x.kind !== 'fuente' && x.kind !== 'social').slice(0, 3), social = others.filter(x => x.kind === 'social').slice(0, 1), sourceLink = hasEventPage ? [] : others.filter(x => x.kind === 'fuente').slice(0, 1);
+    const links = [...useful, ...social, ...sourceLink].map(x => `<a class="sheet-link${x.kind === 'fuente' ? ' sheet-link-source' : ''}" data-lk="${esc(x.kind)}" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">${esc(x.kind === 'sala' || x.kind === 'fuente' || x.kind === 'social' ? x.label : x.label + ' · ' + urlHost(x.url))} ↗</a>`).join('');
+    $('sheet').innerHTML = `<div class="sheet-top"><span data-cat="${esc(e.public_category || e.category || '')}">${esc(catName(e.public_category || e.category))}${(e.channels || []).map(c => ' · ' + esc(chanName(c))).join('')}${e.is_free ? ' · ' + t('Gratis') : ''}${soldOn(e, e.occurrence_date || state.day) ? ' · ' + L('Entradas agotadas', 'Entrades esgotades', 'Sold out') : ''}</span><button class="close" type="button" aria-label="${t('Cerrar ficha')}">✕</button></div><h2 id="detailTitle">${esc(e.title)}</h2>${msLine(e)}${festLine(e)}${cover}<div class="facts"><div><small>${t('Cuándo')}</small><b>${esc(detailWhen(e))}</b></div><div><small>${t('Dónde')}</small><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || 'Barcelona')}</b>${e.district ? `<small>${esc(t(e.district))}</small>` : ''}</div>${organizerBox(e)}${priceFact(e)}${hasAge(e) || (e.channels || []).includes('familia') ? `<div><small>${esc(L('Edad', 'Edat', 'Age'))}</small><b>${esc(hasAge(e) ? ageText(e) : L('No indicada', 'No indicada', 'Not stated'))}</b></div>` : ''}</div>${map}${schedule}${lineup}${description}${mainCta}${gallery}${upcoming}${links ? `<div class="sheet-links">${links}</div>` : ''}<div class="sheet-actions"><button class="save-link" type="button" data-save="${esc(k)}">${state.saved.includes(k) ? '♥ ' + t('Guardado') : '♡ ' + t('Guardar')}</button><button class="save-link share-link" type="button" data-share="${esc(k)}">⇪ ${t('Compartir')}</button>${calendarMenu(k, e)}</div><p class="sheet-note">${e.presentation === 'venue_link_only' ? L('El detalle, en la web de la sala. Confírmalo antes de ir.', "El detall, al web de la sala. Confirma-ho abans d'anar-hi.", 'Details on the venue’s website. Check before you go.') : L('Confirma en la web oficial antes de ir.', "Confirma-ho al web oficial abans d'anar-hi.", 'Check the official website before you go.')}</p>`;
+    $('overlay').hidden = false; document.body.style.overflow = 'hidden'; document.querySelector('.sheet .close').focus();
+    $('sheet').scrollTop = 0; mountSheetMap(e);
+    // Algún dato muy largo (horario de varios días, lugar u organizador con nombre largo): dos cajas por fila, no cuatro estrechas.
+    const facts = document.querySelector('#sheet .facts'); if (facts && [...facts.querySelectorAll(':scope > div:not(.fact-wide) > b')].some(b => b.textContent.length > 45)) facts.classList.add('facts-long');
+  } catch (_) {}
+}
+// Sin organizador declarado pero con la web oficial que publica la ficha (en
+// GuiaBCN suele ser la de quien lo organiza): se muestra «Web» con su dominio.
+// Nombre corto y público de la fuente: «MACBA · agenda directa» → «MACBA»; «… (agenda cultural)» sin paréntesis.
+function sourceName(e) { return String(e.source_label || 'la fuente').split(' · ')[0].replace(/\s*\([^)]*\)/g, '').trim() || 'la fuente' }
+// Botón principal: lo más cerca posible de la fuente original. 1) entradas o web de la sala (catálogo);
+// 2) la página oficial del acto que leímos; 3) la web del evento que da la agenda, si es una página concreta
+// (no solo la portada de un dominio); 4) si no, la ficha de la fuente que lo recoge.
+// Etiquetas de enlace que pone el catálogo en castellano («En GRAF», «Ficha en GuiaBCN»): en catalán, «A GRAF», «Fitxa a GuiaBCN».
+function linkLabel(label) {
+  return L(label, String(label || '').replace(/^Ficha en /, 'Fitxa a ').replace(/^En /, 'A '), String(label || '').replace(/^Ficha en /, 'Listing on ').replace(/^En /, 'On '));
+}
+// Enlaces de la ficha (22-10-2026): el botón lleva a lo más cercano al acto, por este orden:
+// 1) su web propia (una página concreta, no la portada de un dominio), 2) inscripciones,
+// 3) entradas, 4) web de la sala u organizador (y las portadas). La ficha de la fuente que lo
+// recoge solo es el botón si no hay nada de eso; si no, queda como enlace pequeño al final.
+const LINK_RANK = {evento: 0, inscripcion: 1, entradas: 2, sala: 3, social: 4, fuente: 5};
+const LINK_NAME = {evento: () => L('Web del evento', "Web de l'esdeveniment", 'Event website'), inscripcion: () => L('Inscripción', 'Inscripció', 'Registration'), entradas: () => L('Entradas', 'Entrades', 'Tickets'), sala: () => L('Web de la sala', 'Web de la sala', 'Venue website')};
+const urlHost = u => { try { return new URL(u).hostname.replace(/^www\./, '') } catch (_) { return '' } };
+// Portada de un dominio («auditori.cat/ca/»); las webs de una sola página con rutas tras «#/» (h2o.es/#/ca/exposicion/438) no lo son.
+const isHome = u => { try { const x = new URL(u), path = (x.pathname + (x.hash.startsWith('#/') ? x.hash.slice(1) : '')).replace(/\/+/g, '/'); return path.replace(/^\/(?:ca|es|en|cat|esp|eng)(?=\/|$)/, '').replace(/\/+$/, '').length <= 1 } catch (_) { return true } };
+// Páginas genéricas del Ajuntament (la del distrito, «ajuntament.barcelona.cat/sants-montjuic»): no dicen nada del acto.
+const isCityPortal = u => { try { const x = new URL(u); return /(^|\.)barcelona\.cat$/.test(x.hostname) && !/guia\.barcelona/.test(x.hostname) && x.pathname.split('/').filter(Boolean).length <= 2 } catch (_) { return false } };
+function linkKind(l, e) {
+  const label = String(l.label || ''), u = safeurl(l.url) || '';
+  if (!u) return '';
+  if (/whatsapp|drive\.google|docs\.google|geoportal|seuelectronica|safelinks|open\.spotify|linktr\.ee/i.test(u) || isCityPortal(u)) return '';
+  if (u === safeurl(e.url)) return e.data_origin === 'centro' ? 'evento' : 'fuente';  // si la fuente es el propio centro, su página es la del acto
+  if (/^(Página de la fuente|Ficha en |En |Butlletí)/.test(label)) return 'fuente';
+  if (/^(Facebook|Instagram|YouTube|LinkedIn)/.test(label) || /facebook\.com|instagram\.com|youtube\.com|linkedin\.com/i.test(u)) return 'social';
+  if (/^Inscripci/.test(label) || /inscripcions|inscripcionscc|\/\/reserva\.|registre_cursos/i.test(u)) return 'inscripcion';
+  if (/^(Entradas|Venta de entradas)/.test(label) || /ticket|\/\/entrades\.|\/\/entradas\.|entradium|entrapolis|koobin|weeztix|fourvenues|passline|vivaticket|admit-one|codetickets/i.test(u)) return 'entradas';
+  if (/^(Web de la sala|Web del organizador)/.test(label)) return 'sala';
+  return isHome(u) ? 'sala' : 'evento';
+}
+function sheetLinks(e) {
+  const own = safeurl(e.url), list = [];
+  // Ficha de una sala solo con su web o sus entradas (política de la fuente): ese es el enlace.
+  if (own && e.link_label) list.push({url: own, kind: e.link_label === 'Entradas' ? 'entradas' : 'sala', label: t(e.link_label)});
+  const official = safeurl(e.official_page?.url);
+  if (official) list.push({url: official, kind: isHome(official) ? 'sala' : 'evento'});
+  for (const l of e.links || []) { const kind = linkKind(l, e); if (kind) list.push({url: safeurl(l.url), kind, label: kind === 'social' || (kind === 'fuente' && l.label !== 'Página de la fuente') ? linkLabel(l.label) : kind === 'fuente' ? L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`, `Listing on ${sourceName(e)}`) : ''}) }
+  // La página de la fuente: si la fuente es el propio centro, esa página ya es la del acto.
+  if (own && !e.link_label) list.push({url: own, kind: e.data_origin === 'centro' ? 'evento' : 'fuente', label: e.data_origin === 'centro' ? '' : L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`, `Listing on ${sourceName(e)}`)});
+  const seen = new Set(), key = u => u.split('#')[0].replace(/^http:/, 'https:').replace('://www.', '://').replace(/\/+$/, '');
+  const out = list.filter(x => x.url && !seen.has(key(x.url)) && seen.add(key(x.url))).sort((a, b) => LINK_RANK[a.kind] - LINK_RANK[b.kind]);
+  for (const x of out) if (!x.label) x.label = x.kind === 'sala' && isHome(x.url) ? urlHost(x.url) : LINK_NAME[x.kind]();
+  return out;
+}
+function mainLink(e) { const first = sheetLinks(e)[0]; return first ? {url: first.url, label: first.label} : null }
+function organizerBox(e) {
+  if (e.organizers?.length) return `<div><small>${t('Organiza')}</small><b>${esc(e.organizers.join(' · '))}</b></div>`;
+  const web = (e.links || []).find(l => l.label === 'Web del evento' && safeurl(l.url));
+  if (web) { const host = new URL(safeurl(web.url)).hostname.replace(/^www\./, ''); return `<div><small>${t('Web')}</small><b><a href="${esc(safeurl(web.url))}" target="_blank" rel="noopener noreferrer">${esc(host)} ↗</a></b></div>` }
+  return '';  // sin organizador conocido, la caja no sale
+}
+let sheetMap = null;
+function mountSheetMap(e) {
+  if (sheetMap) { try { sheetMap.remove() } catch (_) {} sheetMap = null }
+  const el = $('sheetMap'); if (!el || !window.L || !e.coordinates) return;
+  const point = [e.coordinates.lat, e.coordinates.lon];
+  sheetMap = window.L.map(el, {zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false, boxZoom: false, keyboard: false, attributionControl: true}).setView(point, 15);
+  window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(sheetMap);
+  window.L.circleMarker(point, {radius: 9, color: '#ffffff', weight: 3, fillColor: '#6d5bd0', fillOpacity: 1}).addTo(sheetMap);
+  setTimeout(() => sheetMap && sheetMap.invalidateSize(), 60);
+}
+// Añadir al calendario (22-10-2026): iPhone (.ics que Safari abre con «Añadir al calendario») y
+// Google Calendar. Lo sirve functions/cal/[[path]].js con el hueco ya calculado al exportar
+// (src/publish_static.py, calendar_days): el día que se mira y solo la hora que publica la fuente.
+// Solo en la web publicada: el servidor local no tiene esa función.
+function calendarMenu(k, e) {
+  if (!STATIC) return '';
+  const day = e.occurrence_date || (e.start === e.end ? e.start : state.day);
+  const base = eventPath(k).replace(/^(?:\/v2)?\/e\//, '/cal/') + '?d=' + encodeURIComponent(day);
+  const apple = `<a class="sheet-link" data-cal="ics" data-k="${esc(k)}" href="${esc(base)}">iPhone</a>`, gcal = `<a class="sheet-link" data-cal="google" data-k="${esc(k)}" target="_blank" rel="noopener noreferrer" href="${esc(base + '&g=1')}">Google Calendar ↗</a>`;
+  const ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+  return `<details class="cal-menu"><summary class="save-link">▦ ${t('Añadir al calendario')}</summary><div class="cal-options">${ios ? apple + gcal : gcal + apple}</div></details>`;
+}
+async function shareEvent(k) {
+  const url = location.origin + eventPath(k), title = $('detailTitle')?.textContent || 'Ontoca';
+  // En WhatsApp el enlace ya trae foto, título, cuándo y dónde (vista previa); el texto lo resume por si no carga.
+  const when = document.querySelector('.facts > div:first-child b')?.textContent || '', where = document.querySelector('.facts > div:nth-child(2) b')?.textContent || '';
+  const text = [title, [when, where].filter(Boolean).join(' · ')].filter(Boolean).join('\n');
+  try { if (navigator.share) { await navigator.share({title, text, url}); track('nativo', 'event_share', k); return } } catch (_) { return }  // cancelado: no cuenta
+  try { await navigator.clipboard.writeText(url); track('copiar', 'event_share', k); const b = document.querySelector('[data-share]'); if (b) { b.textContent = '✓ ' + t('Enlace copiado'); setTimeout(() => { b.textContent = '⇪ ' + t('Compartir') }, 1800) } } catch (_) { track('manual', 'event_share', k); prompt(t('Enlace de la ficha'), url) }
+}
+function hideSheet() { if ($('overlay').hidden) return false; $('overlay').hidden = true; document.body.style.overflow = ''; state.detail = null; if (sheetMap) { try { sheetMap.remove() } catch (_) {} sheetMap = null } returnFocus?.focus(); return true }
+function closeSheet() { if (!hideSheet()) return; const depth = history.state?.depth || 0; if (depth) history.go(-depth); else syncUrl() }  // closing skips every sheet opened in a row (sala → evento → …) and lands on the list
+window.addEventListener('popstate', () => { const k = detailFromLocation(); if (k) { if (k !== state.detail) openDetail(k, null, {push: false}) } else hideSheet() });
+function toggleSave(k) { track('ficha', state.saved.includes(k) ? 'event_unsave' : 'event_save', k); state.saved = state.saved.includes(k) ? state.saved.filter(x => x !== k) : [...state.saved, k]; saveState(); renderAgenda(); if (!$('overlay').hidden) openDetail(k, returnFocus) }
+
+/* ---------- orchestration ---------- */
+async function refresh({scroll = false} = {}) {
+  channelView(); syncUrl(); days(); chips(); hours(); renderActive();
+  if (scroll) scrollToId('agenda');
+  await Promise.all([agenda(), selection(), loadDistricts()]);
+}
+let searchTimer = null;
+document.addEventListener('click', e => {
+  const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period]'); if (!button) return;
+  if (button.matches('a[data-quickcat],a[data-period]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro
+  if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
+  if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
+  if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
+  if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
+  if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
+  if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
+  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'closeFilters') { openDrawer(false); return }
+  if (button.dataset.alerts === 'open') { openAlerts(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district'].forEach(clearFilter); refresh(); return }
+  if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
+  if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
+  if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
+  if (button.dataset.expand) { state.expanded.add(button.dataset.expand); renderAgenda(); const sec = $('ag-' + button.dataset.expand); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return }
+  if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }
+  if (button.dataset.moredays) { state.shown += 7; stableRender(); return }
+  if (button.dataset.dayall) { state.openDays.add(button.dataset.dayall); stableRender(); return }
+  if (button.dataset.venueq) {
+    hideSheet(); state.detail = null; state.query = button.dataset.venueq; $('searchInput').value = state.query; state.day = today; state.range = '30'; refresh({scroll: true}); return
+  }
+  if (button.dataset.festq) {
+    // Todas las actividades del festival: búsqueda por su nombre, desde su primer día (o hoy) y sus días.
+    const from = button.dataset.fesfrom > today ? button.dataset.fesfrom : today, span = daysBetween(from, button.dataset.festo || from);
+    hideSheet(); state.detail = null; state.query = button.dataset.festq; $('searchInput').value = state.query; state.day = from;
+    state.range = span <= 0 ? '' : span <= 7 ? '7' : span <= 30 ? '30' : '90'; refresh({scroll: true}); return
+  }
+  if (button.dataset.pickrange) { if (button.dataset.pickrange !== state.pickRange) { state.pickRange = button.dataset.pickrange; track('seleccion', 'range_change', state.pickRange); selection() } return }
+  if (button.dataset.agtab) {   // pestaña: solo su contenido y vuelta al principio del listado
+    if (state.tab !== button.dataset.agtab) { state.tab = button.dataset.agtab; track('filtro', 'agenda_tab', state.tab); syncUrl(); renderAgenda() }
+    const top = $('agendaList').getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--daytop')) || 0);
+    if (window.scrollY > top) window.scrollTo({top}); return
+  }
+  if (button.dataset.quickcat !== undefined) { const c = button.dataset.quickcat; track('filtro', 'filter_category', c || 'todas', c && !(state.cats.length === 1 && state.cats[0] === c) ? 1 : 0); state.cats = !c || (state.cats.length === 1 && state.cats[0] === c) ? [] : [c]; refresh(); return }
+  if (button.dataset.block) {
+    const id = button.dataset.block, open = button.getAttribute('aria-expanded') === 'true'; state.collapsed ||= new Set();
+    if (open) { state.expanded.delete(id); state.collapsed.add(id); if (id === 'wide') state.expanded.delete('wideAll') } else { state.expanded.add(id); state.collapsed.delete(id) }
+    stableRender(); const sec = $('ag-' + id); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return
+  }
+  if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; if (button.closest('#typeMini')) { state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return } state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
+  if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
+  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; refresh(); return }
+  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; refresh(); return }
+  if (button.dataset.category !== undefined) {
+    const c = button.dataset.category; track('filtro', 'filter_category', c || 'todas', c && !state.cats.includes(c) ? 1 : 0);
+    state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
+    refresh(); return
+  }
+  if (button.dataset.age) { const a = button.dataset.age; track('filtro', 'filter_age', a, state.ages.includes(a) ? 0 : 1); state.ages = state.ages.includes(a) ? state.ages.filter(x => x !== a) : [...state.ages, a]; refresh(); return }
+  if (button.dataset.actlang) { const l = button.dataset.actlang; track('filtro', 'filter_language', l, state.langs.includes(l) ? 0 : 1); state.langs = state.langs.includes(l) ? state.langs.filter(x => x !== l) : [...state.langs, l]; refresh(); return }
+  if (button.dataset.channel) { const c = button.dataset.channel; track('filtro', 'filter_channel', c, state.chans.includes(c) ? 0 : 1); state.chans = state.chans.includes(c) ? state.chans.filter(x => x !== c) : [...state.chans, c]; if (!state.chans.includes('familia')) state.ages = []; channelView(); refresh(); return }
+  if (button.dataset.district) { track('filtro', 'filter_district', button.dataset.district, state.district === button.dataset.district ? 0 : 1); state.district = state.district === button.dataset.district ? '' : button.dataset.district; refresh({scroll: true}); return }
+  if (button.dataset.trtoggle !== undefined) {
+    const sec = button.closest('.sheet-copy'), orig = button.getAttribute('aria-expanded') !== 'true';
+    sec.querySelector('.tr-text').hidden = orig; sec.querySelector('.tr-orig').hidden = !orig; button.setAttribute('aria-expanded', String(orig));
+    button.textContent = orig ? L('Ver traducción', 'Veure la traducció', 'Show translation') : L('Ver original', "Veure l'original", 'Show original'); return
+  }
+  if (button.dataset.save) { toggleSave(button.dataset.save); return }
+  if (button.dataset.share) { shareEvent(button.dataset.share); return }
+  if (button.dataset.open) {
+    const origin = button.closest('#curated') ? 'seleccion' : button.closest('.ev-hl') ? 'destacado' : button.closest('#sheet') ? 'ficha' : 'agenda';
+    openDetail(button.dataset.open, button, {origin}); return
+  }
+  if (button.classList.contains('close') && !button.classList.contains('small')) closeSheet();
+  if (button.id === 'retry') agenda();
+});
+// Conversión (Matomo): clic hacia entradas o inscripción, o hacia la web del organizador/sala/fuente. Un solo evento
+// propio por clic; Matomo registra además la salida automáticamente (enableLinkTracking).
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('#sheet a[data-lk], #sheet a[data-cal]'); if (!a || !state.detail) return;
+  if (a.dataset.cal) { track(a.dataset.cal, 'event_calendar', a.dataset.k || state.detail); return }
+  track('conversion', ['entradas', 'inscripcion'].includes(a.dataset.lk) ? 'ticket_click' : 'organizer_click', state.detail);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); if ($('filters').classList.contains('open')) openDrawer(false) } });
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet() });
+$('drawerBackdrop').addEventListener('click', () => openDrawer(false));
+$('formatFilter').addEventListener('change', e => { track('filtro', 'filter_format', e.target.value || 'todos', e.target.value ? 1 : 0); state.format = e.target.value; refresh() });
+$('lang')?.addEventListener('change', ev => { const next = ev.target.value; try { localStorage.setItem('brollant-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href) });
+$('districtFilter').addEventListener('change', e => { track('filtro', 'filter_district', e.target.value || 'todos', e.target.value ? 1 : 0); state.district = e.target.value; refresh() });
+$('freeOnly').addEventListener('change', e => { track('filtro', 'filter_free', 'gratis', e.target.checked ? 1 : 0); state.free = e.target.checked; refresh() });
+// El campo de fecha va invisible encima del botón «Fecha»: en Chrome y Safari de escritorio un clic
+// en él no abre el calendario (solo su icono, que no se ve). Se abre explícitamente.
+$('dayPicker').addEventListener('click', e => { try { e.target.showPicker() } catch (_) { /* navegador sin showPicker: comportamiento nativo */ } });
+$('dayPicker').addEventListener('change', e => { if (!e.target.value) return; track('filtro', 'filter_date', 'fecha_concreta'); state.day = e.target.value; state.range = ''; refresh() });
+$('daysPrev').addEventListener('click', () => { $('days').scrollBy({left: -$('days').clientWidth * 0.8}) });
+$('daysNext').addEventListener('click', () => { $('days').scrollBy({left: $('days').clientWidth * 0.8}) });
+$('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.query = e.target.value.trim(); channelView(); syncUrl(); days(); renderActive(); agenda() }, 250) });
+// Enter keeps the typed text and applies it at once (the form must never submit: that would reload the page without the query).
+$('searchForm').addEventListener('submit', e => { e.preventDefault(); clearTimeout(searchTimer); state.query = $('searchInput').value.trim(); channelView(); syncUrl(); days(); renderActive(); agenda(); $('searchInput').blur(); scrollToId('agenda') });
+function setHours(changed) {
+  let from = Number($('hourFrom').value), to = Number($('hourTo').value);
+  if (changed === 'from' && from > to) { to = from; $('hourTo').value = to } if (changed === 'to' && to < from) { from = to; $('hourFrom').value = from }
+  state.hourFrom = from; state.hourTo = to; track('filtro', 'filter_hours', `${from}-${to}`, 1); refresh();   // al soltar el control (change), no en cada movimiento
+}
+$('hourFrom').addEventListener('change', () => setHours('from')); $('hourTo').addEventListener('change', () => setHours('to'));
+$('hourFrom').addEventListener('input', e => { $('hourFromLabel').textContent = hourLabel(e.target.value) }); $('hourTo').addEventListener('input', e => { $('hourToLabel').textContent = hourLabel(e.target.value) });
+$('clearHours').addEventListener('click', () => { state.hourFrom = null; state.hourTo = null; refresh() });
+
+// Hero: the last word is retyped every few seconds (hoy → mañana → este fin de
+// semana → esta semana → este mes), typewriter style. The heading keeps a fixed
+// accessible name; the animation stops when the tab is hidden or when the
+// visitor prefers reduced motion.
+function typeHero() {
+  const el = $('heroWord'); if (!el) return;
+  const words = ['hoy.', 'mañana.', 'este fin de semana.', 'esta semana.', 'este mes.'].map(t);
+  $('heroTitle').setAttribute('aria-label', `${t('Qué hacer en Barcelona')} ${words[0]}`);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const visible = async () => { while (document.hidden) await wait(500) };
+  (async () => {
+    let i = 0; el.classList.add('typing'); await wait(2600);
+    for (;;) {
+      await visible();
+      const current = el.textContent; for (let n = current.length; n >= 0; n--) { el.textContent = current.slice(0, n); await wait(38) }
+      await wait(260); i = (i + 1) % words.length; const next = words[i]; el.classList.toggle('long', next.length > 16);  // a long phrase shrinks on phones so it stays on its one reserved line
+      for (let n = 1; n <= next.length; n++) { el.textContent = next.slice(0, n); await wait(n === next.length ? 0 : 55 + Math.random() * 45) }
+      await wait(2600);
+    }
+  })();
+}
+
+(async () => {
+  let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}
+  // v1: oscuro por defecto. v2 (22-10-2026): sigue el modo del sistema. En las dos, el botón sol/luna lo cambia y se recuerda.
+  if (SKIN === 'v2') theme = 'light';  // v2 solo en claro (23-10-2026: el oscuro no convenció; los colores siguen con nombre por si se retoma)
+  document.documentElement.dataset.theme = theme; translatePage(); typeHero();
+  const initial = eventFromPath();  // read before the first syncUrl rewrites the address
+  saveState(); await refresh();
+  if (initial) { state.detail = null; syncUrl(); openDetail(initial, null, {origin: 'enlace'}) }  // list entry first, then the sheet: Back shows the agenda
+  if (STATIC) { const warm = () => loadCatalog().catch(() => {}); 'requestIdleCallback' in window ? requestIdleCallback(warm) : setTimeout(warm, 800) }
+})();
