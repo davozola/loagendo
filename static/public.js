@@ -163,7 +163,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), drop_in: Boolean(c.di), sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -247,7 +247,7 @@ async function staticEvents(p) {
       const inside = e.occurrences.filter(o => from <= o.date && o.date <= to);
       if (inside.length || !e.occurrence_date) e = {...e, occurrence_date: inside[0]?.date || null, time: inside[0]?.time || e.time};
     }
-    if (!filters.started && (e.kind === 'course' || e.kind === 'program') && e.start < startedCutoff && !e.open_enrollment) continue;  // los de inscripción abierta siguen
+    if (!filters.started && needsSignup(e) && e.start < startedCutoff) continue;  // solo cursos y talleres por sesiones (25-10-2026)
     if (filters.query && !queryMatches(searchText(e), filters.query)) continue;
     if (!catMatch(e, filters.cat) || !chanMatch(e, filters.chans) || !ageMatch(e, filters.ages) || !langMatch(e, filters.langs)) continue;
     if (filters.format && e.format !== filters.format) continue;
@@ -297,6 +297,15 @@ const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/
 function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate()} ${months[d.getMonth()]}` }
 function labelDay(v) { if (v === today) return t('Hoy'); const d = new Date(v + 'T12:00:00'); return `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` }
 function timeLabel(e) { return t(e.time_label) || e.time || (e.start !== e.end ? t('Varios días') : t('Hora no indicada')) }
+// Sala tocable en la fila (25-10-2026): lleva a sus planes de los próximos 6 meses. Solo si es un sitio concreto.
+function rowVenue(e) {
+  const site = String(e.venue_names?.[0] || '').split(' · ')[0].trim();
+  return site && !MANY_PLACES.test(site) ? `<span class="ev-venue" data-venueq="${esc(site)}" title="${esc(L(`Planes en ${site}`, `Plans a ${site}`, `Plans at ${site}`))}">${esc(venue(e))}</span>` : `<span>${esc(venue(e))}</span>`;
+}
+function goVenue(site) {
+  track('filtro', 'venue', site);
+  hideSheet(); state.detail = null; state.query = site; $('searchInput').value = site; state.day = today; state.range = '183'; refresh({scroll: true});
+}
 function venue(e) { return [e.venue_names?.[0] || e.venues?.[0]?.name, t(e.district)].filter(Boolean).join(' · ') || 'Barcelona' }
 // One label per record: the category, then the format when it is not a plain one-off act ("Talleres y experiencias · Cursos").
 function catLabel(e) {
@@ -533,6 +542,9 @@ const isOpenFormat = e => e.kind === 'exhibition' || e.format === 'exhibition' |
 // Programas de barrio, talleres o deporte que duran semanas: actividad periódica (como un taller), no una obra en cartel.
 const PERIODIC_CATS = new Set(['charlas', 'talleres', 'deporte']);
 const isPeriodic = e => isCourse(e) || (e.format === 'program' && PERIODIC_CATS.has(e.public_category));
+// Curso o taller al que hay que apuntarse desde el principio (mvp/catalog.needs_signup): lo único que
+// «ya empezados» aparta. Programas, temporadas, inscripción abierta y sesiones sueltas salen sus días (25-10-2026).
+const needsSignup = e => isCourse(e) && !e.open_enrollment && !e.drop_in;
 const collator = new Intl.Collator('es', {sensitivity: 'base'}), byTitle = (a, b) => collator.compare(a.title, b.title);
 
 // Parte del día sin hora («Matinal», «Tarda»).
@@ -558,7 +570,7 @@ function availability(e, day) {
   const span = daysBetween(e.start, e.end);
   // Horario oficial de ese día (tabla por días de la fuente): manda sobre la etiqueta general.
   const dayHours = hoursByDay(e)?.[day];
-  if (dayHours && !(isPeriodic(e) && !isOpenFormat(e) && span > SHORT_DAYS)) {
+  if (dayHours && !(needsSignup(e) && !isOpenFormat(e) && span > SHORT_DAYS)) {
     const r = rangeIn(dayHours), ts = timesIn(dayHours);
     // Una exposición o un espacio con horario de apertura es «horario amplio», aunque cada tramo sea corto.
     if (r) return (r.close - r.open >= WIDE_MIN || isOpenFormat(e)) ? {kind: 'wide', ...r, until: e.end} : {kind: 'timed', times: [clock(r.open)], endsAt: r.close};
@@ -568,9 +580,12 @@ function availability(e, day) {
   // La fuente confirma actividad ese día pero no da la hora.
   const dayKnown = hoursByDay(e)?.[day] === '';
   if (isPeriodic(e) && !isOpenFormat(e)) {
-    if (span > SHORT_DAYS) return {kind: day <= e.start ? 'soon' : 'started', until: e.end, ...(range || {})};
-    if (times.length || range) return {kind: 'timed', times: times.length ? times : [clock(range.open)], confirmDay: true, until: e.end, endsAt: range?.close};
-    return {kind: 'tbc', until: e.end};
+    if (span > SHORT_DAYS && (day <= e.start || needsSignup(e))) return {kind: day <= e.start ? 'soon' : 'started', until: e.end, ...(range || {})};
+    if (span <= SHORT_DAYS) {
+      if (times.length || range) return {kind: 'timed', times: times.length ? times : [clock(range.open)], confirmDay: true, until: e.end, endsAt: range?.close};
+      return {kind: 'tbc', until: e.end};
+    }
+    // Programa o sesiones sueltas ya en marcha: sigue como una temporada (abajo).
   }
   if (isOpenFormat(e) || (range && range.close - range.open >= WIDE_MIN)) return {kind: 'wide', until: e.end, ...(range || {noHours: true})};
   // Temporada de semanas con una hora general pero sin saber qué días hay función (24-10-2026): no se
@@ -775,7 +790,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta"><span>${esc(venue(e))}</span>${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1315,7 +1330,7 @@ async function openDetail(k, focus, opts = {}) {
     const osm = e.coordinates && !manyPlaces ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.coordinates.lat + ',' + e.coordinates.lon)}` : '';
     const map = e.coordinates && !manyPlaces ? `<section class="sheet-place"><div id="sheetMap" class="sheet-map" role="img" aria-label="${t('Mapa de')} ${esc(e.venues?.[0]?.name || t('la ubicación'))}"></div><a class="sheet-place-caption" target="_blank" rel="noopener noreferrer" href="${esc(osm)}"><div><b>${esc(e.venue_names?.[0] || e.venues?.[0]?.name || t('Ubicación'))}</b><small>${esc(e.venues?.[0]?.address || t(e.district) || 'Barcelona')}</small></div></a></section><div class="sheet-cta sheet-cta-map"><a class="sheet-link cta-secondary" target="_blank" rel="noopener noreferrer" href="${esc(osm)}">${t('Cómo llegar')} ↗</a></div>` : '';
     // Más planes del mismo espacio: un enlace que abre la agenda filtrada por la sala (30 días), no una lista en la ficha.
-    const upcoming = realSite && (e.venue_upcoming || []).length ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Más planes en ${site}`, `Més plans a ${site}`, `More at ${site}`))} ›</button></p>` : '';
+    const upcoming = realSite ? `<p class="sheet-venue-link"><button class="linklike" type="button" data-venueq="${esc(site)}">${esc(L(`Todos los planes en ${site} (6 meses)`, `Tots els plans a ${site} (6 mesos)`, `All plans at ${site} (6 months)`))} ›</button></p>` : '';
     const all = sheetLinks(e), main = all[0] || null;
     const mainCta = main ? `<div class="sheet-cta sheet-cta-main"><a class="source-link" data-lk="${esc(main.kind)}" target="_blank" rel="noopener noreferrer" href="${esc(main.url)}">${esc(main.label)} ↗</a></div>` : '';
     // Debajo, el resto en el mismo orden (sin repetir tipo salvo entradas/inscripciones distintas), y la fuente al final.
@@ -1429,6 +1444,7 @@ async function refresh({scroll = false} = {}) {
 }
 let searchTimer = null;
 document.addEventListener('click', e => {
+  const vq = e.target.closest('.ev-venue[data-venueq]'); if (vq) { e.preventDefault(); goVenue(vq.dataset.venueq); return }
   const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period]'); if (!button) return;
   if (button.matches('a[data-quickcat],a[data-period]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
@@ -1449,7 +1465,7 @@ document.addEventListener('click', e => {
   if (button.dataset.moredays) { state.shown += 7; stableRender(); return }
   if (button.dataset.dayall) { state.openDays.add(button.dataset.dayall); stableRender(); return }
   if (button.dataset.venueq) {
-    hideSheet(); state.detail = null; state.query = button.dataset.venueq; $('searchInput').value = state.query; state.day = today; state.range = '30'; refresh({scroll: true}); return
+    goVenue(button.dataset.venueq); return
   }
   if (button.dataset.festq) {
     // Todas las actividades del festival: búsqueda por su nombre, desde su primer día (o hoy) y sus días.

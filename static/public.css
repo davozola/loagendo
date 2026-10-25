@@ -513,3 +513,7 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .ag-part+.ag-part{margin-top:28px}
 .ag-part-head{margin:16px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--line2);font-size:20px;font-weight:700;letter-spacing:-.02em}
 .ag-part-head span{font-weight:500;opacity:.65;font-variant-numeric:tabular-nums}
+
+/* Sala tocable en la fila (25-10-2026) */
+.ev-meta .ev-venue{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
+.ev-meta .ev-venue:hover{color:var(--fg)}
