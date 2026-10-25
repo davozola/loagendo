@@ -15,10 +15,11 @@ from src import guia_schedule
 
 # Also versions the description selection. GuiaBCN exposes a metadata-only
 # meta description ("Quan / On") alongside the actual body copy.
-SCHEDULE_PARSER_VERSION = 9  # 9 (20-10-2026): «Fecha y horario» y «Precios» de la información práctica del CCCB. 8 (20-10-2026): horario de la página del Lliure, «Quan?» de Barcelona és molt més (Diputació), «próximamente» del MACBA, «per determinar». 7 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
+SCHEDULE_PARSER_VERSION = 10  # 10 (25-10-2026): descripción con todos los párrafos del bloque .cos (antes solo el primero). 9 (20-10-2026): «Fecha y horario» y «Precios» de la información práctica del CCCB. 8 (20-10-2026): horario de la página del Lliure, «Quan?» de Barcelona és molt més (Diputació), «próximamente» del MACBA, «per determinar». 7 7 (18-10-2026): URL de la API con id_doc antes de xout (la v6 recibía 406), precio de respaldo y enlaces oficiales.
 # 6: 6 (18-10-2026): horario de GuiaBCN desde la API de detalle, fila a fila y por día.
 # 5: 5 (17-10-2026): la descripción sale solo del bloque .cos; nunca del menú de navegación
 
+DESCRIPTION_MAX = 3000
 NAVIGATION_TEXT = re.compile(r"^\s*(?:per districte|por distrito|by district)\b|selecciona el districte|selecciona el distrito", re.I)
 
 
@@ -74,10 +75,17 @@ class MetaParser(HTMLParser):
         # favour the first substantive body paragraph instead.
         # Fuera de `.cos` solo hay navegación y filtros (p. ej. «Per districte
         # Selecciona el districte…»): sin bloque de contenido no hay descripción.
-        body=next((p for p in self._content_paragraphs if usable_description(p)),'')
+        # 10 (25-10-2026): todos los párrafos de `.cos`, no solo el primero, y por delante de la meta
+        # descripción (un resumen de ~160 caracteres). Tope de 3.000 caracteres en el último párrafo entero.
+        paragraphs=[p for p in self._content_paragraphs if usable_description(p)]
+        body=''
+        for p in paragraphs:
+            if body and len(body)+2+len(p)>DESCRIPTION_MAX: break
+            body=(body+'\n\n'+p) if body else p[:DESCRIPTION_MAX]
+        if body: return body
         if re.match(r'^\s*Quan\s*:',meta,re.I) or not usable_description(meta):
-            return body
-        return meta or body
+            return ''
+        return meta
 
     @property
     def schedule(self):
