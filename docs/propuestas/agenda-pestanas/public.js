@@ -925,10 +925,11 @@ function tabHint(counts) {
   const others = Object.keys(TABS).filter(k => k !== state.tab && counts[k]);
   return others.length ? `<p class="ag-tab-hint">${others.map(k => `<button class="linklike" type="button" data-agtab="${k}">${L('Ver', 'Mostra', 'See')} ${counts[k].toLocaleString('es-ES')} ${L('en', 'a', 'in')} ${esc(byLang(TABS[k]))}</button>`).join(' · ')}</p>` : '';
 }
-// Exposiciones y espacios abiertos: el orden de siempre (último día y cierre más cercano primero).
+// Exposiciones y espacios abiertos: primero las que terminan antes (último día, luego fecha de fin; decisión
+// de David del 25-10-2026) y, a igualdad, la que cierra antes hoy.
 function wideTab(list, live) {
-  const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0;
-  const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
+  const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0, endOf = e => String(e._a.until || e.end || '9999');
+  const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
   sorted.forEach(e => { e._hl = '' });  // sin destacados: ya va ordenado por cierre
@@ -1018,6 +1019,9 @@ function renderAgenda() {
     // información útil (22-10-2026): se oculta entero.
     group.hidden = true;
   }
+  // Con «Arte» como única categoría se abre Exposiciones, como antes el bloque (25-10-2026).
+  const catsKey = state.cats.join(',');
+  if (catsKey !== state.catsKey) { if (state.catsKey !== undefined && catsKey === 'arte') state.tab = 'expo'; state.catsKey = catsKey }
   let tabs = $('agTabs');
   if (!tabs) { tabs = document.createElement('div'); tabs.id = 'agTabs'; tabs.className = 'period-tabs ag-tabs'; tabs.setAttribute('role', 'tablist'); host.before(tabs) }
   tabs.hidden = true;
