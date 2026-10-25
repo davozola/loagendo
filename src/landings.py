@@ -81,10 +81,11 @@ NAV = [('/hoy', 'Hoy'), ('/manana', 'Mañana'), ('/fin-de-semana', 'Este fin de 
        ('/con-ninos/fin-de-semana', 'Con niños este finde'), ('/conciertos', 'Conciertos'), ('/teatro', 'Teatro y danza'), ('/exposiciones', 'Exposiciones')]
 
 
-def nav_html():
-    """Enlaces fijos al pie de todas las páginas: así los buscadores llegan a todas desde la portada."""
-    return ('<nav class="seo-nav" aria-label="Planes en Barcelona"><span>Planes en Barcelona:</span> '
-            + ' '.join(f'<a href="{p}">{html.escape(l)}</a>' for p, l in NAV) + '</nav>')
+def nav_html(skip=''):
+    """Enlaces a las demás páginas de entrada. Desde el 25-10-2026 no van en el pie: se ponen en la lista en HTML
+    de cada página de entrada (la que leen los buscadores), y la portada enlaza con la barra de categorías y «Hoy»."""
+    return ('<nav class="seo-nav" aria-label="Planes en Barcelona"><span>Más planes en Barcelona:</span> '
+            + ' '.join(f'<a href="{p}">{html.escape(l)}</a>' for p, l in NAV if p != skip) + '</nav>')
 
 
 def _matches(item, landing):
@@ -141,7 +142,7 @@ def render(index, page, days_data, site_url):
     landing = json.dumps(page['landing'], ensure_ascii=False, separators=(',', ':'))
     doc = doc.replace('<html lang="es"', f"<html lang=\"es\" data-landing='{html.escape(landing, quote=False).replace(chr(39), '&#39;')}'", 1)
     block = (f'<section id="seoLista" class="seo-lista" lang="es"><h1>{html.escape(page["h1"])}</h1><p>{html.escape(page["lead"])}</p>'
-             + listing(page, days_data) + '<p class="seo-lista-more"><a href="/">Ver toda la agenda de Barcelona</a></p></section>')
+             + listing(page, days_data) + nav_html(skip=page['path']) + '<p class="seo-lista-more"><a href="/">Ver toda la agenda de Barcelona</a></p></section>')
     return doc.replace('<main>', '<main>' + block, 1)
 
 

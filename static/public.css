@@ -491,3 +491,4 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .alerts-send:disabled{opacity:.6;cursor:wait}
 .alerts-privacy a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .seo-nav a{display:inline-block;margin:0 14px 6px 0}
+a.cat-pill,a.period-tab{text-decoration:none}

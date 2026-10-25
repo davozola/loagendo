@@ -642,9 +642,14 @@ state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state
 // los cuatro bloques de tipo de horario desaparecen y la lista se ordena por su naturaleza.
 const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Arte', 'Art', 'Art'],
   charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities'], deporte: ['Deporte', 'Esport', 'Sport']};
+const CAT_LANDING = {'': '/', musica: '/conciertos', escena: '/teatro', arte: '/exposiciones'};
 function catBarHtml() {
   const only = state.cats.length === 1 ? state.cats[0] : '';
-  const btn = (c, label) => `<button type="button" class="cat-pill${(c ? only === c : !state.cats.length) ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${c ? only === c : !state.cats.length}"${c ? ` data-category-color="${c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}</button>`;
+  // Las categorías con página de entrada (src/landings.py) son enlaces reales, para que Google llegue a ellas
+  // desde la portada (25-10-2026); al tocarlas se filtra igual que antes, sin cambiar de página.
+  const btn = (c, label) => { const on = c ? only === c : !state.cats.length, href = CAT_LANDING[c];
+    const attrs = `class="cat-pill${on ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${on}"${c ? ` data-category-color="${c}"` : ''}`, inner = `${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}`;
+    return href ? `<a href="${href}" ${attrs}>${inner}</a>` : `<button type="button" ${attrs}>${inner}</button>` };
   return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}</div>`;
 }
 function chipsHtml(counts) {
@@ -1364,7 +1369,8 @@ async function refresh({scroll = false} = {}) {
 }
 let searchTimer = null;
 document.addEventListener('click', e => {
-  const button = e.target.closest('button,a[href^="#"]'); if (!button) return;
+  const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period]'); if (!button) return;
+  if (button.matches('a[data-quickcat],a[data-period]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
