@@ -666,8 +666,11 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             first = next((i for i in by_key[k].get('media', []) if not i.get('fallback')), None)
             exported = images.item(first) if first else None
             if exported: highlight_media[k] = exported['url']
+        # «Selección Ontoca · Hoy» (25-10-2026): las mismas reglas, solo con lo de ese día.
+        today_only = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=30)
+        picks_today = [e for e in today_only['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
-                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
+                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:

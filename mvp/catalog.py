@@ -1840,7 +1840,7 @@ def is_public(event):
     return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES)
 
 
-def query_events(conn, *, query='', date='', day='', date_from='', date_to='', category='', public_category='', format='', free=False, district='', source='', status='', kind='', only_sessions=False,featured=False,curated=False,hour_from=None,hour_to=None,page=1,page_size=24,public=False,include_started=True,subtype='',channel=''):
+def query_events(conn, *, query='', date='', day='', date_from='', date_to='', category='', public_category='', format='', free=False, district='', source='', status='', kind='', only_sessions=False,featured=False,featured_days=None,curated=False,hour_from=None,hour_to=None,page=1,page_size=24,public=False,include_started=True,subtype='',channel=''):
     """``public`` hides records the sources or the editors excluded (services,
     out-of-town rows, calendar notices, editorial exclusions). The admin console
     keeps seeing everything. ``date_from``/``date_to`` select a window (at most
@@ -1878,7 +1878,8 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
             event['occurrence_date']=inside[0]['date'] if inside else None
             if inside and inside[0]['time']: event['time']=inside[0]['time']
     match=[]; term=clean(query)
-    week_end=((parse_date(date) or today())+dt.timedelta(days=FEATURED_DAYS-1)).isoformat()
+    # featured_days=1: la «Selección Ontoca» de hoy (25-10-2026); por defecto, la semana.
+    week_end=((parse_date(date) or today())+dt.timedelta(days=(featured_days or FEATURED_DAYS)-1)).isoformat()
     started_cutoff=(today()-dt.timedelta(days=STARTED_GRACE_DAYS)).isoformat()
     earliest_hour=0 if hour_from is None else hour_from
     latest_hour=23 if hour_to is None else hour_to
