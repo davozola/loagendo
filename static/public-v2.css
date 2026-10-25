@@ -225,3 +225,6 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .alerts-dialog{border-radius:0;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font-family:'Inter Tight','Helvetica Neue',Arial,sans-serif}
 .alerts-head h2{font-size:1.8rem;font-weight:700;letter-spacing:-.03em}
 .alerts-send{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* Pestañas de la agenda (25-10-2026): fondo de papel y línea de tinta, como la barra de filtros. */
+.ag-tabs{background:var(--paper);box-shadow:0 -8px 0 var(--paper);border-bottom:1px solid var(--ink)}

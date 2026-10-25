@@ -492,3 +492,14 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .alerts-privacy a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .seo-nav a{display:inline-block;margin:0 14px 6px 0}
 a.cat-pill,a.period-tab{text-decoration:none}
+
+/* Pestañas de la agenda: Agenda · Exposiciones · Festivales (25-10-2026). Mismo aspecto que las de periodo. */
+.ag-tabs{position:sticky;top:var(--agtop,var(--stick));z-index:8;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 8px;box-shadow:0 -8px 0 var(--bg)}
+.ag-tabs[hidden]{display:none}
+.ag-tab{justify-content:center;gap:6px;white-space:nowrap}
+.ag-tab-n{font-weight:500;opacity:.65;font-variant-numeric:tabular-nums}
+.ag-tab.active .ag-tab-n{opacity:.9}
+.ag-tab-note{margin:12px 0 4px;color:var(--soft);font-size:14px}
+.ag-tab-hint{margin:12px 0 0}
+.ag-stick{top:var(--daytop,var(--stick))}
+@media(max-width:420px){.ag-tab{font-size:13px;padding:0 6px}}
