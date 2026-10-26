@@ -63,7 +63,7 @@ async function signup({request, env}) {
     await d.prepare('DELETE FROM searches WHERE confirm_token=?').bind(confirm).run();
     // 500, no 502 (25-10-2026): Cloudflare sustituye el cuerpo de un 502 por su propia página y la web
     // perdía el motivo. El código («Brevo 401», «sin clave») dice qué falló sin enseñar nada secreto.
-    const m = String(err && err.message || ''), why = /^Falta BREVO_API_KEY/.test(m) ? 'sin clave de Brevo' : (m.match(/^Brevo \d{3}/) || ['envío'])[0];
+    const m = String(err && err.message || ''), why = /^Falta BREVO_API_KEY/.test(m) ? 'sin clave de Brevo' : (m.match(/^Brevo \d{3}(?: · [^<>]{0,160})?/) || ['envío'])[0];
     console.error('alta: correo de confirmación', m);
     return json({ok: false, error: `No hemos podido enviar el correo de confirmación (${why}). Prueba más tarde.`, code: 'mail'}, 500);
   }

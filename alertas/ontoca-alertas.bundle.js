@@ -1,6 +1,5 @@
 // Worker «ontoca-alertas» empaquetado (alertas/worker.js + alertas/lib.js) para pegarlo en el panel de Cloudflare. Generado: npx esbuild alertas/worker.js --bundle --format=esm
-
-// alertas/lib.js
+// mnt/loagendo/alertas/lib.js
 var PENDING_HOURS = 48;
 var MAX_ITEMS_PER_SEARCH = 10;
 var CATS = {
@@ -13,7 +12,7 @@ var CATS = {
   fiestas: "Fiestas y mercados",
   deporte: "Deporte"
 };
-var CHANS = { familia: "En familia", barrio: "Vida de barrio", aire: "Al aire libre", galerias: "Arte y galer\xEDas", festivales: "Festivales" };
+var CHANS = { familia: "En familia", barrio: "Vida de barrio", aire: "Al aire libre", galerias: "Arte y galer\xEDas", festivales: "Festivales y fiestas" };
 var site = (env) => String(env.SITE_URL || "https://ontoca.com").replace(/\/$/, "");
 var sender = (env) => env.SENDER || "hola@ontoca.com";
 var nowIso = () => (/* @__PURE__ */ new Date()).toISOString();
@@ -116,6 +115,8 @@ async function sendMail(env, { to, subject, html, text, headers }) {
   const res = await (env.FETCH || fetch)("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": env.BREVO_API_KEY, "content-type": "application/json", accept: "application/json" },
+    // Sin «headers» vacío ni «tags» (26-10-2026): el alta recibía «Brevo 400»; los correos del Mac, que funcionan,
+    // no los mandan. Las cabeceras solo van cuando hay alguna (la baja en un clic de los resúmenes).
     body: JSON.stringify({
       sender: { name: "Ontoca", email: sender(env) },
       replyTo: { email: sender(env) },
@@ -123,11 +124,18 @@ async function sendMail(env, { to, subject, html, text, headers }) {
       subject,
       htmlContent: html,
       textContent: text,
-      headers: headers || {},
-      tags: ["alertas"]
+      ...headers && Object.keys(headers).length ? { headers } : {}
     })
   });
-  if (!res.ok) throw new Error(`Brevo ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    let why = "";
+    try {
+      const j = await res.json();
+      why = [j.code, j.message].filter(Boolean).join(": ");
+    } catch (_) {
+    }
+    throw new Error(`Brevo ${res.status}${why ? " \xB7 " + why.slice(0, 160) : ""}`);
+  }
   return true;
 }
 var shell = (inner, footer) => `<!doctype html><html lang="es"><body style="margin:0;background:#fff;color:#000;font-family:Helvetica,Arial,sans-serif">
@@ -166,7 +174,7 @@ Darme de baja: ${unsubscribeUrl}`;
   return { subject, html, text, total };
 }
 
-// alertas/worker.js
+// mnt/loagendo/alertas/worker.js
 var num = (v, d) => Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d;
 async function run(env, now = /* @__PURE__ */ new Date()) {
   const d = await db(env), at = now.toISOString(), m = madrid(now);

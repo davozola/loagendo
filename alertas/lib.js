@@ -18,7 +18,7 @@ export const MAX_ITEMS_PER_SEARCH = 10;
 export const FREQS = {bisemanal: 'Dos veces por semana (lunes y jueves)', semanal: 'Una vez por semana (lunes)'};
 export const CATS = {musica: 'Música', escena: 'Teatro y danza', cine: 'Cine', arte: 'Arte y exposiciones', charlas: 'Charlas y visitas',
   talleres: 'Talleres', fiestas: 'Fiestas y mercados', deporte: 'Deporte'};
-export const CHANS = {familia: 'En familia', barrio: 'Vida de barrio', aire: 'Al aire libre', galerias: 'Arte y galerías', festivales: 'Festivales'};
+export const CHANS = {familia: 'En familia', barrio: 'Vida de barrio', aire: 'Al aire libre', galerias: 'Arte y galerías', festivales: 'Festivales y fiestas'};
 
 export const site = env => String(env.SITE_URL || 'https://ontoca.com').replace(/\/$/, '');
 export const sender = env => env.SENDER || 'hola@ontoca.com';
@@ -115,9 +115,14 @@ export async function sendMail(env, {to, subject, html, text, headers}) {
   if (!env.BREVO_API_KEY) throw new Error('Falta BREVO_API_KEY');
   const res = await (env.FETCH || fetch)('https://api.brevo.com/v3/smtp/email', {method: 'POST',
     headers: {'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json'},
+    // Sin «headers» vacío ni «tags» (26-10-2026): el alta recibía «Brevo 400»; los correos del Mac, que funcionan,
+    // no los mandan. Las cabeceras solo van cuando hay alguna (la baja en un clic de los resúmenes).
     body: JSON.stringify({sender: {name: 'Ontoca', email: sender(env)}, replyTo: {email: sender(env)}, to: [{email: to}], subject,
-      htmlContent: html, textContent: text, headers: headers || {}, tags: ['alertas']})});
-  if (!res.ok) throw new Error(`Brevo ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      htmlContent: html, textContent: text, ...(headers && Object.keys(headers).length ? {headers} : {})})});
+  if (!res.ok) {
+    let why = ''; try { const j = await res.json(); why = [j.code, j.message].filter(Boolean).join(': ') } catch (_) {}
+    throw new Error(`Brevo ${res.status}${why ? ' · ' + why.slice(0, 160) : ''}`);
+  }
   return true;
 }
 
