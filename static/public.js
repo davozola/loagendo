@@ -171,7 +171,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -285,6 +285,11 @@ async function staticDistricts(day) {
 async function staticDetail(source, id, day) {
   const k = `${source}:${id}`, shard = await shardFor(k), e = shard[k];
   if (!e) throw Error('No encontrado');
+  // Ficha secundaria de otra (duplicado fusionado, 26-10-2026): se abre la que manda y el guardado pasa a ella.
+  if (e.alias_of) {
+    if (state.saved.includes(k)) { state.saved = [...new Set(state.saved.map(x => x === k ? e.alias_of : x))]; saveState() }
+    const [s, ...rest] = e.alias_of.split(':'); return staticDetail(s, rest.join(':'), day);
+  }
   return day ? atDay(e, day) : e;
 }
 const get = async path => {
@@ -572,6 +577,8 @@ function rangeIn(s) {
 }
 const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
 const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format === 'course';
+// «Exposición» solo para exposiciones: una actividad continuada (ruta, espacio abierto) no lo es (26-10-2026).
+const isExhibit = e => e.kind === 'exhibition' || e.format === 'exhibition';
 const isOpenFormat = e => e.kind === 'exhibition' || e.format === 'exhibition' || e.format === 'ongoing';
 // Programas de barrio, talleres o deporte que duran semanas: actividad periódica (como un taller), no una obra en cartel.
 const PERIODIC_CATS = new Set(['charlas', 'talleres', 'deporte']);
@@ -589,6 +596,8 @@ function availability(e, day) {
   const occTimes = [...new Set(occ.map(o => o.time).filter(Boolean).map(x => String(x).padStart(5, '0')))].sort();
   const label = e.time_label || '', raw = e.base_time ?? e.time ?? '';
   if (occTimes.length) return {kind: 'timed', times: occTimes};
+  // Ficha de pocos días con pases fechados (26-10-2026): sin pase ese día, no sale (sin pruebas de que haya algo).
+  if (!occ.length && e.start !== e.end && !isExhibit(e) && !hoursByDay(e) && daysBetween(e.start, e.end) <= SHORT_DAYS && (e.occurrences || []).some(o => o.time)) return {kind: 'skip'};
   const part = hoursByDay(e)?.[day];
   if (PARTS[part]) return {kind: 'tbc', part, until: e.end};
   // Días con sesión según la fuente (23-10-2026): si la tabla por días cubre esta fecha y no la nombra,
@@ -634,8 +643,9 @@ function availability(e, day) {
   // presenta como sesión de ese día («temporada · confirma el pase»): va a «planes sin hora confirmada».
   // Las de pocos días (festivales cortos) siguen con su hora.
   if ((range || times.length) && span > SHORT_DAYS && !dayKnown) return {kind: 'tbc', until: e.end};
-  if (range) return {kind: 'timed', times: [clock(range.open)], season: true, until: e.end, endsAt: range.close};
-  if (times.length) return {kind: 'timed', times, season: true, until: e.end};
+  if (range) return {kind: 'timed', times: [clock(range.open)], season: span > SHORT_DAYS, until: e.end, endsAt: range.close};
+  // «Temporada · confirma el pase» solo en temporadas largas; unas funciones de pocos días van a su hora (26-10-2026).
+  if (times.length) return {kind: 'timed', times, season: span > SHORT_DAYS, until: e.end};
   // Ciclos, temporadas y programas de semanas sin fechas ni hora de sus sesiones: no se sabe si hay
   // algo ese día, así que no salen en la agenda; solo al buscarlos por nombre.
   if (span > SHORT_DAYS && !dayKnown) return {kind: 'run', until: e.end};
@@ -829,7 +839,7 @@ function whenCell(e) {
   if (a.kind === 'wide') {
     const last = daysBetween(e._day || today, a.until) <= 1;
     if (!a.noHours && a.open === 0 && a.close >= 1439 && !(a.ranges || []).some(r => r.open > 0 || r.close < 1439)) return `<div class="when w-wide"><span class="w-state-wide">${L('Todo el día', 'Tot el dia', 'All day')}</span>${e.start !== e.end ? `<span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span>` : ''}</div>`;
-    if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? L('Exposición', 'Exposició', 'Exhibition') : L('Todo el día', 'Tot el dia', 'All day')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
+    if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? (isExhibit(e) ? L('Exposición', 'Exposició', 'Exhibition') : L('Varios días', 'Diversos dies', 'Several days')) : L('Todo el día', 'Tot el dia', 'All day')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
     let main, note = '', cls = '';
     if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert', 'Open')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a', 'closes in')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les', 'until')} ${clock(st.closesAt ?? a.close)}` }
     else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${st.reopens ? L('Reabre', 'Reobre', 'Reopens') : L('Abre', 'Obre', 'Opens')} ${clock(st.opensAt ?? a.open)}</span>`; note = (a.ranges || []).length > 1 ? a.ranges.map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ') : `${L('hasta las', 'fins a les', 'until')} ${clock(a.close)}` }
@@ -844,6 +854,8 @@ function whenCell(e) {
   if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa', 'times in its programme') : L('hora por confirmar', 'hora per confirmar', 'time to be confirmed')}</span></div>`;
   const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar', 'Time to be announced'), 'Horario próximamente': L('Horario próximamente', 'Horari properament', 'Times coming soon')}[e.time_label];
   if (fixedLater) return `<div class="when w-tbc"><span class="w-mid">${esc(fixedLater)}</span><span class="w-note">${L('según la fuente', 'segons la font', 'according to the source')}</span></div>`;
+  // Texto de horario de la fuente sin horas (26-10-2026): se muestra tal cual en vez de «Hora por confirmar».
+  if (e.schedule_hint && !a.courseStart) return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Horario según la fuente', 'Horari segons la font', 'Times per source')}</span><span class="w-short">${L('Ver horario', 'Veure horari', 'See times')}</span></span><span class="w-note">${esc(e.schedule_hint)}</span></div>`;
   return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.courseStart ? `<span class="w-note">${esc(`${L('empieza · curso', 'comença · curs', 'starts · course')} ${untilText(e, a.until)}`)}</span>` : a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
 }
 function row(e) {

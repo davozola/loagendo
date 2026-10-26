@@ -513,7 +513,7 @@
       "name": "Cines Verdi",
       "type": "cinema",
       "url": "https://barcelona.cines-verdi.com/",
-      "enabled": true
+      "enabled": false
     },
     {
       "slug": "phenomena",

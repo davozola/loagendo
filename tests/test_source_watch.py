@@ -88,7 +88,7 @@ class ReportTests(unittest.TestCase):
                          (json.dumps({'counts': {'events': 9623, 'upcoming_14_days': 4100}, 'deploy': {'status': 'completed'}}),))
             data = daily_report.collect(conn, today=day, now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'no.json', matomo=False)
             subject, body, text = daily_report.render(data)
-            self.assertIn('1 alerta', subject); self.assertIn('9623', body); self.assertIn('guiabcn', body)
+            self.assertIn('1 para revisar', subject); self.assertIn('9.623', body); self.assertIn('web_y', body)   # parte breve (26-10-2026)
             r = daily_report.run(conn, {'to': 'hola@ontoca.com'}, today=day, send=lambda *a: {'status': 'skipped'}, out_dir=Path(folder) / 'partes')
             self.assertEqual(r['status'], 'completed'); self.assertTrue(Path(r['file']).is_file())
 
@@ -128,7 +128,7 @@ class AiBlockTests(unittest.TestCase):
             self.assertEqual((ai['tokens']['input_tokens'], ai['categories'], ai['merges'], ai['dropped']), (1200, 1, 1, 1))
             self.assertEqual(len(ai['sample']), 1)   # 26-10-2026 es lunes
             _, body, _ = daily_report.render(data)
-            self.assertIn('IA · últimas 24 h', body); self.assertIn('misma sala y hora', body)
+            self.assertIn('IA 24 h', body); self.assertIn('misma sala y hora', body)
 
 
 class TriageTests(unittest.TestCase):
@@ -159,7 +159,7 @@ class TriageTests(unittest.TestCase):
             self.assertEqual([a['triage']['class'] for a in data['alerts']], ['revisar', 'esperar'])
             self.assertEqual({f['job']: f['triage']['class'] for f in data['failing']}, {'web-teatre-lliure': 'esperar', 'agendas-ia': 'suelto'})
             subject, body, text = daily_report.render(data)
-            self.assertIn('2 alertas · 1 para revisar', subject)
+            self.assertIn('1 para revisar', subject)
             self.assertIn('Avería suya · esperar', body); self.assertIn('Fallo suelto', body); self.assertIn('[Revisar] web_cccb', text)
 
 

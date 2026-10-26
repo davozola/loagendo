@@ -82,7 +82,7 @@ PROGRAM_LEAD = re.compile(r"^(?:cicle|ciclo|festival|fest|mostra|muestra|tempora
 INNER = {
     'cine': r"\b(?:cinema|cine|cineforum|pel.licula|pelicula|curtmetratge|documental|film)\b",
     'arte': r"\b(?:exposicio|exposicion|inauguracio|instal.lacio|fotografi(?:a|c)|pintura|escultura|art contemporani|arts visuals|il.lustracio)\b",
-    'musica': r"\b(?:concert|concierto|musica|jazz|rock|flamenc|flamenco|electronica|dj|orquestra|coral|piano|guitarra|hip hop|techno|house|indie|blues|soul|reggae|cumbia|salsa|bossa)\b",
+    'musica': r"\b(?:concert|concierto|musica|canciones|cancons|jazz|rock|flamenc|flamenco|electronica|dj|orquestra|coral|piano|guitarra|hip hop|techno|house|indie|blues|soul|reggae|cumbia|salsa|bossa)\b",
     'escena': r"\b(?:teatre|teatro|dansa|danza|circ|circo|titelles|opera|monoleg|comedia|comedy|stand.?up|open mic|improv|espectacle|espectaculo|contacontes|musical)\b",
     'charlas': r"\b(?:xerrada|conferencia|debat|debate|presentacio|literatura|llibre|libro|poesia|lectura|book club|walking tour|visita|itinerari|ruta|patrimoni|historia|ciencia|divulgacio|talks?|simposi|simposio|symposium|cicle tematic)\b",
     'talleres': r"\b(?:taller|workshop|curs|curso|tast|cata|manualitats|cuina|cocina)\b",
@@ -98,6 +98,22 @@ EVENTBRITE_FORMAT = {'class': 'talleres', 'workshop': 'talleres', 'training': 't
                      'concert': 'musica', 'performance': 'escena', 'gala': None, 'party': None, 'networking': None, 'meetup': None}
 EVENTBRITE_CATEGORY = {'music': 'musica', 'film & media': 'cine', 'film, media & entertainment': 'cine', 'performing & visual arts': 'escena',
                        'sports & fitness': 'deporte', 'food & drink': 'talleres', 'science & technology': 'charlas'}
+# Fuentes cuya categoría es la del recinto, no la del acto (auditoría 26-10-2026): todas sus fichas vigentes llevan la
+# misma (Palau 351 «Música», Liceu, Jamboree, Apolo, Teatre Lliure «Artes escénicas»…). Las agendas de sala leídas con IA
+# (venue_ia_*) toman la categoría del tipo de sala de config/agendas_ia.json, así que también lo son. Medido con
+# event_classification + listing_projections (fuentes con ≥10 fichas y una sola categoría).
+# También los agregadores de un solo género (conciertos.club, Songkick, Xceed: «Música» para todo, «Mamma mia» incluido).
+RECINTO_SOURCES = {'web_conciertos_club', 'venue_songkick', 'venue_xceed', 'venue_heliogabal', 'venue_jamboree', 'venue_liceu', 'venue_mira_festival', 'venue_mozilla_festival', 'venue_palau_musica',
+                   'venue_sala_apolo', 'venue_sala_vol', 'venue_sidecar', 'venue_teatre_poliorama', 'web_auditori', 'web_teatre_lliure'}
+
+
+def recinto_source(source):
+    return str(source or '').startswith('venue_ia_') or source in RECINTO_SOURCES
+
+
+# Fuentes que son salas de cine: todo lo que publican es Cine, diga lo que diga el título
+# («Escape Room 2» es una película). Decisión de David, 26-10-2026: «Espai Texas es un cine».
+CINEMA_SOURCES = {'venue_ia_espai_texas'}
 SOURCE_DEFAULT = {'venue_xceed': 'musica', 'venue_songkick': 'musica', 'web_conciertos_club': 'musica', 'venue_dice': 'musica'}
 VENUE_GENRE = [('escena', re.compile(r"^(?:teatre|teatro)\b|\b(?:sala beckett|mercat de les flors|tnc|teatre nacional|gran teatre del liceu)\b")),
                ('cine', re.compile(r"\b(?:filmoteca|cinemes|cines|cinema (?!a la fresca))"))]
@@ -128,6 +144,13 @@ def series_of(title):
     t = norm(title)
     return next((key for key, rx in SERIES if rx.search(t)), '')
 SERVICE = re.compile(r"\b(?:activitats laborals|busques feina|kit emprenedor|acces a l'habitatge|estudis a l'estranger|botiga solidaria|cibernarium|campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
+
+SCHOOL_SUPPORT = re.compile(r"\b(?:reforc (?:educatiu|escolar)|refuerzo (?:educativo|escolar)|classes de repas|clases de repaso)\b")
+
+# «Octubre al Marula Café», «Octubre a la Sala Apolo»… (Generalitat): la programación del mes de una sala,
+# no un acto. Sus conciertos ya llegan uno a uno (DICE, Songkick, la propia sala) y la ficha del mes los
+# duplicaba todos los días (David, 26-10-2026). Medido ese día: 23 fichas, todas con actos propios.
+VENUE_MONTH = re.compile(r"^(?:gener|febrer|marc|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre|enero|febrero|marzo|mayo|junio|julio|septiembre|noviembre|diciembre) (?:al|als|a la|a l'|a) ")
 
 SOURCE_CATEGORY = {
     'Música y vida nocturna': 'musica', 'Artes escénicas': 'escena', 'Cine y audiovisual': 'cine',
@@ -193,6 +216,16 @@ def classify(ev, override=None, ai=None):
     # Medido el 20-10-2026 (scripts/evaluar_ia.py, 310 fichas): reglas 98,7 %, IA 92,6 %; en los casos
     # dudosos, reglas 95 % e IA 84 %. La IA solo decide donde las reglas no dan categoría (pendientes);
     # en el resto, si discrepa con confianza alta, se señala para revisión y manda la regla.
+    # Categoría que solo es la del recinto (26-10-2026): la IA la corrige si, además de su confianza, lo respalda algo del
+    # propio acto: otra señal de las reglas (título, tipo de sala, cartel, subtítulo de la página) o el género que nombra
+    # el principio de su descripción. Validado contra la muestra etiquetada: la IA sola con confianza ≥ 0,85 acierta el
+    # 94 %, y falla justo donde no hay nada más («Mañana musical para embarazadas» → taller). Nunca excluye por esta vía.
+    if rules['method'] == 'categoria_recinto' and answer in CATEGORIES and answer != rules['category']:
+        backed = answer in rules.get('other_categories', []) or answer in inner_categories(str(ev.get('description') or ev.get('source_text') or '')[:400])
+        if backed:
+            return {**out, 'category': answer, 'status': 'probable', 'method': 'ia_con_senal',
+                    'evidence': f"IA ({ai.get('model', '')}, confianza {ai.get('confidence', 0):.2f}): {ai.get('reason', '')}. Respaldo: señal propia del acto. Reglas: {rules['evidence']}",
+                    'ambiguous': False}
     if rules['status'] != 'pendiente':
         if answer != rules['category'] and rules['status'] != 'excluida':
             out['ai_disagrees'] = f"{answer} ({ai.get('confidence', 0):.2f}): {ai.get('reason', '')}"
@@ -226,6 +259,9 @@ def _classify_rules(ev, override=None):
     if override and override.get('category') in CATEGORIES:
         return {'category': override['category'], 'status': 'editorial', 'method': 'correccion_editorial',
                 'evidence': override.get('note') or 'Corrección editorial', 'ambiguous': False}
+    if ev.get('source') in CINEMA_SOURCES:
+        return {'category': 'cine', 'status': 'confirmada', 'method': 'sala_de_cine',
+                'evidence': 'La fuente es una sala de cine (decisión editorial 26-10-2026)', 'ambiguous': False}
     title = ev.get('title') or ''
     source_cat = SOURCE_CATEGORY.get(ev.get('category') or '')
     lead, word = lead_category(title)
@@ -270,6 +306,9 @@ def _classify_rules(ev, override=None):
     if (not signals and (ev.get('source') == 'web_centres_civics' or umbrella)) or (ev.get('source') == 'web_centres_civics' and umbrella):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'resumen_de_programa',
                 'evidence': 'Noticia o resumen de programación de la red de centres cívics, no una actividad', 'ambiguous': False}
+    if ev.get('source') == 'generalitat' and VENUE_MONTH.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'resumen_de_programa',
+                'evidence': 'Programación del mes de una sala: sus actos ya salen uno a uno (decisión 26-10-2026)', 'ambiguous': False}
     if PATIS.search(t):
         return {'category': 'talleres', 'status': 'confirmada', 'method': 'regla_editorial',
                 'evidence': 'Patio escolar abierto para jugar en familia (decisión editorial 20-10-2026)', 'ambiguous': False}
@@ -279,6 +318,10 @@ def _classify_rules(ev, override=None):
     if not lead and not inner_categories(title) and SOCIAL.search(t):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'ocio_social_o_profesional',
                 'evidence': 'Ocio social, networking, empleo o congreso: fuera de la agenda cultural (decisión editorial 20-10-2026)', 'ambiguous': False}
+    # Refuerzo escolar: servicio educativo aunque el título empiece por «classes» (David, 26-10-2026).
+    if SCHOOL_SUPPORT.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
+                'evidence': 'Clases de refuerzo escolar: un servicio, no un plan de agenda (decisión 26-10-2026)', 'ambiguous': False}
     if SERVICE.search(t) and not (lead and lead in ('talleres', 'charlas', 'musica', 'escena', 'cine')):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
                 'evidence': 'Servicio, campaña o convocatoria, no una actividad programada (decisión editorial 20-10-2026)', 'ambiguous': False}
@@ -304,8 +347,12 @@ def _classify_rules(ev, override=None):
     ambiguous = len(strong) > 1 or (first[1] == 'genero_titulo' and source_cat and source_cat != first[0]
                                     and {first[0], source_cat} not in ({'charlas', 'talleres'}, {'escena', 'talleres'}))
     others = '; '.join(f'{CATEGORIES[c][0]} ({m})' for c, m, _ in signals[1:] if c != first[0])
-    return {'category': first[0], 'status': status, 'method': first[1],
-            'evidence': first[2] + (f'. Otras señales: {others}' if others else ''), 'ambiguous': bool(ambiguous)}
+    method, evidence = first[1], first[2]
+    if method == 'categoria_fuente' and recinto_source(ev.get('source')):
+        method, evidence = 'categoria_recinto', f'Categoría del recinto (la fuente la pone a todos sus actos): {ev.get("category")}'
+    return {'category': first[0], 'status': status, 'method': method,
+            'evidence': evidence + (f'. Otras señales: {others}' if others else ''), 'ambiguous': bool(ambiguous),
+            'other_categories': sorted({c for c, _, _ in signals[1:] if c != first[0]})}
 
 
 # ---------- canales ----------

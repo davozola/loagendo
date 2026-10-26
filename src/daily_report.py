@@ -14,6 +14,7 @@ import html
 import json
 import re
 import urllib.parse
+import sqlite3
 import urllib.request
 from pathlib import Path
 
@@ -110,6 +111,166 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG):
     return {'new': new, 'pending': len(pending), 'listed': listed, 'full': today.weekday() == 0}
 
 
+
+# ---------- Calidad del conjunto (26-10-2026): frescura, cobertura, duplicados, correcciones ----------
+AUTOMATION = ROOT / 'config' / 'automation.json'
+AUDIT_DIR = ROOT / 'reports' / 'auditorias'
+STALE_FACTOR = 2.5        # una fuente está atrasada si su última lectura buena es más vieja que 2,5 veces su frecuencia
+STALE_MIN_HOURS = 12
+VENUE_PAST_DAYS = 60      # sala con actividad en los últimos 60 días…
+VENUE_AHEAD_DAYS = 60     # …y nada en los próximos 60: ha dejado de aportar
+VENUE_MIN_PAST = 5
+DUP_DAYS = 14             # duplicados sospechosos: actos de un día en las próximas 2 semanas
+DUP_GENERIC = {'taller', 'tallers', 'concert', 'concerts', 'concierto', 'festival', 'cicle', 'ciclo', 'espectacle', 'espectaculo', 'jornades', 'jornada',
+               'projeccio', 'cinema', 'cinefòrum', 'cineforum', 'visita', 'visites', 'guiada', 'festa', 'major', 'fiesta', 'barcelona', 'edicio', 'activitat',
+               'familiar', 'infantil', 'xerrada', 'conferencia', 'presentacio', 'llibre', 'exposicio', 'nou', 'tardor', 'nadal', 'sessio', 'club', 'live', 'night',
+               'party', 'session', 'dj', 'amb', 'para', 'per', 'del', 'dels', 'les', 'los', 'las', 'the', 'and'}
+
+
+def _expected_minutes():
+    """{fuente: minutos entre lecturas} según config/automation.json; las salas, por su trabajo común."""
+    try: jobs = [j for j in json.loads(AUTOMATION.read_text(encoding='utf-8'))['jobs'] if j.get('enabled', True)]
+    except (OSError, ValueError, KeyError): return {}, {}
+    by_source = {j['source']: j['every_minutes'] for j in jobs if j.get('source')}
+    by_kind = {j['kind']: j['every_minutes'] for j in jobs}
+    return by_source, by_kind
+
+
+def _active_sources():
+    """Fuentes que el motor debe leer hoy: trabajos con fuente, salas activas (agendas IA y schema.org) y Eventbrite."""
+    out = set(_expected_minutes()[0])
+    try:
+        from src.ai_agenda import load_agendas
+        out |= {'venue_ia_' + a['slug'] for a in load_agendas() if a.get('activa') and not a.get('descartada')}
+    except Exception: pass
+    try:
+        venues = json.loads((ROOT / 'config' / 'venues.json').read_text(encoding='utf-8'))
+        venues = venues['venues'] if isinstance(venues, dict) else venues
+        out |= {'venue_' + v['slug'] for v in venues if v.get('enabled') and v.get('slug')}
+    except (OSError, ValueError, KeyError, TypeError): pass
+    return out
+
+
+def _freshness(conn, now):
+    """Fuentes atrasadas respecto a su propia frecuencia: [{source, hours, expected_hours, last_ok, error}]."""
+    by_source, by_kind = _expected_minutes()
+    last_ok = dict(conn.execute("SELECT source, MAX(COALESCE(finished_at, started_at)) FROM sync_runs WHERE status='completed' GROUP BY source").fetchall())
+    out = []
+    for s in sorted(_active_sources()):
+        every = by_source.get(s) or (by_kind.get('ai_agenda') if s.startswith('venue_ia_') else by_kind.get('eventbrite') if s == 'venue_eventbrite' else by_kind.get('venues'))
+        if not every: continue
+        limit_h = max(STALE_MIN_HOURS, every / 60 * STALE_FACTOR)
+        ok = last_ok.get(s)
+        hours = (now - dt.datetime.fromisoformat(ok).astimezone(dt.timezone.utc)).total_seconds() / 3600 if ok else None
+        if hours is None and not conn.execute('SELECT 1 FROM sync_runs WHERE source=? LIMIT 1', (s,)).fetchone(): continue  # nunca leída: aún no toca
+        if hours is None or hours > limit_h:
+            err = conn.execute("SELECT error FROM sync_runs WHERE source=? AND status<>'completed' ORDER BY id DESC LIMIT 1", (s,)).fetchone()
+            out.append({'source': s, 'hours': hours, 'expected_hours': every / 60, 'last_ok': ok, 'error': (err or [''])[0] or ''})
+    return sorted(out, key=lambda x: -(x['hours'] or 1e9))
+
+
+def _snapshot(conn, today, dim, counts):
+    """Guarda el recuento del día y devuelve el de hace 7 días (o None)."""
+    conn.execute("CREATE TABLE IF NOT EXISTS report_snapshots (day TEXT NOT NULL, dim TEXT NOT NULL, key TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY(day, dim, key))")
+    with conn:
+        conn.executemany("INSERT OR REPLACE INTO report_snapshots(day,dim,key,n) VALUES(?,?,?,?)", [(today.isoformat(), dim, k, n) for k, n in counts.items()])
+    before = dict(conn.execute("SELECT key, n FROM report_snapshots WHERE day=? AND dim=?", ((today - dt.timedelta(days=7)).isoformat(), dim)).fetchall())
+    return before or None
+
+
+def _coverage_by(conn, today):
+    """Fichas publicables en los próximos 30 días por categoría y por distrito, con la referencia de hace 7 días."""
+    end = (today + dt.timedelta(days=30)).isoformat()
+    from src.taxonomy import CATEGORIES
+    cats, dists = {}, {}
+    for cat, district in conn.execute("""SELECT e.category, json_extract(l.projection_json,'$.district') FROM source_records r
+            JOIN event_classification e ON e.source=r.source AND e.id=r.id LEFT JOIN listing_projections l ON l.source=r.source AND l.id=r.id
+            WHERE r.eligibility<>'exclude' AND e.category NOT IN ('excluida','pendiente')
+              AND substr(r.start_date,1,10)<=? AND substr(COALESCE(NULLIF(r.end_date,''),r.start_date),1,10)>=?""", (end, today.isoformat())):
+        label = CATEGORIES.get(cat, (cat,))[0]; cats[label] = cats.get(label, 0) + 1
+        if district: dists[district] = dists.get(district, 0) + 1
+    return {'categories': (cats, _snapshot(conn, today, 'categoria', cats)), 'districts': (dists, _snapshot(conn, today, 'distrito', dists))}
+
+
+def _venues_lost(conn, today):
+    """Salas que aportaban (≥5 actos en los últimos 60 días) y no tienen nada en los próximos 60."""
+    past, ahead = (today - dt.timedelta(days=VENUE_PAST_DAYS)).isoformat(), (today + dt.timedelta(days=VENUE_AHEAD_DAYS)).isoformat()
+    from src.dedupe import _clean
+    stats = {}
+    for venue, start, end, source in conn.execute("""SELECT v.venue, substr(r.start_date,1,10), substr(COALESCE(NULLIF(r.end_date,''),r.start_date),1,10), r.source
+            FROM source_records r JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+            WHERE r.eligibility<>'exclude' AND substr(r.start_date,1,10)>=? AND substr(r.start_date,1,10)<=? AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10))<=7""", (past, ahead)):
+        key = _clean(venue)
+        if not key or len(key) < 4: continue
+        s = stats.setdefault(key, {'venue': venue, 'past': 0, 'ahead': 0, 'sources': set()})
+        if start < today.isoformat(): s['past'] += 1
+        else: s['ahead'] += 1
+        s['sources'].add(source)
+    from src.taxonomy import OUTDOOR_VENUE, norm
+    address = re.compile(r"^(?:carrer|c\.|calle|placa|pl\.|plaza|rambla|gran via|avinguda|av\.|passeig|pg\.|diversos|varios)\b|\d")
+    lost = [dict(s, sources=sorted(s['sources'])) for s in stats.values() if s['past'] >= VENUE_MIN_PAST and s['ahead'] == 0
+            and not address.search(norm(s['venue'])) and not OUTDOOR_VENUE.search(norm(s['venue'])) and s['sources'] != {'venue_eventbrite'}]
+    return sorted(lost, key=lambda s: -s['past'])
+
+
+def _dup_suspects(conn, today):
+    """Actos de un día, mismo día y mismo sitio, de fuentes distintas, con una palabra propia del título en común y sin fusionar.
+    No son sospechosos dos pases con horas distintas: son sesiones."""
+    from src.dedupe import canonical_groups, _title_keys, _same_site, _generic_site, _clean
+    groups = canonical_groups(conn)
+    root = lambda k: groups.get(k, k)
+    end = (today + dt.timedelta(days=DUP_DAYS)).isoformat()
+    rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), v.venue, v.lat, v.lon,
+            (SELECT GROUP_CONCAT(local_time) FROM candidate_occurrences o WHERE o.source=r.source AND o.id=r.id AND COALESCE(o.local_time,'')<>'')
+            FROM source_records r JOIN event_classification e ON e.source=r.source AND e.id=r.id
+            LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+            WHERE r.eligibility<>'exclude' AND e.category NOT IN ('excluida','pendiente') AND substr(r.start_date,1,10) BETWEEN ? AND ?
+              AND substr(r.start_date,1,10)=substr(COALESCE(NULLIF(r.end_date,''),r.start_date),1,10)""", (today.isoformat(), end)).fetchall()
+    by_day = {}
+    for s, i, title, day, venue, lat, lon, times in rows:
+        words = {w for k in _title_keys(title) for w in k.split() if len(w) >= 4 and w not in DUP_GENERIC} - set(_clean(venue or '').split())
+        by_day.setdefault(day, []).append({'key': f'{s}:{i}', 'source': s, 'title': title, 'venue': venue or '', 'lat': lat, 'lon': lon, 'address': '',
+                                           'words': words, 'times': set((times or '').split(',')) - {''}})
+    out = []
+    for day, items in by_day.items():
+        for n, a in enumerate(items):
+            if _generic_site(a): continue
+            for b in items[n + 1:]:
+                if a['source'] == b['source'] or root(a['key']) == root(b['key']): continue
+                if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: continue  # gemelas
+                common, least = a['words'] & b['words'], min(len(a['words']), len(b['words']))
+                if not common or (len(common) < 2 and len(common) < least) or len(common) < 0.6 * least: continue
+                if a['times'] and b['times'] and not (a['times'] & b['times']): continue   # otra hora: otra sesión
+                if _same_site(a, b, km=0.15): out.append({'day': day, 'a': a, 'b': b})
+    return out
+
+
+def _corrections(conn, since):
+    """Correcciones editoriales de los últimos 7 días (clasificación y exclusiones)."""
+    try:
+        rows = conn.execute("SELECT new_json FROM classification_override_log WHERE changed_at>=?", (since,)).fetchall()
+    except sqlite3.DatabaseError: return None
+    excluded = sum(1 for (j,) in rows if '"excluida"' in (j or ''))
+    return {'total': len(rows), 'excluded': excluded}
+
+
+def _safe(fn, *args, default=None):
+    """Un indicador que no se puede calcular (tabla que aún no existe, base de pruebas) no tumba el parte."""
+    try: return fn(*args)
+    except (sqlite3.DatabaseError, OSError, ValueError, KeyError): return default
+
+
+def _audit(today):
+    """Última auditoría semanal (src/weekly_audit.py) de los últimos 7 días: {day, patterns, serious, file}."""
+    try: files = sorted(AUDIT_DIR.glob('*.json'))
+    except OSError: return None
+    for f in reversed(files):
+        if f.stem >= (today - dt.timedelta(days=7)).isoformat():
+            try: return json.loads(f.read_text(encoding='utf-8'))
+            except ValueError: return None
+    return None
+
+
 def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None, catalog_path=CATALOG):
     from src.source_watch import initialize
     initialize(conn)
@@ -163,7 +324,10 @@ def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None,
             'total_acts': sum(vol_now.values()), 'total_week_ago': sum(vol_week.values()) if vol_week else None,
             'runs': runs, 'failing': failing, 'publication': publication,
             'new': [(d, new_by_day.get(d, 0)) for d in last7], 'traffic': matomo_yesterday(today) if matomo is None else matomo,
-            'festivals': _festivals(conn, today), 'ai': _ai(conn, since, today), 'fest_watch': _festival_watch(conn, today, now, catalog_path)}
+            'festivals': _festivals(conn, today), 'ai': _ai(conn, since, today), 'fest_watch': _festival_watch(conn, today, now, catalog_path),
+            'freshness': _safe(_freshness, conn, now, default=[]), 'coverage': _safe(_coverage_by, conn, today, default={}),
+            'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]),
+            'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today)}
 
 
 def _tokens(value, out):
@@ -245,100 +409,94 @@ def _delta(x):
 
 
 def render(data):
-    """(asunto, html, texto) del parte."""
+    """(asunto, html, texto) del parte (26-10-2026): arriba lo que pide atención; debajo, los indicadores en pocas líneas."""
     day = dt.date.fromisoformat(data['today'])
     alerts, pub = data['alerts'], data['publication']
-    state = 'rojo' if any(a['kind'] in ('PUBLISH_STALE', 'ACTS_DROP') for a in alerts) else 'ámbar' if alerts or data['failing'] else 'verde'
+    fresh, lost, dups, audit = data.get('freshness') or [], data.get('venues_lost') or [], data.get('dups') or [], data.get('audit')
+    review = [a for a in alerts if (a.get('triage') or {}).get('class', 'revisar') == 'revisar']
+    waiting = [a for a in alerts if a not in review]
+    serious = (audit or {}).get('serious') or []
+    # Trabajos cuya última pasada sigue mal y piden revisión (p. ej. Open Data con 373 filas de 4.905: «suspect»).
+    jobs_bad = [f for f in data['failing'] if (f.get('triage') or {}).get('class') == 'revisar' and f['last'] not in ('completed', 'skipped')
+                and f['job'] not in {a['source'] for a in alerts}]
+    attention = len(review) + len(fresh) + len(jobs_bad) + (1 if lost else 0) + (1 if dups else 0) + (1 if serious else 0)
+    state = 'rojo' if any(a['kind'] in ('PUBLISH_STALE', 'ACTS_DROP') for a in alerts) or serious else 'ámbar' if attention or waiting else 'verde'
     dot = {'verde': '#12b76a', 'ámbar': '#f79009', 'rojo': '#d92d20'}[state]
-    review = sum(1 for a in alerts if (a.get('triage') or {}).get('class', 'revisar') == 'revisar')
-    subject = 'Ontoca · parte del %s · %s' % (day.strftime('%d-%m'), ('%d alerta%s · %s' % (len(alerts), 's' if len(alerts) != 1 else '',
-              '%d para revisar' % review if review else 'nada que revisar')) if alerts else 'todo en orden')
-    td = 'style="padding:5px 8px;border-bottom:1px solid #eee"'
-    tdr = 'style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right"'
-    h2 = lambda t: '<h2 style="font-size:15px;margin:22px 0 8px">%s</h2>' % t
+    subject = 'Ontoca · parte del %s · %s' % (day.strftime('%d-%m'), ('%d para revisar' % attention) if attention else 'todo en orden')
+    td = 'style="padding:4px 8px;border-bottom:1px solid #eee"'
+    tdr = 'style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right"'
+    h2 = lambda t: '<h2 style="font-size:15px;margin:20px 0 6px">%s</h2>' % t
+    li = lambda items: '<ul style="margin:0 0 6px;padding-left:18px">%s</ul>' % ''.join('<li style="margin:2px 0">%s</li>' % x for x in items)
+    num = lambda n: f'{n:,}'.replace(',', '.') if isinstance(n, int) else esc(n)
+    hrs = lambda h: 'nunca' if h is None else ('%d h' % h if h < 48 else '%d días' % (h // 24))
     parts = ['<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;color:#222;max-width:680px">',
              '<p style="font-size:18px;margin:0 0 4px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%%;background:%s"></span> Parte del %s</p>' % (dot, day.strftime('%d-%m-%Y'))]
-    # Alertas
-    parts.append(h2('Alertas abiertas (%d)' % len(alerts)))
-    if alerts:
-        parts.append('<table style="border-collapse:collapse;width:100%%">%s</table>' % ''.join(
-            '<tr><td %s><b>%s</b> %s<br>%s<br><span style="color:#666;font-size:12px">%s · desde %s</span></td></tr>' % (
-                td, esc(a['source']), LABELS.get(a['kind'], a['kind']), _badge(a['triage']) if a.get('triage') else '', esc(a['detail']), esc(a['first_seen_at'][:10])) for a in alerts))
-    else:
-        parts.append('<p style="color:#067647;margin:0">Ninguna.</p>')
+    # ---------- Requiere atención ----------
+    parts.append(h2('Requiere tu atención' + (' (%d)' % attention if attention else '')))
+    items = []
+    for a in serious[:5]:
+        items.append('<b>Error grave</b> (auditoría del %s): <a href="https://ontoca.com/e/%s">%s</a> · %s' % (esc(audit['day'][8:10] + '/' + audit['day'][5:7]), esc(a['key'].replace(':', '/', 1)), esc(a['title']), esc(a['problem'])))
+    for a in review:
+        items.append('<b>%s</b> %s · %s<br><span style="color:#666;font-size:12px">%s · desde %s</span>' % (esc(a['source']), LABELS.get(a['kind'], a['kind']), _badge(a['triage']) if a.get('triage') else '', esc(a['detail'][:200]), esc(a['first_seen_at'][:10])))
+    for f in jobs_bad:
+        items.append('<b>%s</b> · última pasada: %s · %s<br><span style="color:#666;font-size:12px">%s</span>' % (esc(f['job']), esc(f['status']), _badge(f['triage']), esc((f['error'] or '')[:200])))
+    for f in fresh:
+        items.append('<b>%s</b> %s (lee cada %s)%s' % (esc(f['source']), 'nunca se ha leído bien' if f['hours'] is None else 'sin leer bien desde hace ' + hrs(f['hours']), hrs(f['expected_hours']), (' · <span style="color:#666">%s</span>' % esc(f['error'][:120])) if f['error'] else ''))
+    if lost:
+        items.append('<b>%d sala%s sin nada próximo</b> tras %s: %s' % (len(lost), 's' if len(lost) != 1 else '', 'tener actividad en los últimos 60 días',
+                     esc(' · '.join('%s (%d, %s)' % (s['venue'][:40], s['past'], '/'.join(s['sources'])) for s in lost[:6]))))
+    if dups:
+        items.append('<b>%d posibles duplicados</b> sin fusionar (mismo día, sitio y título; horas distintas no cuentan):%s' % (len(dups), li(
+            '%s · %s <span style="color:#777">(%s)</span> = %s <span style="color:#777">(%s)</span>' % (esc(d['day'][8:10] + '/' + d['day'][5:7]), esc(d['a']['title'][:60]), esc(d['a']['source']), esc(d['b']['title'][:60]), esc(d['b']['source'])) for d in dups[:8])))
+    parts.append(li(items) if items else '<p style="color:#067647;margin:0">Nada. Todo en orden.</p>')
+    if waiting:
+        parts.append('<p style="color:#555;margin:4px 0">%s (se recupera sola): %s.</p>' % (TRIAGE['esperar'][0], esc(', '.join('%s (%s)' % (a['source'], a['first_seen_at'][:10]) for a in waiting))))
     if data['resolved']:
-        parts.append('<p style="color:#555">Cerradas en las últimas 24 h: %s.</p>' % esc(', '.join('%s (%s)' % (r['source'], LABELS.get(r['kind'], r['kind'])) for r in data['resolved'])))
-    # Web
-    parts.append(h2('Web'))
+        parts.append('<p style="color:#555;margin:4px 0">Resueltas en 24 h: %s.</p>' % esc(', '.join('%s (%s)' % (r['source'], LABELS.get(r['kind'], r['kind'])) for r in data['resolved'])))
+    # ---------- Indicadores ----------
+    parts.append(h2('Indicadores'))
+    lines = []
     if pub:
         c = pub['counts']
-        parts.append('<table style="border-collapse:collapse">' + ''.join('<tr><td %s>%s</td><td %s><b>%s</b></td></tr>' % (td, k, tdr, esc(v)) for k, v in [
-            ('Última publicación', (pub['at'] or '')[:16].replace('T', ' ') + ' UTC'), ('Fichas publicadas', c.get('events', '')),
-            ('Próximos 14 días', c.get('upcoming_14_days', '')), ('Con traducción', c.get('translations', '')), ('Despliegue', pub.get('deploy') or '')]) + '</table>')
-    else:
-        parts.append('<p>Sin publicación correcta registrada.</p>')
+        lines.append('Web: <b>%s</b> fichas · publicada %s UTC%s' % (num(c.get('events', '')), esc((pub['at'] or '')[:16].replace('T', ' ')), '' if (pub.get('deploy') in (None, 'deployed', 'ok', 'completed')) else ' · despliegue: ' + esc(pub['deploy'])))
     new = data['new']
-    parts.append('<p style="margin:10px 0 0">Planes nuevos en la web: <b>%d</b> ayer · %d en 7 días <span style="color:#777">(%s)</span></p>' % (
-        new[-1][1] if new else 0, sum(n for _, n in new), esc(' · '.join('%s %d' % (d[8:10], n) for d, n in new))))
-    t = data.get('traffic')
-    if t and not t.get('error'):
-        parts.append('<p style="margin:6px 0 0">Visitas (%s): <b>%s</b> · acciones %s%s</p>' % (esc(t['day'][8:10] + '-' + t['day'][5:7]), esc(t['visits']), esc(t['actions']),
-                     (' · búsquedas: ' + esc(', '.join('%s (%s)' % s for s in t['searches']))) if t.get('searches') else ''))
-    elif t and t.get('error'):
-        parts.append('<p style="color:#777">Matomo no respondió (%s).</p>' % esc(t['error']))
-    # Fuentes
+    lines.append('Planes nuevos: <b>%d</b> ayer · %d en 7 días' % (new[-1][1] if new else 0, sum(n for _, n in new)))
+    tr = data.get('traffic')
+    if tr and not tr.get('error'): lines.append('Visitas ayer: <b>%s</b> · acciones %s' % (esc(tr['visits']), esc(tr['actions'])))
     tot, before = data['total_acts'], data['total_week_ago']
-    parts.append(h2('Fuentes · actos en los próximos 30 días'))
-    parts.append('<p style="margin:0 0 8px">Total: <b>%s</b>%s · %d fuentes con actos</p>' % (f'{tot:,}'.replace(',', '.'), (' · hace 7 días %s' % f'{before:,}'.replace(',', '.')) if before else '', len(data['sources'])))
-    top = data['sources'][:TOP_SOURCES]
-    notable = [s for s in data['sources'][TOP_SOURCES:] if s['change'] is not None and abs(s['change']) >= NOTABLE and max(s['acts'], s['week_ago'] or 0) >= 10]
-    rows = top + notable
-    if rows:
-        parts.append('<table style="border-collapse:collapse;width:100%%"><tr><th %s>Fuente</th><th %s>Actos</th><th %s>vs 7 días</th><th %s>Con hora</th></tr>%s</table>' % (
-            td, tdr, tdr, tdr, ''.join('<tr><td %s>%s</td><td %s>%s</td><td %s>%s</td><td %s>%s</td></tr>' % (
-                td, esc(s['source']), tdr, s['acts'], tdr, _delta(s['change']), tdr, _pct(s['timed_share'])) for s in rows)))
-        if notable: parts.append('<p style="color:#777;font-size:12px">Debajo de las %d mayores, solo las que cambian un %d %% o más.</p>' % (TOP_SOURCES, NOTABLE * 100))
-    else:
-        parts.append('<p style="color:#777">Aún no hay medidas de volumen (empiezan con la primera pasada del motor).</p>')
-    fw = data.get('fest_watch')
-    if fw and (fw['new'] or fw['listed']):
-        day2 = lambda d: '%s/%s' % (d[8:10], d[5:7]) if d else ''
-        parts.append(h2('Festivales y fiestas'))
-        if fw['new']:
-            parts.append('<p style="margin:0 0 4px">Nuevos detectados:</p><ul style="margin:0;padding-left:18px">%s</ul>' % ''.join(
-                '<li><b>%s</b> · %s → %s · %s · %s</li>' % (esc(n['name']), day2(n['start']), day2(n['end']), esc(n['source']),
-                                                            esc('hora: ' + n['hours']) if n['hours'] else '<span style="color:#b42318">sin horario encontrado</span>') for n in fw['new']))
-        if fw['listed']:
-            title = 'Sin horario encontrado (%d pendientes%s)' % (fw['pending'], '' if fw['full'] else '; hoy, los nuevos y los que empiezan esta semana')
-            parts.append('<p style="margin:10px 0 4px">%s:</p><ul style="margin:0;padding-left:18px">%s</ul>' % (esc(title), ''.join(
-                '<li>%s · empieza el %s · <code>%s</code></li>' % (esc(p['name']), day2(p['start']), esc(p['key'])) for p in fw['listed'])))
-            parts.append('<p style="color:#777;font-size:12px;margin:6px 0 0">Para poner la hora a mano: config/horarios_festivales.json, con la clave de la ficha, los días, '
-                         'si es apertura o primera sesión y la fuente. Ninguna actualización la sobrescribe.</p>')
-    elif fw and fw['pending']:
-        parts.append('<p style="color:#777;margin-top:18px">Festivales sin horario encontrado: %d pendientes, sin novedades.</p>' % fw['pending'])
+    drops = [s for s in data['sources'] if s['change'] is not None and s['change'] <= -NOTABLE and max(s['acts'], s['week_ago'] or 0) >= 10]
+    lines.append('Fuentes: <b>%s</b> actos en 30 días%s · %d fuentes%s' % (num(tot), (' (%s hace 7 días)' % num(before)) if before else '', len(data['sources']),
+                 ('; bajan: ' + esc(', '.join('%s %s' % (s['source'], _delta(s['change'])) for s in drops[:6]))) if drops else ''))
+    cov = data.get('coverage') or {}
+    for label, key in (('Categorías', 'categories'), ('Distritos', 'districts')):
+        now_, week = cov.get(key, ({}, None))
+        if not now_: continue
+        top = sorted(now_.items(), key=lambda kv: -kv[1])
+        fmt = lambda k, n: '%s %s%s' % (esc(k), num(n), (' <span style="color:%s">%s</span>' % ('#b42318' if n < week.get(k, 0) else '#067647', _delta((n - week[k]) / week[k]))) if week and week.get(k) and abs(n - week[k]) / week[k] >= 0.1 else '')
+        lines.append('%s (30 días): %s%s' % (label, ' · '.join(fmt(k, n) for k, n in top[:10]), '' if week else ' <span style="color:#999">(la comparación semanal empieza en 7 días)</span>'))
+    corr = data.get('corrections')
+    if corr: lines.append('Correcciones editoriales en 7 días: <b>%d</b> (%d fuera de la agenda)' % (corr['total'], corr['excluded']))
+    if audit:
+        lines.append('Auditoría semanal (%s): %s' % (esc(audit['day'][8:10] + '/' + audit['day'][5:7]), esc(' · '.join(p['title'] for p in audit.get('patterns', [])[:3])) or 'sin patrones'))
     ai = data.get('ai')
     if ai:
         tk = ai['tokens']
-        parts.append(h2('IA · últimas 24 h'))
-        parts.append('<p style="margin:0">%s tokens de entrada · %s de salida · %s sugerencias (%s)</p>' % (
-            f"{tk.get('input_tokens', 0):,}".replace(',', '.'), f"{tk.get('output_tokens', 0):,}".replace(',', '.'), sum(ai['by_task'].values()),
-            esc(', '.join('%s %d' % kv for kv in sorted(ai['by_task'].items())) or 'ninguna')))
-        parts.append('<p style="margin:4px 0 0">Categorías decididas por IA: <b>%d</b> · fusiones de duplicados por IA: <b>%d</b> · fichas con datos descartados por no pasar la cita: <b>%d</b></p>'
-                     % (ai['categories'], ai['merges'], ai['dropped']))
-        if ai['sample']:
-            parts.append('<p style="margin:8px 0 4px">Muestra semanal de fusiones por IA para revisar (si alguna no es el mismo acto, dímelo y se corrige):</p><ol style="margin:0;padding-left:20px">%s</ol>'
-                         % ''.join('<li>%s <span style="color:#777">=</span> %s <span style="color:#777">· %.2f · %s</span></li>' % (esc(x['a']), esc(x['b']), x['confidence'], esc(x['reason'])) for x in ai['sample']))
-    # Motor
+        lines.append('IA 24 h: %s tokens · %d categorías y %d fusiones decididas por IA' % (num(tk.get('input_tokens', 0) + tk.get('output_tokens', 0)), ai['categories'], ai['merges']))
     r = data['runs']
-    parts.append(h2('Motor · últimas 24 h'))
-    parts.append('<p style="margin:0">%d pasadas correctas · %d con problemas</p>' % (r.get('completed', 0), sum(v for k, v in r.items() if k not in ('completed', 'skipped', 'running'))))
-    if data['failing']:
-        parts.append('<ul style="margin:6px 0;padding-left:18px">%s</ul>' % ''.join('<li><b>%s</b>: %s %s<br><span style="color:#777;font-size:12px">%s</span></li>' % (
-            esc(f['job']), esc(f['status']), _badge(f['triage']) if f.get('triage') else '', esc((f['error'] or '')[:200])) for f in data['failing']))
-    parts.append('<p style="color:#999;font-size:12px;margin-top:24px">Generado por el motor de Ontoca en el Mac. Las alertas también llegan al momento, una sola vez.</p></div>')
-    text = '\n'.join([subject, '', 'Alertas abiertas: %d' % len(alerts)] + ['- [%s] %s %s: %s' % (TRIAGE[(a.get('triage') or {}).get('class', 'revisar')][0], a['source'], LABELS.get(a['kind'], a['kind']), a['detail']) for a in alerts] +
-                     ['', 'Fichas publicadas: %s · próximos 14 días: %s' % ((pub or {}).get('counts', {}).get('events', '?'), (pub or {}).get('counts', {}).get('upcoming_14_days', '?')),
-                      'Planes nuevos ayer: %d' % (new[-1][1] if new else 0), 'Actos de las fuentes en 30 días: %s' % tot])
+    lines.append('Motor 24 h: %d pasadas correctas · %d con problemas%s' % (r.get('completed', 0), sum(v for k, v in r.items() if k not in ('completed', 'skipped', 'running')),
+                 (' (%s)' % esc(', '.join('%s: %s' % (f['job'], TRIAGE[f['triage']['class']][0]) for f in data['failing'] if f.get('triage')))) if data['failing'] else ''))
+    fw = data.get('fest_watch')
+    if fw and fw['new']:
+        lines.append('Festivales nuevos: %s' % esc(', '.join(n['name'] for n in fw['new'][:5])))
+    parts.append(li(lines))
+    if ai and ai['sample']:
+        parts.append('<p style="margin:10px 0 4px;color:#555">Lunes · muestra de fusiones por IA para revisar:</p><ol style="margin:0;padding-left:20px;color:#555">%s</ol>'
+                     % ''.join('<li>%s = %s <span style="color:#999">· %.2f · %s</span></li>' % (esc(x['a']), esc(x['b']), x['confidence'], esc(x['reason'])) for x in ai['sample'][:10]))
+    parts.append('<p style="color:#999;font-size:12px;margin-top:20px">Generado por el motor de Ontoca. Las alertas nuevas también llegan al momento, una sola vez.</p></div>')
+    text = '\n'.join([subject, '', 'Requiere atención: %d' % attention] + ['- [Revisar] %s %s: %s' % (a['source'], LABELS.get(a['kind'], a['kind']), a['detail'][:160]) for a in review] +
+                     ['- %s: %s' % (f['job'], (f['error'] or '')[:160]) for f in jobs_bad] + ['- %s %s' % (f['source'], 'nunca se ha leído bien' if f['hours'] is None else 'sin leer bien desde hace ' + hrs(f['hours'])) for f in fresh] + (['- %d posibles duplicados' % len(dups)] if dups else []) +
+                     (['- %d salas sin nada próximo' % len(lost)] if lost else []) + ['- Error grave: %s · %s' % (a['title'], a['problem']) for a in serious[:5]] +
+                     ['', 'Fichas publicadas: %s' % ((pub or {}).get('counts', {}).get('events', '?')), 'Actos de las fuentes en 30 días: %s' % tot])
     return subject, ''.join(parts), text
 
 

@@ -441,7 +441,7 @@ def _block_rows(block, season):
     rows = []
     for n, head in enumerate(heads):
         hours = block[head.end(): heads[n + 1].start() if n + 1 < len(heads) else len(block)]
-        hours = _WEEKLY_TAIL.sub('', hours).strip(' .;,')
+        hours = _WEEKLY_TAIL.sub('', hours).strip(' .;,·')  # «a les 20.00 h · Diumenge: …» (26-10-2026)
         days = head.group(1).strip()
         if not hours: return None
         # Horas por temporada dentro de la fila: «d'11 a 19.30 h (del 25 de setembre al 24 de juny) i de 10 a 20 h (del 25 de juny…)».

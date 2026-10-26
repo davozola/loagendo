@@ -229,6 +229,9 @@ def source_rank(source):
 def first_party(source):
     """La sala o el centro publicando su propia agenda (lectura de su web o su feed), no una ticketera ni un directorio."""
     if source.startswith("venue_ia_"): return True
+    # Las webs propias que se leen aparte (L'Auditori, Teatre Lliure, MACBA, CCCB) también son la sala (26-10-2026).
+    from src.data_origin import OWN_WEB
+    if source in OWN_WEB: return True
     if source.startswith("venue_"):
         from src.venue_directory import venue_type
         return venue_type(source[6:]) not in ("ticketing", "aggregator")
@@ -273,7 +276,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn) + slot_and_session_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -454,7 +457,10 @@ def act_pairs(conn):
             if words <= set(_clean(r["venue"]).split()) | CORE_STOP | PLACE_STOP:
                 # «Jamboree Jazz» en el Jamboree Jazz Club: Songkick anuncia la sala, no un concierto.
                 # Si otra fuente publica lo que hay esa noche en la sala, el anuncio se une a su primer concierto.
-                same = sorted((g for g in items if g is not r and g["source"] not in SINGLE_ACT_SOURCES and g["single"] and _same_place(r, g)), key=lambda g: g["key"])
+                # Sin nombre de artista que comparar, «mismo sitio» es la misma sala (nombre propio o <150 m), no el radio de
+                # 1,5 km de las ticketeras: con él, «Jamboree Jazz» se unía a conciertos del Palau y del Poliorama y encadenaba
+                # «Gran Gala Flamenc» (Palau) con «Gran Gala Flamenco» (Poliorama) en un solo grupo (26-10-2026).
+                same = sorted((g for g in items if g is not r and g["source"] not in SINGLE_ACT_SOURCES and g["single"] and _same_site(r, g, km=0.15)), key=lambda g: g["key"])
                 if same: pairs.append((r["key"], same[0]["key"]))
                 continue
             pattern = re.compile(r"(?:^| )" + re.escape(r["clean"]) + r"(?: |$)")
@@ -510,6 +516,12 @@ def _title_keys_typed(title):
     out = [(_title_key(title), "full")]
     m = QUOTED_WORK.match(str(title or ''))
     if m: out.append((_clean(m.group(1)), "quoted"))
+    # La obra entre comillas tras el nombre del ciclo o festival (26-10-2026): GuiaBCN titula «Flaix de Tardor: Teatre
+    # "Navegar por el Neva", a partir de…» y el Lliure «Navegar por el Neva»; «Cicle Simfònics al Palau: Concert "Requiem
+    # de Mozart"» y el Palau «Requiem de Mozart». Misma regla que sin ciclo; las fechas y el sitio se siguen exigiendo.
+    elif ':' in str(title or ''):
+        m = QUOTED_WORK.match(str(title).split(':', 1)[1])
+        if m: out.append((_clean(m.group(1)), "quoted"))
     # «Palms Trax all night long / POGO: …» junta dos actos: la parte tras «:» no es el título de la ficha entera.
     if ':' in str(title or '') and not str(title).lstrip().startswith(('"', '«', '“', "'")) and '/' not in str(title).split(':', 1)[0]:
         after = _clean(str(title).split(':', 1)[1])
@@ -856,3 +868,68 @@ def unconfirmed_by_venue(conn, groups, venues=None, today=None):
             key = f"{source}:{rid}"
             if root(key) not in own_roots: out[key] = venue["name"]
     return out
+
+
+# --- Mismo pase con otro título y sesiones partidas (26-10-2026, revisión de David) -----------------
+def _single_day_items(conn):
+    """Fichas de un solo día desde hoy, con sala y sus horas (candidate_occurrences)."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), v.venue, v.lat, v.lon, v.address
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE substr(r.start_date,1,10)>=? AND substr(r.end_date,1,10)<=date(substr(r.start_date,1,10),'+1 day')
+              AND r.eligibility<>'exclude'""", (today,)).fetchall()
+        occ = {}
+        for s, i, d, t in conn.execute("SELECT source,id,local_date,local_time FROM candidate_occurrences WHERE local_date>=? AND local_time IS NOT NULL AND local_time<>''", (today,)):
+            occ.setdefault((s, i), set()).add((d, t))
+    except sqlite3.DatabaseError:
+        return []
+    items = []
+    for source, rid, title, day, venue, lat, lon, address in rows:
+        items.append({"key": f"{source}:{rid}", "source": source, "id": rid, "title_key": _title_key(title), "day": day,
+                      "venue": venue or "", "lat": lat, "lon": lon, "address": address or "", "slots": occ.get((source, rid), set())})
+    return items
+
+
+def slot_pairs(conn, items=None):
+    """El mismo pase en dos ticketeras con títulos distintos, uno contenido en el otro: «MÜV» (Songkick) y
+    «MUV: Anti-Mondays Jam» (DICE), Marula Café, 26-10 a las 22:00. Distinta fuente, mismo sitio, misma
+    fecha y hora, y todas las palabras del título corto en el largo (aunque sea corto: «muv»)."""
+    items = _single_day_items(conn) if items is None else items
+    by_slot = {}
+    for it in items:
+        if not it["title_key"] or _generic_site(it): continue
+        for slot in it["slots"]: by_slot.setdefault(slot, []).append(it)
+    pairs = []
+    for group in by_slot.values():
+        if len(group) < 2 or len(group) > 40: continue
+        for n, a in enumerate(group):
+            for b in group[n + 1:]:
+                if a["source"] == b["source"] or a["title_key"] == b["title_key"]: continue
+                short, long_ = sorted((a["title_key"], b["title_key"]), key=len)
+                if len(short) < 3 or short in CONTAINED_GENERIC or not set(short.split()) <= set(long_.split()): continue
+                if _same_site(a, b, km=0.15): pairs.append((a["key"], b["key"]))
+    return list(dict.fromkeys(pairs))
+
+
+def session_pairs(conn, items=None):
+    """Una película con varios pases el mismo día en la misma sala es una sola ficha (David, 26-10-2026):
+    las salas que publican una página por pase (Espai Texas en Koobin) daban una ficha por sesión. Misma
+    fuente, mismo título, mismo sitio y mismo día; la ficha que queda reúne todas las horas (catalog)."""
+    items = _single_day_items(conn) if items is None else items
+    by = {}
+    for it in items:
+        if it["title_key"] and not _generic_site(it):
+            by.setdefault((it["source"], it["title_key"], it["day"]), []).append(it)
+    pairs = []
+    for group in by.values():
+        for n, a in enumerate(group):
+            for b in group[n + 1:]:
+                if _same_site(a, b, km=0.1): pairs.append((a["key"], b["key"]))
+    return pairs
+
+
+def slot_and_session_pairs(conn):
+    items = _single_day_items(conn)
+    return slot_pairs(conn, items) + session_pairs(conn, items)

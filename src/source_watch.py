@@ -97,16 +97,36 @@ def check_volume(conn, today, now, opened, resolved):
     return current
 
 
+def _check_agendas(conn, now, opened, resolved):
+    """JOB_FAILING por sala: sus tres últimas lecturas (sync_runs) fallaron."""
+    try:
+        from src.ai_agenda import load_agendas
+        active = ['venue_ia_' + a['slug'] for a in load_agendas() if a.get('activa') and not a.get('descartada')]
+    except Exception: return
+    for source in active:
+        rows = [r for r in conn.execute("SELECT status, error FROM sync_runs WHERE source=? AND status<>'running' ORDER BY id DESC LIMIT ?", (source, JOB_FAILURES))]
+        if len(rows) == JOB_FAILURES and all(s == 'failed' for s, _ in rows):
+            _raise(conn, source, 'JOB_FAILING', 'Últimas %d lecturas de la agenda fallidas. %s' % (JOB_FAILURES, (rows[0][1] or '')[:240]), now, opened)
+        elif rows and rows[0][0] == 'completed':
+            _clear(conn, source, 'JOB_FAILING', now, resolved)
+
+
 def check_jobs(conn, config, now_dt, opened, resolved):
     now = now_dt.isoformat(timespec='seconds')
     for job in (config or {}).get('jobs', []):
         if not job.get('enabled', True): continue
         statuses = [r[0] for r in conn.execute("""SELECT status FROM automation_runs WHERE job_name=? AND status NOT IN ('running')
             ORDER BY id DESC LIMIT ?""", (job['name'], JOB_FAILURES))]
-        if len(statuses) == JOB_FAILURES and all(s not in ('completed', 'skipped') for s in statuses):
+        # Trabajos de muchas salas (agendas leídas con IA): una sala distinta caída en cada pasada no es que el trabajo
+        # falle (26-10-2026: Poliorama, Filmoteca, CaixaForum… una vez cada una). Cuenta solo si fallan todas, y aparte
+        # se vigila cada sala: tres lecturas seguidas fallidas de la misma.
+        multi = job.get('kind') == 'ai_agenda'
+        if multi: _check_agendas(conn, now, opened, resolved)
+        bad = (lambda s: s == 'failed') if multi else (lambda s: s not in ('completed', 'skipped'))
+        if len(statuses) == JOB_FAILURES and all(bad(s) for s in statuses):
             last = conn.execute('SELECT error FROM automation_runs WHERE job_name=? ORDER BY id DESC LIMIT 1', (job['name'],)).fetchone()
             _raise(conn, job['name'], 'JOB_FAILING', 'Últimas %d pasadas: %s. %s' % (JOB_FAILURES, ', '.join(statuses), ((last or [''])[0] or '')[:240]), now, opened)
-        elif statuses and statuses[0] in ('completed', 'skipped'):
+        elif statuses and (statuses[0] in ('completed', 'skipped') or (multi and statuses[0] == 'partial')):
             _clear(conn, job['name'], 'JOB_FAILING', now, resolved)
         if job.get('kind') == 'publish':
             row = conn.execute("SELECT MAX(finished_at) FROM automation_runs WHERE job_name=? AND status='completed'", (job['name'],)).fetchone()

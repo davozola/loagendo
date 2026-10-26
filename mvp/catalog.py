@@ -326,6 +326,16 @@ def source_time(raw,source):
     return str(raw.get('observacions_horari') or '')
 
 
+def single_session(text):
+    """«A las 19.30 h», «a les 20.00 h» → '19:30': el único pase de un texto de horario que no dice nada más.
+    parse_hours ya rechaza lo que no es hora («portes», «aprox.», duración); aquí, además, nada de rangos
+    (horario de apertura) ni de varios pases (sin saber qué día va cada uno)."""
+    from src.guia_schedule import parse_hours
+    if not text or '\n' in str(text): return ''
+    h=parse_hours(text)
+    return h['sessions'][0] if h and not h['ranges'] and len(h['sessions'])==1 else ''
+
+
 def hours_range(text):
     """'de 10.00 h a 20.00 h', 'd'11 a 19.30 h', 'De 8.30 h a 22.30 h' → '10:00–20:00'.
 
@@ -533,6 +543,16 @@ def effective_kind(source, raw, stored_kind, title, start, end):
     if 'curs' in text or 'curso' in text:return 'course'
     if 'cicle' in text or 'festival' in text or span>2:return 'program'
     return 'single'
+
+
+def has_sessions(occurrences, hours_by_day):
+    """Sesiones confirmadas: un pase fechado con hora, o días con horas que no son un horario de apertura (≥ 4 h)."""
+    if any(o.get('time') for o in occurrences or []): return True
+    for value in (hours_by_day or {}).values():
+        for part in str(value or '').split(' · '):
+            m=re.fullmatch(r'(\d{2}):(\d{2})(?:–(\d{2}):(\d{2}))?',part.strip())
+            if m and (not m.group(3) or (int(m.group(3))*60+int(m.group(4)))-(int(m.group(1))*60+int(m.group(2)))<240): return True
+    return False
 
 
 def format_of(kind, title, start, end):
@@ -952,7 +972,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=33  # 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=34  # 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -981,6 +1001,19 @@ def listed_dates(text):
         out.append(value.isoformat())
     out=sorted(set(out))
     return out
+
+
+def night_only(raw):
+    """Una sola noche: la fuente da la hora de inicio y la de fin, y el fin es de madrugada del día siguiente
+    (DICE «Milkshake: Halloween», 29-10 23:59 → 30-10 05:00). Solo con las dos horas publicadas (26-10-2026)."""
+    item=(raw or {}).get('item') or {}
+    a,b=str(item.get('startDate') or ''),str(item.get('endDate') or '')
+    m1=re.match(r'(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})',a); m2=re.match(r'(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})',b)
+    if not (m1 and m2): return False
+    d1,d2=parse_date(m1.group(1)),parse_date(m2.group(1))
+    if not (d1 and d2) or (d2-d1).days!=1: return False
+    start_min,end_min=int(m1.group(2))*60+int(m1.group(3)),int(m2.group(2))*60+int(m2.group(3))
+    return end_min<=8*60 and end_min<start_min
 
 
 def project_raw(source, id, title, start, end, kind, url, raw):
@@ -1028,7 +1061,9 @@ def project_raw(source, id, title, start, end, kind, url, raw):
         if hours_by_day and len(set(hours_by_day.values()))>1: schedule_time=hours_label=None
     lineup,lineup_times=lineup_of(raw)
     languages=activity_languages(raw,source)
-    return {'v':PROJECTION_VERSION,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'languages':languages,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
+    single_night=night_only(raw)
+    start_clock=bool(re.fullmatch(r'\d{1,2}:\d{2}',source_time(raw,source).strip()))   # «19:00» a secas: hora de inicio, no un horario
+    return {'v':PROJECTION_VERSION,'single_night':single_night,'start_clock':start_clock,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'languages':languages,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
             'family_audience':family_audience(raw,source,title),'price_label':split_price(price)[0] or None,'is_free':is_free(price,free_label),
             'schedule_text_time':schedule_time,'hours_label':hours_label,'schedule_range':(lambda t:t if re.fullmatch(r'\d{2}:\d{2}–\d{2}:\d{2}',t) else '')(str(source_time(raw,source) or '').strip()),'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
@@ -1150,6 +1185,13 @@ def drop_in(title, text, notes=''):
     return ' '.join(blob[a:b].split())
 
 
+def short_dated(e):
+    """Ficha de hasta 7 días con algún pase fechado con hora: sus días son los de sus pases."""
+    if e.get('kind')=='exhibition' or e.get('format')=='exhibition': return False   # una exposición abre todos sus días
+    d0,d1=parse_date(e['start']),parse_date(e['end'])
+    return bool(d0 and d1 and (d1-d0).days<=7 and any(o.get('time') for o in e.get('occurrences') or []))
+
+
 def needs_signup(e):
     """Curso o taller por sesiones al que hay que apuntarse desde el principio: lo único que la
     regla de «ya empezados» oculta (25-10-2026). Temporadas, programas y funciones siguen saliendo
@@ -1165,6 +1207,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     else:
         raw=None
     kind=projection['kind']
+    if projection.get('single_night'): end=start   # una sola noche (night_only): el día siguiente es su madrugada
+    else:
+        # Las ticketeras alargan al día siguiente la sesión que pasa de medianoche (la misma regla que ya usa dedupe:
+        # DICE «Irieix» 5 → 6-3, la sala el 5-3). Sin esto, la hora se repetía en un día sin sesión (26-10-2026).
+        from src.dedupe import _end_of
+        if _end_of(source,str(start)[:10],str(end)[:10])==str(start)[:10]: end=start
     event_format=format_of(kind,title,start,end)
     if prefetch is not None:
         occurrences=[dict(o) for o in prefetch.occurrences.get((source,id),[])]
@@ -1340,7 +1388,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             singles=set()
             from src.dedupe import first_party as _first_party
             # La propia sala: sus agendas leídas (venue_*) y las webs propias que se leen aparte (L'Auditori, Lliure, MACBA, CCCB).
-            _fp=lambda src: _first_party(src) or src in ('web_auditori','web_teatre_lliure','web_macba','web_cccb')
+            _fp=_first_party  # incluye las webs propias (data_origin.OWN_WEB) desde el 26-10-2026
             for member in collapsed_members:
                 ms,mi=member.split(':',1)
                 if ms==source: continue
@@ -1370,6 +1418,17 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 if ts:
                     occurrences[:]=[o for o in occurrences if o['date']!=day]+[{'date':day,'time':t,'evidence_field':'otra_fuente','verified':False} for t in ts]
                     break
+        # Pases de la misma sala en fichas aparte (26-10-2026, David): una película con pases a las 16:00, 18:15 y
+        # 20:30 es una sola ficha ese día con todas sus horas; las de las otras fichas de la misma fuente (una página
+        # por pase, Espai Texas en Koobin) se suman aquí. Solo días dentro de las fechas de la ficha.
+        have={(o['date'],o.get('time')) for o in occurrences}
+        for member in collapsed_members:
+            ms,mi=member.split(':',1)
+            if ms!=source: continue
+            for o in _member_occ(ms,mi):
+                if o.get('time') and str(start)[:10]<=o['date']<=str(end)[:10] and (o['date'],o['time']) not in have:
+                    occurrences[:]=[x for x in occurrences if not (x['date']==o['date'] and not x.get('time'))]
+                    occurrences.append({'date':o['date'],'time':o['time'],'evidence_field':'misma_fuente','verified':False}); have.add((o['date'],o['time']))
         occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
         # Con funciones de la sala, sus horas mandan también sobre la tabla por días del agregador (Open Data daba
         # «16:00 · 17:15» también los domingos de «Concert per a nadons»; la sala y la Generalitat, 10:00, 11:15, 12:30).
@@ -1427,6 +1486,14 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # A record whose source names no district (Generalitat, the halls' own feeds,
     # aggregators) takes the district the municipal feeds give the same venue, or
     # the district of its nearest labelled neighbours when it carries coordinates.
+    # La ficha que manda (la web de la sala) a menudo no trae coordenadas: las de otra fuente del mismo acto, que
+    # describe el mismo sitio; el distrito sale de ellas más abajo (26-10-2026).
+    if not events['coordinates'] and collapsed_members:
+        for member in collapsed_members:
+            ms,mi=member.split(':',1)
+            rows=prefetch.venues.get((ms,mi),[]) if prefetch is not None else conn.execute('SELECT venue,address,lat,lon FROM source_venues WHERE source=? AND id=? ORDER BY seq',(ms,mi)).fetchall()
+            got=next(({'lat':v[2],'lon':v[3]} for v in rows if v[2] is not None and v[3] is not None),None)
+            if got: events['coordinates']=got; events['coordinates_from']=member; break
     if not events['district'] or not events['coordinates']:
         from src.gazetteer import gazetteer
         district,coords,how=gazetteer(conn).resolve(events['venue_names'],events['coordinates'])
@@ -1447,11 +1514,18 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['source_text']=events['source_text'][:1500]+'\n\n[Web oficial del acto] '+official_page['excerpt'].strip()[:950]
     from src import ai_assist, ai_extract
     ai_data=ai_assist.data_for(conn,source+':'+id,events) or {}
-    # Horario en líneas de la página de la sala (Teatre Lliure): días, pases, días sin función y funciones sueltas.
-    if not any((events.get('hours_by_day') or {}).values()) and page_schedule_text and '\n' in page_schedule_text:
-        from src.guia_schedule import lines_schedule
-        by_line=lines_schedule(page_schedule_text,start,end)
+    # Horario de la página de la sala: en líneas (Teatre Lliure: días, pases, días sin función y funciones sueltas)
+    # o, desde el 26-10-2026, también en una sola línea con los mismos lectores: «De jueves a sábado a las 19.00 h»,
+    # «Divendres 30: 22.30 h Dissabte 31: 21 h» (horario semanal) y «A las 19.30 h» (un único pase). Antes una
+    # línea suelta no se leía y la ficha quedaba sin hora aunque la fuente la diera (auditoría 26-10-2026).
+    if not any((events.get('hours_by_day') or {}).values()) and page_schedule_text:
+        from src.guia_schedule import lines_schedule,weekly_rows,schedule_by_day
+        by_line=lines_schedule(page_schedule_text,start,end) if '\n' in page_schedule_text else {}
+        if not by_line and str(start)[:10]!=str(end)[:10]:
+            rows=weekly_rows(page_schedule_text); by_line=schedule_by_day(rows,start,end) if rows else {}
         if by_line: events['hours_by_day']=by_line
+    if not schedule_time and not any((events.get('hours_by_day') or {}).values()):
+        schedule_time=single_session(page_schedule_text)
     own_time=any(o.get('time') for o in occurrences) or events.get('hours_by_day') or schedule_time or projection.get('schedule_text_time')
     ai_sessions=[x for x in ai_data.get('sessions') or [] if x.get('time')] if not own_time else []
     if ai_sessions:
@@ -1504,6 +1578,19 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
            'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
     ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
     verdict=taxonomy.classify(basis,override,ai)
+    # Formato por la naturaleza del acto (26-10-2026), no por su duración: un acto de la fuente (kind single) que format_of
+    # deja en «continuado» es una función si es teatro, música o cine, o si tiene sesiones confirmadas (pases fechados con
+    # hora, una hora de inicio de la fuente o una tabla por días con horas que no son de apertura). Las exposiciones y lo
+    # abierto sin hora (rutas, espacios) siguen como estaban.
+    if event_format=='ongoing' and kind=='single' and verdict['category']!='arte' and (verdict['category'] in ('escena','musica','cine') or has_sessions(events.get('occurrences'),events.get('hours_by_day')) or bool(re.fullmatch(r'\d{2}:\d{2}',str(events.get('time') or '')))):
+        events['format'],events['format_label']='one_shot',FORMATS['one_shot']
+    # Hora de inicio a secas («19:00», Eventbrite, DICE, GRAF) en una ficha de varios días (26-10-2026): solo consta para
+    # el primer día; los demás días van sin hora («por confirmar»), no con la misma hora repetida sin pruebas.
+    if events.get('format')=='one_shot' and events.get('time') and str(start)[:10]!=str(end)[:10] and not events.get('occurrences') and not any((events.get('hours_by_day') or {}).values()) \
+       and (projection.get('start_clock') or re.fullmatch(r'\d{1,2}:\d{2}(?:–\d{1,2}:\d{2})?',str(page_schedule_text or '').strip())):
+        d0,d1=parse_date(str(start)[:10]),parse_date(str(end)[:10])
+        if d0 and d1 and (d1-d0).days<=31:
+            events['occurrences']=[{'date':(d0+dt.timedelta(days=n)).isoformat(),'time':events['time'] if n==0 else None,'evidence_field':'inicio_de_la_fuente','verified':False} for n in range((d1-d0).days+1)]
     events['legacy_category']=events.get('public_category')
     events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
                    'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous'],
@@ -1944,6 +2031,9 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
         # Con horario por día (GuiaBCN, Open Data), un programa solo sale los días
         # en que hay actividad: «Dimecres» no aparece el jueves.
         if date and not featured and e['start']!=e['end'] and e.get('hours_by_day') and date not in e['hours_by_day']:continue
+        # Sin pruebas para ese día (26-10-2026): una ficha de pocos días con pases fechados solo sale los días con pase
+        # («Lectures compartides», Diba: 27-28 oct, un pase el 27 a las 17:30; el 28 no).
+        if date and not featured and e['start']!=e['end'] and not e.get('hours_by_day') and short_dated(e) and date not in {o['date'] for o in e['occurrences']}:continue
         if window and not (e['start']<=window[1] and e['end']>=window[0]):continue
         if category and e['category']!=category:continue
         if public and not is_public(e):continue

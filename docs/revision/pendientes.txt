@@ -1,0 +1,8 @@
+# Casos para revisar · una línea por ficha:
+#   <URL de la ficha o fuente:id> | <qué está mal> | <dato correcto y dónde lo has visto (opcional)>
+# Ejemplos:
+#   https://ontoca.com/e/opendatabcn_agenda/99400767314 | es charla, no taller |
+#   https://ontoca.com/e/venue_ia_poliorama/652ace... | falta la hora | 20:30, web del Poliorama
+#   https://ontoca.com/e/eventbrite/123 | no debería estar (venta de cursos) |
+# Las líneas con # se ignoran. Cuando una tanda está procesada, se mueve al registro.
+

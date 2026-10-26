@@ -156,6 +156,21 @@ def default_thumbnailer():
     return resize
 
 
+# Texto de horario de la fuente sin horas (26-10-2026, David): «Horaris i preus segons establiment»,
+# «Consulteu horari en el programa». La tarjeta lo muestra en vez del genérico «Hora por confirmar».
+_SCHEDULE_TEXT = {}
+# Sede comprobada a mano (field_verifications, campo «venue», con URL de evidencia): manda sobre la de la fuente
+# en tarjeta y ficha. Serielizados: Open Data da solo la sala Phenomena y el festival va en varias salas (26-10-2026).
+_VERIFIED_VENUE = {}
+_HINT_CLOCK = re.compile(r"\b\d{1,2}(?:[:.]\d{2})?\s*h\b|\b\d{1,2}:\d{2}\b")
+
+
+def schedule_hint(text):
+    text = ' '.join(str(text or '').split())
+    if not text or len(text) > 80 or _HINT_CLOCK.search(text): return ''
+    return text
+
+
 def packed_hours(event, field='hours_by_day'):
     """Horario por día en poco espacio: {etiqueta: [días desde el inicio]}.
 
@@ -210,6 +225,10 @@ def compact(event, images, full=True, hidden=frozenset()):
         'v': [v for v in event['venue_names'][:2]], 'g': [round(event['coordinates']['lat'], 5), round(event['coordinates']['lon'], 5)] if event.get('coordinates') else None,
         'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'ch': event.get('channels') or [], 'tm': event.get('time') or '', 'tl': event['time_label'],
     }
+    vv = _VERIFIED_VENUE.get(event.get('key') or f"{event['source']}:{event['id']}")
+    if vv: out['v'] = [vv]; out['g'] = None  # varias sedes: sin un punto en el mapa
+    tx = _SCHEDULE_TEXT.get(event.get('key') or f"{event['source']}:{event['id']}")
+    if tx and not any(o.get('time') for o in event['occurrences']): out['tx'] = tx
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)
     if event.get('notes_by_day'): out['nd'] = packed_hours(event, 'notes_by_day')  # actividad de cada día
     if event.get('age_source'): out['ag'] = [event['age_min'], 99 if event.get('age_max') is None else event['age_max']]  # franja de edad
@@ -607,6 +626,15 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for e in events:
         detail = catalog.event_detail(conn, e['source'], e['id'])
         if detail is not None: details[e['key']] = detail
+    _SCHEDULE_TEXT.clear()
+    _VERIFIED_VENUE.clear()
+    try:
+        for s, i, v in conn.execute("SELECT source,id,value_json FROM field_verifications WHERE field_name='venue'"):
+            k = f'{s}:{i}'
+            if k in details and isinstance(json.loads(v), str):
+                _VERIFIED_VENUE[k] = json.loads(v); details[k]['venue_names'] = [_VERIFIED_VENUE[k]]; details[k]['coordinates'] = None
+    except Exception: pass
+    _SCHEDULE_TEXT.update({k: h for k, d in details.items() if (h := schedule_hint(d.get('time_text')))})
     # Otras fichas del mismo acto en otros días: solo las que también se publican (24-10-2026).
     for detail in details.values():
         detail['other_days'] = {d: k for d, k in (detail.get('other_days') or {}).items() if k in details} or None
@@ -666,6 +694,16 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         public = public_detail(detail, images, hidden)
         shards.setdefault(shard_of(e['key']), {})[e['key']] = public
         cards.setdefault(shard_of(e['key']), {})[e['key']] = share_card({**detail, 'media': public['media'], 'official_page': public.get('official_page')}, today)
+    # Fichas que ahora son secundarias de otra (fusión de duplicados, prioridad de la web de la sala, 26-10-2026): su
+    # dirección /e/<fuente>/<id>, los enlaces compartidos y los guardados siguen llevando a la ficha que manda.
+    aliases = 0
+    for e in events:
+        for member in e.get('also_in') or []:
+            if member == e['key'] or member in shards.get(shard_of(member), {}): continue
+            shards.setdefault(shard_of(member), {})[member] = {'alias_of': e['key']}
+            card = cards.get(shard_of(e['key']), {}).get(e['key'])
+            if card: cards.setdefault(shard_of(member), {})[member] = card
+            aliases += 1
     for name, records in shards.items(): _write_json(out / 'data' / 'detail' / f'{name}.json', records)
     translations = write_translations(conn, out, shards)
     # Tarjetas para compartir: las lee la función de /e/* para la vista previa (functions/e/[[path]].js).

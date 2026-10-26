@@ -31,7 +31,7 @@ REREAD_BEFORE = '2026-10-24T09:00:00+00:00'
 CREDIT = 'la web del organizador'
 SKIP_HOSTS = re.compile(r"(?:^|\.)(?:barcelona\.cat|bcn\.cat|instagram\.com|facebook\.com|fb\.me|twitter\.com|x\.com|youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|"
                         r"ticketmaster\.\w+|entradas\.com|eventbrite\.\w+|atrapalo\.com|fever\w*\.com|dice\.fm|wegow\.com|taquilla\.com|tickets\.\w+|"
-                        r"oneboxtds\.com|codetickets\.com|entradium\.com|koobin\.com|google\.\w+|goo\.gl|wa\.me|whatsapp\.com|linktr\.ee|mailto)$")
+                        r"oneboxtds\.com|ra\.co|codetickets\.com|entradium\.com|koobin\.com|google\.\w+|goo\.gl|wa\.me|whatsapp\.com|linktr\.ee|mailto)$")
 STOP = {'concert', 'concierto', 'espectacle', 'espectaculo', 'exposicio', 'exposicion', 'taller', 'cicle', 'ciclo', 'festival', 'barcelona', 'visita',
         'xerrada', 'presentacio', 'activitat', 'teatre', 'teatro', 'musica', 'dansa', 'cinema', 'familiar', 'infantil', 'amb', 'con', 'per', 'para', 'del', 'dels',
         'les', 'els', 'las', 'los', 'una', 'que', 'the', 'and', 'dels', 'amb', 'sala', 'nova', 'nou', 'gran', 'edicio', 'edicion', 'tots', 'todos', 'tota', 'toda', 'aquest', 'esta', 'este', 'sobre', 'entre', 'més', 'mes', 'cada', 'dues', 'tres', 'partit', 'lliga', 'festa', 'major', 'fiesta', 'dates'}
@@ -150,9 +150,20 @@ def candidates(conn, limit, today=None):
               AND (o.id IS NULL OR (o.status<>'ok' AND (o.fetched_at<? OR (o.status IN ('corto','sin_texto') AND o.fetched_at<?))))
             ORDER BY r.start_date LIMIT ?""", (today, retry, REREAD_BEFORE, limit * 3)).fetchall()
     except sqlite3.DatabaseError: own = []
+    # Agendas propias de sala que no son de IA (Palau, Sala VOL, Nau Bostik…) sin texto (26-10-2026).
+    try:
+        own += [r for r in conn.execute("""SELECT r.source, r.id, r.title, r.source_url FROM source_records r
+            JOIN listing_projections l ON l.source=r.source AND l.id=r.id
+            LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
+            WHERE r.source LIKE 'venue_%' AND r.source NOT LIKE 'venue_ia_%' AND r.end_date>=? AND r.eligibility<>'exclude'
+              AND COALESCE(json_extract(l.projection_json,'$.has_description'),0)=0
+              AND (o.id IS NULL OR (o.status<>'ok' AND o.fetched_at<?))
+            ORDER BY r.start_date LIMIT ?""", (today, retry, limit * 3)) if _first_party(r[0])]
+    except sqlite3.DatabaseError: pass
     for source, rid, title, url in own:
-        if usable_link(url) and _words(title) & _words(urlsplit(url).path.replace('-', ' ').replace('_', ' ')):
-            out.append((source, rid, title, url))
+        # El enlace es la página del acto en la web de la propia sala: no hace falta que la URL lleve el título
+        # (ID numéricos, 26-10-2026); que el texto sea del acto se comprueba al leerla (no_es_del_acto).
+        if usable_link(url): out.append((source, rid, title, url))
         if len(out) >= limit: return out
     try:
         rows = conn.execute("""SELECT r.source, r.id, r.title, e.description, e.links_json FROM source_records r
@@ -176,10 +187,57 @@ def candidates(conn, limit, today=None):
     return out
 
 
+def _first_party(source):
+    from src.dedupe import first_party
+    return first_party(source)
+
+
+# Información práctica de la página (cómo llegar, horario del museo, compra de entradas): no describe el acto.
+PRACTICAL = re.compile(r"p[aà]rquing|parking|aparcament|aparcamiento|com arribar|c[oó]mo llegar|transport p[uú]blic|\bmetro\b|autob[uú]s|"
+                       r"obert de|abierto de|horari d['’]obertura|horario de apertura|prepara la teva visita|prepara tu visita|"
+                       r"comprar entrades|comprar entradas|\bhorari\b|\bhorario\b|\bpreu\b|\bprecio\b|iva incl|accessibilitat|accesibilidad", re.I)
+
+
+def excerpt_paragraphs(excerpt, title):
+    """Párrafos del acto en el texto ya leído de su página oficial (official_pages.excerpt, una línea por bloque):
+    las líneas largas con frases, sin menús, avisos de cookies ni textos legales; tal cual, sin reescribir."""
+    out = []
+    for line in str(excerpt or '').split('\n'):
+        line = ' '.join(line.split())
+        if len(line) < 90 or len(line.split()) < 12 or BOILER.search(line) or PRACTICAL.search(line) or line.isupper(): continue
+        if not re.search(r"[.!?…»)]$", line): continue
+        out.append(line)
+        if sum(len(x) for x in out) >= MAX_TEXT: break
+    text = ' '.join(out)[:MAX_TEXT]
+    head = str(excerpt or '').split('\n', 1)[0]
+    return text if len(text) >= MIN_TEXT and _words(title) & (_words(text) | _words(head)) else ''
+
+
+def from_official_pages(conn):
+    """Sin red (26-10-2026): para las fichas sin texto aceptado, los párrafos del acto en la página oficial que
+    official_dates ya leyó para la hora y el precio. Mismos filtros; el genérico del sitio se descarta en run()."""
+    try:
+        rows = conn.execute("""SELECT p.source, p.id, p.url, p.excerpt, r.title FROM official_pages p
+            JOIN source_records r ON r.source=p.source AND r.id=p.id
+            LEFT JOIN organizer_texts o ON o.source=p.source AND o.id=p.id
+            WHERE p.status='ok' AND p.excerpt<>'' AND r.end_date>=date('now') AND (o.id IS NULL OR o.status<>'ok')""").fetchall()
+    except sqlite3.DatabaseError: return 0
+    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'); n = 0
+    with conn:
+        for source, rid, url, excerpt, title in rows:
+            text = excerpt_paragraphs(excerpt, title)
+            if not text or not usable_link(url): continue
+            conn.execute("""INSERT INTO organizer_texts(source,id,url,text,page_title,status,fetched_at) VALUES(?,?,?,?,?,'ok',?)
+                ON CONFLICT(source,id) DO UPDATE SET url=excluded.url,text=excluded.text,page_title=excluded.page_title,status='ok',fetched_at=excluded.fetched_at""",
+                         (source, rid, url, text, str(excerpt).split('\n', 1)[0][:300], now)); n += 1
+    return n
+
+
 def run(conn, limit=150, fetcher=None, timeout=15, today=None):
     from src.venue_feeds import fetch, robots_allows
     import time
     initialize(conn); fetcher = fetcher or fetch
+    reused = from_official_pages(conn)
     found = ok = images = 0; pages = {}
     for source, rid, title, url in candidates(conn, limit, today):
         status, text, ptitle = 'sin_texto', '', ''
@@ -209,6 +267,7 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
                             with conn: register(conn, source, rid, image, alt=title, credit=venue[0] if venue else '')
                             images += 1
                     if len(text) < MIN_TEXT: status = 'corto'
+                    elif PRACTICAL.search(text[:40]): status = 'no_es_del_acto'  # «COMPRAR ENTRADES…», «Horari…» (26-10-2026)
                     elif not (_words(title) & (_words(text) | _words(ptitle) | _words(urlsplit(final or url).path.replace('-', ' ')))): status = 'no_es_del_acto'
                     else: status = 'ok'; ok += 1
             if fetcher is fetch and len(pages) and url == list(pages)[-1]: time.sleep(0.5)
@@ -223,7 +282,7 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
     with conn:
         conn.execute("""UPDATE organizer_texts SET status='generico_del_sitio' WHERE status='ok' AND text IN (
             SELECT text FROM organizer_texts WHERE status='ok' GROUP BY text HAVING COUNT(DISTINCT url)>=3)""")
-    return {'status': 'completed', 'attempted': found, 'with_text': ok, 'images': images}
+    return {'status': 'completed', 'attempted': found, 'with_text': ok, 'images': images, 'from_official_pages': reused}
 
 
 def texts(conn):

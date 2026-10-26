@@ -75,15 +75,17 @@ class CollapseTests(unittest.TestCase):
             conn.commit()
             refresh_match_candidates(conn, since='2026-10-01')
             groups = canonical_groups(conn)
-            self.assertEqual(groups, {'generalitat:g1': 'opendatabcn_agenda:99', 'web_auditori:w1': 'opendatabcn_agenda:99'})
+            # Desde el 26-10-2026 manda la web propia de la sala (L'Auditori); las demás rellenan lo que le falta.
+            self.assertEqual(groups, {'generalitat:g1': 'web_auditori:w1', 'opendatabcn_agenda:99': 'web_auditori:w1'})
             from mvp import catalog
             catalog.initialize(conn); catalog.invalidate_cache()
             public = catalog.query_events(conn, day='2026-10-12', public=True)
-            self.assertEqual([e['key'] for e in public['items']], ['opendatabcn_agenda:99'])
-            self.assertEqual(sorted(public['items'][0]['also_in']), ['generalitat:g1', 'web_auditori:w1'])
+            self.assertEqual([e['key'] for e in public['items']], ['web_auditori:w1'])
+            self.assertEqual(sorted(public['items'][0]['also_in']), ['generalitat:g1', 'opendatabcn_agenda:99'])
+            self.assertIsNotNone(public['items'][0]['coordinates'])   # la web no las da: de un gemelo
             everything = catalog.query_events(conn, day='2026-10-12')
             hidden = next(e for e in everything['items'] if e['key'] == 'generalitat:g1')
-            self.assertEqual(hidden['superseded_by'], 'opendatabcn_agenda:99')
+            self.assertEqual(hidden['superseded_by'], 'web_auditori:w1')
             self.assertEqual(everything['total'], 3)
             catalog.invalidate_cache(); conn.close()
 

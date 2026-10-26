@@ -60,7 +60,7 @@
       "urls": [
         "https://almo2bar.com/"
       ],
-      "activa": true
+      "activa": false, "nota": "Desactivada el 26-10-2026: almo2bar.com publica en portugués y en reales; no es el local de Bruniquer 59 (auditoría del motor)"
     },
     {
       "slug": "filmoteca",
@@ -618,7 +618,7 @@
       "slug": "espai_texas",
       "name": "Espai Texas",
       "address": "Carrer de Bailèn 205, 08037 Barcelona",
-      "type": "theatre",
+      "type": "cinema",
       "urls": [
         "https://espaitexas.cat/"
       ],
