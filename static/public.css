@@ -496,8 +496,10 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 a.cat-pill,a.period-tab{text-decoration:none}
 
 /* Pestañas de la agenda: Agenda · Exposiciones · Festivales (25-10-2026). Mismo aspecto que las de periodo. */
-.ag-tabs{position:sticky;top:var(--agtop,var(--stick));z-index:8;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 8px;box-shadow:0 -8px 0 var(--bg)}
+.ag-tabs{position:sticky;top:var(--agtop,var(--stick));z-index:8;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:0 0 8px;box-shadow:0 -8px 0 var(--bg)}
 .ag-tabs[hidden]{display:none}
+/* Tantas columnas como pestañas (26-10-2026): sin la de Festivales quedaba un hueco a la derecha. */
+.period-tabs.ag-tabs{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}  /* en móvil, .period-tabs fijaba 3 columnas */
 .ag-tab{justify-content:center;gap:6px;white-space:nowrap}
 .ag-tab-n{font-weight:500;opacity:.65;font-variant-numeric:tabular-nums}
 .ag-tab.active .ag-tab-n{opacity:.9}

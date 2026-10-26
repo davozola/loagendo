@@ -228,6 +228,7 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('manual_hours'): out['mh'] = event['manual_hours']  # hora puesta a mano por David, con su fuente
     if event.get('drop_in'): out['di'] = 1  # la fuente dice que las sesiones son sueltas (mvp.catalog.drop_in)
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento
+    if event.get('registration_required'): out['rr'] = 1  # hay que inscribirse: etiqueta «Inscripción» en la fila de cursos (26-10-2026)
     if event.get('sold_out'): out['so'] = event['sold_out'].get('dias') or 1  # entradas agotadas: días que nombra el aviso o 1 = todos
     if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse
     if (event.get('confirmations') or 1) >= 3: out['cf'] = event['confirmations']  # lo anuncian tres fuentes o más
