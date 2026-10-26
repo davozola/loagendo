@@ -48,7 +48,7 @@ MONTHS = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7
           'gener':1,'febrer':2,'març':3,'abril':4,'maig':5,'juny':6,'juliol':7,'agost':8,'setembre':9,'octubre':10,'novembre':11,'desembre':12}
 
 def fetch(url, timeout=30, max_bytes=4_000_000):
-    request=Request(url,headers={'Accept':'text/html','User-Agent':'Brollant/1.3 (+https://brollant.com) agenda collector'})
+    request=Request(url,headers={'Accept':'text/html','User-Agent':'Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) agenda collector'})
     try:
         with urlopen(request,timeout=timeout,context=tls_context()) as response:  # nosec B310: fixed first-party URLs above
             if not 200 <= response.status < 300: raise RuntimeError('HTTP %s' % response.status)

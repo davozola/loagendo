@@ -48,7 +48,7 @@ DETAIL_URL = "https://guia.barcelona.cat/ca/detall/agenda_{id}.html"
 TAXONOMY_PATH = Path(__file__).resolve().parents[1] / "config" / "opendatabcn_taxonomy.json"
 MAX_OCCURRENCES_PER_RECORD = 60
 OCCURRENCE_HORIZON_DAYS = 200
-USER_AGENT = "Brollant/1.3 (+https://brollant.com) open-data connector (CC BY 4.0 dataset)"
+USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) open-data connector (CC BY 4.0 dataset)"
 
 
 def load_taxonomy(path=TAXONOMY_PATH):

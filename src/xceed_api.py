@@ -35,7 +35,7 @@ MADRID = ZoneInfo("Europe/Madrid")
 PAGE = 100
 HORIZON_DAYS = 180
 PAUSE_SECONDS = 0.5
-USER_AGENT = "Brollant/1.3 (+https://brollant.com) agenda cultural de Barcelona"
+USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) agenda cultural de Barcelona"
 
 
 def load_config(path=CONFIG_PATH):

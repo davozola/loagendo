@@ -337,7 +337,8 @@ def records_for(agenda, accepted, page_url, page_hash, model):
         nodes = []
         for day, hours in sorted(days.items()):
             times = sorted(h for h in hours if h)
-            nodes.append({**base, 'startDate': day + (('T' + times[0]) if times else ''), 'endDate': day, 'x_sessions': times})
+            # x_time_verified: la hora sale de una cita comprobada en la página (una sesión de club a las 00:00 vale).
+            nodes.append({**base, 'startDate': day + (('T' + times[0]) if times else ''), 'endDate': day, 'x_sessions': times, 'x_time_verified': bool(times)})
         if act.get('periodo') and not nodes:
             a, b = act['periodo']; nodes.append({**base, 'startDate': a, 'endDate': b})
         for node in nodes:
@@ -542,7 +543,9 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()
-    status = 'completed' if all(r['status'] == 'completed' for r in results) else 'failed'
+    # Una agenda caída no tumba el trabajo: «partial» si fallan algunas, «failed» solo si fallan todas (26-10-2026).
+    ok = sum(r['status'] == 'completed' for r in results)
+    status = 'completed' if ok == len(results) else 'partial' if ok else 'failed'
     usage = {}
     for r in results:
         for k, v in (r.get('usage') or {}).items():

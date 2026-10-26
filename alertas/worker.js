@@ -27,7 +27,7 @@ export async function run(env, now = new Date()) {
   if (room <= 0) return {status: 'tope diario', sentToday};
 
   const slotB = lastSlot('bisemanal', now)?.toISOString() || '0', slotW = lastSlot('semanal', now)?.toISOString() || '0';
-  const {results: due} = await d.prepare(`SELECT id, email, token, freq, last_sent_at FROM subscribers WHERE confirmed_at IS NOT NULL
+  const {results: due} = await d.prepare(`SELECT id, email, token, freq, confirmed_at, last_sent_at FROM subscribers WHERE confirmed_at IS NOT NULL
       AND ((freq='semanal' AND last_sent_at<?) OR (freq<>'semanal' AND last_sent_at<?)) ORDER BY last_sent_at LIMIT ?`).bind(slotW, slotB, room).all();
   if (!due.length) return {status: 'nadie pendiente', sentToday};
 
@@ -35,7 +35,7 @@ export async function run(env, now = new Date()) {
   if (!res.ok) return {status: `sin novedades publicadas (${res.status})`};
   const feed = (await res.json()).items || [];
   const ids = due.map(s => s.id);
-  const {results: searches} = await d.prepare(`SELECT subscriber_id, filters, label FROM searches WHERE status='active'
+  const {results: searches} = await d.prepare(`SELECT subscriber_id, filters, label, confirmed_at, created_at FROM searches WHERE status='active'
       AND subscriber_id IN (${ids.map(() => '?').join(',')}) ORDER BY id`).bind(...ids).all();
 
   const updates = []; let sent = 0, checked = 0, error = '';
@@ -44,12 +44,16 @@ export async function run(env, now = new Date()) {
     const fresh = feed.filter(i => Date.parse(i.fs) > since && (i.b || i.a) >= m.day), seen = new Set();
     const groups = searches.filter(s => s.subscriber_id === sub.id).map(s => {
       const f = cleanFilters(JSON.parse(s.filters));
-      const items = fresh.filter(i => !seen.has(i.k) && matches(i, f)); items.forEach(i => seen.add(i.k));   // cada acto, una vez por correo
-      return {label: s.label, url: searchUrl(env, f), items};
+      // Cada búsqueda capta solo lo que entra en la agenda después de confirmarla (26-10-2026): una búsqueda
+      // añadida más tarde no arrastra lo aparecido entre el último aviso y su alta.
+      const from = Math.max(since, Date.parse(s.confirmed_at || s.created_at || 0) || 0);
+      const items = fresh.filter(i => Date.parse(i.fs) > from && !seen.has(i.k) && matches(i, f)); items.forEach(i => seen.add(i.k));   // cada acto, una vez por correo
+      return {label: s.label, url: searchUrl(env, f), items, since: new Date(from || Date.parse(sub.confirmed_at) || now).toISOString()};
     }).filter(g => g.items.length);
     if (groups.length) {
       const manageUrl = `${site(env)}/alertas/gestionar?t=${sub.token}`, unsubscribeUrl = `${site(env)}/alertas/baja?t=${sub.token}`;
-      const mail = digestMail(env, {groups, manageUrl, unsubscribeUrl});
+      const first = !sub.last_sent_at || sub.last_sent_at === sub.confirmed_at;   // al confirmar, last_sent_at = confirmed_at
+      const mail = digestMail(env, {groups, manageUrl, unsubscribeUrl, freq: sub.freq, lastSent: first ? null : sub.last_sent_at, now});
       try {
         await sendMail(env, {to: sub.email, subject: mail.subject, html: mail.html, text: mail.text,
           headers: {'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:${sender(env)}?subject=baja>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'}});

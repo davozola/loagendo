@@ -213,6 +213,22 @@ class StartedCoursesTests(unittest.TestCase):
             catalog.invalidate_cache(); conn.close()
 
 
+    def test_programmes_and_runs_under_way_still_show(self):
+        # 25-10-2026: «ya empezados» solo aparta cursos y talleres; una obra en cartel o un programa sigue.
+        import json, tempfile, datetime as dt
+        from pathlib import Path
+        from src.pipeline import connect
+        today = catalog.today(); d = lambda n: (today + dt.timedelta(days=n)).isoformat()
+        rows = [('old_course', 'Curs de ceràmica', d(-30), d(60), 'course'), ('run', 'Temporada de teatre', d(-30), d(20), 'program')]
+        with tempfile.TemporaryDirectory() as folder:
+            conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn)
+            for id, title, start, end, kind in rows:
+                conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('generalitat', id, title, start, end, kind, 'review', 'x', '', 'h', json.dumps({'localizaciones': [{'denominaci': title}]})))
+            conn.commit(); catalog.invalidate_cache()
+            ids = {e['id'] for e in catalog.query_events(conn, day=d(0), public=True, include_started=False)['items']}
+            self.assertIn('run', ids); self.assertNotIn('old_course', ids)
+            catalog.invalidate_cache(); conn.close()
+
 class SubtypeTests(unittest.TestCase):
     def test_subtypes_come_from_official_paths_and_unclassified_keeps_every_record(self):
         import json, tempfile

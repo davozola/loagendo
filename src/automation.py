@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -70,7 +70,24 @@ def _last_terminal(conn, name):
     except ValueError: return None
 
 
+def _due_at(conn, job, now):
+    """Trabajo a hora fija («at»: "08:00", hora de Madrid): una vez al día, a partir de esa hora.
+    Si falla, se reintenta cada retry_after_minutes (60 por defecto) ese mismo día."""
+    from zoneinfo import ZoneInfo
+    hour, minute = (int(x) for x in job["at"].split(":"))
+    local = now.astimezone(ZoneInfo(job.get("timezone", "Europe/Madrid")))
+    target = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if local < target: return False
+    last = _last_terminal(conn, job["name"])
+    if last is None: return True
+    finished, status = last
+    if finished.tzinfo is None: finished = finished.replace(tzinfo=dt.timezone.utc)
+    if finished < target: return True
+    return status != "completed" and now - finished >= dt.timedelta(minutes=job.get("retry_after_minutes", 60))
+
+
 def is_due(conn, job, now):
+    if job.get("at"): return _due_at(conn, job, now)
     last = _last_terminal(conn, job["name"])
     if last is None: return True
     finished,status=last
@@ -156,6 +173,12 @@ def execute(conn, job, media_root):
         from src.dedupe import refresh_match_candidates
         result = refresh_match_candidates(conn)
         return {"status": "completed", "pairs": result["pairs"], "records_compared": result["records_compared"], "by_source_pair": result["by_source_pair"]}
+    if kind == "festival_finder":
+        from src.festival_finder import run as run_finder
+        return run_finder(conn, job)
+    if kind == "report":
+        from src.daily_report import run as run_report
+        return run_report(conn, job)
     if kind == "publish":
         from src.publish_static import publish
         return publish(conn, job, media_root=media_root)
@@ -163,6 +186,28 @@ def execute(conn, job, media_root):
         from src.media import download_local_previews
         return download_local_previews(conn, media_root, job.get("limit", 100), job.get("source"))
     return _maintain_media(conn, media_root)
+
+
+def summarize_failure(result):
+    """Texto corto del fallo para alertas y parte (26-10-2026).
+
+    En los trabajos con varias fuentes (agendas-ia, recintos-schema-org) dice cuáles
+    fallan y por qué, en vez del JSON entero, que se cortaba antes de llegar a ellas.
+    El resultado completo sigue guardado en result_json."""
+    parts = next((result.get(k) for k in ("agendas", "venues") if isinstance(result.get(k), list)), None)
+    if parts is not None:
+        bad = [p for p in parts if p.get("status") != "completed"]
+        def why(p):
+            text = p.get("error") or "; ".join(map(str, p.get("warnings") or [])) or p.get("status", "")
+            return "%s: %s" % (p.get("source") or p.get("slug") or "?", str(text)[:120])
+        return "%d de %d fallan · %s" % (len(bad), len(parts), " · ".join(why(p) for p in bad))
+    for key in ("error", "reason"):
+        if result.get(key): return str(result[key])
+    if result.get("warnings"):
+        text = "; ".join(map(str, result["warnings"]))
+        code = "HTTP %s" % result["http_status"] if result.get("http_status") else ""
+        return text if not code or code in text else code + " · " + text
+    return json.dumps(result, ensure_ascii=False)
 
 
 def _median_rows(conn, source, exclude_run_id=None):
@@ -228,7 +273,7 @@ def run_due(conn, config, media_root, *, force=False, now=None):
             try:
                 result = execute(conn, job, media_root)
                 status = "completed" if result.get("status", "completed") == "completed" else result.get("status", "failed")
-                error = "" if status == "completed" else json.dumps(result, ensure_ascii=False)
+                error = "" if status == "completed" else summarize_failure(result)
                 anomaly = volume_check(conn, source, result)
                 if anomaly:
                     status, error = "suspect", anomaly; result = {**result, "anomaly": anomaly}
@@ -246,7 +291,15 @@ def run_due(conn, config, media_root, *, force=False, now=None):
                 horas = _time_check(conn)
             except Exception as exc:
                 horas = {"error": str(exc)}
-        return {"ran_at": now.isoformat(timespec="seconds"), "outcomes": outcomes, "horas": horas}
+        # Volumen por fuente, trabajos que fallan y web sin publicar; avisa por correo de lo nuevo (25-10-2026).
+        vigilancia = None
+        if any(o.get("status") not in ("disabled", "not_due") for o in outcomes):
+            try:
+                from src.source_watch import check as _watch
+                vigilancia = _watch(conn, config)
+            except Exception as exc:
+                vigilancia = {"error": str(exc)}
+        return {"ran_at": now.isoformat(timespec="seconds"), "outcomes": outcomes, "horas": horas, "vigilancia": vigilancia}
     finally:
         with conn: conn.execute("DELETE FROM automation_locks WHERE name='engine'")
 

@@ -1,0 +1,14 @@
+{
+  "nota": "Horas de festivales puestas a mano (26-10-2026). Cada día es explícito: no se extrapola a otros días. 'ficha' es la clave que da el parte diario (fuente:id); 'tipo': apertura o primera sesión; 'fuente': de dónde sale la hora. Ninguna actualización lo sobrescribe.",
+  "ejemplo": {
+    "ficha": "guiabcn:99400000000",
+    "dias": {
+      "2026-10-29": "17:00",
+      "2026-10-30": "17:00"
+    },
+    "tipo": "apertura",
+    "fuente": "https://web-oficial-del-festival/programa",
+    "nota": ""
+  },
+  "horarios": []
+}

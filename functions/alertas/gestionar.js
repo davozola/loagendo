@@ -1,6 +1,6 @@
 // /alertas/gestionar?t=<código personal>: ver y borrar búsquedas, cambiar la frecuencia o darse de baja.
 // El código va en cada correo de avisos; sin él no se ve nada de nadie.
-import {db, esc, page, FREQS} from '../../alertas/lib.js';
+import {db, esc, page, FREQS, shortDate} from '../../alertas/lib.js';
 
 async function subscriber(env, t) {
   if (!/^[0-9a-f]{48}$/.test(t || '')) return null;
@@ -9,9 +9,9 @@ async function subscriber(env, t) {
 const gone = env => page(env, 'No hay avisos', '<p>Este enlace no corresponde a ningún aviso activo. Puede que ya te hayas dado de baja.</p>', 404);
 
 async function view(env, sub, note = '') {
-  const {results} = await (await db(env)).prepare("SELECT id, label FROM searches WHERE subscriber_id=? AND status='active' ORDER BY id").bind(sub.id).all();
+  const {results} = await (await db(env)).prepare("SELECT id, label, confirmed_at FROM searches WHERE subscriber_id=? AND status='active' ORDER BY id").bind(sub.id).all();
   const t = esc(sub.token);
-  const rows = results.length ? `<ul>${results.map(s => `<li style="margin:.5em 0">${esc(s.label)}
+  const rows = results.length ? `<ul>${results.map(s => `<li style="margin:.5em 0">${esc(s.label)}${s.confirmed_at ? ` <small style="color:#444">· planes nuevos desde el ${esc(shortDate(s.confirmed_at))}</small>` : ''}
 <form method="post" style="display:inline"><input type="hidden" name="t" value="${t}"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="${s.id}">
 <button type="submit" style="margin-left:8px">Quitar</button></form></li>`).join('')}</ul>` : '<p>No tienes búsquedas con avisos.</p>';
   const freq = `<form method="post"><input type="hidden" name="t" value="${t}"><input type="hidden" name="action" value="freq">

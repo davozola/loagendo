@@ -76,6 +76,16 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual(sorted(by_day), ['2026-10-14', '2026-10-21', '2026-10-28', '2026-11-04', '2026-11-11'])
         self.assertEqual(set(by_day.values()), {'17:15–18:15'})
 
+    def test_period_row_without_days_repeats_the_previous_days(self):
+        # 99400576434 (Jugatecambiental del Botànic Històric): la web pinta «Dissabte / d'11.30 h a 13.30 h»
+        # ocupando dos periodos; la segunda fila solo trae «Del 5 setembre al 14 novembre».
+        rows = [{'periode': 'Del 7 març al 6 juny', 'dies': 'Dissabte', 'hores': "d'11.30 h a 13.30 h", 'preu': 'Entrada Gratuïta'},
+                {'periode': 'Del 5 setembre al 14 novembre'}]
+        by_day = summary(rows, '2026-03-07', '2026-11-14')['by_day']
+        self.assertEqual(len(by_day), 25)  # 14 sábados de primavera y 11 de otoño
+        self.assertIn('2026-09-05', by_day); self.assertIn('2026-10-31', by_day); self.assertNotIn('2026-07-04', by_day)
+        self.assertEqual(set(by_day.values()), {'11:30–13:30'})
+
     def test_conflicting_rows_leave_the_day_without_hours(self):
         rows = [{'dies': 'Cada dia', 'hores': 'de 10.00 h a 20.00 h'}, {'dies': 'Dissabte', 'hores': 'de 10.00 h a 14.00 h'}]
         by_day = summary(rows, '2026-10-23', '2026-10-25')['by_day']

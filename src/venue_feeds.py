@@ -45,18 +45,53 @@ TYPE_CATEGORY = {"MusicEvent": "Música y vida nocturna", "Festival": "Música y
                  "EducationEvent": "Talleres y experiencias", "ChildrensEvent": "Talleres y experiencias", "SportsEvent": "Deporte", "FoodEvent": "Gastronomía"}
 VENUE_CATEGORY = {"music": "Música y vida nocturna", "festival": "Música y vida nocturna", "theatre": "Artes escénicas", "cinema": "Cine y audiovisual", "culture": "Arte y exposiciones"}
 EVENT_TYPES = {"Event", "MusicEvent", "TheaterEvent", "DanceEvent", "ComedyEvent", "ScreeningEvent", "Festival", "ExhibitionEvent", "VisualArtsEvent", "LiteraryEvent", "EducationEvent", "ChildrensEvent", "SocialEvent"}
-USER_AGENT = "Brollant/1.3 (+https://brollant.com) venue census (reads published schema.org data)"
+USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) venue census (reads published schema.org data)"
 
 
-def load_venues(path=VENUES_PATH):
+AUTO_FESTIVALS_PATH = Path(__file__).resolve().parents[1] / "data" / "festivales_auto.json"
+
+
+def load_venues(path=VENUES_PATH, auto_path=AUTO_FESTIVALS_PATH):
     data = json.loads(Path(path).read_text(encoding="utf-8"))
-    return [v for v in data.get("venues", []) if v.get("slug") and v.get("url")]
+    venues = [v for v in data.get("venues", []) if v.get("slug") and v.get("url")]
+    # Programas de festival que el buscador conecta solo (src/festival_finder.py, 25-10-2026); config/venues.json manda.
+    if path == VENUES_PATH:
+        try: auto = json.loads(Path(auto_path).read_text(encoding="utf-8")).get("venues", [])
+        except (OSError, ValueError): auto = []
+        known = {v["slug"] for v in venues} | {((v.get("feed") or {}).get("festival") or {}).get("slug") for v in venues}
+        venues += [v for v in auto if v.get("slug") not in known and ((v.get("feed") or {}).get("festival") or {}).get("slug") not in known]
+    return venues
+
+
+def own_ticket(node):
+    """El acto se compra o se reserva por su cuenta: la fuente le da precio o enlace de entradas propios."""
+    offers = node.get("offers") or {}
+    if isinstance(offers, list): offers = offers[0] if offers else {}
+    return isinstance(offers, dict) and (offers.get("url") or offers.get("price") not in (None, "") or offers.get("lowPrice") not in (None, ""))
+
+
+def festival_nodes(venue, nodes):
+    """Actos leídos del programa de un festival (25-10-2026, David): el precio del festival es su abono, así que por
+    defecto van al programa de la ficha del festival (x_programa); los que tienen entrada propia, ficha propia.
+    ``feed.venta: "por_acto"`` (festivales gratis por actos, como 48h Open House) da ficha propia a todos. Con
+    ``feed.desde``/``feed.hasta`` solo se quedan los actos de las fechas del festival."""
+    feed = venue.get("feed") or {}
+    fest = feed.get("festival")
+    if not fest: return nodes
+    out = []
+    for url, node in nodes:
+        day = str(node.get("startDate") or "")[:10]
+        if day and ((feed.get("desde") and day < feed["desde"]) or (feed.get("hasta") and day > feed["hasta"])): continue
+        node.setdefault("x_festival", fest)
+        if "x_programa" not in node: node["x_programa"] = feed.get("venta") != "por_acto" and not own_ticket(node)
+        out.append((url, node))
+    return out
 
 
 _ROBOTS: dict[str, robotparser.RobotFileParser | None] = {}
 
 
-def robots_allows(url, user_agent="Brollant", timeout=10):
+def robots_allows(url, user_agent="Ontoca", timeout=10):
     """Respect each host's robots.txt (ticketing sites in particular publish
     one). Unreachable robots.txt counts as allowed; a parse error too."""
     host = "{0.scheme}://{0.netloc}".format(urlsplit(url))
@@ -320,6 +355,13 @@ def record_from_jsonld(venue, node, page_url):
     performers = performers if isinstance(performers, list) else [performers]
     organizers = [_text(o) for o in ([node.get("organizer")] if node.get("organizer") else []) if _text(o)]
     time_text = _time(node.get("startDate"))
+    # 00:00 sin una hora de fin coherente es casi siempre «solo fecha» convertida en medianoche (Dice: «00:00» o
+    # «00:00–23:59»): no es una hora de la fuente y no se publica (auditoría del 25-10-2026, regla de no inventar
+    # horas). Se queda si la fuente da un fin de madrugada (sesión de club, 00:00–06:00) o la cita la hora (x_time_text).
+    if time_text == "00:00" and not node.get("x_time_text") and not node.get("x_time_verified") and not ("00:01" <= (end_time or "") <= "12:00"):
+        time_text = ""; alerts_midnight = True
+    else:
+        alerts_midnight = False
     sessions = [t for t in (node.get("x_sessions") or []) if re.fullmatch(r"\d{2}:\d{2}", str(t))]
     if node.get("x_time_text") and time_text: time_text = str(node["x_time_text"])   # «01:15–02:15 (madrugada del sábado 7)»
     if len(sessions) > 1: time_text = " · ".join(sessions)   # pases que imprime la sala («19:00h 20:30h»)
@@ -331,6 +373,11 @@ def record_from_jsonld(venue, node, page_url):
         eligibility = "exclude"; alerts.append("EVENT_STATUS_" + status.split("/")[-1].upper())
     if is_online_event(node):
         eligibility = "exclude"; alerts.append(ONLINE_REASON)
+    # Acto de un festival al que solo se entra con el abono (25-10-2026, David): no tiene ficha propia; va al
+    # programa de la ficha del festival (src/festivals.py → programs). Se guarda igual, con su procedencia.
+    if node.get("x_programa"):
+        eligibility = "exclude"; alerts.append("FESTIVAL_PASS_PROGRAM_ITEM")
+    if alerts_midnight: alerts.append("MIDNIGHT_WITHOUT_END_DROPPED")
     if not price_text: alerts.append("NO_PRICE_TEXT")
     description = _text(node.get("description"))
     types = node.get("@type"); types = [str(t).split("/")[-1] for t in (types if isinstance(types, list) else [types]) if t]
@@ -723,6 +770,47 @@ def tribe_rest_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+def accelevents_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Programa de un festival en Accelevents (25-10-2026; Mozilla Festival). La agenda pública de la plataforma
+    (la misma que pinta su web) da cada sesión con título, día y hora locales («2026/10/28 10:00»), sala y formato;
+    el recinto y sus coordenadas, la ficha del evento. Cada sesión es una actividad del festival (x_festival)."""
+    feed = venue["feed"]; slug = feed["event"]
+    status, _, body = fetcher("https://apiv3.accelevents.com/rest/cache/event/%s" % slug, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en la ficha del evento %s" % (status, slug))
+    ev = json.loads(body)
+    address = str(ev.get("address") or "")
+    place = {"@type": "Place", "name": feed.get("lugar") or address.split(",")[0].strip().title() or venue["name"],
+             "address": {"@type": "PostalAddress", "streetAddress": feed.get("direccion") or ", ".join(address.split(",")[1:2]).strip(), "addressLocality": "Barcelona"}}
+    try: place["geo"] = {"latitude": float(feed.get("lat") or ev["latitude"]), "longitude": float(feed.get("lon") or ev["longitude"])}
+    except (KeyError, TypeError, ValueError): pass
+    nodes, fetched, page = [], 1, 0
+    labels = {"MAIN_STAGE": "Escenario principal", "WORKSHOP": "Taller", "BREAKOUT_SESSION": "Sesión", "MEET_UP": "Encuentro"}
+    while page < 20:
+        url = ("https://apiro.accelevents.com/r/events/%s/session/v2/get-all-sessions?page=%d&size=100&searchString=&ids=&tagIds=&trackIds="
+               "&sessionFormat=&filterDate=&showPastAndUpcoming=false&includeHidden=false&fromLandingPage=true") % (slug, page)
+        status, _, body = fetcher(url, timeout); fetched += 1
+        if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+        data = json.loads(body); rows = data.get("data") or []
+        for s in rows:
+            if s.get("sessionVisibilityType") not in (None, "PUBLIC") or s.get("sessionStatus") not in (None, "VISIBLE"): continue
+            start, end = str(s.get("startTime") or ""), str(s.get("endTime") or "")
+            if not re.match(r"\d{4}/\d{2}/\d{2} \d{2}:\d{2}", start) or not str(s.get("title") or "").strip(): continue
+            iso = lambda v: v[:10].replace("/", "-") + "T" + v[11:16]
+            room = str(s.get("locationName") or s.get("location") or "").strip()
+            node = {"@type": "Event", "name": " ".join(str(s["title"]).split()), "url": "%s#session-%s" % (feed["url"], s.get("sessionId")),
+                    "startDate": iso(start), "endDate": iso(end) if re.match(r"\d{4}/", end) else iso(start),
+                    "description": " · ".join(x for x in (labels.get(s.get("format"), ""), room) if x),
+                    "location": place, "x_room": room, "x_festival": feed.get("festival"), "x_time_text": start[11:16],
+                    # Con abono («venta»: «abono» en config): al programa de la ficha del festival; si la sesión pide su propia entrada, ficha propia.
+                    "x_programa": feed.get("venta") != "por_acto" and not s.get("requiredTicketTypeIds")}
+            short = " ".join(re.sub(r"<[^>]+>", " ", str(s.get("shortDescriptionOfSession") or s.get("description") or "")).split())
+            if short: node["description"] = (short[:850] + (" · " + node["description"] if node["description"] else ""))
+            nodes.append((feed["url"], node))
+        if (page + 1) * 100 >= int(data.get("recordsTotal") or 0) or not rows: break
+        page += 1
+    return nodes, fetched
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -732,7 +820,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule", "accelevents"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -742,7 +830,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes, "accelevents": accelevents_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)
@@ -786,6 +874,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                 moved.append((event_url, str(node.get("startDate"))))   # la página dice otra fecha: manda la página
             nodes[n] = (page_url, detailed)
         if not nodes: raise RuntimeError("Ni la página ni sus enlaces de evento contienen JSON-LD schema.org/Event; revisa la URL con --venue-census" if pages else "El feed no devolvió eventos")
+        nodes = festival_nodes(venue, nodes)
         records = [r for r in (record_from_jsonld(venue, node, page_url) for page_url, node in nodes) if r]
         seen = set(); records = [r for r in records if not (r["id"] in seen or seen.add(r["id"]))]
         mutated = 0
@@ -881,7 +970,13 @@ def sync_enabled(conn, venues=None, fetcher=fetch, timeout=25, census_path=CENSU
     # por su JSON-LD: lo hace su conector (p. ej. src/ticketmaster_api.py).
     from src.ticketmaster_api import load_key as ticketmaster_key
     api_ready = {"ticketmaster": bool(ticketmaster_key())}
-    results = [sync_venue(conn, venue, fetcher, timeout) for venue in venues if venue.get("enabled") and not api_ready.get(venue.get("api", ""), False)]
-    status = "completed" if all(r["status"] == "completed" for r in results) else "failed"
+    # Un festival ya terminado («hasta» en su feed) no se vuelve a leer: lo publicado se queda y la próxima edición
+    # se activa cambiando su evento y sus fechas (25-10-2026).
+    today = dt.date.today().isoformat()
+    over = lambda v: bool((v.get("feed") or {}).get("hasta")) and v["feed"]["hasta"] < today
+    results = [sync_venue(conn, venue, fetcher, timeout) for venue in venues if venue.get("enabled") and not over(venue) and not api_ready.get(venue.get("api", ""), False)]
+    # Un recinto caído no tumba el trabajo: «partial» si fallan algunos, «failed» solo si fallan todos (26-10-2026).
+    ok = sum(r["status"] == "completed" for r in results)
+    status = "completed" if ok == len(results) else "partial" if ok else "failed"
     online = exclude_online_events(conn)
     return {"status": status, "venues": results, "rows_received": sum(r["rows_received"] for r in results), "rows_mutated": sum(r["rows_mutated"] for r in results), "id_migration": migration, "online_excluded": online}

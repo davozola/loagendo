@@ -11,7 +11,7 @@
     {
       "slug": "mira-festival",
       "nombre": "MIRA Festival",
-      "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b|^mira 20\\d\\d\\b",
+      "patron": "\\bmira (digital arts )?festival\\b|\\bfestival mira\\b|^mira 20\\d\\d\\b|\\bmira week\\b",
       "web": "https://mirafestival.com/"
     },
     {
@@ -101,6 +101,12 @@
       "patron": "\\bdart\\b.{0,6}festival|festival.{0,40}\\bdart\\b",
       "web": "https://dart-festival.com/ca/",
       "nota": "24-10-2026: su web no permite lectores automáticos (robots.txt: Disallow /); el programa llega por GuiaBCN y Open Data."
+    },
+    {
+      "slug": "mozilla-festival",
+      "nombre": "Mozilla Festival",
+      "patron": "\\bmozilla festival\\b|\\bmozfest\\b",
+      "web": "https://events.mozillafoundation.org/e/mozilla-festival-2026/page/schedule"
     }
   ]
 }

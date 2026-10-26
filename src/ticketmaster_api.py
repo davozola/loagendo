@@ -40,7 +40,7 @@ HORIZON_DAYS = 180
 PAUSE_SECONDS = 0.6       # ~2 peticiones por segundo, el límite más bajo publicado
 MAX_CALLS_PER_RUN = 400   # muy por debajo de las 5.000 diarias
 SLOT_THRESHOLD = 10       # más pases que esto con el mismo nombre y recinto = producto por franjas
-USER_AGENT = "Brollant/1.3 (+https://brollant.com) Ticketmaster Discovery API"
+USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) Ticketmaster Discovery API"
 
 # Por identificador: con locale=es los nombres llegan traducidos («Música»,
 # «Arte y Teatro»), así que el nombre solo sirve de respaldo (en ambos idiomas).

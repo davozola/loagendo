@@ -710,7 +710,9 @@
         "festival": {
           "slug": "48h-open-house-bcn",
           "name": "48h Open House BCN"
-        }
+        },
+        "hasta": "2026-10-25",
+        "venta": "por_acto"
       },
       "note": "21-10-2026: programa oficial del festival desde la API de su web (edificios de Barcelona con su franja de apertura). Actualizar «dias» en cada edición."
     },
@@ -731,7 +733,8 @@
         "festival": {
           "slug": "mira-festival",
           "name": "MIRA Festival"
-        }
+        },
+        "hasta": "2026-11-07"
       },
       "note": "24-10-2026: horarios oficiales del festival (cada actuación con su escenario y franja) desde mirafestival.com/horarios; robots.txt lo permite. Cada edición cambia la página: revisar al publicar los horarios."
     },
@@ -748,6 +751,26 @@
         "lugar": "Diversos espais del Poblenou"
       },
       "note": "21-10-2026 (aviso de David): agenda del distrito creativo del Poblenou y de su festival AR-DE, desde la API pública de The Events Calendar de su web (reglas, sin IA)."
+    },
+    {
+      "slug": "mozilla_festival",
+      "name": "Mozilla Festival",
+      "type": "festival",
+      "url": "https://events.mozillafoundation.org/e/mozilla-festival-2026/page/schedule",
+      "site": "https://events.mozillafoundation.org/",
+      "enabled": true,
+      "feed": {
+        "kind": "accelevents",
+        "event": "mozilla-festival-2026",
+        "url": "https://events.mozillafoundation.org/e/mozilla-festival-2026/page/schedule",
+        "lugar": "Fabra i Coats",
+        "festival": {
+          "slug": "mozilla-festival",
+          "name": "Mozilla Festival"
+        },
+        "hasta": "2026-10-30"
+      },
+      "note": "25-10-2026: programa oficial (151 sesiones) desde la agenda pública de Accelevents; cada edición cambia el identificador del evento (feed.event)."
     }
   ]
 }

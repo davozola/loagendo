@@ -480,6 +480,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .alerts-dialog::backdrop{background:rgba(0,0,0,.45)}
 .alerts-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.alerts-head h2{margin:0;font-size:1.5rem}
 .alerts-close{width:44px;height:44px;border:0;background:none;color:inherit;font-size:1.1rem;cursor:pointer}
+.alerts-when{margin:-4px 0 14px;padding:10px 12px;background:var(--surface2,#f4f4f1);border-left:3px solid var(--petrol,#097C87);font-size:.88rem;line-height:1.5}
 .alerts-lead{margin:.6em 0 .2em}.alerts-search{font-weight:700;margin:0 0 1em}
 .alerts-field{display:block;font-weight:600;margin-bottom:4px}
 #alertsEmail{width:100%;box-sizing:border-box;height:46px;padding:0 12px;font:inherit;border:1px solid currentColor;background:transparent;color:inherit}
@@ -517,3 +518,16 @@ a.cat-pill,a.period-tab{text-decoration:none}
 /* Sala tocable en la fila (25-10-2026) */
 .ev-meta .ev-venue{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
 .ev-meta .ev-venue:hover{color:var(--fg)}
+
+/* Fiesta mayor dentro de la pestaña Festivales y fiestas (25-10-2026) */
+.ev-fest-group .fest-kind{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:8px;opacity:.75}
+.ev-fest-group .fest-past>summary{font-size:13px;opacity:.7;padding:8px 0}
+
+/* Etiqueta Festival / Fiesta en filas y ficha (25-10-2026) */
+.ev-fest .fest-kind,.sheet-fest .fest-kind{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:9px;margin-right:6px;background:var(--accentSoft,rgba(120,90,220,.12));color:var(--accentText,inherit);vertical-align:1px}
+
+/* Programa de un festival con abono en la ficha (25-10-2026) */
+.sheet-program{margin:14px 0;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sheet-program>summary{cursor:pointer;font-weight:600}
+.sheet-program h4{margin:12px 0 4px;font-size:13px;color:var(--muted)}
+.sheet-program ul{margin:0;padding:0;list-style:none}.sheet-program li{padding:3px 0;font-size:14px}.sheet-program small{color:var(--soft)}

@@ -32,7 +32,7 @@ API_URL = "https://www.eventbriteapi.com/v3/events/{id}/?expand=ticket_availabil
 PARSER_VERSION = 4  # 4: formato y categoría de Eventbrite para clasificar; 3  # 3: la API manda en fecha, hora, nombre, resumen, estado y lugar (19-10-2026); 2: ids «-registration-»
 RECHECK_DAYS = 3
 TZ = "Europe/Madrid"
-USER_AGENT = "Brollant/1.3 (+https://brollant.com) eventbrite-api"
+USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) eventbrite-api"
 # El id es el número final de la ruta /e/…: «…-tickets-123», «…-registration-123» o «/e/123».
 EVENT_ID = re.compile(r"/e/(?:[^/?#]*-)?(\d{9,})/?(?:[?#]|$)")
 

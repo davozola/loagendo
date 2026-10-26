@@ -47,7 +47,7 @@ STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js', 'leg
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
                         'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out', 'description_scope')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
@@ -216,9 +216,17 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('series'): out['se'] = event['series']  # serie que la web agrupa en una fila
     if event.get('languages'): out['lg'] = event['languages']  # idioma de la actividad, si la fuente lo dice
     if event.get('milestone'): out['ms'] = event['milestone']['kind'][:2]  # «op» inauguración, «cl» clausura (src/milestones.py)
-    if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0]  # festival (src/festivals.py)
+    if event.get('festival'): out['fs'] = [event['festival']['slug'], event['festival']['name'], 1 if event['festival']['umbrella'] else 0] + ([1] if event['festival'].get('kind') == 'fiesta' else [])  # festival (src/festivals.py)
     if event.get('lineup'): out['lu'] = event['lineup'][:40]
     if event.get('featured_date'): out['fd'] = event['featured_date']  # para buscar por artista
+    if event.get('program'):
+        out['pg'] = list(dict.fromkeys(p['title'] for p in event['program']))[:400]  # programa del festival (abono): para el buscador
+        first = {}
+        for p in event['program']:
+            if p.get('time') and (p['date'] not in first or p['time'] < first[p['date']]): first[p['date']] = p['time']
+        if first: out['pf'] = first  # primera sesión de cada día según su programa oficial (no se extrapola)
+    if event.get('manual_hours'): out['mh'] = event['manual_hours']  # hora puesta a mano por David, con su fuente
+    if event.get('drop_in'): out['di'] = 1  # la fuente dice que las sesiones son sueltas (mvp.catalog.drop_in)
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento
     if event.get('sold_out'): out['so'] = event['sold_out'].get('dias') or 1  # entradas agotadas: días que nombra el aviso o 1 = todos
     if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse

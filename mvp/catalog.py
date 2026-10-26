@@ -1126,6 +1126,37 @@ def open_enrollment(title, text, price=''):
     return ' '.join(blob[a:b].split())
 
 
+# Sesiones sueltas (25-10-2026): cada sesión es una actividad completa a la que se va sin haber
+# empezado con el grupo (juego familiar, cuentacuentos, espacio de descubrimiento). Solo si la fuente
+# lo dice; la regla de «ya empezados» no las oculta. Las señales débiles (entrada o acceso libre) no
+# valen si la misma fuente pide inscripción previa o matrícula.
+DROP_IN=re.compile(r"reserva[^.\n]{0,80}?(?:el |l['’])?(?:mateix|mismo) d[ií]a"
+    r"|(?:inscripci[oó]n?|entrades|entradas|tiquets?)[^.\n]{0,40}?(?:el |l['’])?(?:mateix|mismo) d[ií]a de l['’]?activitat"
+    r"|sessions? (?:s[oó]n )?independents|sesiones (?:son )?independientes|cada sessi[oó] [eé]s independent|cada sesi[oó]n es independiente"
+    r"|(?:no cal|sense|sin|no es necesaria la|no hace falta) reserva(?! pr[eè]via obligat)"
+    r"|espai de joc lliure|espacio de juego libre",re.I)
+DROP_IN_WEAK=re.compile(r"\b(?:entrada|acc[eé]s|acceso) (?:lliure|libre)\b|\blliure acc[eé]s\b|\blibre acceso\b",re.I)
+SIGNUP=re.compile(r"inscripci[oó]n? pr[eè]via|cal inscriure|cal inscripci|imprescindible (?:la )?inscripci|matr[ií]cula|plazas limitadas con inscripci",re.I)
+
+
+def drop_in(title, text, notes=''):
+    """Cita de la fuente que dice que las sesiones son sueltas; vacío si no lo dice (solo regla)."""
+    blob=f'{title}\n{notes}\n{text or ""}'
+    m=DROP_IN.search(blob)
+    if not m:
+        m=DROP_IN_WEAK.search(blob)
+        if not m or SIGNUP.search(blob): return ''
+    a=max(0,m.start()-60); b=min(len(blob),m.end()+60)
+    return ' '.join(blob[a:b].split())
+
+
+def needs_signup(e):
+    """Curso o taller por sesiones al que hay que apuntarse desde el principio: lo único que la
+    regla de «ya empezados» oculta (25-10-2026). Temporadas, programas y funciones siguen saliendo
+    los días que tienen actividad."""
+    return (e.get('kind')=='course' or e.get('format') in ('workshop','course')) and not e.get('open_enrollment') and not e.get('drop_in')
+
+
 def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, projection=None):
     source,id,title,start,end,kind,eligibility,evidence_level,url,raw_text,status,note,updated = row
     if projection is None:
@@ -1454,6 +1485,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['ai_summary']=ai_assist.description_for(conn,source+':'+id,events)  # descripción breve (src/ai_describe.py)
     # Inscripción abierta (te puedes apuntar con el curso empezado): solo si la fuente lo dice; se guarda la cita.
     events['open_enrollment']=open_enrollment(title,events['source_text'],events.get('price_label') or '')
+    events['drop_in']=drop_in(title,events['source_text'],' · '.join(str(x) for x in (facts.get('schedule_note'),facts.get('price_text'),events.get('price_label')) if x))
     # Franja de edad: la regla (título o texto) primero; la IA solo si la regla no la ve.
     by_rule=ai_extract.ages_by_rule(title,events['source_text'])
     if by_rule: events.update(age_min=by_rule[0],age_max=by_rule[1],age_evidence=by_rule[2],age_source='fuente')
@@ -1489,8 +1521,27 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if '"x_festival"' in (raw_text or ''):
         try: raw_fest=(json.loads(raw_text).get('item') or {}).get('x_festival')
         except ValueError: raw_fest=None
-    fest=_festivals(conn).of(title,raw_fest,venue=(place[0][0] if place and place[0][0] else ''))
+    fest=_festivals(conn).of(title,raw_fest,venue=(place[0][0] if place and place[0][0] else ''),start=str(start or '')[:10],end=str(end or '')[:10])
     events['festival']=fest
+    # Filtro «Festivales y fiestas» (25-10-2026): el festival o fiesta y todos sus actos, con el criterio de
+    # src/festivals.py; la palabra «festival» sola ya no basta (talleres «per a festes», «Budapest Festival Orchestra»…).
+    chans=set(events.get('channels') or [])
+    if fest: chans.add('festivales')
+    elif 'festivales' in chans and not (events.get('format')=='festival' and str(start)[:10]!=str(end)[:10]): chans.discard('festivales')
+    events['channels']=sorted(chans)
+    # Festival con abono: su programa (actos sin ficha propia) va en la ficha del festival y en lo que mira el buscador.
+    events['program']=_festivals(conn).programs.get(fest['slug'],[]) if fest and fest.get('umbrella') else []
+    # Hora puesta a mano (config/horarios_festivales.json): manda y no la toca ninguna actualización.
+    from src.festivals import manual_hours as _manual
+    events['manual_hours']=_manual().get(source+':'+id) or {}
+    # Enlace al programa oficial que encontró el buscador de programas (src/festival_finder.py).
+    if fest and fest.get('umbrella'):
+        try:
+            row=conn.execute('SELECT web,program_url FROM festival_programs WHERE slug=?',(fest['slug'],)).fetchone()
+        except sqlite3.DatabaseError: row=None
+        have={l.get('url') for l in events.get('links') or []}
+        for label,url in (('Programa oficial',row[1]),('Web del festival',row[0])) if row else ():
+            if url and url not in have: events.setdefault('links',[]).append({'label':label,'url':url}); have.add(url)
     # La ficha general del festival va en el mismo grupo que sus actividades (la primera del desplegable, 24-10-2026).
     if fest: events['series']='festival:'+fest['slug']
     # Inauguración o clausura de una exposición (src/milestones.py): por la dirección o el título, con su motivo.
@@ -1885,7 +1936,7 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     latest_hour=23 if hour_to is None else hour_to
     has_hour_filter=hour_from is not None or hour_to is not None
     for e in events:
-        if term and not query_matches(clean(e['title']+' '+' '.join(e['venue_names'])+' '+' '.join(e.get('lineup') or [])),term):continue
+        if term and not query_matches(clean(e['title']+' '+' '.join(e['venue_names'])+' '+' '.join(e.get('lineup') or [])+' '+' '.join(p['title'] for p in e.get('program') or [])),term):continue
         # La selección de la semana mira 7 días desde el día pedido, no solo ese día.
         if date and featured and not curated:
             if not (e['start']<=week_end and e['end']>=date):continue
@@ -1911,7 +1962,9 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
         # A course or programme that began more than STARTED_GRACE_DAYS ago
         # usually cannot be joined any more; the public default hides it and a
         # switch brings it back. Exhibitions and one-day acts are unaffected.
-        if not include_started and e['kind'] in ('course','program') and e['start']<started_cutoff and not e.get('open_enrollment'):continue
+        # Solo cursos y talleres por sesiones (needs_signup); programas, temporadas y sesiones
+        # sueltas siguen saliendo (25-10-2026).
+        if not include_started and needs_signup(e) and e['start']<started_cutoff:continue
         if only_sessions:
             if not e['occurrences']:
                 continue

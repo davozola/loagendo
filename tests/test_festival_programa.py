@@ -78,3 +78,78 @@ class OfficialSetTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class AcceleventsTest(unittest.TestCase):
+    """Programa en Accelevents (Mozilla Festival, 25-10-2026)."""
+    def test_sesiones_con_hora_sala_y_festival(self):
+        from src.venue_feeds import accelevents_nodes
+        ev = {"name": "Mozilla Festival 2026", "address": "RECINTE FABRA I COATS, Carrer de Sant Adrià, Barcelona, Spain", "latitude": "41.4333", "longitude": "2.1914"}
+        sessions = {"recordsTotal": 3, "data": [
+            {"sessionId": 1, "title": "Attack the AI. Then Defend It.", "startTime": "2026/10/28 10:00", "endTime": "2026/10/28 11:00", "locationName": "B1 Room",
+             "format": "WORKSHOP", "sessionVisibilityType": "PUBLIC", "sessionStatus": "VISIBLE"},
+            {"sessionId": 2, "title": "Oculta", "startTime": "2026/10/28 12:00", "endTime": "2026/10/28 13:00", "sessionVisibilityType": "PRIVATE", "sessionStatus": "VISIBLE"},
+            {"sessionId": 3, "title": "Sin hora", "startTime": None}]}
+        def fetcher(url, timeout):
+            return (200, url, json.dumps(ev if "/rest/cache/event/" in url else sessions))
+        v = {"slug": "mozilla_festival", "name": "Mozilla Festival", "type": "festival",
+             "feed": {"kind": "accelevents", "event": "mozilla-festival-2026", "url": "https://e/schedule", "lugar": "Fabra i Coats",
+                      "festival": {"slug": "mozilla-festival", "name": "Mozilla Festival"}}}
+        nodes, fetched = accelevents_nodes(v, fetcher)
+        self.assertEqual(len(nodes), 1)
+        r = record_from_jsonld(v, nodes[0][1], nodes[0][0])
+        self.assertEqual((r['title'], r['start'], r['time_text'], r['venues'][0]['name']), ('Attack the AI. Then Defend It.', '2026-10-28', '10:00', 'Fabra i Coats'))
+        self.assertEqual(nodes[0][1]['x_festival']['slug'], 'mozilla-festival')
+        self.assertIn('B1 Room', nodes[0][1]['description'])
+
+
+class AbonoTest(unittest.TestCase):
+    """Festival con abono (25-10-2026): los actos van al programa de la ficha del festival, no tienen ficha propia."""
+    def test_programa_en_la_ficha(self):
+        import tempfile
+        from pathlib import Path
+        from src.venue_feeds import accelevents_nodes
+        from src.festivals import programs
+        ev = {"address": "RECINTE FABRA I COATS, Carrer de Sant Adrià, Barcelona", "latitude": "41.43", "longitude": "2.19"}
+        sessions = {"recordsTotal": 2, "data": [
+            {"sessionId": 1, "title": "Wild AI", "startTime": "2026/10/28 10:00", "endTime": "2026/10/28 11:00", "locationName": "E1 Stage", "requiredTicketTypeIds": []},
+            {"sessionId": 2, "title": "Taller de pago aparte", "startTime": "2026/10/28 12:00", "endTime": "2026/10/28 13:00", "requiredTicketTypeIds": [99]}]}
+        fetcher = lambda url, t: (200, url, json.dumps(ev if "/rest/cache/event/" in url else sessions))
+        v = {"slug": "mozilla_festival", "name": "Mozilla Festival", "type": "festival",
+             "feed": {"kind": "accelevents", "venta": "abono", "event": "x", "url": "https://e/s", "lugar": "Fabra i Coats", "festival": {"slug": "mozilla-festival", "name": "Mozilla Festival"}}}
+        nodes, _ = accelevents_nodes(v, fetcher)
+        recs = [record_from_jsonld(v, n, u) for u, n in nodes]
+        self.assertEqual([r['eligibility'] for r in recs][0], 'exclude')          # con el abono: sin ficha propia
+        self.assertNotEqual(recs[1]['eligibility'], 'exclude')                     # entrada propia: ficha propia
+        with tempfile.TemporaryDirectory() as folder:
+            conn = connect(Path(folder) / 't.sqlite3')
+            for r in recs:
+                conn.execute("INSERT INTO source_records(source,id,title,start_date,end_date,raw_json,eligibility,source_url) VALUES(?,?,?,?,?,?,?,?)",
+                             (r['source'], r['id'], r['title'], r['start'], r['end'], json.dumps(r['raw']), r['eligibility'], ''))
+            prog = programs(conn, '2026-10-25')
+            self.assertEqual([(p['date'], p['time'], p['title'], p['room']) for p in prog['mozilla-festival']], [('2026-10-28', '10:00', 'Wild AI', 'E1 Stage')])
+
+
+class CriterioProgramaTest(unittest.TestCase):
+    """Precio del festival = abono (25-10-2026): al programa salvo entrada propia; «por_acto», ficha propia."""
+    def test_por_defecto_programa_y_entrada_propia(self):
+        from src.venue_feeds import festival_nodes
+        v = {"feed": {"festival": {"slug": "f", "name": "F"}, "desde": "2026-11-06", "hasta": "2026-11-07"}}
+        nodes = [("u", {"name": "A", "startDate": "2026-11-06T22:00"}), ("u", {"name": "B", "startDate": "2026-11-07T20:00", "offers": {"price": "12"}}),
+                 ("u", {"name": "C", "startDate": "2026-12-01T20:00"})]
+        out = festival_nodes(v, nodes)
+        self.assertEqual([(n["name"], n["x_programa"]) for _, n in out], [("A", True), ("B", False)])   # C, fuera de fechas
+        v["feed"]["venta"] = "por_acto"
+        self.assertEqual([n["x_programa"] for _, n in festival_nodes(v, [("u", {"name": "D", "startDate": "2026-11-06"})])], [False])
+
+
+class MidnightTest(unittest.TestCase):
+    """Auditoría 25-10-2026: 00:00 sin fin coherente no es una hora de la fuente."""
+    def test_medianoche(self):
+        v = {"slug": "dice", "name": "Dice", "type": "ticketing"}
+        r = lambda n: record_from_jsonld(v, {"name": "X", "location": {"name": "Sala", "address": {"addressLocality": "Barcelona"}}, **n}, "https://d/x")
+        self.assertEqual(r({"startDate": "2027-02-05T00:00", "endDate": "2027-02-05T23:59"})["time_text"], "")
+        self.assertEqual(r({"startDate": "2027-02-05T00:00"})["time_text"], "")
+        self.assertEqual(r({"startDate": "2026-11-06T00:00", "endDate": "2026-11-06T06:00"})["time_text"], "00:00")   # sesión de club
+        self.assertEqual(r({"startDate": "2026-11-06T00:00", "x_time_verified": True})["time_text"], "00:00")          # cita comprobada
+        self.assertEqual(r({"startDate": "2026-11-06T21:00"})["time_text"], "21:00")

@@ -34,7 +34,7 @@ from urllib.parse import urlsplit
 
 from src.network import ascii_url, tls_context
 
-USER_AGENT = 'Brollant/1.3 (+https://brollant.com) link check'
+USER_AGENT = 'Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) link check'
 TIMEOUT = 12
 WORKERS = 8
 PER_HOST = 2

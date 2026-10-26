@@ -55,3 +55,62 @@ class TribeRestTests(unittest.TestCase):
         self.assertEqual([(r['title'], r['start'], r['time_text'], r['venues'][0]['name']) for r in recs],
                          [('AR-DE', '2026-10-23', '', 'Diversos espais del Poblenou'), ('Piramidón: Teresa Camacho – Punt i Coma', '2026-09-18', '', 'Piramidón'),
                           ('URBAN TALKS', '2026-10-24', '11:00', 'Museu del Disseny')])
+
+
+class CriterioTests(unittest.TestCase):
+    """Criterio del 25-10-2026: unir ficha general y actividades, desde 2, fuera lo que no es festival."""
+    def setUp(self):
+        recs = [('25è Festival de Creació Contemporània "Escena Poblenou": Teatre "Torcidxs"', '2026-10-24', '2026-11-08'),
+                ('25è Festival de Creació Contemporània "Escena Poblenou": Espectacle "Clam"', '2026-10-25', '2026-10-25'),
+                ('25è Festival de Creació Contemporània "Escena Poblenou": Espectacle "Imagiro"', '2026-10-25', '2026-10-25'),
+                ('Festival Escena Poblenou 2026', '2026-10-22', '2026-10-25'),
+                ('Festival "Flaix de tardor - BCN": Teatre "Petróleo"', '2026-10-26', '2026-10-27'),
+                ('Festival "Flaix de tardor - BCN": Espectacle "Šventoji"', '2026-10-28', '2026-10-29'),
+                ('Caps de setmana singulars: Visita guiada a la Casa Rocamora', '2026-10-04', '2027-01-09'),
+                ('Caps de setmana singulars: Visita guiada a la Casa Llotja', '2026-10-04', '2027-01-09'),
+                ('CLOSA SELECTS w/ MRAK - Halloween [Balla Festival]', '2026-10-30', '2026-10-30'),
+                ('Throwback Open Air Halloween [Balla Festival]', '2026-10-31', '2026-10-31'),
+                ('Balla Barcelona Festival', '2026-10-30', '2026-10-31'),
+                ('"Festa Major del Clot - Camp de l\'Arpa": Ballada', '2026-11-01', '2026-11-01'),
+                ('"Festa Major del Clot - Camp de l\'Arpa": Correfoc', '2026-11-02', '2026-11-02')]
+        self.f = Festivals(recs, config=load())
+
+    def test_ficha_general_se_une(self):
+        child = self.f.of('25è Festival de Creació Contemporània "Escena Poblenou": Espectacle "Clam"')
+        umb = self.f.of('Festival Escena Poblenou 2026', start='2026-10-22', end='2026-10-25')
+        self.assertEqual(child['slug'], umb['slug']); self.assertTrue(umb['umbrella']); self.assertFalse(child['umbrella'])
+        self.assertEqual(self.f.of('Balla Barcelona Festival')['slug'], self.f.of('Throwback Open Air Halloween [Balla Festival]')['slug'])
+
+    def test_desde_dos_y_exclusiones(self):
+        self.assertIsNotNone(self.f.of('Festival "Flaix de tardor - BCN": Teatre "Petróleo"'))
+        self.assertIsNone(self.f.of('Caps de setmana singulars: Visita guiada a la Casa Rocamora'))
+        self.assertIsNone(self.f.of("Taller 'Bombolles per a les Festes!'"))
+        self.assertIsNone(self.f.of('Budapest Festival Orchestra & fischer - Simfonia núm. 9', start='2027-04-08', end='2027-04-08'))
+
+    def test_ficha_general_sola_y_fiestas(self):
+        moz = self.f.of('Mozilla Festival', start='2026-10-28', end='2026-10-30')
+        self.assertTrue(moz['umbrella']); self.assertEqual(moz['kind'], 'festival')
+        self.assertIsNone(self.f.of('Festival "Grunge Is Not Dead XXL"', start='2026-11-07', end='2026-11-07'))  # una noche
+        a, b = self.f.of('Asian Film Festival Barcelona', start='2026-10-22', end='2026-11-01'), self.f.of('14è Asian Film Festival Barcelona', start='2026-10-22', end='2026-11-01')
+        self.assertEqual(a['slug'], b['slug'])
+        self.assertEqual(self.f.of('"Festa Major del Clot - Camp de l\'Arpa": Ballada')['kind'], 'fiesta')
+
+    def test_mira_week(self):
+        self.assertEqual(self.f.of('MIRA WEEK: MIRA.exe')['slug'], 'mira-festival')
+
+
+class SimplificacionTests(unittest.TestCase):
+    """26-10-2026: un acto de un día no es ficha general; horas a mano por día, sin extrapolar."""
+    def test_acto_de_un_dia_no_es_ficha_general(self):
+        f = Festivals([], config=load())
+        self.assertIsNone(f.of('49è Correfoc de Festa Major', start='2026-11-14', end='2026-11-14'))
+        self.assertTrue(f.of('Festival Feroe 2026', start='2026-11-13', end='2026-11-14')['umbrella'])
+
+    def test_horas_a_mano(self):
+        import tempfile
+        from pathlib import Path
+        from src.festivals import manual_hours
+        with tempfile.TemporaryDirectory() as folder:
+            p = Path(folder) / 'h.json'
+            p.write_text(json.dumps({'horarios': [{'ficha': 'guiabcn:1', 'dias': {'2026-10-29': '17:00', 'mal': '9'}, 'tipo': 'primera sesión', 'fuente': 'https://x'}]}))
+            self.assertEqual(manual_hours(p), {'guiabcn:1': {'2026-10-29': {'time': '17:00', 'kind': 'primera', 'source': 'https://x'}}})

@@ -40,10 +40,10 @@ async function signup({request, env}) {
   if (recent.n >= MAX_SIGNUPS_PER_IP_HOUR) return json({ok: false, error: 'Demasiadas solicitudes desde esta conexión. Prueba dentro de una hora.'}, 429);
   await d.prepare('INSERT INTO signup_log (ip_hash, at) VALUES (?, ?)').bind(ipHash, now).run();
 
-  let sub = await d.prepare('SELECT id FROM subscribers WHERE email=?').bind(email).first();
+  let sub = await d.prepare('SELECT id, token FROM subscribers WHERE email=?').bind(email).first();
   if (!sub) {
     await d.prepare('INSERT INTO subscribers (email, token, freq, created_at) VALUES (?, ?, ?, ?)').bind(email, token(), freq, now).run();
-    sub = await d.prepare('SELECT id FROM subscribers WHERE email=?').bind(email).first();
+    sub = await d.prepare('SELECT id, token FROM subscribers WHERE email=?').bind(email).first();
   }
   const ok = json({ok: true, message: 'Te hemos enviado un correo. Confírmalo para empezar a recibir los avisos.'});
   const key = JSON.stringify(filters);
@@ -58,7 +58,7 @@ async function signup({request, env}) {
   await d.prepare('INSERT INTO searches (subscriber_id, filters, label, freq, status, confirm_token, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .bind(sub.id, key, name, freq, 'pending', confirm, now).run();
   try {
-    await sendMail(env, {to: email, ...confirmMail(env, {freq, label: name, confirmUrl: `${site(env)}/alertas/confirmar?t=${confirm}`})});
+    await sendMail(env, {to: email, ...confirmMail(env, {freq, label: name, confirmUrl: `${site(env)}/alertas/confirmar?t=${confirm}`, manageUrl: `${site(env)}/alertas/gestionar?t=${sub.token}`})});
   } catch (err) {
     await d.prepare('DELETE FROM searches WHERE confirm_token=?').bind(confirm).run();
     // 500, no 502 (25-10-2026): Cloudflare sustituye el cuerpo de un 502 por su propia página y la web

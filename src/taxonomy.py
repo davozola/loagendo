@@ -36,7 +36,7 @@ CHANNELS = {
     'barrio': ('Vida de barrio', 'Vida de barri'),
     'aire': ('Al aire libre', "A l'aire lliure"),
     'galerias': ('Arte y galerías', 'Art i galeries'),
-    'festivales': ('Festivales', 'Festivals'),
+    'festivales': ('Festivales y fiestas', 'Festivals i festes'),
 }
 PENDING = 'pendiente'
 # Fuera de la agenda cultural por decisión editorial (20-10-2026): no se publica ni va a la cola

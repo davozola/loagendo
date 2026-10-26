@@ -228,3 +228,16 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 
 /* Pestañas de la agenda (25-10-2026): fondo de papel y línea de tinta, como la barra de filtros. */
 .ag-tabs{background:var(--paper);box-shadow:0 -8px 0 var(--paper);border-bottom:1px solid var(--ink)}
+
+/* Fiesta mayor dentro de la pestaña Festivales y fiestas (25-10-2026) */
+.ev-fest-group .fest-kind{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:8px;opacity:.75}
+.ev-fest-group .fest-past>summary{font-size:13px;opacity:.7;padding:8px 0}
+
+/* Etiqueta Festival / Fiesta en filas y ficha (25-10-2026) */
+.ev-fest .fest-kind,.sheet-fest .fest-kind{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 7px;border-radius:9px;margin-right:6px;background:var(--accentSoft,rgba(120,90,220,.12));color:var(--accentText,inherit);vertical-align:1px}
+
+/* Programa de un festival con abono en la ficha (25-10-2026) */
+.sheet-program{margin:14px 0;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sheet-program>summary{cursor:pointer;font-weight:600}
+.sheet-program h4{margin:12px 0 4px;font-size:13px;color:var(--muted)}
+.sheet-program ul{margin:0;padding:0;list-style:none}.sheet-program li{padding:3px 0;font-size:14px}.sheet-program small{color:var(--soft)}

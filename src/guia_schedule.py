@@ -294,6 +294,13 @@ def schedule_by_day(rows, start, end):
     previous_days, previous_index = None, None
     unclear, closed, parts = set(), set(), {}
     for index, row in enumerate(rows):
+        if not row.get('dies') and row.get('periode') and index and rows[index - 1].get('dies') \
+                and rows[index - 1].get('periode') and rows[index - 1]['periode'] != row['periode']:
+            # Periodo propio sin días = los mismos días (y horas, si no trae) en otro periodo: en la web
+            # «Dies / Hores» ocupan las dos filas (99400576434: «Del 7 març al 6 juny / Dissabte /
+            # d'11.30 h a 13.30 h» y debajo solo «Del 5 setembre al 14 novembre»).
+            prev = rows[index - 1]
+            row = {**{k: prev[k] for k in ('dies', 'hores') if prev.get(k)}, **{k: v for k, v in row.items() if v}}; rows[index] = row
         if row.get('dies'):
             # «Dissabte, diumenge i festius»: los festivos no se pueden fechar; el fin de semana sí.
             days = parse_days(_HOLIDAYS.sub('', row.get('dies')), start, end); group = index

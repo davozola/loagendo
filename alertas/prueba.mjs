@@ -48,6 +48,7 @@ mails.length = 0;
 
 // Confirmados el sábado 24-10 (hora real de la prueba = ahora): forzamos sus fechas a antes del lunes.
 await DB.prepare("UPDATE subscribers SET confirmed_at='2026-10-24T10:00:00.000Z', last_sent_at='2026-10-24T10:00:00.000Z' WHERE confirmed_at IS NOT NULL").run();
+await DB.prepare("UPDATE searches SET confirmed_at='2026-10-24T10:00:00.000Z' WHERE status='active'").run();
 feed = {items: [
   {k: 'a:1', fs: '2026-10-25T09:00:00+00:00', t: 'Cuentacuentos', a: '2026-10-31', b: '2026-10-31', tm: '11:00', v: 'Biblioteca', d: 'Gràcia', pc: 'escena', ch: ['familia'], fr: 1},
   {k: 'a:2', fs: '2026-10-25T09:00:00+00:00', t: 'Jazz', a: '2026-10-30', b: '2026-10-30', tm: '21:00', v: 'Jamboree', d: 'Ciutat Vella', pc: 'musica', ch: [], fr: 0},
@@ -64,6 +65,9 @@ assert.match(ana.htmlContent, /Cuentacuentos/); assert.doesNotMatch(ana.htmlCont
 assert.match(bea.htmlContent, /Jazz/); assert.doesNotMatch(bea.htmlContent, /Cuentacuentos/);
 assert.equal(ana.headers['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click'); assert.match(ana.headers['List-Unsubscribe'], /alertas\/baja\?t=/);
 assert.match(ana.htmlContent, /https:\/\/ontoca\.com\/e\/a\/1/);
+assert.match(ana.htmlContent, /Captando planes nuevos desde el sábado 24 de octubre/); assert.match(ana.htmlContent, /a partir de las 8:00/);
+assert.match(ana.htmlContent, /Modificar mis avisos/); assert.match(ana.htmlContent, /alertas\/gestionar\?t=/); assert.match(ana.htmlContent, /Tu primer aviso/);
+assert.match(ana.htmlContent, /El próximo, el jueves 29 de octubre/);
 // Segunda pasada del lunes: ya no toca a nadie
 out = await run(env, new Date('2026-10-26T07:10:00Z')); assert.equal(out.status, 'nadie pendiente');
 // Jueves: solo la bisemanal; sin novedades nuevas no se envía nada
