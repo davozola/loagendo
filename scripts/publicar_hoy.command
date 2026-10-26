@@ -11,21 +11,10 @@ echo "✓ Pruebas en verde"
 
 echo "2/4 · Commit y push"
 git add -A
-git commit -q -F - <<'MSG' || echo "  (nada nuevo que guardar)"
-Avisos por correo maquetados y trabajo del 25-26/10
-
-- Avisos: correo y confirmación con el estilo de ontoca.com (logo, franja de colores,
-  cuadrito de categoría, botones Modificar/Cancelar), hora de envío (lunes y jueves a
-  partir de las 8:00), próximo aviso y fecha desde la que se captan planes.
-- Cada búsqueda capta solo lo que entra después de confirmarla.
-- Sin enlaces automáticos de dirección en hora y sala; titular con el total por búsqueda.
-- Formulario de alta: cuándo llegan, qué incluyen y primer aviso posible.
-- Correo de prueba: alertas/correo-prueba.mjs y alertas/enviar-correo-prueba.command.
-- Resto del trabajo pendiente de guardar (festivales, parte diario, vigilancia de fuentes…).
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_017MWCgVEQ4jFMtDcwR9E7CY
-MSG
+# Mensaje del commit: tmp/mensaje-commit.txt si existe (lo deja preparado Claude); si no, uno genérico.
+MSG_FILE=tmp/mensaje-commit.txt
+[ -s "$MSG_FILE" ] || printf 'Publicación del %s\n' "$(date +%d-%m-%Y)" > "$MSG_FILE"
+git commit -q -F "$MSG_FILE" && mv "$MSG_FILE" "tmp/mensaje-commit-usado.txt" || echo "  (nada nuevo que guardar)"
 git push -q && echo "✓ Subido a GitHub" || { echo "✗ No se pudo hacer push"; pausa 1; }
 
 echo "3/4 · Worker de avisos"

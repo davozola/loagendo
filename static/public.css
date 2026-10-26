@@ -288,6 +288,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ev-cat+.ev-meta{margin-top:1px}
 .w-short{display:none}
 .ev-free{color:var(--fg);font-weight:600}
+.ev-signup{margin-left:8px;font-weight:600}
 .ev-soldout{color:var(--fg);font-weight:600;text-transform:uppercase;font-size:.85em;letter-spacing:.02em}
 .ev .save{width:38px;height:38px;flex-basis:38px;font-size:16px}
 

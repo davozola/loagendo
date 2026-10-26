@@ -541,7 +541,8 @@ async function selection() {
                próximo pase y se avisa «confirma el de hoy»)
      wide    → «Horario amplio»: exposiciones, ferias y espacios abiertos 4 h o más
      tbc     → «Hora por confirmar»: pasa ese día (o está en cartel) pero la fuente no da la hora
-     soon    → «Talleres y cursos»: periódicos que empiezan en los próximos 30 días
+     (cursos y talleres de más de una semana: el día que empiezan, en la agenda a su hora con «curso
+      hasta el…»; antes de ese día no salen; ya no hay bloque «empiezan pronto», 26-10-2026)
      started → talleres y cursos ya en marcha: solo con el filtro «Incluir talleres y cursos ya empezados»
    Los botones de arriba muestran u ocultan cada tipo (por defecto: hora fija y por confirmar);
    cada botón lleva su número, así nada queda oculto sin que se pueda recuperar.
@@ -614,7 +615,14 @@ function availability(e, day) {
   // La fuente confirma actividad ese día pero no da la hora.
   const dayKnown = hoursByDay(e)?.[day] === '';
   if (isPeriodic(e) && !isOpenFormat(e)) {
-    if (span > SHORT_DAYS && (day <= e.start || needsSignup(e))) return {kind: day <= e.start ? 'soon' : 'started', until: e.end, ...(range || {})};
+    // Curso o taller de varias semanas (26-10-2026): sale en la agenda el día que empieza, a su hora (o sin hora
+    // confirmada), como cualquier plan; antes de ese día no sale. Ya empezado, lo de siempre.
+    if (span > SHORT_DAYS && day < e.start) return {kind: 'skip'};
+    if (span > SHORT_DAYS && day === e.start) {
+      if (times.length || range) return {kind: 'timed', times: range ? [clock(range.open)] : times, courseStart: true, until: e.end, endsAt: range?.close};
+      return {kind: 'tbc', courseStart: true, until: e.end};
+    }
+    if (span > SHORT_DAYS && needsSignup(e)) return {kind: 'started', until: e.end, ...(range || {})};
     if (span <= SHORT_DAYS) {
       if (times.length || range) return {kind: 'timed', times: times.length ? times : [clock(range.open)], confirmDay: true, until: e.end, endsAt: range?.close};
       return {kind: 'tbc', until: e.end};
@@ -812,6 +820,7 @@ function whenCell(e) {
     if (a.season) { note = L('temporada · confirma el pase', 'temporada · confirma el passi', 'season · check the show time'); cls = 'hint' }
     else if (st.state === 'soon') { note = st.in <= 1 ? L('ahora', 'ara', 'now') : `${L('en', 'd\'aquí a', 'in')} ${st.in} min`; cls = 'urgent' }
     else if (st.state === 'started') { note = `${L('empezó hace', 'va començar fa', 'started')} ${st.ago} min`; cls = 'urgent' }
+    else if (a.courseStart) { note = `${L('curso', 'curs', 'course')} ${untilText(e, a.until)}`; cls = 'hint' }
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia', 'check the day'); cls = 'hint' }
     else if (a.endsAt) note = `${L('hasta las', 'fins a les', 'until')} ${clock(a.endsAt)}`;
     else if ((st.rest || []).length) note = `${L('después', 'després', 'later')} ${st.rest.slice(0, 2).map(clock).join(' · ')}${st.rest.length > 2 ? '…' : ''}`;
@@ -835,12 +844,12 @@ function whenCell(e) {
   if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa', 'times in its programme') : L('hora por confirmar', 'hora per confirmar', 'time to be confirmed')}</span></div>`;
   const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar', 'Time to be announced'), 'Horario próximamente': L('Horario próximamente', 'Horari properament', 'Times coming soon')}[e.time_label];
   if (fixedLater) return `<div class="when w-tbc"><span class="w-mid">${esc(fixedLater)}</span><span class="w-note">${L('según la fuente', 'segons la font', 'according to the source')}</span></div>`;
-  return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
+  return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.courseStart ? `<span class="w-note">${esc(`${L('empieza · curso', 'comença · curs', 'starts · course')} ${untilText(e, a.until)}`)}</span>` : a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
 }
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1073,7 +1082,6 @@ function renderDay(m) {
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
   html += `<div class="ag-timeline">${groups}</div>`;
-  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, L(`En los próximos ${COURSE_AHEAD} días`, `En els propers ${COURSE_AHEAD} dies`, `In the next ${COURSE_AHEAD} days`), state.cats.length === 1 && state.cats[0] === 'talleres');
   html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
   html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
@@ -1101,7 +1109,6 @@ function renderRange(m) {
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
   let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`}</div>`;
   if (rest) html += `<button class="ag-toggle ag-moredays" type="button" data-moredays="1">${L('Ver más días', 'Mostra més dies', 'See more days')} · ${rest.toLocaleString('es-ES')} ${L('actividades más', 'activitats més', 'more activities')}</button>`;
-  html += foldBlock('soon', L(`${s.soon.length} talleres y cursos que empiezan pronto`, `${s.soon.length} tallers i cursos que comencen aviat`, `${s.soon.length} workshops and courses starting soon`), s.soon, '', state.cats.length === 1 && state.cats[0] === 'talleres');
   if (state.started && s.started.length) html += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   html += foldHtml('past', L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other);
