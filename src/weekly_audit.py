@@ -150,7 +150,18 @@ def run(conn, job=None, today=None, requester=None, send=None, out_dir=OUT_DIR):
     body = {'model': job.get('model', MODEL), 'max_tokens': job.get('max_tokens', 16000), 'thinking': {'type': 'disabled'}, 'system': _prompt(),
             'messages': [{'role': 'user', 'content': 'Muestra de %d fichas publicadas (%s), una línea JSON por ficha:\n\n%s' % (
                 len(rows), ', '.join('%d %s' % (n, k) for k, n in comp.items()), '\n'.join(json.dumps(r, ensure_ascii=False) for r in rows))}]}
-    message = (requester or ai_assist._request)('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
+    import urllib.error
+    call = requester or ai_assist._request
+    try:
+        message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode('utf-8', 'replace')[:400] if hasattr(error, 'read') else ''
+        if error.code != 400 or 'thinking' not in body: return {'status': 'failed', 'error': f'HTTP {error.code}: {detail}'}
+        # El modelo no admite desactivar el razonamiento: sin ese campo y con margen de sobra para pensar y escribir.
+        body.pop('thinking'); body['max_tokens'] = max(body['max_tokens'], 24000)
+        try: message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
+        except urllib.error.HTTPError as again:
+            return {'status': 'failed', 'error': f'HTTP {again.code}: ' + (again.read().decode('utf-8', 'replace')[:400] if hasattr(again, 'read') else '') + f' (antes: {detail[:200]})'}
     report = ''.join(b.get('text', '') for b in message.get('content') or [] if b.get('type') == 'text')
     if not report.strip():
         return {'status': 'failed', 'error': 'Informe vacío (stop_reason %s; bloques %s)' % (message.get('stop_reason'), [b.get('type') for b in message.get('content') or []]),
