@@ -271,6 +271,38 @@ def _audit(today):
     return None
 
 
+_WD_TEXT = {'dilluns': 0, 'dimarts': 1, 'dimecres': 2, 'dijous': 3, 'divendres': 4, 'dissabte': 5, 'diumenge': 6,
+            'lunes': 0, 'martes': 1, 'miercoles': 2, 'jueves': 3, 'viernes': 4, 'sabado': 5, 'domingo': 6}
+_MO_TEXT = {'gener': 1, 'febrer': 2, 'marc': 3, 'abril': 4, 'maig': 5, 'juny': 6, 'juliol': 7, 'agost': 8, 'setembre': 9, 'octubre': 10, 'novembre': 11,
+            'desembre': 12, 'enero': 1, 'febrero': 2, 'marzo': 3, 'mayo': 5, 'junio': 6, 'julio': 7, 'agosto': 8, 'septiembre': 9, 'noviembre': 11, 'diciembre': 12}
+
+
+def date_contradictions(conn, today, limit=40):
+    """Textos de la fuente con un día de la semana que no es el de la fecha que acompaña («dissabte 30 d'octubre» en
+    2026 es viernes; Pinocchio, Open Data, 27-10-2026). Solo fechas dentro del periodo de la propia ficha, para no
+    tomar referencias a otros años. No se corrige nada: se avisa para revisarlo a mano."""
+    import json as _json, re as _re, unicodedata as _ud
+    from mvp.catalog import source_description
+    fold = lambda t: ''.join(c for c in _ud.normalize('NFKD', t.lower()) if not _ud.combining(c))
+    rx = _re.compile(r"\b(" + '|'.join(_WD_TEXT) + r")\s+(\d{1,2})\s+(?:de\s+|d['’]\s*)(" + '|'.join(_MO_TEXT) + r")\b")
+    out = []
+    for s, i, title, a, b, raw in conn.execute("""SELECT source,id,title,substr(start_date,1,10),substr(end_date,1,10),raw_json FROM source_records
+                                                WHERE end_date>=? AND eligibility<>'exclude'""", (today.isoformat(),)):
+        try: d0, d1 = dt.date.fromisoformat(a), dt.date.fromisoformat(b)
+        except (TypeError, ValueError): continue
+        try: text = fold(str(source_description(_json.loads(raw or '{}'), s) or ''))
+        except (ValueError, TypeError, AttributeError): continue
+        for m in rx.finditer(text):
+            for year in {d0.year, d1.year}:
+                try: d = dt.date(year, _MO_TEXT[m.group(3)], int(m.group(2)))
+                except ValueError: continue
+                if d0 - dt.timedelta(days=1) <= d <= d1 + dt.timedelta(days=1) and d.weekday() != _WD_TEXT[m.group(1)]:
+                    out.append({'source': s, 'id': i, 'title': title, 'quote': m.group(0), 'date': d.isoformat()})
+                    break
+        if len(out) >= limit: break
+    return out
+
+
 def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None, catalog_path=CATALOG):
     from src.source_watch import initialize
     initialize(conn)
@@ -326,7 +358,7 @@ def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None,
             'new': [(d, new_by_day.get(d, 0)) for d in last7], 'traffic': matomo_yesterday(today) if matomo is None else matomo,
             'festivals': _festivals(conn, today), 'ai': _ai(conn, since, today), 'fest_watch': _festival_watch(conn, today, now, catalog_path),
             'freshness': _safe(_freshness, conn, now, default=[]), 'coverage': _safe(_coverage_by, conn, today, default={}),
-            'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]),
+            'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]), 'date_text': _safe(date_contradictions, conn, today, default=[]),
             'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today)}
 
 
@@ -448,6 +480,10 @@ def render(data):
     if dups:
         items.append('<b>%d posibles duplicados</b> sin fusionar (mismo día, sitio y título; horas distintas no cuentan):%s' % (len(dups), li(
             '%s · %s <span style="color:#777">(%s)</span> = %s <span style="color:#777">(%s)</span>' % (esc(d['day'][8:10] + '/' + d['day'][5:7]), esc(d['a']['title'][:60]), esc(d['a']['source']), esc(d['b']['title'][:60]), esc(d['b']['source'])) for d in dups[:8])))
+    dates_txt = data.get('date_text') or []
+    if dates_txt:
+        items.append('<b>%d textos con día y fecha que no cuadran</b> (de la fuente; no se cambian, revisar o avisar a la fuente):%s' % (len(dates_txt), li(
+            '%s <span style="color:#777">(%s)</span> · «%s» es %s' % (esc(d['title'][:60]), esc(d['source']), esc(d['quote']), esc(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'][dt.date.fromisoformat(d['date']).weekday()])) for d in dates_txt[:8])))
     parts.append(li(items) if items else '<p style="color:#067647;margin:0">Nada. Todo en orden.</p>')
     if waiting:
         parts.append('<p style="color:#555;margin:4px 0">%s (se recupera sola): %s.</p>' % (TRIAGE['esperar'][0], esc(', '.join('%s (%s)' % (a['source'], a['first_seen_at'][:10]) for a in waiting))))

@@ -830,7 +830,7 @@ def description_skeleton(text, title):
     return ' '.join(out)[:180]
 
 
-_TEMPLATES={'stamp':None,'set':set(),'generic':set()}
+_TEMPLATES={'stamp':None,'set':set(),'generic':set(),'shared':set()}
 
 
 def description_templates(conn):
@@ -845,10 +845,15 @@ def description_templates(conn):
             try: rows+=list(conn.execute("""SELECT o.source, r.title, o.text FROM organizer_texts o JOIN source_records r ON r.source=o.source AND r.id=o.id
                                             WHERE o.status IN ('ok','generico_del_sitio') AND r.end_date>=date('now','-30 day')"""))
             except sqlite3.DatabaseError: pass
+            texts={}
             for src,title,text in rows:
                 if not text or len(str(text))<25: continue
-                seen.setdefault((src,description_skeleton(text,title)),set()).add(clean(title))
+                k=(src,description_skeleton(text,title))
+                seen.setdefault(k,set()).add(clean(title)); texts.setdefault(k,set()).add(' '.join(str(text).split())[:300])
             found={k for k,v in seen.items() if len(v)>=5 and len(k[1].replace('{}','').split())>=4}
+            # El mismo texto, idéntico, en las sesiones de un ciclo («4X4 és un cicle de performance…», DICE): describe el
+            # ciclo y se queda si nombra algo del título; una plantilla rellenada con cada artista (Upload) no.
+            _TEMPLATES['shared']={k for k in found if len(texts.get(k,()))==1}
             # Lo que src/organizer_text.py ya marcó como texto genérico del sitio (la presentación del Ateneu): también.
             try: found|={(src,description_skeleton(text,title)) for src,title,text in conn.execute("""SELECT o.source, r.title, o.text FROM organizer_texts o
                          JOIN source_records r ON r.source=o.source AND r.id=o.id WHERE o.status='generico_del_sitio'""")}
@@ -865,9 +870,20 @@ def description_problem(conn, source, text, title):
     if not t: return ''
     ft,ftitle=re.sub(r'[^a-z0-9]+',' ',clean(t)).strip(),re.sub(r'[^a-z0-9]+',' ',clean(title)).strip()
     if ft==ftitle or (len(t)<40 and _fold_words(t)<=_fold_words(title)): return 'igual_al_titulo'
-    lines=[l for l in re.split(r'\n+|(?<=[a-z0-9)])\.\s+(?=[A-ZÀ-Ú])',t) if l.strip()]
-    if len(lines)>=2 and sum(1 for l in lines if WEEKDAY_LINE.match(l) or PRACTICAL_LINE.search(l))/len(lines)>=0.5: return 'datos_practicos'
-    if conn is not None and ((source,description_skeleton(t,title)) in description_templates(conn) or (source,' '.join(t.split())) in _TEMPLATES['generic']): return 'plantilla'
+    # Datos prácticos del recinto (horario de apertura, cierres, transporte, aparcamiento) y casi nada más. Un programa
+    # con sus fechas («Dimarts, 8 de setembre a les 19.30 h: Dues grans sonates») o un punto de encuentro son del acto.
+    lines=[l.strip() for l in t.split('\n') if l.strip()]
+    opening=lambda l: WEEKDAY_LINE.match(l) and re.search(r'\bde\s+\d{1,2}(?:[.:]\d{2})?\s*h?\s*a\s+\d',l) and len(l)<220
+    practical=[l for l in lines if (opening(l) or (PRACTICAL_LINE.search(l) and len(l)<220))]
+    prose=[l for l in lines if l not in practical and len(l)>=60]
+    if len(practical)>=2 and len(practical)/len(lines)>=0.6 and not prose: return 'datos_practicos'
+    if conn is not None:
+        key=(source,description_skeleton(t,title))
+        if (source,' '.join(t.split())) in (description_templates(conn) and _TEMPLATES['generic']): return 'plantilla'
+        if key in _TEMPLATES['set']:
+            names={w for w in re.findall(r'[a-z0-9]+',clean(title)) if len(w)>=3 and not w.isdigit()}-{'amb','con','per','para','les','els','los','las','del','the','and','pres','presenta'}
+            if key in _TEMPLATES['shared'] and names & set(re.findall(r'[a-z0-9]+',clean(t))): return ''
+            return 'plantilla'
     return ''
 
 
