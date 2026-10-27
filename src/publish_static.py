@@ -230,8 +230,10 @@ def expo_rank(items, day, floor=None):
         # Solo museos, centros y salas con peso propio (config/venue_prestige.json, 8 puntos o más): la red de
         # proximidad (centros cívicos, bibliotecas, casals) no se destaca aunque la anuncien varias fuentes.
         # Un espacio marcado como cerrado («*Tancat temporalment») tampoco.
-        from src.venue_prestige import prestige
-        if prestige(e.get('venue_names'))[0] < 8: continue
+        # Desde el 27-10-2026 también los espacios de arte de la lista «exposiciones» (galerías y centros de arte
+        # elegidos uno a uno), aunque no tengan esos puntos en la portada.
+        from src.venue_prestige import prestige, art_space
+        if prestige(e.get('venue_names'))[0] < 8 and not art_space(e.get('venue_names')): continue
         if re.search(r'\*\s*(?:tancat|tancada|cerrad[oa]|closed)', ' '.join(e.get('venue_names') or []), re.I): continue
         score, _ = catalog.featured_score(dict(e, featured_date=day), day)
         opened = (dt.date.fromisoformat(day) - dt.date.fromisoformat(e['start'][:10])).days

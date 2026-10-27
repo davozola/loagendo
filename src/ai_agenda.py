@@ -37,6 +37,7 @@ PROMPT_VERSION = 1
 LABEL = 'Datos de la sala'
 CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
+EMPTY_PAGE_MIN_ACTIVE = 3    # con menos actos vigentes, una página vacía puede ser simplemente que no hay programación
 IMAGE_BUDGET = 40            # páginas de acto leídas por agenda y pasada para su imagen
 NEAR_TIME, NEAR_PRICE, NEAR_DATE_AFTER, NEAR_DATE_BEFORE = 500, 900, 700, 5000
 
@@ -50,6 +51,8 @@ WEEKDAYS = {0: ('dilluns', 'lunes', 'monday', 'dl', 'lun'), 1: ('dimarts', 'mart
             5: ('dissabte', 'sabado', 'saturday', 'ds', 'sab', 'sa'), 6: ('diumenge', 'domingo', 'sunday', 'dg', 'dom', 'do')}
 WEEKDAY_FULL = re.compile(r"\b(dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|miercoles|jueves|viernes|sabado|domingo|"
                           r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b")
+CANCELLED_RX = re.compile(r"\b(?:ajornat|ajornada|aplazad[oa]|cancel[.·]?lat|cancel[.·]?lada|cancelad[oa]|anul[.·]?lat|anul[.·]?lada|anulad[oa]|suspes|suspesa|suspendid[oa]|postponed|cancelled|canceled)\b")
+MEMBERS_RX = re.compile(r"exclusiu per a soci|nomes per a soci|exclusivo para soci|solo para soci|members only")
 FREE_RX = re.compile(r"gratu|gratis|lliure|libre|free|sense cost|sin coste")
 
 SYSTEM = """Lees la página de agenda de una sala o espacio cultural de Barcelona y devuelves los actos que anuncia, para la agenda Brollant.
@@ -216,6 +219,10 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
     title = ' '.join(str(item.get('titulo') or '').split())
     tpos = _positions(title, hay)
     if not title or not tpos: return None, ['título que no está en la página']
+    # Actos que la propia página da por anulados o aplazados («[Acte ajornat]», «(ANULADO)»), o que no son para el
+    # público («Exclusiu per a socis», justo después del título): no se publican (27-10-2026).
+    if CANCELLED_RX.search(fold(title)): return None, ['acto anulado o aplazado según la página']
+    if any(MEMBERS_RX.search(hay[p:p + len(title) + 300]) for p in tpos): return None, ['acto solo para socios']
     out = {'titulo': title, 'sesiones': [], 'quotes': {}}
     # Sala (agendas de varias salas): una de las configuradas.
     if salas:
@@ -502,6 +509,13 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                     image, fetched = _image(conn, url, fetcher, timeout); images += fetched
                     if image: act['image'] = urljoin(url, image)
                 except Exception: pass
+        # Página cambiada que ya no trae ningún acto cuando la sala tenía programación (Filmoteca en mantenimiento,
+        # 25-10-2026: «temporalment fora de servei»): es un fallo de la fuente, no un vacío de programación. Se marca
+        # como fallida (la vigilancia avisa a la tercera) y no se deja de publicar nada.
+        if not res['accepted'] and not res.get('rules_nodes'):
+            active = conn.execute("SELECT COUNT(*) FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'", (source, today.isoformat())).fetchone()[0]
+            if active >= EMPTY_PAGE_MIN_ACTIVE:
+                raise RuntimeError('la página ha cambiado y no trae ningún acto (tenía %d vigentes): web caída, rediseñada o sin programación publicada' % active)
         model = ai_assist.MODEL
         page_hash = ','.join(sorted({p.get('hash', '') for p in res['pages'] if p.get('hash')}))
         records = []

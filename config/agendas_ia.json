@@ -80,10 +80,10 @@
       "address": "Carrer de Béjar 53, Barcelona",
       "type": "cinema",
       "urls": [
-        "https://zumzeigcine.coop/"
+        "https://zumzeigcine.coop/cinema/sessions/"
       ],
       "activa": true,
-      "nota": "La portada da cada película con su próxima sesión («Dimecres 21.10.26 (19:00)»); el calendario parte el día en otra línea y no se puede citar."
+      "nota": "27-10-2026: se lee la cartelera de sesiones (/cinema/sessions/: cada película con todas sus sesiones, «Dt 27.10.26 (21:30)»); la portada solo daba la próxima sesión de cada película. Antes: el calendario parte el día en otra línea y no se puede citar."
     },
     {
       "slug": "phenomena",
@@ -312,7 +312,7 @@
       "address": "C Pi 5, 08002 Barcelona",
       "type": "theatre",
       "urls": [
-        "https://elmalda.cat/calendari/"
+        "https://elmalda.cat/"
       ],
       "activa": true
     },
@@ -322,7 +322,7 @@
       "address": "C Sant Pere Més Baix 7, Barcelona",
       "type": "culture",
       "urls": [
-        "https://labonne.org/temes/activitats/"
+        "https://labonne.org/events/"
       ],
       "activa": true
     },
@@ -673,6 +673,61 @@
       ],
       "activa": true,
       "nota": "Añadida el 21-10-2026 (aviso de David: faltaba «BULTACO: pasión por la moto»). Agenda en HTML con fecha y hora de cada acto; robots.txt lo permite."
+    },
+    {
+      "slug": "23robadors",
+      "name": "23 Robadors",
+      "address": "Carrer d'en Robador 23, 08001 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://23robadors.com/"
+      ],
+      "activa": true,
+      "nota": "27-10-2026: flamenco y jazz cada día; la página publica sus actos en schema.org (hora y precio): se leen con reglas, sin IA."
+    },
+    {
+      "slug": "deskomunal",
+      "name": "La Deskomunal",
+      "address": "Carrer Riera d'Escuder 38, 08028 Barcelona",
+      "type": "music",
+      "urls": [
+        "https://ladeskomunal.coop/"
+      ],
+      "activa": true,
+      "nota": "27-10-2026: conciertos en La Comunal (Sants); schema.org con la fecha (sin hora): se leen con reglas."
+    },
+    {
+      "slug": "la_caldera",
+      "name": "La Caldera",
+      "address": "Carrer d'Eugeni d'Ors 12, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.lacaldera.info/"
+      ],
+      "activa": true,
+      "nota": "27-10-2026: centro de creación de danza (Les Corts). Sin schema.org: IA. Activada el 27-10-2026 por decisión de David."
+    },
+    {
+      "slug": "documenta",
+      "name": "Llibreria Documenta",
+      "address": "Carrer de Pau Claris 144, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.documenta-bcn.com/activitat"
+      ],
+      "activa": true,
+      "nota": "27-10-2026: presentaciones de libros con fecha y hora. Sin schema.org: IA. Activada el 27-10-2026 por decisión de David."
+    },
+    {
+      "slug": "cinema_malda",
+      "name": "Cinema Maldà",
+      "address": "Carrer del Pi 5, Barcelona",
+      "type": "cinema",
+      "urls": [
+        "https://www.cinemamalda.com/"
+      ],
+      "activa": false,
+      "nota": "27-10-2026: cine de autor en VOSE (criterio: cines independientes y de autor, no la cartelera comercial). Sin schema.org: IA. Desactivada el 27-10-2026: su robots.txt solo permite Google, Bing y Microsoft (User-agent: * / Disallow: /). Activar solo con permiso escrito del cine o si añaden Ontoca a su robots.txt."
     }
   ]
 }

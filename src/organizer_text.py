@@ -286,6 +286,32 @@ def run(conn, limit=150, fetcher=None, timeout=15, today=None):
 
 
 def texts(conn):
-    """{(source, id): (texto, url)} aceptados."""
-    try: return {(s, i): (t, u) for s, i, t, u in conn.execute("SELECT source,id,text,url FROM organizer_texts WHERE status='ok' AND text<>''")}
+    """{(source, id): (texto, url)} aceptados, sin los que son de otro acto (ver foreign)."""
+    try: rows = conn.execute("SELECT source,id,text,url FROM organizer_texts WHERE status='ok' AND text<>''").fetchall()
     except sqlite3.DatabaseError: return {}
+    try: titles = conn.execute("SELECT source,id,title FROM source_records WHERE source IN (SELECT DISTINCT source FROM organizer_texts WHERE status='ok')").fetchall()
+    except sqlite3.DatabaseError: titles = []
+    bad = foreign(rows, titles)
+    return {(s, i): (t, u) for s, i, t, u in rows if (s, i) not in bad}
+
+
+def foreign(rows, titles):
+    """{(source, id)} cuyo texto es el de OTRO acto de la misma fuente (27-10-2026).
+
+    La página del acto puede traer, debajo, tarjetas de «También te puede interesar»: la ficha del Institut français
+    «Le grand tour en Italie» de Ferrante Ferranti cogió el texto del «Atelier théâtre d'octobre à juin». La
+    comprobación de siempre (palabras del título en el texto, el título de la página o la URL) pasaba por la URL.
+    Ahora: si el texto no comparte ninguna palabra propia con su título y sí contiene todas las de otro acto de la
+    misma fuente (al menos tres), es de ese otro acto y no se usa. Un texto que no nombra nada (una sinopsis) se queda."""
+    by_source = {}
+    for s, i, t in titles:
+        w = _words(t)
+        if len(w) >= 3: by_source.setdefault(s, []).append((i, w))   # con dos («Galder Varas») sale el nombre de alguien del reparto
+    own = {(s, i): _words(t) for s, i, t in titles}
+    out = set()
+    for s, i, text, _ in rows:
+        tw = _words(text)
+        if own.get((s, i), set()) & tw: continue
+        for other, w in by_source.get(s, []):
+            if other != i and w <= tw and not (w <= own.get((s, i), set())): out.add((s, i)); break
+    return out

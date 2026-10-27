@@ -58,3 +58,21 @@ def prestige(names):
         candidate = venue_points(name)
         if candidate[0] > best[0]: best = candidate
     return best
+
+
+@lru_cache(maxsize=1)
+def _expo_patterns(path=str(PRESTIGE_PATH)):
+    try: data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError): return ()
+    return tuple(k for k in (normalise(p) for p in (data.get("exposiciones") or {}).get("patterns", [])) if k)
+
+
+def art_space(names):
+    """¿Es un espacio de arte de referencia para destacar exposiciones (Selección Ontoca en Expos)? Lista aparte
+    de los puntos de la portada (config/venue_prestige.json, «exposiciones»; 27-10-2026): museos, centros de arte y
+    fotografía y galerías elegidas una a una. Se compara como el resto: palabras enteras del nombre normalizado."""
+    pats = _expo_patterns()
+    for name in names or []:
+        text = normalise(name)
+        if text and any(re.search(r"(?<![a-z0-9])" + re.escape(k) + r"(?![a-z0-9])", text) for k in pats): return True
+    return False

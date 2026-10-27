@@ -265,7 +265,7 @@ def _audit(today):
     try: files = sorted(AUDIT_DIR.glob('*.json'))
     except OSError: return None
     for f in reversed(files):
-        if f.stem >= (today - dt.timedelta(days=7)).isoformat():
+        if (today - dt.timedelta(days=7)).isoformat() <= f.stem[:10] <= today.isoformat():   # nunca una auditoría posterior al día del parte
             try: return json.loads(f.read_text(encoding='utf-8'))
             except ValueError: return None
     return None

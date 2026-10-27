@@ -145,6 +145,17 @@ def _hash(payload): return hashlib.sha256(json.dumps(payload, ensure_ascii=False
 
 # ---------- lo que se le enseña ----------
 def category_payload(ev):
+    """Lo que la IA ve para decidir la categoría. El título es el de la fuente (27-10-2026): la clasificación se
+    hace antes de arreglar el título para la web («MEMORIAL JOAQUIM SERRA» → «Memorial Joaquim Serra»), y con el
+    título arreglado la respuesta nunca casaba con la ficha (68 de 80 pendientes sin aplicar). Sin resumen, el
+    principio de la descripción (CCCB «Bivac 2026»: la IA decía «título sin extracto»)."""
+    return {'titulo': (ev.get('source_title') or ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
+            'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('format') or ev.get('kind') or '',
+            'extracto': (ev.get('summary') or ev.get('description') or '')[:300]}
+
+
+def _legacy_category_payload(ev):
+    """La forma anterior (hasta el 27-10-2026): las respuestas ya dadas con ella siguen valiendo mientras la ficha no cambie."""
     return {'titulo': (ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
             'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('format') or ev.get('kind') or '',
             'extracto': (ev.get('summary') or '')[:300]}
@@ -173,7 +184,14 @@ def suggestions(conn):
 def category_for(conn, key, ev):
     """La sugerencia vigente de categoría para la ficha (o None si no hay o si la ficha cambió)."""
     s = suggestions(conn).get(('categoria', key))
-    if not s or s['prompt_version'] != prompt_version('categoria') or s['input_hash'] != _hash(category_payload(ev)): return None
+    if not s or s['prompt_version'] != prompt_version('categoria'): return None
+    accepted = {_hash(category_payload(ev)), _hash(_legacy_category_payload(ev))}
+    if s['input_hash'] not in accepted:
+        # Respuestas dadas con el título ya arreglado para la web (hasta el 27-10-2026): se reconstruye ese título
+        # con la categoría que respondió la IA, que es la que lo decidía.
+        from src.titles import display_title
+        shown = display_title(ev.get('title') or '', s['answer'] if s['answer'] in CATEGORY_KEYS else '')
+        if s['input_hash'] != _hash(_legacy_category_payload({**ev, 'title': shown})): return None
     return s
 
 
@@ -192,7 +210,12 @@ def category_candidates(conn, events, today):
     current = suggestions(conn); out = []
     for e in events:
         # Pendientes (la IA decide) y ambiguas (la IA solo señala discrepancias para revisión).
-        if e.get('rule_status') != 'pendiente' and not e.get('rule_ambiguous'): continue
+        # Y las que solo tienen la categoría del recinto en teatros, cines y salas de arte (27-10-2026): un teatro también
+        # acoge conciertos y charlas (Christian Löffler o Victor Küppers en el Coliseum salían «Teatro»). Sin pregunta
+        # no había sugerencia y la corrección con respaldo de classify() no podía actuar nunca. Las salas de música
+        # (2.282 fichas, casi todas conciertos) siguen sin preguntarse.
+        venue_only = e.get('category_method') == 'categoria_recinto' and e.get('public_category') in ('escena', 'cine', 'arte')
+        if e.get('rule_status') != 'pendiente' and not e.get('rule_ambiguous') and not venue_only: continue
         if not taxonomy.eligible(e, today) or e.get('category_status') == 'editorial': continue
         payload = category_payload(e); s = current.get(('categoria', e['key']))
         if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('categoria'): continue

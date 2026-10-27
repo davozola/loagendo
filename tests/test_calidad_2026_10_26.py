@@ -27,8 +27,21 @@ class Auditoria(unittest.TestCase):
         patterns, _, serious = weekly_audit.parse(REPORT)
         subject, body, text = weekly_audit.render({'day': '2026-10-26', 'model': 'm', 'sample_size': 80, 'composition': {'azar': 40}, 'patterns': patterns,
                                                    'serious': serious, 'usage': {'input_tokens': 10, 'output_tokens': 5}}, REPORT)
-        self.assertIn('2 errores graves', subject)
-        self.assertLess(body.index('Errores graves'), body.index('Patrones'))
+        # Correo corto (27-10-2026): verificados y sospechas por separado, sin el informe completo.
+        self.assertIn('1 errores verificados, 1 sospechas', subject)
+        self.assertLess(body.index('Errores graves verificados'), body.index('Sospechas'))
+        self.assertNotIn('Origen: REGLA', body)
+        self.assertIn('reports/auditorias/2026-10-26.md', body)
+
+    def test_comparacion_y_anterior(self):
+        import tempfile, json, pathlib
+        report = REPORT + "\n## Comparación con la auditoría anterior\nResuelto: x\nSigue: y\n"
+        self.assertIn('Resuelto: x', weekly_audit.comparison(report))
+        with tempfile.TemporaryDirectory() as d:
+            pathlib.Path(d, '2026-10-20.json').write_text(json.dumps({'serious': [{'key': 'a:1'}]}))
+            pathlib.Path(d, '2026-10-27.json').write_text(json.dumps({'serious': []}))
+            name, prev = weekly_audit.previous(d, dt.date(2026, 10, 27))
+            self.assertEqual((name, prev['serious'][0]['key']), ('2026-10-20', 'a:1'))
 
 
 class Parte(unittest.TestCase):

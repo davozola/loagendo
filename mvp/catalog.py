@@ -725,7 +725,14 @@ def is_free(price, free_label):
 
 def public_fields(event, projection, requested_day='', schedule_time=''):
     source=event['source']
-    requested=[o['time'] for o in event['occurrences'] if (not requested_day or o['date']==requested_day) and o['time']]
+    # Sin día pedido, la hora de la ficha es la de la próxima sesión, no la de la primera de su historia (27-10-2026:
+    # «Última planta» de Teatreneu se representa desde 2024; su página da las sesiones de 2024 a las 21:00 y las
+    # actuales a las 19:30). Las sesiones pasadas se conservan; solo dejan de dar la hora de cabecera.
+    pool=event['occurrences']
+    if not requested_day:
+        upcoming=[o for o in pool if o['date']>=today().isoformat()]
+        if any(o['time'] for o in upcoming): pool=upcoming
+    requested=[o['time'] for o in pool if (not requested_day or o['date']==requested_day) and o['time']]
     # Horario oficial por día (GuiaBCN): vale para el día pedido o, en un acto
     # de un solo día, para ese día. Si varía según el día y no se pide ninguno,
     # no se elige uno: la ficha muestra todas las filas.
@@ -1689,7 +1696,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'price_text':split_price(price or archived_facts.get('price_text',''))[0],'source_free_label':free,
             'price_status':'unknown' if not (price or archived_facts.get('price_text') or free) else 'source_claim_unverified',
             'venues':[{'name':v[0], 'address':v[1], 'lat':v[2],'lon':v[3]} for v in place] or ([{'name':archived_facts.get('venue',''), 'address':archived_facts.get('address',''), **archived_facts.get('coordinates',{})}] if archived_facts.get('venue') else []),
-            'organizers':[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),
+            # La plataforma no es quien organiza («Eventbrite», «DICE»): fuera también aquí, no solo en la ficha pública.
+            'organizers':[o for o in ([r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else [])) if clean(o) not in PLATFORMS],
             'alerts':[r[0] for r in conn.execute('SELECT issue FROM review_flags WHERE source=? AND id=? ORDER BY issue',(source,id))],
             'links':links,
             'raw_sha256':conn.execute('SELECT raw_sha256 FROM source_records WHERE source=? AND id=?',(source,id)).fetchone()[0],

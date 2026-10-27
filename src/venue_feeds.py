@@ -132,8 +132,10 @@ def jsonld_blocks(page):
         text = html.unescape(raw.strip())
         try: data = json.loads(text)
         except json.JSONDecodeError:
-            # Some sites leave trailing commas or comments; skip rather than guess.
-            continue
+            # Apóstrofo escapado al estilo PHP («SCREAMIN\' MEEMIES», La Deskomunal, 27-10-2026): no es JSON válido,
+            # pero la corrección es exacta. Lo demás (comas sobrantes, comentarios) se salta en lugar de adivinar.
+            try: data = json.loads(text.replace("\\'", "'"))
+            except json.JSONDecodeError: continue
         out.append(data)
     return out
 

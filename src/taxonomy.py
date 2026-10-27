@@ -114,6 +114,17 @@ def recinto_source(source):
 # Fuentes que son salas de cine: todo lo que publican es Cine, diga lo que diga el título
 # («Escape Room 2» es una película). Decisión de David, 26-10-2026: «Espai Texas es un cine».
 CINEMA_SOURCES = {'venue_ia_espai_texas'}
+STAGE_AT_CINEMA = re.compile(r"(?i)\bl'espectacle\b|\bal teatre\b|\buna obra (?:de teatre|sobre)\b")
+PROFESSIONAL_EVENTBRITE = {'business', 'science tech', 'science technology'}
+TICKET_PRODUCT_DAYS = 60
+
+
+def _span_days(ev):
+    import datetime as _dt
+    try: return (_dt.date.fromisoformat(str(ev.get('end'))[:10]) - _dt.date.fromisoformat(str(ev.get('start'))[:10])).days
+    except ValueError: return 0
+
+
 SOURCE_DEFAULT = {'venue_xceed': 'musica', 'venue_songkick': 'musica', 'web_conciertos_club': 'musica', 'venue_dice': 'musica'}
 VENUE_GENRE = [('escena', re.compile(r"^(?:teatre|teatro)\b|\b(?:sala beckett|mercat de les flors|tnc|teatre nacional|gran teatre del liceu)\b")),
                ('cine', re.compile(r"\b(?:filmoteca|cinemes|cines|cinema (?!a la fresca))"))]
@@ -259,7 +270,9 @@ def _classify_rules(ev, override=None):
     if override and override.get('category') in CATEGORIES:
         return {'category': override['category'], 'status': 'editorial', 'method': 'correccion_editorial',
                 'evidence': override.get('note') or 'Corrección editorial', 'ambiguous': False}
-    if ev.get('source') in CINEMA_SOURCES:
+    # …salvo cuando la propia sala dice que es teatro (27-10-2026: Espai Texas también tiene escenario; «compra les
+    # teves entrades per l'espectacle AUTÓNOMOS EL MUSICAL al teatre de l'Espai Texas», «Rita, una obra sobre…»).
+    if ev.get('source') in CINEMA_SOURCES and not STAGE_AT_CINEMA.search(str(ev.get('description') or ev.get('source_text') or '')[:600]):
         return {'category': 'cine', 'status': 'confirmada', 'method': 'sala_de_cine',
                 'evidence': 'La fuente es una sala de cine (decisión editorial 26-10-2026)', 'ambiguous': False}
     title = ev.get('title') or ''
@@ -298,6 +311,19 @@ def _classify_rules(ev, override=None):
     if TICKET_PRODUCT.search(t):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'producto_de_ticketera',
                 'evidence': 'Mejora de entrada o producto de la ticketera, no un acto', 'ambiguous': False}
+    # Eventbrite (auditoría 27-10-2026): la categoría que declara el propio organizador separa la formación y los
+    # encuentros profesionales («Business», «Science & Tech»: CEO's Night, conferencias de desarrolladores) del ocio
+    # cultural. Es la decisión editorial del 20-10-2026 (ocio profesional, congresos: fuera) con el dato de la fuente.
+    # Una fiesta, función o festival con esa categoría (una noche de arte y música en el Palau Dalmases) no se excluye
+    # por ella: sigue las reglas de siempre.
+    if ev.get('source') == 'venue_eventbrite' and gen in PROFESSIONAL_EVENTBRITE and not override and not any(k in fmt for k in ('party', 'performance', 'festival', 'concert', 'screening')):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'ocio_social_o_profesional',
+                'evidence': f'Categoría declarada en Eventbrite: {ev.get("hint_category")} (formación o encuentro profesional; decisión editorial 20-10-2026)', 'ambiguous': False}
+    # Lo que Eventbrite vende todo el año con una sola ficha (visita guiada al Park Güell, clase de paella del
+    # 14-12-2025 al 15-12-2026) es un producto turístico, no un acto con fecha.
+    if ev.get('source') == 'venue_eventbrite' and _span_days(ev) > TICKET_PRODUCT_DAYS:
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'producto_de_ticketera',
+                'evidence': f'Producto que la ticketera vende todo el año ({ev.get("start")} → {ev.get("end")}), no un acto con fecha', 'ambiguous': False}
     # La web de centres cívics mezcla noticias con actividades: sin género ni fecha propia es una noticia.
     # Y en esa web, lo que va a nombre de la red entera («Xarxa de Centres Cívics», «Diversos centres
     # cívics») es siempre un artículo de recopilación («10 visites i itineraris…», «5 tallers per…»,

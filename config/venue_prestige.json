@@ -18,5 +18,11 @@
     {"points": 3, "label": "Red de proximidad", "patterns": [
       "centre civic", "centro civico", "biblioteca", "casal barri", "casal joves", "ateneu", "fabrica creacio", "espai jove", "centre cultural", "centre art"
     ]}
-  ]
+  ],
+  "exposiciones": {
+    "note": "Espacios de arte cuyas exposiciones pueden salir como «Selección Ontoca» en la pestaña Expos aunque no tengan puntos en la portada (27-10-2026, evaluación de Claude con el inventario de GRAF y la base; decisión de David de ampliar). Criterio: museos y centros públicos o de fundación con programación propia de exposiciones, centros de fotografía y galerías de arte contemporáneo con programa estable (Barcelona Gallery Weekend, GRAF). Fuera: experiencias inmersivas y museos comerciales (MOCO, Ideal, Casa Amatller, Palau Moja, Titanic), centros cívicos, casals y espacios de barrio. Además tienen que pasar el mínimo de puntos de la ficha (imagen, descripción…).",
+    "patterns": [
+      "disseny hub", "museu del disseny", "arxiu fotografic de barcelona", "casa de l arquitectura", "museu d arqueologia de catalunya", "castell de montjuic", "sant pau recinte modernista", "kbr", "fundacion mapfre", "foto colectania", "agrupacio fotografica de catalunya", "fundacio sunol", "goethe institut", "institut francais", "casa america catalunya", "valid foto", "adn galeria", "homesession", "alzueta gallery", "escat gallery", "sorondo projects", "senda", "3 punts", "chiquita room", "angels barcelona", "fuga gallery", "dilalica", "projectesd", "sala pares", "bombon projects", "galeria mayoral", "mayoral", "nogueras blanchard", "victor lope", "piramidon", "pigment gallery", "galeria marc domenech", "suburbia contemporary", "galeria h2o", "joan gaspar", "rociosantacruz", "zielinsky", "house of chappaz", "galeria joan prats", "etherton gallery", "the green parrot", "bombon"
+    ]
+  }
 }
