@@ -384,10 +384,10 @@ class ListingByDayTests(unittest.TestCase):
         from mvp import catalog
         from src.pipeline import connect
         html = '<table><tr><td class="timetable-day"><div>Dimecres</div></td><td class="timetable-hour"><div>de 17.15 h a 18.15 h</div></td></tr></table>'
-        raw = {'name': 'Espai moviment', 'register_id': 9, 'timetable': {'html': html}, 'addresses': [], 'loagendo': {'category': 'Talleres y experiencias', 'schedule_hours': 'de 17.15 h a 18.15 h'}}
+        raw = {'name': 'Taller de moviment', 'register_id': 9, 'timetable': {'html': html}, 'addresses': [], 'loagendo': {'category': 'Talleres y experiencias', 'schedule_hours': 'de 17.15 h a 18.15 h'}}
         with tempfile.TemporaryDirectory() as folder:
             conn = connect(Path(folder) / 't.sqlite3'); catalog.initialize(conn)
-            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '9', 'Espai moviment', '2026-10-14', '2026-11-25', 'program', 'review', 'x', '', 'h', json.dumps(raw)))
+            conn.execute('INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)', ('opendatabcn_agenda', '9', 'Taller de moviment', '2026-10-14', '2026-11-25', 'program', 'review', 'x', '', 'h', json.dumps(raw)))
             conn.commit(); catalog.invalidate_cache()
             wednesday = [e['id'] for e in catalog.query_events(conn, day='2026-10-21', public=True)['items']]
             thursday = [e['id'] for e in catalog.query_events(conn, day='2026-10-22', public=True)['items']]

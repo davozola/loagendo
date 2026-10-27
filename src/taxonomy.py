@@ -272,7 +272,7 @@ GENERALIST_SOURCES = {'guiabcn', 'opendatabcn_agenda', 'generalitat', 'diba_bibl
 NAME_WORDS = re.compile(r"^(?:entrevista|entrevistas|ruta|rutes|rutas|tour|gira|carrera|cursa|fiestas|festes|dansa|danza|danses|danzas)$")
 
 
-def _classify_rules(ev, override=None):
+def _base_rules(ev, override=None):
     """→ dict(category, status, method, evidence, ambiguous).
 
     status: 'editorial' | 'confirmada' | 'probable' | 'pendiente'."""
@@ -415,6 +415,55 @@ def _classify_rules(ev, override=None):
             'evidence': evidence + (f'. Otras señales: {others}' if others else ''), 'ambiguous': bool(ambiguous),
             'other_categories': sorted({c for c, _, _ in signals[1:] if c != first[0]})}
 
+
+
+# ---------- modelo de participación (David, 27-10-2026, aprobado 21:04) ----------
+# La Agenda es para planes a los que se puede ir. Fuera, sin borrar nada y reversible con una corrección editorial:
+# (1) los cursos completos de más de una semana (precio de curso entero, o de pago fuera de museos y bibliotecas),
+# (2) los grupos, espacios y servicios estables del barrio (grupo de senderismo, sala de informática, espacio familiar)
+# y (3) las atracciones permanentes de realidad virtual que su sala no llama exposición. Medido sobre el catálogo del
+# 27-10-2026 (reports en claude/politica-participacion-2026-10-27.md). Lo dudoso se queda.
+COURSE_PRICE = re.compile(r"imports? als cursos|preu del curs|curs complet|trimestr|matricula|quota|mensualitat|al mes\b|/ ?mes\b|/ ?\d+ sessions|\b\d+ sessions|socis i socies|/ ?any\b|\banual\b|per any\b|\b\d{3,}(?:[.,]\d+)? ?eur\b")
+PAID = re.compile(r"\d+(?:[.,]\d+)? ?eur\b")
+OPEN_VENUE = re.compile(r"cosmocaixa|museu|mnac|museo|pedrera|casa vicens|casa batllo|bellesguard|pavello|auditori|palau de la musica|poble espanyol|liceu|temple expiatori|sagrada famil|caixaforum|fundacio|fundacion|macba|cccb|biblioteca|disseny hub|observatori|filmoteca|arxiu")
+STABLE_GROUP = re.compile(r"^\W*(?:espai(?! d'aprenentatge| sensorial)\b|sala d'|sala de joc|servei\b|trobada (?:de|del) grup|grup\b|grups\b|taula d'intercanvi|aula oberta|"
+                          r"sessio informativa|cicle d'acollida|assessorament|acollida\b|banc del temps|aprenem en comunitat|activitats per a grups)|"
+                          r"\bgrup d'aprenentatge|\bespai (?:familiar|relacional|obert|jove|comunitari|de participacio|de trobada|dona)\b|\blactancia\b|"
+                          r"\bsala d'informatica\b|\bbretxa digital\b|\btargeta cuidadora\b|\bcasal (?:de )?persones grans\b|\blas kellys\b|\braconet\b")
+# Lo que sí es un plan aunque lo haga un grupo estable: su función, su concierto, su ruta o su exposición.
+GROUP_SHOW = re.compile(r"\b(?:teatre|teatro|concert|concierto|jam|ruta|rutes|rutas|visita|visites|espectacle|exposicio|exposicion|mostra|cinema|projeccio|festa|fira|mercat|ball|presentacio)\b")
+SESSION_PRICE = re.compile(r"\b(?:1 classe|una classe|per classe|per sessio|sessio solta|per sesion|por sesion|clase suelta|entrada per sessio)\b")
+VR_ATTRACTION = re.compile(r"\b(?:realitat virtual|realidad virtual|virtual reality)\b")
+
+
+def participation_exclusion(ev, category):
+    """Veredicto de exclusión por modelo de participación, o None. Cursos y grupos: solo talleres, charlas, deporte o sin categoría."""
+    if ev.get('kind') == 'exhibition' or ev.get('format') == 'exhibition': return None
+    span = _span_days(ev); t = norm(ev.get('title'))
+    if span > 180 and VR_ATTRACTION.search(t) and category in ('talleres', 'charlas', 'arte', PENDING):
+        return {'method': 'atraccion_permanente', 'evidence': f'Atracción permanente ({ev.get("start")} → {ev.get("end")}) que su sala no presenta como exposición (decisión 27-10-2026)'}
+    if category not in ('talleres', 'charlas', 'deporte', PENDING): return None
+    if span <= 7: return None
+    if STABLE_GROUP.search(t) and not GROUP_SHOW.search(t) and not re.match(r"\W*(?:taller|tallers|curs|cicle|xerrada|conferencia)\b", t):
+        return {'method': 'grupo_o_servicio_estable', 'evidence': f'Grupo, espacio o servicio estable ({ev.get("start")} → {ev.get("end")}), no un plan con fecha (decisión 27-10-2026)'}
+    formative = ev.get('kind') == 'course' or ev.get('format') in ('workshop', 'course')
+    if not formative or ev.get('open_enrollment') or ev.get('drop_in'): return None
+    price = ' '.join(str(x) for x in (ev.get('price_label'), ev.get('price_note')) if x).replace('€', ' eur ')
+    price = re.sub(r'\s+', ' ', unicodedata.normalize('NFKD', price).encode('ascii', 'ignore').decode().lower().replace('euros', 'eur'))
+    venue = norm(' '.join(ev.get('venue_names') or []))
+    if SESSION_PRICE.search(price) or re.match(r"\W*(?:visita|visites|ruta|itinerari)\b", t): return None
+    amounts = [float(a.replace(',', '.')) for a in re.findall(r"(\d+(?:[.,]\d+)?) ?eur\b", price)]
+    if COURSE_PRICE.search(price) or (amounts and max(amounts) >= 20 and not OPEN_VENUE.search(venue)):
+        return {'method': 'curso_completo', 'evidence': f'Curso de {span + 1} días con precio de curso entero («{(ev.get("price_label") or ev.get("price_note") or "")[:80]}»): pide matrícula, no es un plan suelto (decisión 27-10-2026)'}
+    return None
+
+
+def _classify_rules(ev, override=None):
+    out = _base_rules(ev, override)
+    if override or out['status'] in ('editorial', 'excluida'): return out
+    cut = participation_exclusion(ev, out['category'])
+    if cut: return {'category': EXCLUDED, 'status': 'excluida', 'method': cut['method'], 'evidence': cut['evidence'], 'ambiguous': False}
+    return out
 
 # ---------- canales ----------
 BARRIO_VENUE = re.compile(r"\b(?:centre civic|centro civico|casal de barri|casal de gent gran|casal|ateneu|biblioteca|espai veinal|associacio de veins|asociacion de vecinos|casa de la barceloneta|centre cultural|cc )\b")

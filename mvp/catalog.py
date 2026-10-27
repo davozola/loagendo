@@ -558,13 +558,21 @@ GALLERY_AGENDAS={'venue_poblenou_urban_district'}
 EXHIBIT_TITLE=re.compile(r'\b(?:exposici[oó]n?s?|exposicions?|exhibitions?|mostra d.art)\b',re.I)
 
 
+OFFICIAL_URL=re.compile(r'https?://[^\s"\'<>\\]+')
+
+
 def _exhibit_evidence(source, raw, title, start, end):
-    if not str(source).startswith(('venue_','web_')): return False
     span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
     if span<7 or _activity_kind(title,start,end): return False
     if re.match(r"\W*(?:visit|taller|curs|curso|conferenc|xerrad|charla|presentaci|inauguraci|concert|projecci|proyecci)",clean(title)): return False
-    url=str((raw.get('normalized') or {}).get('url') or (raw.get('item') or {}).get('url') or '') if isinstance(raw,dict) else ''
     from urllib.parse import urlsplit
+    if not str(source).startswith(('venue_','web_')):
+        # Agendas generalistas (GuiaBCN, Generalitat, Diputació), 27-10-2026: solo si el enlace oficial del acto o uno de
+        # su descripción está en la sección de exposiciones de la sala («dissenyhub.barcelona/ca/exposicio/mater…»,
+        # «espai-imagina.com/exposicions/codi-gaudi…»). Ni «instal·lació» ni «mostra» bastan solas. Medido: 5 fichas.
+        text=json.dumps(raw,ensure_ascii=False) if isinstance(raw,dict) else str(raw or '')
+        return any(EXHIBIT_PATH.search(urlsplit(u).path) for u in OFFICIAL_URL.findall(text))
+    url=str((raw.get('normalized') or {}).get('url') or (raw.get('item') or {}).get('url') or '') if isinstance(raw,dict) else ''
     if EXHIBIT_PATH.search(urlsplit(url).path): return True
     if EXHIBIT_TITLE.search(title or ''): return True
     # Agenda de barrio de galerías (Poblenou Urban District): «Galería: Artista – Título» («Piramidón: Teresa Camacho
@@ -1199,7 +1207,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=36  # 36: días de apertura de las exposiciones de GRAF según el horario del espacio (27-10-2026); 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=37  # 37: exposiciones de GuiaBCN y Generalitat por el enlace oficial a la sección de exposiciones de la sala (27-10-2026); 36: días de apertura de las exposiciones de GRAF según el horario del espacio (27-10-2026); 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1884,7 +1892,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['family_ai']=ai_assist.family_for(conn,source+':'+id,events) if events.get('format')=='exhibition' else None
     basis={**events,'classification_paths':projection.get('classification_paths') or [],'ai_family':ai_data.get('family'),'ai_outdoor':ai_data.get('outdoor'),
            'ai_family_rec':events['family_ai'] if ai_family.public_enabled() else None,
-           'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category','')}
+           'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category',''),'price_note':facts.get('price_text','')}
     ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
     verdict=taxonomy.classify(basis,override,ai)
     # Formato por la naturaleza del acto (26-10-2026), no por su duración: un acto de la fuente (kind single) que format_of
