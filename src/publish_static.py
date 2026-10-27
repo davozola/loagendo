@@ -258,7 +258,9 @@ def compact(event, images, full=True, hidden=frozenset()):
     }
     vv = _VERIFIED_VENUE.get(event.get('key') or f"{event['source']}:{event['id']}")
     if vv: out['v'] = [vv]; out['g'] = None  # varias sedes: sin un punto en el mapa
-    if event.get('time_conflicts'): out['tc'] = event['time_conflicts']  # días con horas que no cuadran: «por confirmar» (27-10-2026)
+    if event.get('time_conflicts'): out['tc'] = event['time_conflicts']
+    # Días que abre el espacio de una exposición (y si atiende con cita previa), del horario que publica (27-10-2026).
+    if event.get('opening_days') and event.get('kind') == 'exhibition': out['od'] = event['opening_days']['dias']; out['oc'] = 1 if event['opening_days'].get('cita') else 0  # días con horas que no cuadran: «por confirmar» (27-10-2026)
     tx = _SCHEDULE_TEXT.get(event.get('key') or f"{event['source']}:{event['id']}")
     if tx and not any(o.get('time') for o in event['occurrences']): out['tx'] = tx
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)

@@ -88,5 +88,44 @@ class Fase2Clasificacion(unittest.TestCase):
         self.assertIn('familia', T.channels({'title': 'Pica Pica – Operación Halloween', 'source_text': 'el nuevo espectáculo de Pica Pica el grupo infantil más querido', 'source': 'venue_ia_teatre_apolo'}, 'escena'))
 
 
+class Fase3Fichas(unittest.TestCase):
+    def test_descripcion_limpia(self):
+        self.assertEqual(catalog.clean_description('15 novembre, 2026. MARIA JOVER<br/> Diumenge 15<br/> <br/> "Una obra"'), 'MARIA JOVER\nDiumenge 15\n\n"Una obra"')
+
+    def test_descripcion_que_no_describe(self):
+        p = lambda t, title: catalog.description_problem(None, 'x', t, title)
+        self.assertEqual(p('JAM SESSION', 'Jam Session'), 'igual_al_titulo')
+        casal = ("De dimarts a dissabte, de 10 a 19h Dimecres, de 10 a 20h Diumenges i festius, de 10 a 14.30h\n\nTANCAT: Dilluns no festius, 1 i 6 de gener"
+                 "\n\nAutobusos V17, H14, D20, V15 Metro L4 (groga) Barceloneta.")
+        self.assertEqual(p(casal, 'Casal Lambda. 50 anys creant referents positius'), 'datos_practicos')
+        self.assertEqual(p('Fa cinquanta anys, obrir camí era un acte de supervivència. El Casal Lambda va néixer en un temps difícil.', 'Casal Lambda'), '')
+
+    def test_plantilla_por_su_forma(self):
+        a = catalog.description_skeleton('Charlotte Plank actuará en la Sala Upload de Barcelona el 11 de noviembre de 2026. Entradas ya a la venta aquí.', 'Charlotte Plank')
+        b = catalog.description_skeleton('Kid Kapichi actuarán en la Sala Upload de Barcelona el 11 de diciembre de 2026. Entradas ya a la venta aquí.', 'Kid Kapichi')
+        self.assertEqual(a.replace('actuara ', 'actuaran '), b)
+
+    def test_salas_del_lliure(self):
+        from src.web_agendas import lliure_room
+        self.assertEqual(lliure_room('GRÀCIA'), ('Teatre Lliure - Sala Lliure de Gràcia', 'C Montseny 47'))
+        self.assertEqual(lliure_room('MONTJUÏC. ESPAI LLIURE')[0], 'Teatre Lliure - Sala Espai Lliure')
+        self.assertEqual(lliure_room('Sala Desconeguda'), ('Sala Desconeguda', ''))
+
+    def test_dias_de_apertura(self):
+        self.assertEqual(catalog.opening_weekdays('Dimarts a divendres: 11 a 19 h\naltres hores amb cita prèvia'), {'dias': [1, 2, 3, 4], 'cita': True})
+        self.assertIsNone(catalog.opening_weekdays('De dijous a diumenge, de 10 a 19 h fins al mes d’octubre'))   # por temporadas: no se afirma
+        self.assertIsNone(catalog.opening_weekdays('Horari variable'))
+
+    def test_curso_semanal_y_dia_del_listado(self):
+        self.assertEqual(catalog.weekly_day('Rejoignez-nous tous les mardis, d’octobre à juin'), 1)
+        self.assertEqual(catalog.weekly_day('tots els diumenges'), 6)
+        self.assertIsNone(catalog.weekly_day('un sol dia'))
+
+    def test_sesion_de_biblioteca_de_un_dia(self):
+        from src.dedupe import _end_of
+        self.assertEqual(_end_of('diba_bibliotecas', '2026-12-18', '2026-12-19'), '2026-12-18')
+        self.assertEqual(_end_of('diba_bibliotecas', '2026-12-18', '2026-12-21'), '2026-12-21')
+
+
 if __name__ == '__main__':
     unittest.main()

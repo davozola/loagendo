@@ -20,7 +20,7 @@ class WebAgendaTests(unittest.TestCase):
         self.assertEqual((macba[0]['start'],macba[0]['time_text'],macba[0]['url']),('2026-10-12','', 'https://www.macba.cat/es/actividades/demo/'))
         self.assertEqual((cccb[0]['start'],cccb[0]['time_text']),('2026-10-13','18:30'))
         lliure=parse_teatre_lliure(LLIURE)
-        self.assertEqual((lliure[0]['start'],lliure[0]['end'],lliure[0]['venues'][0]['name']),('2026-10-01','2026-10-25','GRÀCIA'))
+        self.assertEqual((lliure[0]['start'],lliure[0]['end'],lliure[0]['venues'][0]['name']),('2026-10-01','2026-10-25','Teatre Lliure - Sala Lliure de Gràcia'))
 
     def test_web_sync_is_idempotent_and_never_deletes(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -799,6 +799,123 @@ def reliable_price(text):
     return None
 
 
+# ---------- Descripciones que no describen el acto (27-10-2026, auditoría conjunta 3.1) ----------
+# Lo que se descarta no se borra: queda en la ficha como «description_discarded» con el motivo, y la de una ficha
+# gemela puede ocupar su lugar (borrow_from_twins). Sin texto fiable, la ficha queda breve: no se rellena.
+WEEKDAY_LINE=re.compile(r"^\W*(?:de\s+|del\s+|els\s+|los\s+)?(?:dilluns|dimarts|dimecres|dijous|divendres|dissabtes?|diumenges?|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bados?|domingos?|festius|festivos)\b.*\d",re.I)
+PRACTICAL_LINE=re.compile(r"\b(?:tancat|cerrado|closed|autobusos|autobuses|autob[uú]s|bus tur[ií]stic|metro|parada|aparcaments?|aparcamientos?|parking|p[aà]rquings?|accessibilitat|accesibilidad|com arribar|c[oó]mo llegar|horari d.obertura|horario de apertura)\b",re.I)
+MONTHS_RX=r"gener|febrer|mar[çc]|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre|enero|febrero|marzo|mayo|junio|julio|agosto|septiembre|noviembre|diciembre|january|february|march|april|may|june|july|august|september|october|november|december"
+LEAD_DATE=re.compile(r"^\s*\d{1,2}\s+(?:de\s+|d['’])?(?:"+MONTHS_RX+r"),?\s+\d{4}(?:\s+(?:to|a|al|fins al)\s+\d{1,2}\s+(?:de\s+|d['’])?(?:"+MONTHS_RX+r"),?\s+\d{4})?\.?\s*",re.I)
+
+
+def clean_description(text):
+    """HTML suelto (<br/>, etiquetas) y la fecha que algunas salas ponen delante («15 novembre, 2026.»)."""
+    t=str(text or '')
+    if '<' in t:
+        t=re.sub(r'(?i)<br\s*/?>|</p>|</div>|</li>','\n',t); t=re.sub(r'<[^>]{1,200}>','',t)
+    t=t.replace('&nbsp;',' ').replace('&amp;','&')
+    t='\n'.join(' '.join(l.split()) for l in t.split('\n'))
+    t=re.sub(r'\n{3,}','\n\n',t).strip()
+    return LEAD_DATE.sub('',t,count=1).strip()
+
+
+def _fold_words(text):
+    return {w for w in re.findall(r'[a-z0-9]+',clean(text)) if len(w)>=3}
+
+
+def description_skeleton(text, title):
+    """La forma de una plantilla: sin las palabras del título, cifras ni meses («{} actuará en la Sala Upload el # de {}»)."""
+    words=_fold_words(title)
+    out=[('#' if w.isdigit() else '{}' if w in words or re.fullmatch(MONTHS_RX,w) else w) for w in re.findall(r'[a-z0-9]+',clean(text))]
+    return ' '.join(out)[:180]
+
+
+_TEMPLATES={'stamp':None,'set':set(),'generic':set()}
+
+
+def description_templates(conn):
+    """(fuente, forma) de los textos que se repiten en 5 fichas o más con títulos distintos: la presentación de la sala
+    (Ateneu), la frase de la ticketera (Apolo, Upload). Desde las descripciones guardadas (listado y web del organizador)."""
+    try:
+        stamp=conn.execute('SELECT COUNT(*),MAX(rowid) FROM listing_projections').fetchone()
+        if stamp!=_TEMPLATES['stamp']:
+            seen={}
+            rows=list(conn.execute("""SELECT p.source, r.title, json_extract(p.projection_json,'$.summary') FROM listing_projections p
+                                      JOIN source_records r ON r.source=p.source AND r.id=p.id WHERE r.end_date>=date('now','-30 day')"""))
+            try: rows+=list(conn.execute("""SELECT o.source, r.title, o.text FROM organizer_texts o JOIN source_records r ON r.source=o.source AND r.id=o.id
+                                            WHERE o.status IN ('ok','generico_del_sitio') AND r.end_date>=date('now','-30 day')"""))
+            except sqlite3.DatabaseError: pass
+            for src,title,text in rows:
+                if not text or len(str(text))<25: continue
+                seen.setdefault((src,description_skeleton(text,title)),set()).add(clean(title))
+            found={k for k,v in seen.items() if len(v)>=5 and len(k[1].replace('{}','').split())>=4}
+            # Lo que src/organizer_text.py ya marcó como texto genérico del sitio (la presentación del Ateneu): también.
+            try: found|={(src,description_skeleton(text,title)) for src,title,text in conn.execute("""SELECT o.source, r.title, o.text FROM organizer_texts o
+                         JOIN source_records r ON r.source=o.source AND r.id=o.id WHERE o.status='generico_del_sitio'""")}
+            except sqlite3.DatabaseError: pass
+            generic={(src,re.sub(r'\s+',' ',str(text or '')).strip()) for src,text in conn.execute("SELECT source,text FROM organizer_texts WHERE status='generico_del_sitio'")} if conn.execute("SELECT 1 FROM sqlite_master WHERE name='organizer_texts'").fetchone() else set()
+            _TEMPLATES.update(stamp=stamp,set=found,generic=generic)
+    except sqlite3.DatabaseError: pass
+    return _TEMPLATES['set']
+
+
+def description_problem(conn, source, text, title):
+    """Motivo por el que el texto no sirve de descripción del acto, o ''."""
+    t=clean_description(text)
+    if not t: return ''
+    ft,ftitle=re.sub(r'[^a-z0-9]+',' ',clean(t)).strip(),re.sub(r'[^a-z0-9]+',' ',clean(title)).strip()
+    if ft==ftitle or (len(t)<40 and _fold_words(t)<=_fold_words(title)): return 'igual_al_titulo'
+    lines=[l for l in re.split(r'\n+|(?<=[a-z0-9)])\.\s+(?=[A-ZÀ-Ú])',t) if l.strip()]
+    if len(lines)>=2 and sum(1 for l in lines if WEEKDAY_LINE.match(l) or PRACTICAL_LINE.search(l))/len(lines)>=0.5: return 'datos_practicos'
+    if conn is not None and ((source,description_skeleton(t,title)) in description_templates(conn) or (source,' '.join(t.split())) in _TEMPLATES['generic']): return 'plantilla'
+    return ''
+
+
+WEEKLY_RX=re.compile(r"\b(?:tous les|chaque|tots els|cada|todos los|every)\s+(lundis?|mardis?|mercredis?|jeudis?|vendredis?|samedis?|dimanches?|dilluns|dimarts|dimecres|dijous|divendres|dissabtes?|diumenges?|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bados?|domingos?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|sundays?)\b",re.I)
+_WD={'lun':0,'mar':1,'mer':2,'jeu':3,'ven':4,'sam':5,'dim':6,'dil':0,'dmt':1,'dmc':2,'dij':3,'div':4,'dis':5,'diu':6,'mie':2,'jue':3,'vie':4,'sab':5,'dom':6,'mon':0,'tue':1,'wed':2,'thu':3,'fri':4,'sat':5,'sun':6}
+
+
+WEEKDAY_NAMES=['dilluns|lunes|lundi|monday','dimarts|martes|mardi|tuesday','dimecres|miercoles|mercredi|wednesday','dijous|jueves|jeudi|thursday',
+               'divendres|viernes|vendredi|friday','dissabte|sabado|samedi|saturday','diumenge|domingo|dimanche|sunday']
+
+
+def weekly_day(text):
+    """Día de la semana (0 = lunes) de «tous les mardis», «cada dimarts», «todos los martes», o None."""
+    m=WEEKLY_RX.search(str(text or ''))
+    if not m: return None
+    w=clean(m.group(1))
+    key={'dimarts':'dmt','dimecres':'dmc','dimanche':'dim','dimanches':'dim'}.get(w,w[:3])
+    return _WD.get(key)
+
+
+_OPEN_WD=r"(?:dilluns|dimarts|dimecres|dijous|divendres|dissabtes?|diumenges?)"
+
+
+def opening_weekdays(text):
+    """Días de la semana (0 = lunes) que abre un espacio según su horario publicado («Dimarts a divendres: 11 a 19 h ·
+    altres hores amb cita prèvia», GRAF), y si atiende con cita previa. None si el texto no lo dice claro (horario por
+    temporadas, sin días). Para saber si una exposición vigente está abierta el día consultado (27-10-2026, A8)."""
+    from src.guia_schedule import weekly_rows,schedule_by_day
+    t=str(text or '')
+    if not t.strip() or re.search(r"\b(?:fins al mes|de (?:gener|febrer|mar[çc]|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre) a)\b",t,re.I): return None
+    lines=[]
+    for l in t.split('\n'):
+        l=' '.join(l.split()).strip(' –-:')
+        l=re.sub(r"^(?:obertura al p[uú]blic:?\s*)","",l,flags=re.I)
+        if not re.match(r"(?i)^(?:de\s+)?"+_OPEN_WD,l): continue
+        if re.search(r"(?i)\b(?:tancat|cerrado|amb cita|con cita|cita pr[eè]via)\b",l): continue
+        l=re.sub(r"(?i)^(?:de\s+)?("+_OPEN_WD+r")\s*(?:–|-|a)\s*("+_OPEN_WD+r")",r"De \1 a \2",l)
+        lines.append(re.sub(r"(\d)\s*h\b",r"\1 h",l))
+    found=set()
+    for l in lines:   # cada línea por separado: si una no se entiende, no se afirma nada (mejor «no confirmado» que «cerrado»)
+        rows=weekly_rows(l)
+        days=schedule_by_day(rows,'2030-01-07','2030-01-13') if rows else {}   # una semana cualquiera, de lunes a domingo
+        if not days: return None
+        found|={parse_date(d).weekday() for d in days}
+    if not found: return None
+    return {'dias':sorted(found),'cita':bool(re.search(r"(?i)cita pr[eè]via|amb cita|con cita|by appointment",t))}
+
+
 def public_fields(event, projection, requested_day='', schedule_time=''):
     source=event['source']
     # Sin día pedido, la hora de la ficha es la de la próxima sesión, no la de la primera de su historia (27-10-2026:
@@ -1066,7 +1183,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=35  # 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=36  # 36: días de apertura de las exposiciones de GRAF según el horario del espacio (27-10-2026); 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1157,7 +1274,8 @@ def project_raw(source, id, title, start, end, kind, url, raw):
     languages=activity_languages(raw,source)
     single_night=night_only(raw)
     start_clock=bool(re.fullmatch(r'\d{1,2}:\d{2}',source_time(raw,source).strip()))   # «19:00» a secas: hora de inicio, no un horario
-    return {'v':PROJECTION_VERSION,'single_night':single_night,'start_clock':start_clock,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'languages':languages,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
+    opening=opening_weekdays(((raw.get('item') or {}).get('space_opening') or {}).get('opening')) if source=='web_graf' and kind=='exhibition' and isinstance(raw,dict) else None
+    return {'v':PROJECTION_VERSION,'opening_days':opening,'single_night':single_night,'start_clock':start_clock,'hours_by_day':hours_by_day,'notes_by_day':notes_by_day,'ticket_url':next((l['url'] for l in links if l.get('label')=='Entradas'),''),'lineup':lineup,'lineup_times':lineup_times,'languages':languages,'kind':kind,'category':category_of(raw,source,kind),'district':district_of(raw,source),
             'family_audience':family_audience(raw,source,title),'price_label':split_price(price)[0] or None,'is_free':is_free(price,free_label),
             'schedule_text_time':schedule_time,'hours_label':hours_label,'schedule_range':(lambda t:t if re.fullmatch(r'\d{2}:\d{2}–\d{2}:\d{2}',t) else '')(str(source_time(raw,source) or '').strip()),'url':links[0]['url'] if links else None,
             'has_description':bool(description.strip()),'summary':description.strip()[:220],
@@ -1231,6 +1349,7 @@ def borrow_from_twins(conn, event):
             # Días y notas del gemelo solo si esta ficha no tiene horario propio: mezclar la tabla
             # de una fuente con la primera fila de otra da «Dilluns · … · Dissabte» sueltos.
             if field in ('schedule_days','schedule_note') and event.get('time_text'): continue
+            if field=='description' and twin.get(field) and description_problem(conn,ms,twin[field],twin.get('title') or ''): continue
             if not event.get(field) and twin.get(field):
                 event[field]=twin[field]; borrowed[field]=member
                 if field=='description': event['description_credit']=twin['source_label']
@@ -1350,6 +1469,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             from src.place_images import local_place_images
             venue_photo=local_place_images(conn).get(projection['place_id'])
             if venue_photo: media=[place_media_item(venue_photo)]
+    # Teatre Lliure (27-10-2026, auditoría conjunta A5): su web nombra la sala sin el teatro («GRÀCIA», «Montjuïc. Espai
+    # Lliure») y sin dirección. Se usa el nombre y la dirección con que GuiaBCN publica cada sala; las coordenadas salen
+    # de esas mismas fichas (venue_places). Lo mismo hace ya el conector para las lecturas nuevas.
+    if source=='web_teatre_lliure' and place:
+        from src.web_agendas import lliure_room
+        place=[(lliure_room(v[0])[0],lliure_room(v[0])[1] or v[1],v[2],v[3]) for v in place]
     if place and not any(v[2] is not None and v[3] is not None for v in place):
         # Lugar sin coordenadas en esta fuente: las de otras fuentes que publican ese mismo lugar.
         from src.venue_places import cached_places,lookup
@@ -1411,8 +1536,17 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     summary=projection['summary'] or (archived_description or '').strip()[:220]
     boiler=is_boilerplate(conn,source,projection.get('summary'))
     if boiler: has_description=False; summary=(archived_description or '').strip()[:220]
+    elif has_description and summary and description_problem(conn,source,summary,title) in ('plantilla','igual_al_titulo'): has_description=False   # 27-10-2026
     if source=='venue_eventbrite' and facts.get('api_summary'):
         summary=summary or facts['api_summary'][:220]; has_description=has_description or len(facts['api_summary'])>=40
+    # Curso semanal fechado con el día del listado (27-10-2026, Institut français «Atelier théâtre»: «tous les mardis», con
+    # fecha el domingo 1-11 porque el listado decía «1 noviembre»). El texto y la fecha se contradicen: no se publica en
+    # un día que el propio texto descarta; queda para revisar (nada se borra).
+    if not moved_to and str(source).startswith('venue_ia_') and str(start)[:10]==str(end)[:10] and not any(o.get('time') for o in occurrences):
+        wd=weekly_day(str(summary or '')+' '+(archived_description or '')[:600])
+        d0=parse_date(start)
+        named=[i for i,names in enumerate(WEEKDAY_NAMES) if re.search(r'\b(?:'+names+r')\b',clean(title))]
+        if wd is not None and d0 and d0.weekday()!=wd and d0.weekday() not in named: moved_to='revision_fecha'
     twin=_register_twin(conn,source,id,prefetch)
     key=source+':'+id
     if prefetch is not None: collapsed_into=prefetch.collapsed.get(key); collapsed_members=prefetch.collapsed_members.get(key,[])
@@ -1636,6 +1770,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         # municipal id); the archived row and its history stay untouched.
         'time_conflicts':time_conflicts,
         'hours_by_day':hours_by_day if isinstance(hours_by_day,dict) else {},
+        'opening_days':projection.get('opening_days'),
         'notes_by_day':notes_by_day if isinstance(notes_by_day,dict) else {},'moved_to':moved_to,'event_status':act_status,'sold_out':({'texto':sold['texto'],'dias':sold['dias'],'origen':sold['origen']} if sold else None),'ticket_url':projection.get('ticket_url',''),
         'lineup':list(projection.get('lineup') or []),'lineup_times':list(projection.get('lineup_times') or []),'languages':list(projection.get('languages') or []),
         'superseded_by':(twin if source=='guiabcn' else None) or collapsed_into,
@@ -1801,6 +1936,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['is_free']=True
     # How many independent sources carry this record (twins collapsed into it).
     events['confirmations']=1+len(events['also_in'])
+    if source=='web_teatre_lliure' and events.get('organizers'):
+        from src.web_agendas import lliure_room
+        events['organizers']=list(dict.fromkeys('Teatre Lliure' if lliure_room(o)[1] else o for o in events['organizers']))
     if events.get('price_label') and not reliable_price(events['price_label']):
         events['price_unreliable']=events['price_label']; events['price_label']=None   # se guarda lo que decía la fuente
     elif events.get('price_label'): events['price_label']=reliable_price(events['price_label'])
@@ -1855,6 +1993,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'source_taxonomy':{'guiabcn_activity_codes':guiabcn_codes(raw)} if source=='guiabcn' else {},
             'possible_duplicates':_possible_duplicates(conn,source,id),
         })
+        if source=='web_teatre_lliure' and events.get('organizers'):
+            from src.web_agendas import lliure_room
+            events['organizers']=list(dict.fromkeys('Teatre Lliure' if lliure_room(o)[1] else o for o in events['organizers']))
         if events.get('price_text'):
             ok=reliable_price(events['price_text'])
             if not ok: events['price_unreliable']=events['price_text']
@@ -1878,6 +2019,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         if full and len(full['text'])>len((events.get('description') or '').strip()):
             events['description_short']=events.get('description') or ''
             events['description']=full['text']; events['description_scope']='sala'; events['description_url']=full['url']
+        if events.get('description'):
+            events['description']=clean_description(events['description'])
+            problem=description_problem(conn,source,events['description'],title)
+            if problem:
+                events['description_discarded']={'motivo':problem,'texto':events['description'][:400],'credito':events.get('description_credit') or ''}
+                events['description']=''; events.pop('description_credit',None); events.pop('description_scope',None)
         if policy=='venue_link_only': apply_venue_link_policy(events,detail=True,source_url=url)
         else: borrow_from_twins(conn,events)
     return events

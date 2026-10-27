@@ -541,7 +541,9 @@ def _title_keys(title):
 # Las ticketeras alargan al día siguiente las sesiones que pasan de medianoche (DICE «Irieix» 5 → 6-3, la sala el 5-3).
 def _end_of(source, start, end):
     try:
-        if source in SINGLE_ACT_SOURCES and (dt.date.fromisoformat(end) - dt.date.fromisoformat(start)).days == 1: return start
+        # Biblioteques de la Diputació (27-10-2026): cada sesión llega con el fin al día siguiente a las 23:59:59
+        # («Presentació de llibre» 18-12 18:30 → 19-12): es una sesión de un día, como la medianoche de las ticketeras.
+        if (source in SINGLE_ACT_SOURCES or source == 'diba_bibliotecas') and (dt.date.fromisoformat(end) - dt.date.fromisoformat(start)).days == 1: return start
     except (TypeError, ValueError): pass
     return end
 

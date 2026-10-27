@@ -171,7 +171,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -592,12 +592,16 @@ const needsSignup = e => isCourse(e) && !e.open_enrollment && !e.drop_in;
 const collator = new Intl.Collator('es', {sensitivity: 'base'}), byTitle = (a, b) => collator.compare(a.title, b.title);
 
 // Parte del día sin hora («Matinal», «Tarda»).
-const PARTS = {mañana: () => L('Por la mañana', 'Al matí', 'In the morning'), tarde: () => L('Por la tarde', 'A la tarda', 'In the afternoon'), noche: () => L('Por la noche', 'A la nit', 'In the evening'), 'mañana y tarde': () => L('Mañana y tarde', 'Matí i tarda', 'Morning and afternoon'), programa: () => L('Varias sesiones', 'Diverses sessions', 'Several sessions')};
+const PARTS = {cita: () => L('Con cita previa', 'Amb cita prèvia', 'By appointment'), mañana: () => L('Por la mañana', 'Al matí', 'In the morning'), tarde: () => L('Por la tarde', 'A la tarda', 'In the afternoon'), noche: () => L('Por la noche', 'A la nit', 'In the evening'), 'mañana y tarde': () => L('Mañana y tarde', 'Matí i tarda', 'Morning and afternoon'), programa: () => L('Varias sesiones', 'Diverses sessions', 'Several sessions')};
 function availability(e, day) {
   if (isFestHead(e)) return festAvailability(e, day);
   const occ = (e.occurrences || []).filter(o => o.date === day);
   const occTimes = [...new Set(occ.map(o => o.time).filter(Boolean).map(x => String(x).padStart(5, '0')))].sort();
   const label = e.time_label || '', raw = e.base_time ?? e.time ?? '';
+  // Exposición vigente no es exposición abierta (27-10-2026, A8): el día que el horario del espacio no abre, no sale como
+  // plan de ese día; si atiende con cita previa, sale con esa nota.
+  if (isExhibit(e) && e.open_days && e.start !== e.end && !e.open_days.includes((new Date(day + 'T12:00:00').getDay() + 6) % 7))
+    return e.by_appointment ? {kind: 'tbc', part: 'cita', until: e.end} : {kind: 'run', until: e.end};
   // Las fuentes dan horas distintas ese día (27-10-2026): no se presenta una como segura; sale en «Hora por confirmar».
   if (e.time_conflicts && e.time_conflicts[day]) return {kind: 'tbc', conflict: e.time_conflicts[day], until: e.end};
   if (occTimes.length) return {kind: 'timed', times: occTimes};
@@ -1423,14 +1427,16 @@ async function openDetail(k, focus, opts = {}) {
     // kept), otherwise a single factual sentence built from the record.
     const text = (e.description || '').trim();
     const para = s => s.slice(0, 3000).split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('');
-    const paragraphs = text ? para(text) : `<p>${esc(e.editorial_summary || '')}</p>`;
+    // Sin texto de la fuente, nada en su lugar (27-10-2026, auditoría conjunta A4): la frase hecha con los datos («Proyección en
+    // Cinemes Girona el martes…») repetía lo que ya dicen Cuándo, Dónde y Precio. Sigue sirviendo para buscadores y para compartir.
+    const paragraphs = text ? para(text) : '';
     const tr = text ? await translationFor(k) : null;
     // Descripción breve automática (IA) encima del texto original, para comparar; nunca lo sustituye.
     // Resumen y recomendación escritos por IA: fuera de la ficha pública hasta evaluarlos (22-10-2026).
     const brief = '';
     // Con traducción: se dice que es automática y el original queda a un clic (24-10-2026).
     const description = tr ? `${brief}<section class="sheet-copy"><div class="tr-note">${tr.o ? L('Texto de la web oficial', 'Text del web oficial', 'Text from the official website') : L('Traducción automática', 'Traducció automàtica', 'Machine translation')} · <button type="button" class="tr-toggle" data-trtoggle aria-expanded="false">${L('Ver original', "Veure l'original", 'Show original')}</button></div><div class="tr-text" lang="${LANG}">${para(tr.t)}</div><div class="tr-orig" hidden>${paragraphs}</div></section>`
-      : `${brief}<section class="sheet-copy">${paragraphs}</section>`;
+      : (paragraphs ? `${brief}<section class="sheet-copy">${paragraphs}</section>` : '');
     const conflict = e.time_conflicts && (e.time_conflicts[e.occurrence_date || state.day] || e.time_conflicts[e.start]);
     // Hora que dio una lectura anterior de la fuente y la actual ya no trae (23-10-2026): se dice.
     const carried = (e.occurrences || []).find(o => o.evidence_field === 'ultima_hora_conocida' && o.date === (e.occurrence_date || state.day));

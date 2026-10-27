@@ -153,6 +153,19 @@ def parse_cccb(page):
             result.append(_record(source,name,start,end,html.unescape(link.group(1)),cfg['venue'],cfg['address'],{'page_title':html.unescape(link.group(2)),'discipline':discipline,'series':series},when,html.unescape(image.group(1)) if image else ''))
     return result
 
+# Salas del Teatre Lliure con el nombre y la dirección con que las publica GuiaBCN (27-10-2026).
+LLIURE_ROOMS = {'gracia': ('Teatre Lliure - Sala Lliure de Gràcia', 'C Montseny 47'),
+                'montjuic. sala fabia puigserver': ('Teatre Lliure - Sala Fabià Puigserver', 'Pg Santa Madrona 40-46'),
+                'montjuic. espai lliure': ('Teatre Lliure - Sala Espai Lliure', 'Pl Margarida Xirgu 1')}
+
+
+def lliure_room(name):
+    """(nombre, dirección) de una sala del Lliure tal como la escribe su web; si no se conoce, la de siempre."""
+    import unicodedata
+    key = ' '.join(''.join(c for c in unicodedata.normalize('NFKD', str(name or '')) if not unicodedata.combining(c)).lower().split())
+    return LLIURE_ROOMS.get(key, (name, ''))
+
+
 def parse_teatre_lliure(page):
     source='web_teatre_lliure'; cfg=SOURCES[source]; result=[]
     blocks=re.split(r'(?=<li class="\s*filter-show-)',page)
@@ -167,7 +180,10 @@ def parse_teatre_lliure(page):
         start_year=end_year if month<=end_month else end_year-1
         start=f'{start_year:04d}-{month:02d}-{day:02d}'; end=f'{end_year:04d}-{end_month:02d}-{end_day:02d}'
         url='https://www.teatrelliure.com'+html.unescape(title.group(1))
-        result.append(_record(source,html.unescape(title.group(2)),start,end,url,html.unescape(room.group(1)).strip() if room else cfg['venue'],cfg['address'],{'period':period.group(0)},image='https:'+html.unescape(image.group(1)) if image else ''))
+        hall,hall_address=lliure_room(html.unescape(room.group(1)).strip()) if room else (cfg['venue'],'')
+        rec=_record(source,html.unescape(title.group(2)),start,end,url,hall,hall_address or cfg['address'],{'period':period.group(0)},image='https:'+html.unescape(image.group(1)) if image else '')
+        rec['organizers']=['Teatre Lliure']   # organiza el teatro, no la sala
+        result.append(rec)
     return result
 
 def parse_auditori(page):
