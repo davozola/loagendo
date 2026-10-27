@@ -58,6 +58,11 @@ class GruposTests(unittest.TestCase):
                       "Taller 'Aula Oberta d'Informàtica'", "Cicle 'Espai Dona': Activitat 'Alimentació saludable'", "Visita guiada a l'Institut de Robòtica i Informàtica Industrial"):
             self.assertNotEqual(self.method(title), 'grupo_o_servicio_estable', title)
 
+    def test_ofertas_permanentes(self):
+        self.assertEqual(self.method("Podcast 'Eixample Barcelona Ràdio'"), 'grupo_o_servicio_estable')
+        self.assertEqual(self.method("'El barri proposa': Grup obert de gimnàstica"), 'grupo_o_servicio_estable')
+        self.assertNotEqual(self.method('Pòdcast "Media offline live", una Movide en directe'), 'grupo_o_servicio_estable')
+
     def test_un_solo_dia_se_queda(self):
         self.assertNotEqual(self.method('Grup de senderisme', end='2026-09-28'), 'grupo_o_servicio_estable')
 

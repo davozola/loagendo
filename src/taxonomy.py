@@ -433,6 +433,7 @@ STABLE_GROUP = re.compile(r"^\W*(?:espai(?! d'aprenentatge| sensorial)\b|sala d'
 # Lo que sí es un plan aunque lo haga un grupo estable: su función, su concierto, su ruta o su exposición.
 GROUP_SHOW = re.compile(r"\b(?:teatre|teatro|concert|concierto|jam|ruta|rutes|rutas|visita|visites|espectacle|exposicio|exposicion|mostra|cinema|projeccio|festa|fira|mercat|ball|presentacio)\b")
 SESSION_PRICE = re.compile(r"\b(?:1 classe|una classe|per classe|per sessio|sessio solta|per sesion|por sesion|clase suelta|entrada per sessio)\b")
+STANDING_OFFER = re.compile(r"^\W*podcast\b(?!.*\b(?:en directe|en directo|en vivo|live)\b)|\bruta gourmet\b|\bel barri proposa\b.*\bgrup\b|\bgrup obert de (?:gimnastica|ioga|caminar|ball|petanca|escacs)\b")
 VR_ATTRACTION = re.compile(r"\b(?:realitat virtual|realidad virtual|virtual reality)\b")
 
 
@@ -444,6 +445,8 @@ def participation_exclusion(ev, category):
         return {'method': 'atraccion_permanente', 'evidence': f'Atracción permanente ({ev.get("start")} → {ev.get("end")}) que su sala no presenta como exposición (decisión 27-10-2026)'}
     if category not in ('talleres', 'charlas', 'deporte', PENDING): return None
     if span <= 7: return None
+    if STANDING_OFFER.search(t):
+        return {'method': 'grupo_o_servicio_estable', 'evidence': f'Oferta permanente ({ev.get("start")} → {ev.get("end")}): podcast, ruta comercial o grupo abierto de cada semana, no un plan con fecha (decisión 27-10-2026)'}
     if STABLE_GROUP.search(t) and not GROUP_SHOW.search(t) and not re.match(r"\W*(?:taller|tallers|curs|cicle|xerrada|conferencia)\b", t):
         return {'method': 'grupo_o_servicio_estable', 'evidence': f'Grupo, espacio o servicio estable ({ev.get("start")} → {ev.get("end")}), no un plan con fecha (decisión 27-10-2026)'}
     formative = ev.get('kind') == 'course' or ev.get('format') in ('workshop', 'course')
