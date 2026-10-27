@@ -32,6 +32,12 @@ class CursosTests(unittest.TestCase):
         self.assertNotEqual(self.method(ev('Taller per a nadons', venue_names=["L'Auditori de Barcelona"], price_label='Entrada general: 9 € (+ despeses de gestió)')), 'curso_completo')
         self.assertNotEqual(self.method(ev('Tallers de dibuix i pintura', venue_names=['Associació Espai Random'], price_label='Entrada general de: 20 a 60 € · 1 classe: 20 € · Abonament 4 classes')), 'curso_completo')
 
+    def test_umbral_solo_en_equipamientos_de_barrio(self):
+        # Revisión 27-10-2026: sin frase de curso entero, el importe solo excluye en centres cívics, casals, ateneus…
+        self.assertEqual(self.method(ev("Taller 'Ceràmica'", venue_names=["Ateneu L'Harmonia"], price_label='Entrada general: 90 € Preu reduït: 74 €')), 'curso_completo')
+        self.assertNotEqual(self.method(ev("Taller infantil 'Arqueòlegs per un dia'", venue_names=['Campus Arqueològic'], price_label='Entrada general: 20 € Entrada club: 15 €')), 'curso_completo')
+        self.assertEqual(self.method(ev("Taller 'Sevillanes'", venue_names=['Galeria X'], price_label='Entrada general: 31 € mensual')), 'curso_completo')
+
     def test_gratis_material_o_corto_se_quedan(self):
         self.assertNotEqual(self.method(ev("Taller 'Conversa en català'", price_label='Entrada Gratuïta + 3 € de material')), 'curso_completo')
         self.assertNotEqual(self.method(ev("Taller 'Ioga'", end='2026-10-02', price_label='Entrada general: 60 € per trimestre')), 'curso_completo')
@@ -73,6 +79,17 @@ class AtraccionTests(unittest.TestCase):
         self.assertEqual(taxonomy.classify(vr)['method'], 'atraccion_permanente')
         iniesta = {**vr, 'title': 'Experiència immersiva "Iniesta Experience: El Joc interior"', 'kind': 'exhibition', 'format': 'exhibition'}
         self.assertNotEqual(taxonomy.classify(iniesta)['status'], 'excluida')
+
+
+class GemelasTests(unittest.TestCase):
+    def test_titulo_de_otra_fuente_respalda_a_la_ia(self):
+        ev_ = {'title': 'Victor Küppers Mentes Expertas', 'start': '2026-11-03', 'end': '2026-11-03', 'kind': 'single', 'format': 'one_shot',
+               'source': 'venue_ia_balana', 'category': 'Artes escénicas', 'venue_names': ['Teatre Coliseum']}
+        ai = {'answer': 'charlas', 'confidence': 0.85, 'model': 'm', 'reason': 'conferencia'}
+        if taxonomy._classify_rules(ev_)['method'] != 'categoria_recinto': self.skipTest('fuente no marcada como recinto en esta configuración')
+        self.assertEqual(taxonomy.classify(ev_, None, ai)['category'], 'escena')
+        out = taxonomy.classify({**ev_, 'twin_titles': ['Conferència "Mentes expertas", a càrrec de Victor Küppers']}, None, ai)
+        self.assertEqual((out['category'], out['method']), ('charlas', 'ia_con_senal'))
 
 
 class ExposicionesTests(unittest.TestCase):

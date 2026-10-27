@@ -232,7 +232,10 @@ def classify(ev, override=None, ai=None):
     # el principio de su descripción. Validado contra la muestra etiquetada: la IA sola con confianza ≥ 0,85 acierta el
     # 94 %, y falla justo donde no hay nada más («Mañana musical para embarazadas» → taller). Nunca excluye por esta vía.
     if rules['method'] == 'categoria_recinto' and answer in CATEGORIES and answer != rules['category']:
-        backed = answer in rules.get('other_categories', []) or answer in inner_categories(str(ev.get('description') or ev.get('source_text') or '')[:400])
+        # …o el título con que otra fuente publica el mismo acto empieza por ese género (27-10-2026: la ficha de Balañá
+        # «Victor Küppers Mentes Expertas» es la «Conferència "Mentes expertas"» de GuiaBCN y Open Data).
+        backed = answer in rules.get('other_categories', []) or answer in inner_categories(str(ev.get('description') or ev.get('source_text') or '')[:400]) \
+            or any(lead_category(tt)[0] == answer for tt in ev.get('twin_titles') or [])
         if backed:
             return {**out, 'category': answer, 'status': 'probable', 'method': 'ia_con_senal',
                     'evidence': f"IA ({ai.get('model', '')}, confianza {ai.get('confidence', 0):.2f}): {ai.get('reason', '')}. Respaldo: señal propia del acto. Reglas: {rules['evidence']}",
@@ -423,8 +426,12 @@ def _base_rules(ev, override=None):
 # (2) los grupos, espacios y servicios estables del barrio (grupo de senderismo, sala de informática, espacio familiar)
 # y (3) las atracciones permanentes de realidad virtual que su sala no llama exposición. Medido sobre el catálogo del
 # 27-10-2026 (reports en claude/politica-participacion-2026-10-27.md). Lo dudoso se queda.
-COURSE_PRICE = re.compile(r"imports? als cursos|preu del curs|curs complet|trimestr|matricula|quota|mensualitat|al mes\b|/ ?mes\b|/ ?\d+ sessions|\b\d+ sessions|socis i socies|/ ?any\b|\banual\b|per any\b|\b\d{3,}(?:[.,]\d+)? ?eur\b")
+COURSE_PRICE = re.compile(r"imports? als (?:cursos|tallers)|\bmensual\b|per hora\b|preu del curs|curs complet|trimestr|matricula|quota|mensualitat|al mes\b|/ ?mes\b|/ ?\d+ sessions|\b\d+ sessions|socis i socies|/ ?any\b|\banual\b|per any\b|\b\d{3,}(?:[.,]\d+)? ?eur\b")
 PAID = re.compile(r"\d+(?:[.,]\d+)? ?eur\b")
+# Sin frase de curso entero en el precio, el importe solo basta en los equipamientos de barrio que programan cursos
+# trimestrales (centres cívics, casals, ateneus, espais de gent gran o joves, salas polivalentes, Ateneus de Fabricació).
+# Revisión del umbral (David, 27-10-2026): en cualquier otro sitio un taller de pago puede ser de sesión suelta y se queda.
+COURSE_VENUE = re.compile(r"\b(?:centre civic|centro civico|casal|ateneu|espai de persones grans|casal de gent gran|espai jove|sala polivalent|fab casa|ateneu de fabricacio|centre cultural|escola municipal de musica)\b")
 OPEN_VENUE = re.compile(r"cosmocaixa|museu|mnac|museo|pedrera|casa vicens|casa batllo|bellesguard|pavello|auditori|palau de la musica|poble espanyol|liceu|temple expiatori|sagrada famil|caixaforum|fundacio|fundacion|macba|cccb|biblioteca|disseny hub|observatori|filmoteca|arxiu")
 STABLE_GROUP = re.compile(r"^\W*(?:espai(?! d'aprenentatge| sensorial)\b|sala d'|sala de joc|servei\b|trobada (?:de|del) grup|grup\b|grups\b|taula d'intercanvi|aula oberta|"
                           r"sessio informativa|cicle d'acollida|assessorament|acollida\b|banc del temps|aprenem en comunitat|activitats per a grups)|"
@@ -456,7 +463,7 @@ def participation_exclusion(ev, category):
     venue = norm(' '.join(ev.get('venue_names') or []))
     if SESSION_PRICE.search(price) or re.match(r"\W*(?:visita|visites|ruta|itinerari)\b", t): return None
     amounts = [float(a.replace(',', '.')) for a in re.findall(r"(\d+(?:[.,]\d+)?) ?eur\b", price)]
-    if COURSE_PRICE.search(price) or (amounts and max(amounts) >= 20 and not OPEN_VENUE.search(venue)):
+    if COURSE_PRICE.search(price) or (amounts and max(amounts) >= 20 and COURSE_VENUE.search(venue) and not OPEN_VENUE.search(venue)):
         return {'method': 'curso_completo', 'evidence': f'Curso de {span + 1} días con precio de curso entero («{(ev.get("price_label") or ev.get("price_note") or "")[:80]}»): pide matrícula, no es un plan suelto (decisión 27-10-2026)'}
     return None
 

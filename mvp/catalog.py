@@ -1892,7 +1892,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events['family_ai']=ai_assist.family_for(conn,source+':'+id,events) if events.get('format')=='exhibition' else None
     basis={**events,'classification_paths':projection.get('classification_paths') or [],'ai_family':ai_data.get('family'),'ai_outdoor':ai_data.get('outdoor'),
            'ai_family_rec':events['family_ai'] if ai_family.public_enabled() else None,
-           'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category',''),'price_note':facts.get('price_text','')}
+           'hint_format':facts.get('api_format',''),'hint_category':facts.get('api_category',''),'price_note':facts.get('price_text',''),
+           'twin_titles':[r[0] for m in collapsed_members[:12] for r in conn.execute('SELECT title FROM source_records WHERE source=? AND id=?',tuple(m.split(':',1)))]}
     ai=ai_assist.category_for(conn,source+':'+id,basis)  # sugerencia de IA vigente (src/ai_assist.py), si la hay
     verdict=taxonomy.classify(basis,override,ai)
     # Formato por la naturaleza del acto (26-10-2026), no por su duración: un acto de la fuente (kind single) que format_of
