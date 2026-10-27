@@ -1720,7 +1720,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                     break
         # Temporada sin funciones ni horario propio (Tantarantana «Evidències evidents de bruixeria», 27-10-2026): el
         # horario por días que publica otra agenda del mismo acto (GuiaBCN, tabla de su ficha), dentro de estas fechas.
-        if str(start)[:10]!=str(end)[:10] and not occurrences and not any((hours_by_day or {}).values()):
+        if str(start)[:10]!=str(end)[:10] and not occurrences and not any((hours_by_day or {}).values()) and not projection.get('schedule_text_time') and not schedule_time and not page_schedule_text:
             for member in sorted(collapsed_members, key=lambda m: _rank(m.split(':',1)[0])):
                 ms,mi=member.split(':',1)
                 if ms==source: continue

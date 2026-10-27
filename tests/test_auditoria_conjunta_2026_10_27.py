@@ -127,5 +127,28 @@ class Fase3Fichas(unittest.TestCase):
         self.assertEqual(_end_of('diba_bibliotecas', '2026-12-18', '2026-12-21'), '2026-12-21')
 
 
+class Fase4Series(unittest.TestCase):
+    def _items(self, rows):
+        return [{'key': f'{s}:{i}', 'source': s, 'id': i, 'title_key': t.lower(), 'full_title': t.lower(), 'day': d, 'venue': v, 'lat': 41.38, 'lon': 2.17,
+                 'address': '', 'slots': set()} for s, i, t, d, v in rows]
+
+    def test_misma_obra_dias_seguidos(self):
+        from src import dedupe
+        items = self._items([('venue_ia_antic_teatre', 'a', 'la concha de tu madre cabaret', '2026-10-28', 'Antic Teatre'),
+                             ('venue_ia_antic_teatre', 'b', 'la concha de tu madre cabaret', '2026-10-29', 'Antic Teatre'),
+                             ('venue_ia_antic_teatre', 'c', 'la concha de tu madre cabaret', '2026-12-20', 'Antic Teatre')])   # dos meses después: otra temporada
+        self.assertEqual(dedupe.series_pairs(None, items), [('venue_ia_antic_teatre:a', 'venue_ia_antic_teatre:b')])
+
+    def test_no_se_juntan_conciertos_distintos_ni_cine_ni_titulos_de_sala(self):
+        from src import dedupe
+        items = self._items([('venue_jamboree', 'a', 'cicle john coltrane bruce barth', '2026-11-11', 'Jamboree'),
+                             ('venue_jamboree', 'b', 'cicle john coltrane dion hoorn', '2026-11-12', 'Jamboree'),
+                             ('venue_ia_filmoteca', 'c', 'licorice pizza', '2026-10-28', 'Filmoteca'),
+                             ('venue_ia_filmoteca', 'd', 'licorice pizza', '2026-10-31', 'Filmoteca'),
+                             ('venue_songkick', 'e', 'jamboree jazz', '2026-10-31', 'Jamboree Jazz Club'),
+                             ('venue_songkick', 'f', 'jamboree jazz', '2026-11-01', 'Jamboree Jazz Club')])
+        self.assertEqual(dedupe.series_pairs(None, items), [])
+
+
 if __name__ == '__main__':
     unittest.main()

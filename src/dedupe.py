@@ -905,7 +905,7 @@ def _single_day_items(conn):
         return []
     items = []
     for source, rid, title, day, venue, lat, lon, address in rows:
-        items.append({"key": f"{source}:{rid}", "source": source, "id": rid, "title_key": _title_key(title), "day": day,
+        items.append({"key": f"{source}:{rid}", "source": source, "id": rid, "title_key": _title_key(title), "full_title": re.sub(r"[^a-z0-9]+", " ", _clean(title)).strip(), "day": day,
                       "venue": venue or "", "lat": lat, "lon": lon, "address": address or "", "slots": occ.get((source, rid), set())})
     return items
 
@@ -969,8 +969,12 @@ def series_pairs(conn, items=None):
     by = {}
     for it in items:
         if it["source"] in SERIES_SKIP or not it["title_key"] or _generic_site(it): continue
-        k = it["title_key"]
-        if k in CONTAINED_GENERIC or len(k) < 5 or len(k.split()) < 1: continue
+        # El título entero, no la clave recortada: «Cicle John Coltrane: Bruce Barth» y «Cicle John Coltrane: Dion
+        # Hoorn» son conciertos distintos del mismo ciclo (27-10-2026).
+        k = it.get("full_title") or it["title_key"]
+        if it["title_key"] in CONTAINED_GENERIC or k in CONTAINED_GENERIC or len(k) < 5: continue
+        # Título que es el nombre de la sala («Jamboree Jazz», «Hal9000» en Songkick): no dice qué acto es.
+        if set(k.split()) <= set(re.sub(r"[^a-z0-9]+", " ", _clean(it["venue"])).split()) | {"club", "sala", "jazz", "bcn", "barcelona"}: continue
         by.setdefault((it["source"], k), []).append(it)
     pairs = []
     for (source, _), group in by.items():
