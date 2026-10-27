@@ -150,14 +150,14 @@ def category_payload(ev):
     título arreglado la respuesta nunca casaba con la ficha (68 de 80 pendientes sin aplicar). Sin resumen, el
     principio de la descripción (CCCB «Bivac 2026»: la IA decía «título sin extracto»)."""
     return {'titulo': (ev.get('source_title') or ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
-            'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('format') or ev.get('kind') or '',
+            'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('source_format') or ev.get('format') or ev.get('kind') or '',
             'extracto': (ev.get('summary') or ev.get('description') or '')[:300]}
 
 
 def _legacy_category_payload(ev):
     """La forma anterior (hasta el 27-10-2026): las respuestas ya dadas con ella siguen valiendo mientras la ficha no cambie."""
     return {'titulo': (ev.get('title') or '')[:200], 'sala': (ev.get('source_venue') or (ev.get('venue_names') or [''])[0] or '')[:100],
-            'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('format') or ev.get('kind') or '',
+            'categoria_fuente': ev.get('category') or '', 'tipo': ev.get('source_format') or ev.get('format') or ev.get('kind') or '',
             'extracto': (ev.get('summary') or '')[:300]}
 
 

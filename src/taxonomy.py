@@ -267,7 +267,9 @@ EVENTBRITE_TOURIST = re.compile(r"\b(?:free tour|walking tour|walking tours|sigh
 PROFESSIONAL_COLLEGE = re.compile(r"\b(?:col.legi|colegio) (?:oficial )?(?:de |d.)?(?:logopedes|logopedas|metges|medicos|infermeres|enfermeras|psicolegs|psicologos|advocats|abogados|economistes|economistas|farmaceutics|farmaceuticos|fisioterapeutes|fisioterapeutas|odontolegs|dentistas|veterinaris|veterinarios)\b")
 COMMERCIAL_PITCH = re.compile(r"\b(?:aceites esenciales|olis essencials|doterra|young living|marketing multinivel|network marketing|criptomonedas|trading|libertad financiera|ingresos pasivos|bienes raices|real estate)\b")
 GENERALIST_SOURCES = {'guiabcn', 'opendatabcn_agenda', 'generalitat', 'diba_bibliotecas', 'diba_turismo', 'web_centres_civics', 'web_cccb', 'web_macba'}
-FORMAT_LEAD = re.compile(r"^(?:taller|tallers|tast|tastet|visita|visites|visitas|xerrada|xerrades|charla|conferencia|conferencies|curs|curso|masterclass|classe|clase|workshop)")
+# Palabras de género que a menudo son parte del nombre de una obra, una gira o un artista (no se toman como formato
+# en salas de música o cine). Las de formato (taller, visita, xerrada, presentació, mercat, fira…) siguen mandando.
+NAME_WORDS = re.compile(r"^(?:entrevista|entrevistas|ruta|rutes|rutas|tour|gira|carrera|cursa|fiestas|festes|dansa|danza|danses|danzas)$")
 
 
 def _classify_rules(ev, override=None):
@@ -293,7 +295,7 @@ def _classify_rules(ev, override=None):
     # dansa del sabre», «Respighi: fiestas romanas», «MNEK – … TOUR», «Carrera Blanca»). Solo un formato explícito
     # (taller, visita, xerrada, conferència, tast, curs) cambia la categoría.
     if lead and source_cat in ('musica', 'cine') and lead != source_cat and ev.get('source') not in GENERALIST_SOURCES \
-            and not FORMAT_LEAD.match(norm(word or '')):
+            and NAME_WORDS.match(norm(word or '')):
         lead, word = None, None
     official = next((cat for cat, rx in OFFICIAL_TYPE for p in ev.get('classification_paths') or [] if rx.search(norm(p))), None)
     signals = []

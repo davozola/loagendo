@@ -1322,6 +1322,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         from src.dedupe import _end_of
         if _end_of(source,str(start)[:10],str(end)[:10])==str(start)[:10]: end=start
     event_format=format_of(kind,title,start,end)
+    source_format=None   # el formato antes de juntar series o exposiciones duplicadas: con él pregunta la IA (27-10-2026)
     if prefetch is not None:
         occurrences=[dict(o) for o in prefetch.occurrences.get((source,id),[])]
         place=prefetch.venues.get((source,id),[])
@@ -1423,7 +1424,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if kind in ('program','single') and collapsed_members and not any(o.get('time') for o in occurrences) and not _activity_kind(title,start,end):
         span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
         if span>=7 and any(_record_kind(conn,m,prefetch)=='exhibition' for m in collapsed_members):
-            kind='exhibition'; event_format='exhibition'
+            source_format=source_format or event_format; kind='exhibition'; event_format='exhibition'
     # Manda la web oficial: fechas leídas en la página del propio centro (src/official_dates.py), de esta
     # ficha o de cualquiera de sus gemelas. Las de la fuente se conservan en 'official_dates'.
     official_dates=None
@@ -1516,7 +1517,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                     occurrences[:]=[o for o in occurrences if o['date']!=own_day]+[{'date':own_day,'time':projection['schedule_text_time'],'evidence_field':'horari','verified':False}]
                 start,end=min(series_dates),max(series_dates)
                 if kind=='single': kind='program'
-                event_format=format_of(kind,title,start,end)
+                source_format=source_format or event_format; event_format=format_of(kind,title,start,end)
                 have_days={o['date'] for o in occurrences}
                 for d in sorted(series_dates-have_days): occurrences.append({'date':d,'time':None,'evidence_field':'misma_fuente','verified':False})
                 occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
@@ -1619,7 +1620,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     events={
         'source':source,'id':id,'key':source+':'+id, 'title':title,
         'source_label':SOURCES.get(source) or projection.get('source_label') or source,'start':start,'end':end,
-        'kind':kind,'kind_label':KINDS.get(kind,kind),'format':event_format,'format_label':FORMATS[event_format],'eligibility':eligibility,
+        'kind':kind,'kind_label':KINDS.get(kind,kind),'format':event_format,'source_format':source_format,'format_label':FORMATS[event_format],'eligibility':eligibility,
         'category':projection['category'],'district':projection['district'],
         'family_audience':projection['family_audience'],'has_description':has_description,'summary':summary,
         'status':status or 'pending','review_note':note or '', 'review_updated_at':updated,
