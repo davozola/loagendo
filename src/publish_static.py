@@ -258,6 +258,7 @@ def compact(event, images, full=True, hidden=frozenset()):
     }
     vv = _VERIFIED_VENUE.get(event.get('key') or f"{event['source']}:{event['id']}")
     if vv: out['v'] = [vv]; out['g'] = None  # varias sedes: sin un punto en el mapa
+    if event.get('time_conflicts'): out['tc'] = event['time_conflicts']  # días con horas que no cuadran: «por confirmar» (27-10-2026)
     tx = _SCHEDULE_TEXT.get(event.get('key') or f"{event['source']}:{event['id']}")
     if tx and not any(o.get('time') for o in event['occurrences']): out['tx'] = tx
     if event.get('hours_by_day'): out['hb'] = packed_hours(event)

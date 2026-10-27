@@ -122,7 +122,7 @@ class SourceRankTests(unittest.TestCase):
             public = catalog.query_events(conn, day='2026-10-15', public=True)
             by_title = {e['title']: e for e in public['items']}
             self.assertEqual(set(by_title), {'The Lemon Twigs', 'Erik Urano'})
-            self.assertEqual((by_title['The Lemon Twigs']['time_label'], by_title['The Lemon Twigs']['time_conflicts']), ('19:00 / 21:00', {'2026-10-15': ['19:00', '21:00']}))
+            self.assertEqual((by_title['The Lemon Twigs']['time_label'], by_title['The Lemon Twigs']['time_conflicts']), ('Por confirmar · 19:00 / 21:00', {'2026-10-15': ['19:00', '21:00']}))
             self.assertEqual(by_title['Erik Urano']['confirmations'], 2)
             catalog.invalidate_cache(); conn.close()
 

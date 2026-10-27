@@ -245,7 +245,7 @@ class CalendarioDeBalana(unittest.TestCase):
     def test_horas_tras_el_icono_y_todos_los_pases(self):
         from src.official_dates import calendar_sessions, page_facts
         self.assertEqual(calendar_sessions(self.PAGE, '2026-10-28', '2026-11-01'), {'2026-10-28': ['20:00'], '2026-10-31': ['17:30', '20:00']})
-        times, _, _ = page_facts(self.PAGE, 'Galder Varas', '2026-10-28', '2026-11-01')
+        times, _, _ = page_facts(self.PAGE, 'Galder Varas', '2026-10-28', '2026-11-01', today=__import__('datetime').date(2026, 10, 27))
         self.assertEqual(times, {'2026-10-28': '20:00', '2026-10-31': '17:30'})
 
     def test_titulo_junto_en_la_ruta(self):

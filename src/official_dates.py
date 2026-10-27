@@ -281,7 +281,8 @@ def page_candidates(conn, limit, today=None):
         LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
         WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude' AND r.kind<>'exhibition'
           AND (o.id IS NULL OR o.checked_at<? OR (o.price='Gratis' AND o.checked_at<'2026-10-24T10:00:00+00:00')
-               OR (o.url LIKE '%balanaenviu.com/%' AND o.times_json='{}' AND o.checked_at<'2026-10-27T00:00:00+00:00'))
+               OR (o.url LIKE '%balanaenviu.com/%' AND o.times_json='{}' AND o.checked_at<'2026-10-27T00:00:00+00:00')
+               OR (o.price<>'' AND r.start_date<substr(o.checked_at,1,10) AND o.checked_at<'2026-10-27T16:00:00+00:00'))
         ORDER BY (o.id IS NOT NULL),
                  EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>''),
                  r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
@@ -340,19 +341,24 @@ def same_act(title, path):
     return len(whole) >= 8 and whole in squash(path)
 
 
-def page_facts(page, title, start, end):
+def page_facts(page, title, start, end, today=None):
     """Hora por día y precio de los actos schema.org de la página que son este acto."""
     from src.venue_feeds import jsonld_events, _date, _time
     words = _words(title); times, price, free = {}, "", False
-    for node in jsonld_events(page or ""):
-        if not (words & _words(str(node.get("name") or ""))): continue
+    # Solo funciones de hoy en adelante (27-10-2026, «Última planta» de Teatreneu: la página lista las funciones desde
+    # 2024 —«Dates anteriors»— y el precio de la primera, 10 €, ya no es el de ahora, «Des de 15 €»). El precio, el de
+    # la próxima función; si la página no trae ninguna futura, el de cualquiera (como antes).
+    now = (today or dt.date.today()).isoformat()
+    nodes = [n for n in jsonld_events(page or "") if words & _words(str(n.get("name") or ""))]
+    dated = sorted(nodes, key=lambda n: ((_date(n.get("startDate")) or "9999") < now, _date(n.get("startDate")) or "9999"))
+    for node in dated:
         day, hour = _date(node.get("startDate")), _time(node.get("startDate"))
-        if day and start <= day <= end and hour and hour != "00:00": times.setdefault(day, hour)
+        if day and start <= day <= end and day >= now and hour and hour != "00:00": times.setdefault(day, hour)
         if not price and node.get("offers"): price, free = _price_of(node.get("offers"))
         if node.get("isAccessibleForFree") in (True, "true", "True", "1") and not price: price, free = "Gratis", True
     # Calendario de funciones impreso en la página (Balañà: cada día un bloque data-calendar-sessions con sus
     # pases, 23-10-2026). Solo completa los días que schema.org no da.
-    for day, hours in calendar_sessions(page, start, end).items():
+    for day, hours in calendar_sessions(page, max(start, now), end).items():
         times.setdefault(day, hours[0])
     return times, price, free
 

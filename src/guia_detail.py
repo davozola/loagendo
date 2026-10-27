@@ -23,6 +23,19 @@ DESCRIPTION_MAX = 3000
 NAVIGATION_TEXT = re.compile(r"^\s*(?:per districte|por distrito|by district)\b|selecciona el districte|selecciona el distrito", re.I)
 
 
+# Inscripción (27-10-2026): «Sense inscripció prèvia», «No cal inscripció prèvia» no piden inscribirse. La
+# negación se quita antes de buscar la palabra; «Places limitades» solo no basta (A1, auditoría conjunta).
+NEGATED_SIGNUP=re.compile(r"(?:\bsense|\bsin|\bno\s+cal|\bno\s+fa\s+falta|\bno\s+hace\s+falta|\bno\s+[ée]s\s+necess?[aà]ri[aeo]?|\bno\s+es\s+necesari[oa]|"
+                          r"\bno\s+requereix(?:en)?|\bno\s+requiere[n]?|\bsense\s+necessitat\s+de|\bsin\s+necesidad\s+de)\s+(?:de\s+)?(?:fer\s+|hacer\s+|realitzar\s+|la\s+|cap\s+|ninguna\s+)?"
+                          r"(?:inscripci\w*|reserv\w*|inscriure['’]?s|inscribirse)(?:\s+pr[eè]vi[ae])?",re.I)
+
+
+def registration_in(text, positive=r'inscripci'):
+    """¿El texto pide inscribirse? Lo negado («sense inscripció», «no cal reserva») no cuenta."""
+    return bool(re.search(positive,NEGATED_SIGNUP.sub(' ',text or ''),re.I))
+
+
+
 def usable_description(text):
     """False for page chrome captured as if it were prose (district menu of
     GuiaBCN pages). Archived rows are kept as they are; readers use this."""
@@ -217,7 +230,7 @@ def detail_facts(content):
     coords=re.search(r'loadmapdetall\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)',content)
     if coords: facts['coordinates']={'lat':float(coords.group(1)),'lon':float(coords.group(2))}
     note=facts.get('schedule_note','').casefold()
-    facts['registration_required']=bool(re.search(r'inscripci',note))
+    facts['registration_required']=registration_in(note)
     return {key:value for key,value in facts.items() if value not in ('',None,False)}
 
 def _lines(fragment):
@@ -257,7 +270,7 @@ def page_schedule(source, content, start='', end=''):
         price=cccb_block('Precios?|Preus?|Prices?')
         if price:
             facts['price_text']=' · '.join(price)
-            if re.search(r'reserva|inscripci',facts['price_text'],re.I): facts['registration_required']=True
+            if registration_in(facts['price_text'],r'reserva|inscripci'): facts['registration_required']=True
         lines=cccb_block('Fecha y horario|Data i horari|Date and time|Horario|Horari')
         if lines:
             text=' · '.join(lines)
@@ -344,7 +357,7 @@ def enrich_sources(conn, limit=10, timeout=20, sources=None, refresh=False, fetc
                 schedule_time,schedule_text,schedule_facts=guia_schedule_facts(record_id,content,start_date,end_date,fetch_api,timeout)
                 facts.update(schedule_facts)
                 text=' '.join((facts.get('schedule_note',''),facts.get('price_text','')))
-                if re.search(r'inscripci',text,re.I) and not re.search(r'\bno\s+cal\s+inscripci',text,re.I): facts['registration_required']=True
+                if registration_in(text): facts['registration_required']=True
             now=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
             resolved+=bool(schedule_time or facts.get('hours_by_day'))
             with conn:

@@ -171,7 +171,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -595,6 +595,8 @@ function availability(e, day) {
   const occ = (e.occurrences || []).filter(o => o.date === day);
   const occTimes = [...new Set(occ.map(o => o.time).filter(Boolean).map(x => String(x).padStart(5, '0')))].sort();
   const label = e.time_label || '', raw = e.base_time ?? e.time ?? '';
+  // Las fuentes dan horas distintas ese día (27-10-2026): no se presenta una como segura; sale en «Hora por confirmar».
+  if (e.time_conflicts && e.time_conflicts[day]) return {kind: 'tbc', conflict: e.time_conflicts[day], until: e.end};
   if (occTimes.length) return {kind: 'timed', times: occTimes};
   // Ficha de pocos días con pases fechados (26-10-2026): sin pase ese día, no sale (sin pruebas de que haya algo).
   if (!occ.length && e.start !== e.end && !isExhibit(e) && !hoursByDay(e) && daysBetween(e.start, e.end) <= SHORT_DAYS && (e.occurrences || []).some(o => o.time)) return {kind: 'skip'};
@@ -1369,7 +1371,7 @@ const onePlace = e => !MANY_PLACES.test(String(e.venue_names?.[0] || '').trim())
 // Precio en la ficha (22-10-2026): si la fuente da varias tarifas («Entrada 1 dia: 50 € · Abonament 2 dies: 95 €»),
 // la caja ocupa toda la fila y cada tarifa va en su línea. El texto es el de la fuente, solo partido por «·».
 function priceFact(e) {
-  const text = e.is_free ? t('Gratis') : String(e.price_text || e.price_label || L('Consultar', 'Consultar', 'Check'));
+  const text = e.is_free ? t('Gratis') : String(e.price_text || e.price_label || L('Consultar precio', 'Consultar preu', 'Check price'));
   const parts = text.split(/\s+·\s+/).map(x => x.trim()).filter(Boolean);
   if (text.length <= 32 && parts.length < 2) return `<div><small>${t('Precio')}</small><b>${esc(text)}</b></div>`;
   return `<div class="fact-wide"><small>${t('Precio')}</small><ul class="fact-lines">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;

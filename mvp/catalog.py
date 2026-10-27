@@ -326,6 +326,25 @@ def source_time(raw,source):
     return str(raw.get('observacions_horari') or '')
 
 
+def own_text_hours(text, start, end):
+    """{fecha: horas} que dice el texto de horario de la ficha («Dissabte 7: 11 h · Diumenge 8: 11 h», «Dimecres…: a les
+    20.00 h»), con los lectores de GuiaBCN. Para contrastar horas prestadas; no crea sesiones."""
+    from src.guia_schedule import weekly_rows,schedule_by_day,lines_schedule
+    text=str(text or '')
+    if not text.strip(): return {}
+    text=re.sub(r'(?i)\bdiumnege\b','Diumenge',text)  # errata frecuente de la fuente
+    text=re.sub(r'(?i)\s*\b(?:durada|duraci[oó]n?|duration)\s+(?:aproximada\s*|aprox\.?\s*)?:?\s*\d+\s*(?:minuts|minutos|min\.?|minutes|h)\b\.?','',text).strip()
+    out=lines_schedule(text,start,end) if '\n' in text else {}
+    if not out:
+        rows=weekly_rows(text); out=schedule_by_day(rows,start,end) if rows else {}
+    if not out:
+        # Sin días: las mismas horas cada día de función («a les 16.30 h i a les 19.00 h»). Solo pases, no rangos.
+        from src.guia_schedule import parse_hours
+        h=parse_hours(text)
+        if h and h['sessions'] and not h['ranges']: out={'*':' · '.join(h['sessions'])}
+    return out
+
+
 def single_session(text):
     """«A las 19.30 h», «a les 20.00 h» → '19:30': el único pase de un texto de horario que no dice nada más.
     parse_hours ya rechaza lo que no es hora («portes», «aprox.», duración); aquí, además, nada de rangos
@@ -723,6 +742,21 @@ def is_free(price, free_label):
     return any(term in clean(price+' '+free_label) for term in ('gratis','gratuit','gratuito','free','entrada lliure'))
 
 
+CSS_JUNK=re.compile(r'\s*(?:\.[\w-]+\s*)?\{[^{}]*\}')
+PRICE_AMOUNT=re.compile(r'(?:(?<![\d%])\d+(?:[.,]\d+)?\s*(?:€|eur\b|euros?\b)|€\s*\d)',re.I)
+FREE_WORDS=re.compile(r'\b(?:gratis|gratu[iï]t[ao]?|gratuito|free|entrada (?:libre|lliure)|accés lliure|acceso libre)\b',re.I)
+
+
+def reliable_price(text):
+    """El precio tal como se muestra, o None si no es un precio («10% DE DESCOMPTE», «Durant la presentació es poden
+    adquirir…», restos de CSS del CCCB): entonces la ficha dice «Consultar precio» y enlaza a la fuente (27-10-2026).
+    Un importe en euros o una gratuidad dicha; nada se deduce ni se corrige."""
+    t=' '.join(CSS_JUNK.sub(' ',str(text or '')).split()).strip(' ·|')
+    if not t: return None
+    if PRICE_AMOUNT.search(t) or FREE_WORDS.search(t): return t
+    return None
+
+
 def public_fields(event, projection, requested_day='', schedule_time=''):
     source=event['source']
     # Sin día pedido, la hora de la ficha es la de la próxima sesión, no la de la primera de su historia (27-10-2026:
@@ -750,10 +784,12 @@ def public_fields(event, projection, requested_day='', schedule_time=''):
     # time; an exhibition or programme shows its opening hours when the
     # source prints them, otherwise the kind of interval it is.
     conflict=(event.get('time_conflicts') or {}).get(requested_day or event['start'])
-    if conflict: time_label=' / '.join(conflict)
+    if conflict: time_label='Por confirmar · '+' / '.join(conflict)  # 27-10-2026: ninguna hora se da por segura
     elif day_hours and time_source=='official_schedule_by_day': time_label=day_hours  # «09:00–18:00»: abre y cierra
     # Acto de un día con hora de fin publicada («18:00–21:00»): se muestra el rango, no solo el inicio.
     elif time and event['start']==event['end'] and str(projection.get('schedule_range') or '').startswith(time+'–'): time_label=projection['schedule_range']
+    # Dos o tres pases el mismo día (27-10-2026, «Cicle John Coltrane» a las 19:00 y a las 20:30): todos en la cabecera.
+    elif time and len(same:=sorted({o['time'] for o in pool if o['time'] and o['date']==next(o2['date'] for o2 in pool if o2['time']==time and (not requested_day or o2['date']==requested_day))}))>=2 and len(same)<=3: time_label=' · '.join(same)
     elif time: time_label=time
     elif projection.get('hours_label'): time_label=projection['hours_label']
     elif event['start']!=event['end'] and event['kind']=='exhibition': time_label='Exposición'
@@ -783,6 +819,15 @@ MONTHS_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','se
 def _date_words(value):
     d=parse_date(value)
     return f'{WEEKDAYS_ES[d.weekday()]} {d.day} de {MONTHS_ES[d.month-1]}' if d else str(value)
+
+
+def _registration(facts, raw, source):
+    """Inscripción: lo que dijo la ficha de detalle, revisado con la negación (27-10-2026: los datos ya guardados
+    con «Sense inscripció prèvia» se leían como «Requiere inscripción»); Open Data, por su campo de entradas."""
+    from src.guia_detail import registration_in
+    stored=bool(facts.get('registration_required')) and (registration_in(facts.get('schedule_note','')) or registration_in(facts.get('price_text',''),r'reserva|inscripci')
+                                                          or not (facts.get('schedule_note') or facts.get('price_text')))
+    return bool(stored or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))
 
 
 def editorial_summary(event, price_text='', organizers=None, schedule_days='', registration=False):
@@ -1126,6 +1171,20 @@ def borrow_from_twins(conn, event):
         if not row: continue
         twin=row_to_event(conn,row,True,'')
         if twin.get('presentation')=='venue_link_only': continue
+        # Texto de horario del gemelo que contradice las horas de esta ficha (27-10-2026, «¡Acojonado!»: la página de la
+        # sala y GuiaBCN dicen 21:30, la Generalitat «19.30 h»): si la hora de la ficha es de primera mano (la fuente o
+        # la página del acto), manda y el texto no se toma; si también es prestada, ese día queda «por confirmar».
+        twin_text=twin.get('time_text') if not event.get('time_text') else ''
+        if twin_text and any(o.get('time') for o in event.get('occurrences') or []):
+            told=own_text_hours(twin_text,event.get('start'),event.get('end'))
+            for date in sorted({o['date'] for o in event['occurrences'] if o.get('time')}):
+                theirs={h for h in str(told.get(date) or told.get('*') or '').split(' · ') if re.fullmatch(r'\d{2}:\d{2}',h)}
+                mine={o['time'] for o in event['occurrences'] if o['date']==date and o.get('time')}
+                if not theirs or theirs<=mine: continue
+                if all(o.get('evidence_field') in ('otra_fuente','ultima_hora_conocida') for o in event['occurrences'] if o['date']==date):
+                    event.setdefault('time_conflicts',{})[date]=sorted(mine|theirs)
+                twin=dict(twin,time_text=''); borrowed['time_text_contradice']=member
+                break
         for field in ('description','time_text','price_text','schedule_days','schedule_note'):
             # Días y notas del gemelo solo si esta ficha no tiene horario propio: mezclar la tabla
             # de una fuente con la primera fila de otra da «Dilluns · … · Dissabte» sueltos.
@@ -1343,6 +1402,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         for k in [key,twin or '']+list(collapsed_members):
             if k and tuple(k.split(':',1)) in ptable:
                 found=ptable[tuple(k.split(':',1))]
+                # Funciones de días ya pasados de la página (las «Dates anteriors» de Teatreneu, desde 2024): no dan días
+                # ni horas a la ficha (27-10-2026). Siguen guardadas en official_pages.
+                _now=today().isoformat()
+                found={**found,'times':{d:h for d,h in (found.get('times') or {}).items() if d>=_now},'sessions':{d:h for d,h in (found.get('sessions') or {}).items() if d>=_now}}
                 official_page={**found,'host':re.sub(r'^www\.','',urlsplit(found['url']).netloc),'applied':[]}; break
     # Temporada o programa de la sala sin días propios (Poliorama «Gran Gala Flamenco», del 19-10-2021 al
     # 30-12-2026): las funciones fechadas de la página del acto dicen qué días hay función. Solo esos días
@@ -1428,9 +1491,22 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 ms,mi=member.split(':',1)
                 if ms==source: continue
                 ts=sorted({o['time'] for o in _member_occ(ms,mi) if o['date']==day and o.get('time')})
+                # La hora del gemelo que solo está en su horario por días (GuiaBCN, ficha de detalle: «Un Mal Normal»,
+                # Tantarantana, 19:30, 27-10-2026). Solo horas sueltas de ese día; un horario de apertura no es un pase.
+                if not ts:
+                    hb=str((detail_facts(conn,ms,mi,prefetch).get('hours_by_day') or {}).get(day) or '')
+                    if re.fullmatch(r'\d{2}:\d{2}(?: · \d{2}:\d{2}){0,3}',hb): ts=hb.split(' · ')
                 if ts:
                     occurrences[:]=[o for o in occurrences if o['date']!=day]+[{'date':day,'time':t,'evidence_field':'otra_fuente','verified':False} for t in ts]
                     break
+        # Temporada sin funciones ni horario propio (Tantarantana «Evidències evidents de bruixeria», 27-10-2026): el
+        # horario por días que publica otra agenda del mismo acto (GuiaBCN, tabla de su ficha), dentro de estas fechas.
+        if str(start)[:10]!=str(end)[:10] and not occurrences and not any((hours_by_day or {}).values()):
+            for member in sorted(collapsed_members, key=lambda m: _rank(m.split(':',1)[0])):
+                ms,mi=member.split(':',1)
+                if ms==source: continue
+                hb={d:h for d,h in (detail_facts(conn,ms,mi,prefetch).get('hours_by_day') or {}).items() if str(start)[:10]<=d<=str(end)[:10]}
+                if any(hb.values()): hours_by_day=hb; break
         # Pases de la misma sala en fichas aparte (26-10-2026, David): una película con pases a las 16:00, 18:15 y
         # 20:30 es una sola ficha ese día con todas sus horas; las de las otras fichas de la misma fuente (una página
         # por pase, Espai Texas en Koobin) se suman aquí. Solo días dentro de las fechas de la ficha.
@@ -1656,6 +1732,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events['is_free']=True
     # How many independent sources carry this record (twins collapsed into it).
     events['confirmations']=1+len(events['also_in'])
+    if events.get('price_label') and not reliable_price(events['price_label']):
+        events['price_unreliable']=events['price_label']; events['price_label']=None   # se guarda lo que decía la fuente
+    elif events.get('price_label'): events['price_label']=reliable_price(events['price_label'])
     policy=presentation_of(source)
     if policy=='venue_link_only': apply_venue_link_policy(events)
     if detail:
@@ -1687,12 +1766,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         events.update({
             'description':('' if boiler else source_description(raw,source)) or archived_description,
             **({'description_credit':organizer_credit} if organizer_credit else {}),
-            'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=sched_days,registration=bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False))),
+            'editorial_summary':editorial_summary(events,price_text=price or archived_facts.get('price_text',''),organizers=[r[0] for r in conn.execute('SELECT name FROM source_organizers WHERE source=? AND id=? ORDER BY seq',(source,id))] or ([archived_facts['organizer']] if archived_facts.get('organizer') else []),schedule_days=sched_days,registration=_registration(archived_facts,raw,source)),
             'time_text':(' · '.join(page_passes) if page_passes else '') or (opendata_facts.get('schedule_hours') if od_table else '') or schedule_text or archived_facts.get('schedule_hours') or source_time(raw,source),
             'schedule_days':sched_days,
             # Las condiciones que venían pegadas al precio pasan a las notas del horario (sin repetir).
             'schedule_note':' · '.join(dict.fromkeys(source_notices(raw,source)+[x for x in sched_note.split(' · ') if x]+[n for n in split_price(price or archived_facts.get('price_text',''))[1] if n.rstrip('.').lower() not in sched_note.lower()])),
-            'registration_required':bool(archived_facts.get('registration_required') or (opendata_normalized(raw).get('registration_required') if source=='opendatabcn_agenda' else False)),
+            'registration_required':_registration(archived_facts,raw,source),
             'price_text':split_price(price or archived_facts.get('price_text',''))[0],'source_free_label':free,
             'price_status':'unknown' if not (price or archived_facts.get('price_text') or free) else 'source_claim_unverified',
             'venues':[{'name':v[0], 'address':v[1], 'lat':v[2],'lon':v[3]} for v in place] or ([{'name':archived_facts.get('venue',''), 'address':archived_facts.get('address',''), **archived_facts.get('coordinates',{})}] if archived_facts.get('venue') else []),
@@ -1707,6 +1786,22 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             'source_taxonomy':{'guiabcn_activity_codes':guiabcn_codes(raw)} if source=='guiabcn' else {},
             'possible_duplicates':_possible_duplicates(conn,source,id),
         })
+        if events.get('price_text'):
+            ok=reliable_price(events['price_text'])
+            if not ok: events['price_unreliable']=events['price_text']
+            events['price_text']=ok or ''
+        # Horas que no cuadran con el texto de horario de la ficha (27-10-2026, auditoría conjunta A2/B-P6b): «Trencanous-
+        # jazz» (texto «Dissabte 7: 11 h», hora prestada 10:00), «Tadeo Jones» (pases 12:30 de la página, texto 16:30 y
+        # 19:00), «¡Acojonado!» (21:30 frente a «19.30 h»). No se elige por mayoría ni se da por buena la hora
+        # estructurada: ese día queda «por confirmar» con las horas publicadas y el enlace a la fuente. Solo horas que
+        # no son de la propia fuente de la ficha (prestadas, de la página del acto o de una lectura anterior).
+        second={o['date'] for o in events.get('occurrences') or [] if o.get('time') and o.get('evidence_field') in ('otra_fuente','pagina_del_acto','ultima_hora_conocida','web_oficial')}
+        if second and events.get('time_text'):
+            told=own_text_hours(events['time_text'],start,end)
+            for date in sorted(second):
+                mine={h for h in str(told.get(date) or told.get('*') or '').split(' · ') if re.fullmatch(r'\d{2}:\d{2}',h)}
+                theirs={o['time'] for o in events['occurrences'] if o['date']==date and o.get('time')}
+                if mine and not mine<=theirs: events.setdefault('time_conflicts',{})[date]=sorted(mine|theirs)
         # Texto completo de la página del acto en la web de la sala (src/venue_text.py, 25-10-2026): cuando es más
         # largo que lo que da la programación (una línea, una meta recortada). El de la fuente queda en el registro.
         from src.venue_text import text_for as _venue_text

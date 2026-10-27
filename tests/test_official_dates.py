@@ -71,7 +71,7 @@ class CalendarSessionsTest(unittest.TestCase):
         page = ('<div class="ticketsCalendar__sessions is-active" data-calendar-sessions="2026-10-23"><div class="ticketsCalendar__sessionTime"> <span>20:00</span> </div></div>'
                 '<div class="ticketsCalendar__sessions" data-calendar-sessions="2026-10-24"><div class="ticketsCalendar__sessionTime"> <span>18:00</span></div>'
                 '<div class="ticketsCalendar__sessionTime"> <span>21:00</span></div></div>')
-        times, _, _ = page_facts(page, 'El Tenoriu', '2026-10-01', '2026-11-30')
+        times, _, _ = page_facts(page, 'El Tenoriu', '2026-10-01', '2026-11-30', today=__import__('datetime').date(2026, 10, 20))
         self.assertEqual(times, {'2026-10-23': '20:00', '2026-10-24': '18:00'})
 
 

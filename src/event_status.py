@@ -24,6 +24,19 @@ import sqlite3
 import unicodedata
 
 TITLE_MARK = re.compile(r"\*+\s*(ajornat|ajornada|aplazad[oa]|suspès|suspes|suspesa|suspendid[oa]|cancel·lat|cancel·lada|cancel.lat|cancel.lada|cancelad[oa]|anul·lat|anul·lada|anulad[oa])\b\**", re.I)
+# Cualquier fuente (27-10-2026): el estado al principio del título, con o sin asterisco («CANCELADO: Geordie
+# Greep», «Concert Cancel·lat Oval presenta: Superfan»). Solo como primera palabra, o tras un nombre genérico
+# (concierto, espectáculo…), y seguida de dos puntos, guion o más título: «El día que todo se canceló» no casa.
+TITLE_LEAD = re.compile(r"^\W*(?:(?P<noun>concerts?|conciertos?|espectacles?|espect[aá]culos?|funci[oóó]n?|sessi[oó]|sesi[oó]n|show|event[oe]?|acte|acto)\s+)?"
+                        r"(?P<st>ajornat|ajornada|aplazad[oa]|suspès|suspes|suspesa|suspendid[oa]|cancel·lat|cancel·lada|cancel\.lat|cancel\.lada|cancelad[oa]|cancel+ed|"
+                        r"anul·lat|anul·lada|anulad[oa]|postponed)\b\s*(?P<sep>[:\-–—!|])?\s*(?=\S)", re.I)
+
+
+def title_lead(title):
+    """Marca de estado al principio del título, o None. Sin signo detrás, solo si va en mayúsculas o tras un nombre
+    genérico («Concert Cancel·lat Oval…»): «Cancelled Plans» puede ser el nombre de un grupo."""
+    m = TITLE_LEAD.match(title or '')
+    return m if m and (m.group('sep') or m.group('noun') or m.group('st').isupper()) else None
 POSTPONED = {'ajornat', 'ajornada', 'aplazado', 'aplazada'}
 STOP = {'concert', 'concierto', 'concerts', 'conciertos', 'gira', 'tour', 'dins', 'dentro', 'amb', 'con', 'live', 'presenta', 'presents', 'espectacle',
         'espectaculo', 'festival', 'the', 'and', 'del', 'dels', 'les', 'las', 'los', 'els', 'una', 'per', 'para', 'barcelona', 'world', 'entrades', 'entradas',
@@ -41,6 +54,8 @@ def _fold(text):
 
 def words(title):
     t = TITLE_MARK.sub(' ', str(title or ''))
+    lead = title_lead(t)
+    if lead: t = t[lead.end():]
     return {w for w in re.findall(r"[a-z0-9]+", _fold(t)) if len(w) >= 3 and w not in STOP and not w.isdigit()}
 
 
@@ -58,7 +73,8 @@ def anchors(conn, today):
         WHERE end_date>=? AND (
           (source='guiabcn' AND (json_extract(raw_json,'$.api_item.status.item.code') IN ('2','3') OR title LIKE '%*%'))
           OR (source='opendatabcn_agenda' AND COALESCE(json_extract(raw_json,'$.event_status'),'ok') NOT IN ('ok',''))
-          OR (raw_json LIKE '%EventCancelled%' OR raw_json LIKE '%EventPostponed%'))""", (today,)).fetchall()
+          OR (raw_json LIKE '%EventCancelled%' OR raw_json LIKE '%EventPostponed%')
+          OR title LIKE '%cancel%' OR title LIKE '%suspe%' OR title LIKE '%ajorna%' OR title LIKE '%aplaza%' OR title LIKE '%anul%' OR title LIKE '%postpone%')""", (today,)).fetchall()
     for source, rid, title, start, end, raw_text in rows:
         try: raw = json.loads(raw_text)
         except ValueError: continue
@@ -83,6 +99,11 @@ def anchors(conn, today):
             if 'Cancelled' in st or 'Postponed' in st:
                 state = 'aplazado' if 'Postponed' in st else 'cancelado'
                 evidence = f"La fuente lo publica como {'aplazado' if state == 'aplazado' else 'cancelado'} (schema.org {st.split('/')[-1]})"
+        if not state and source != 'guiabcn':
+            lead = title_lead(title)
+            if lead:
+                state = 'aplazado' if _fold(lead.group('st')) in POSTPONED or 'postpon' in lead.group('st').lower() else 'cancelado'
+                evidence = f"La fuente lo indica en el título: «{(title or '')[:lead.end()].strip()}»"
         if not state: continue
         venues = {_fold(v) for (v,) in conn.execute('SELECT venue FROM source_venues WHERE source=? AND id=?', (source, rid)) if v}
         out.append((source, rid, state, evidence, start, end, words(title), venues))
