@@ -141,7 +141,8 @@ def event_kind(title,cat,span,freq,source):
     if (t.startswith('curs d escacs') or ('estas on' in t or 'estason' in t) and (span or 0)>60 and f=='setmanal') and source=='diba_bibliotecas':
         return 'course','exclude'
     if source=='guiabcn' and c=='course':return 'course','review'
-    if 'curs' in t or 'curso' in t:return 'course','review'
+    # Palabra entera (27-10-2026): «Cursa», «Concurs», «Superexcursió» o «Recursos» no son cursos.
+    if re.search(r'\b(?:curs|cursos?|curset|cursets)\b',t):return 'course','review'
     if 'exposic' in t or 'exposicions' in c or 'exposiciones' in c:return 'exhibition','review'
     if 'festivals' in c or 'cicles' in c or 'festival' in t or ('cicle' in t and (span or 0)>1):return 'program','review'
     if f=='setmanal' or f=='mensual' or (span is not None and span>2):return 'program','review'

@@ -2,6 +2,11 @@
   "_note": "Lugares que algunas fuentes publican solo con su nombre. Dirección de la ficha del lugar en la fuente (conciertos.club) o de OpenStreetMap; coordenadas de OpenStreetMap (Nominatim), comprobadas el 19-10-2026. Se usan solo si la ficha no trae coordenadas propias. «same_as»: otro nombre del mismo lugar, que toma las coordenadas que publican nuestras fuentes para ese nombre.",
   "places": [
     {
+      "aliases": ["Casa Amèrica Catalunya", "Casa America Catalunya"],
+      "same_as": "Fundació Casa Amèrica Catalunya - Sala Exposicions",
+      "evidence": "La agenda de la sala da C Còrsega 299, la misma dirección con que GuiaBCN publica la Fundació Casa Amèrica Catalunya (27-10-2026)"
+    },
+    {
       "name": "CASA SEAT",
       "aliases": ["Casa Seat Cupra", "Casa SEAT"],
       "address": "Passeig de Gràcia, 109-111, 08008 Barcelona",

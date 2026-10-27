@@ -265,7 +265,7 @@ SCHOOL_ONLY_TITLE = re.compile(r"\b(?:amb l.escola|per a escoles|per a centres e
                                r"primaria \(?de \d|primaria \(?\d|secundaria \(?\d|batxillerat|bachillerato|alumnes de \d|alumnos de \d)")
 EVENTBRITE_TOURIST = re.compile(r"\b(?:free tour|walking tour|walking tours|sightseeing|city tour|old town tour|gothic quarter|el born and gothic|barrio gotico tour|tapas tour|wine tasting tour|paella (?:class|cooking)|cooking class)\b")
 PROFESSIONAL_COLLEGE = re.compile(r"\b(?:col.legi|colegio) (?:oficial )?(?:de |d.)?(?:logopedes|logopedas|metges|medicos|infermeres|enfermeras|psicolegs|psicologos|advocats|abogados|economistes|economistas|farmaceutics|farmaceuticos|fisioterapeutes|fisioterapeutas|odontolegs|dentistas|veterinaris|veterinarios)\b")
-COMMERCIAL_PITCH = re.compile(r"\b(?:aceites esenciales|olis essencials|doterra|young living|marketing multinivel|network marketing|criptomonedas|trading|libertad financiera|ingresos pasivos|bienes raices|real estate)\b")
+COMMERCIAL_PITCH = re.compile(r"\b(?:career fair|job fair|feria de empleo|fira de treball|vip experience|aceites esenciales|olis essencials|doterra|young living|marketing multinivel|network marketing|criptomonedas|trading|libertad financiera|ingresos pasivos|bienes raices|real estate)\b")
 GENERALIST_SOURCES = {'guiabcn', 'opendatabcn_agenda', 'generalitat', 'diba_bibliotecas', 'diba_turismo', 'web_centres_civics', 'web_cccb', 'web_macba'}
 # Palabras de género que a menudo son parte del nombre de una obra, una gira o un artista (no se toman como formato
 # en salas de música o cine). Las de formato (taller, visita, xerrada, presentació, mercat, fira…) siguen mandando.
@@ -377,7 +377,8 @@ def _classify_rules(ev, override=None):
     # colegio profesional y ventas de producto. Lo demás de Eventbrite sigue las reglas de siempre.
     if ev.get('source') == 'venue_eventbrite' and not override:
         place = norm(' '.join(ev.get('venue_names') or []))
-        why = ('Visita turística genérica (free tour), no un acto cultural con fecha' if EVENTBRITE_TOURIST.search(t) else
+        why = ('Entrada VIP o mejora de una entrada, no un acto aparte' if re.search(r"\bvip\b", t) else
+               'Visita turística genérica (free tour), no un acto cultural con fecha' if EVENTBRITE_TOURIST.search(t) else
                'Formación para profesionales de un colegio profesional' if PROFESSIONAL_COLLEGE.search(place) else
                'Venta de producto o captación comercial' if COMMERCIAL_PITCH.search(t + ' ' + norm(ev.get('summary') or ev.get('source_text') or '')[:400]) else '')
         if why:
