@@ -260,6 +260,16 @@ def page_subtitle_category(ev):
     return None, '', ''
 
 
+SCHOOL_ONLY_TITLE = re.compile(r"\b(?:amb l.escola|per a escoles|per a centres educatius|centres educatius|grups escolars|grupos escolares|para escuelas|"
+                               r"centros educativos|funcio escolar|funcions escolars|funcion escolar|sessio escolar|sessions escolars|sesion escolar|"
+                               r"primaria \(?de \d|primaria \(?\d|secundaria \(?\d|batxillerat|bachillerato|alumnes de \d|alumnos de \d)")
+EVENTBRITE_TOURIST = re.compile(r"\b(?:free tour|walking tour|walking tours|sightseeing|city tour|old town tour|gothic quarter|el born and gothic|barrio gotico tour|tapas tour|wine tasting tour|paella (?:class|cooking)|cooking class)\b")
+PROFESSIONAL_COLLEGE = re.compile(r"\b(?:col.legi|colegio) (?:oficial )?(?:de |d.)?(?:logopedes|logopedas|metges|medicos|infermeres|enfermeras|psicolegs|psicologos|advocats|abogados|economistes|economistas|farmaceutics|farmaceuticos|fisioterapeutes|fisioterapeutas|odontolegs|dentistas|veterinaris|veterinarios)\b")
+COMMERCIAL_PITCH = re.compile(r"\b(?:aceites esenciales|olis essencials|doterra|young living|marketing multinivel|network marketing|criptomonedas|trading|libertad financiera|ingresos pasivos|bienes raices|real estate)\b")
+GENERALIST_SOURCES = {'guiabcn', 'opendatabcn_agenda', 'generalitat', 'diba_bibliotecas', 'diba_turismo', 'web_centres_civics', 'web_cccb', 'web_macba'}
+FORMAT_LEAD = re.compile(r"^(?:taller|tallers|tast|tastet|visita|visites|visitas|xerrada|xerrades|charla|conferencia|conferencies|curs|curso|masterclass|classe|clase|workshop)")
+
+
 def _classify_rules(ev, override=None):
     """→ dict(category, status, method, evidence, ambiguous).
 
@@ -278,6 +288,13 @@ def _classify_rules(ev, override=None):
     title = ev.get('title') or ''
     source_cat = SOURCE_CATEGORY.get(ev.get('category') or '')
     lead, word = lead_category(title)
+    # Salas y ticketeras de música o cine (27-10-2026, auditoría conjunta 2.2): la palabra de género del título no manda
+    # sobre su categoría si es parte del nombre de la obra o del artista («Entrevista con el vampiro», «Ruta 61», «La
+    # dansa del sabre», «Respighi: fiestas romanas», «MNEK – … TOUR», «Carrera Blanca»). Solo un formato explícito
+    # (taller, visita, xerrada, conferència, tast, curs) cambia la categoría.
+    if lead and source_cat in ('musica', 'cine') and lead != source_cat and ev.get('source') not in GENERALIST_SOURCES \
+            and not FORMAT_LEAD.match(norm(word or '')):
+        lead, word = None, None
     official = next((cat for cat, rx in OFFICIAL_TYPE for p in ev.get('classification_paths') or [] if rx.search(norm(p))), None)
     signals = []
     # Una visita o un taller dentro de una exposición es esa actividad, no la exposición.
@@ -348,6 +365,21 @@ def _classify_rules(ev, override=None):
     if SCHOOL_SUPPORT.search(t):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
                 'evidence': 'Clases de refuerzo escolar: un servicio, no un plan de agenda (decisión 26-10-2026)', 'ambiguous': False}
+    # Solo para grupos escolares (27-10-2026, auditoría conjunta 2.5): la misma decisión que las filas «Visites per a
+    # escoles» de GuiaBCN, ahora por el título de cualquier fuente («Primaria (de 3º a 6º)» del MACBA, «El Meu primer
+    # Festival amb l'escola» de la Filmoteca). Si el título nombra a las familias o es un patio escolar abierto, se queda.
+    if SCHOOL_ONLY_TITLE.search(t) and not re.search(r"famil", t) and not PATIS.search(t):
+        return {'category': EXCLUDED, 'status': 'excluida', 'method': 'solo_escolar',
+                'evidence': 'Actividad solo para grupos escolares: no es un plan abierto al público (decisión 27-10-2026)', 'ambiguous': False}
+    # Eventbrite, lista corta y revisable (27-10-2026): free tours y visitas turísticas genéricas, formación para un
+    # colegio profesional y ventas de producto. Lo demás de Eventbrite sigue las reglas de siempre.
+    if ev.get('source') == 'venue_eventbrite' and not override:
+        place = norm(' '.join(ev.get('venue_names') or []))
+        why = ('Visita turística genérica (free tour), no un acto cultural con fecha' if EVENTBRITE_TOURIST.search(t) else
+               'Formación para profesionales de un colegio profesional' if PROFESSIONAL_COLLEGE.search(place) else
+               'Venta de producto o captación comercial' if COMMERCIAL_PITCH.search(t + ' ' + norm(ev.get('summary') or ev.get('source_text') or '')[:400]) else '')
+        if why:
+            return {'category': EXCLUDED, 'status': 'excluida', 'method': 'ocio_social_o_profesional', 'evidence': why + ' (Eventbrite, decisión 27-10-2026)', 'ambiguous': False}
     if SERVICE.search(t) and not (lead and lead in ('talleres', 'charlas', 'musica', 'escena', 'cine')):
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'servicio_o_convocatoria',
                 'evidence': 'Servicio, campaña o convocatoria, no una actividad programada (decisión editorial 20-10-2026)', 'ambiguous': False}
@@ -408,7 +440,10 @@ FAMILY_TEXT = re.compile(r"(?:per a|para|dirigida a|dirigit a|dirigido a|pensada
                          r"|\bedat recomanada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anys|any|a)\b|\bedad recomendada:?\s*(?:a partir de|de)\s*(?:[0-9]|1[0-2])\s*(?:anos|ano|a)\b"
                          # El formato lo dice (24-10-2026): «Taller familiar», «Concert familiar amb…», «espectacle infantil».
                          r"|\b(?:taller|tallers|activitat|activitats|concert|concerts|espectacle|espectacles|visita|visites|ruta|itinerari|proposta|sessio|"
-                         r"actividad|actividades|concierto|conciertos|espectaculo|espectaculos|sesion)\s+(?:familiar|familiars|familiares|infantil|infantils|infantiles|per a nadons|para bebes)\b")
+                         r"actividad|actividades|concierto|conciertos|espectaculo|espectaculos|sesion|teatre|teatro|musical|grup|grupo|cinema|cine|"
+                         r"obra|funcio|funcion)\s+(?:familiar|familiars|familiares|infantil|infantils|infantiles|per a nadons|para bebes)\b"
+                         # 27-10-2026: «el grupo infantil más querido» (Pica Pica): el adjetivo puede ir tras otro («grupo infantil»).
+                         r"|\b(?:el|la|un|una)\s+(?:grup|grupo|espectacle|espectaculo|musical|obra)\s+infantil\b")
 NOT_FAMILY_TEXT = re.compile(r"per a infants i adults|para ninos y adultos|canguratge|cangur|servei de guarderia|servicio de guarderia|espai infantil mentre|ludoteca mentre")
 
 
@@ -435,6 +470,9 @@ def channels(ev, category, override=None):
     """{canal: evidencia}. Un evento puede estar en varios; sin canal sigue en la agenda."""
     out = {}
     title, venue = norm(ev.get('title')), norm(' '.join(ev.get('venue_names') or []))
+    # Edad mínima de 14 años o más (27-10-2026, «Humor de madre», «a partir de 14 anys»): no es un plan en familia,
+    # diga lo que diga una frase suelta del texto.
+    teen = ev.get('age_min') is not None and ev['age_min'] >= 14
     paths = [norm(p) for p in ev.get('classification_paths') or []]
     if ev.get('family_audience'):
         out['familia'] = 'La fuente la marca para público familiar o infantil'
@@ -450,6 +488,7 @@ def channels(ev, category, override=None):
         out['familia'] = f'La web de la sala la publica en su sección para familias («/{family_path(ev.get("url"))}/»)'
     elif ev.get('ai_family_rec'):
         out['familia'] = f'Recomendación automática (IA): {ev["ai_family_rec"].get("es", "")}'
+    if teen and 'familia' in out and not ev.get('family_audience'): out.pop('familia')
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
     # equipamiento municipal. Entra: fiestas mayores y de barrio, actividad vecinal o comunitaria,
     # fiestas y mercados en la calle o en equipamientos de proximidad, y actividades puntuales de

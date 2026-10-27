@@ -537,7 +537,7 @@ def music_route(title_text):
 
 # Actividad que la fuente archiva en «exposicions» (Open Data BCN, Generalitat): el título la nombra
 # como taller, visita, festival… («Taller 'Grup Costura'», «Visita dinamitzada…», «Festival FotoFest»).
-ACTIVITY_TITLE=re.compile(r"^(?:taller|tallers|tastet|curs|curset|curso|visita|visites|activitat|actividad|festival|festa|fiesta|fira|feria|setmana|semana|cloenda|"
+ACTIVITY_TITLE=re.compile(r"^(?:taller|tallers|tastet|curs|curset|curso|visita|visites|visitamos|visitem|visitas|activitat|actividad|festival|festa|fiesta|fira|feria|setmana|semana|cloenda|"
                           r"presentacio|presentacion|contes?|cuentos?|xerrada|conferencia|halloween|dates de festa|jornada|jornades)\b")
 
 
@@ -550,16 +550,57 @@ def _activity_kind(title, start, end):
     return 'single'
 
 
+# Exposiciones que las agendas de sala publican como «programa» (27-10-2026, auditoría conjunta 2.1): la página del
+# acto está en la sección de exposiciones de la propia sala (MHC «/exposicions/», Fundació Miró, Santa Mònica, CCCB
+# «/exposiciones/»: un tramo de la ruta que es exactamente ese) o el título dice que lo es («Group Exhibition»).
+EXHIBIT_PATH=re.compile(r'(?:^|/)(?:exposicions?|exposiciones|exposicio|exposicion|exhibitions?|exposicions_en_curs)(?:/|$)',re.I)
+GALLERY_AGENDAS={'venue_poblenou_urban_district'}
+EXHIBIT_TITLE=re.compile(r'\b(?:exposici[oó]n?s?|exposicions?|exhibitions?|mostra d.art)\b',re.I)
+
+
+def _exhibit_evidence(source, raw, title, start, end):
+    if not str(source).startswith(('venue_','web_')): return False
+    span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
+    if span<7 or _activity_kind(title,start,end): return False
+    if re.match(r"\W*(?:visit|taller|curs|curso|conferenc|xerrad|charla|presentaci|inauguraci|concert|projecci|proyecci)",clean(title)): return False
+    url=str((raw.get('normalized') or {}).get('url') or (raw.get('item') or {}).get('url') or '') if isinstance(raw,dict) else ''
+    from urllib.parse import urlsplit
+    if EXHIBIT_PATH.search(urlsplit(url).path): return True
+    if EXHIBIT_TITLE.search(title or ''): return True
+    # Agenda de barrio de galerías (Poblenou Urban District): «Galería: Artista – Título» («Piramidón: Teresa Camacho
+    # – Punt i Coma», «La Plataforma: Matti Schulz – Unfunny Paintings»).
+    if source in GALLERY_AGENDAS and re.match(r'^[^:]{2,40}:\s*\S.{1,60}?\s[–—-]\s\S',str(title or '')): return True
+    from src.venue_prestige import art_space
+    return ':' in str(title or '') and art_space([str(title).split(':',1)[0]])
+
+
+def _record_kind(conn, key, prefetch=None):
+    """Tipo guardado de una ficha (fuente:id), con caché en la precarga."""
+    cache=getattr(prefetch,'_kinds',None) if prefetch is not None else None
+    if cache is None:
+        if prefetch is not None:
+            cache={f'{s}:{i}':k for s,i,k in conn.execute("SELECT source,id,kind FROM source_records WHERE kind='exhibition'")}
+            prefetch._kinds=cache
+        else:
+            s_,_,i_=key.partition(':'); row=conn.execute('SELECT kind FROM source_records WHERE source=? AND id=?',(s_,i_)).fetchone()
+            return row[0] if row else None
+    return cache.get(key)
+
+
 def effective_kind(source, raw, stored_kind, title, start, end):
     """Repair legacy GuiaBCN rows whose feed type was the generic 'Agenda', and activities that a
     source files as exhibitions (20-10-2026)."""
     if stored_kind=='exhibition':
         return _activity_kind(title,start,end) or stored_kind
+    if stored_kind in ('program','single') and _exhibit_evidence(source,raw,title,start,end): return 'exhibition'
+    # CCCB: lo que su web archiva en «Cursos y talleres» (Institut d'Humanitats: «La Divina comedia», «Leviatán») es un
+    # curso de inscripción, no una charla suelta de cada sesión (27-10-2026, auditoría conjunta 2.4).
+    if source=='web_cccb' and stored_kind=='single' and re.search(r'cursos|cursos y talleres|cursos i tallers',str(((raw or {}).get('item') or {}).get('discipline') or ''),re.I): return 'course'
     if source!='guiabcn' or stored_kind!='Agenda': return stored_kind
     span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
     text=clean(title)
     if 'exposic' in text:return 'exhibition'
-    if 'curs' in text or 'curso' in text:return 'course'
+    if re.search(r'\b(?:curs|cursos?|curset)\b',text):return 'course'
     if 'cicle' in text or 'festival' in text or span>2:return 'program'
     return 'single'
 
@@ -577,8 +618,9 @@ def has_sessions(occurrences, hours_by_day):
 def format_of(kind, title, start, end):
     text=clean(title)
     if kind=='exhibition':return 'exhibition'
-    if 'taller' in text or 'workshop' in text:return 'workshop'
-    if kind=='course' or 'curs' in text or 'curso' in text:return 'course'
+    # Palabras enteras (27-10-2026): «Concurshow» no es un curso ni «Destallerat» un taller.
+    if re.search(r'\b(?:taller|tallers|talleres|workshops?)\b',text):return 'workshop'
+    if kind=='course' or re.search(r'\b(?:curs|cursos?|curset|cursets)\b',text):return 'course'
     # A source interval does not necessarily mean a programme: theatres and
     # concert venues commonly publish one production or act with its whole
     # run. Keep those visible under the public "Actos y funciones" filter.
@@ -1024,7 +1066,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=34  # 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=35  # 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1375,6 +1417,13 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if prefetch is not None: collapsed_into=prefetch.collapsed.get(key); collapsed_members=prefetch.collapsed_members.get(key,[])
     else:
         groups=_collapse_groups(conn); collapsed_into=groups.get(key); collapsed_members=[m for m,c in groups.items() if c==key]
+    # La ficha que queda de un grupo de duplicados es exposición si alguna de las fichas que absorbe lo es (27-10-2026:
+    # «Casal Lambda» del MHC, «programa», absorbía las exposiciones de GuiaBCN, Open Data y la Generalitat, y dejaba de
+    # salir en Expos). Solo sin pases con hora y de una semana o más: una visita o un taller siguen siendo lo que son.
+    if kind in ('program','single') and collapsed_members and not any(o.get('time') for o in occurrences) and not _activity_kind(title,start,end):
+        span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
+        if span>=7 and any(_record_kind(conn,m,prefetch)=='exhibition' for m in collapsed_members):
+            kind='exhibition'; event_format='exhibition'
     # Manda la web oficial: fechas leídas en la página del propio centro (src/official_dates.py), de esta
     # ficha o de cualquiera de sus gemelas. Las de la fuente se conservan en 'official_dates'.
     official_dates=None
@@ -1450,8 +1499,27 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # Orden de la hora (23-10-2026, David): 1) lo que da la fuente ahora, 2) la página del propio acto,
     # 3) la última hora que dio la fuente, 4) solo si la fuente nunca la dio, la de otra agenda del mismo acto
     # (municipal antes que ticketera o directorio). Marcada «otra_fuente»; en público no se nombra el agregador.
+    series_dates=set()
     if collapsed_members:
         from src.dedupe import source_rank as _rank
+        # El mismo acto de la misma fuente en una ficha por día (27-10-2026, auditoría conjunta 4.1; src/dedupe.series_pairs):
+        # una sola ficha del primer al último día, con cada día y su hora. No se pierde ninguna fecha.
+        if str(start)[:10]==str(end)[:10]:
+            for member in collapsed_members:
+                ms,mi=member.split(':',1)
+                if ms!=source: continue
+                row=conn.execute('SELECT substr(start_date,1,10),substr(end_date,1,10) FROM source_records WHERE source=? AND id=?',(ms,mi)).fetchone()
+                if row and row[0]==row[1]: series_dates.add(row[0])
+            if series_dates-{str(start)[:10]}:
+                own_day=str(start)[:10]; series_dates.add(own_day)
+                if projection.get('schedule_text_time') and not any(o['date']==own_day and o.get('time') for o in occurrences):
+                    occurrences[:]=[o for o in occurrences if o['date']!=own_day]+[{'date':own_day,'time':projection['schedule_text_time'],'evidence_field':'horari','verified':False}]
+                start,end=min(series_dates),max(series_dates)
+                if kind=='single': kind='program'
+                event_format=format_of(kind,title,start,end)
+                have_days={o['date'] for o in occurrences}
+                for d in sorted(series_dates-have_days): occurrences.append({'date':d,'time':None,'evidence_field':'misma_fuente','verified':False})
+                occurrences.sort(key=lambda o:(o['date'],o.get('time') or ''))
         def _member_occ(ms,mi):
             if prefetch is not None: return prefetch.occurrences.get((ms,mi),[])
             return [{'date':d,'time':t} for d,t in conn.execute('SELECT local_date,local_time FROM candidate_occurrences WHERE source=? AND id=?',(ms,mi))]

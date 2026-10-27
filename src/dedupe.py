@@ -770,6 +770,18 @@ def exhibition_pairs(conn):
         rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon
               FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
               WHERE r.end_date>=? AND r.eligibility<>'exclude' AND r.kind='exhibition' AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10)) >= 14""", (today,)).fetchall()
+        # Exposiciones que la agenda de la sala publica como «programa» (27-10-2026): las mismas pruebas que la ficha
+        # (sección de exposiciones de su página, título; mvp/catalog.effective_kind).
+        from mvp.catalog import effective_kind
+        try: extra = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon, r.raw_json
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude' AND r.kind IN ('program','single') AND (r.source LIKE 'venue_%' OR r.source LIKE 'web_%')
+                AND julianday(substr(r.end_date,1,10))-julianday(substr(r.start_date,1,10)) >= 14""", (today,)).fetchall()
+        except sqlite3.DatabaseError: extra = []   # base sin raw_json (pruebas)
+        for source, rid, title, start, end, venue, lat, lon, raw in extra:
+            try: data = json.loads(raw or '{}')
+            except ValueError: continue
+            if effective_kind(source, data, 'program', title, start, end) == 'exhibition': rows.append((source, rid, title, start, end, venue, lat, lon))
     except sqlite3.DatabaseError:
         return []
     def day(v):
@@ -794,7 +806,11 @@ def exhibition_pairs(conn):
         for b in by_word.get(max(words, key=len), []):
             kb = b["title_key"]
             if b is a or b["source"] == a["source"] or f" {ka} " not in f" {kb} " or len(kb.split()) > len(ka.split()) + 8: continue
-            if not _same_site(a, b, km=0.12): continue
+            # Mismas fechas exactas y un título dentro del otro (27-10-2026): basta aunque una de las dos no tenga
+            # coordenadas o su lugar sea genérico («World Press Photo 2026», CCCB sin coordenadas; «Unfunny Paintings»,
+            # Poblenou Urban District «Diversos espais»).
+            exact = a["start"] == b["start"] and a["end"] == b["end"] and (a["lat"] is None or b["lat"] is None or _generic_site(b))
+            if not exact and not _same_site(a, b, km=0.12): continue
             if abs((a["start"] - b["start"]).days) > 31 or a["end"] < b["start"] or b["end"] < a["start"]: continue
             found.append(b)
         # «Aurèlia Muñoz» dentro de dos títulos distintos: ambiguo, no se junta con ninguno.
@@ -930,6 +946,48 @@ def session_pairs(conn, items=None):
     return pairs
 
 
+# Fuentes de cine: una película en días distintos son pases distintos de la cartelera (solo se juntan los del mismo
+# día, session_pairs). Las agregadoras municipales publican cada sesión de talleres o lecturas por separado con el
+# mismo título genérico: tampoco se juntan entre días.
+SERIES_SKIP = ('venue_ia_filmoteca', 'venue_ia_phenomena', 'venue_ia_zumzeig', 'venue_cinemes_girona', 'venue_ia_espai_texas',
+               'venue_ia_cinema_malda', 'venue_ia_documenta', 'guiabcn', 'opendatabcn_agenda', 'generalitat', 'diba_bibliotecas',
+               'diba_turismo', 'web_centres_civics')
+SERIES_GAP_DAYS = 7          # días seguidos o semanales: el mismo espectáculo, la misma sesión de club
+SERIES_COURSE_GAP_DAYS = 35  # sesiones mensuales de un curso del CCCB
+SERIES_MAX = 40
+
+
+def series_pairs(conn, items=None):
+    """El mismo acto de una sala en una ficha por día (27-10-2026, auditoría conjunta 4.1: 194 títulos en 695 fichas):
+    misma fuente, mismo título, mismo sitio, fichas de un día que se suceden con menos de una semana entre una y
+    otra (un curso del CCCB, menos de cinco). La ficha que queda va del primer al último día con todas sus sesiones
+    (mvp/catalog). Fuera: cine entre días distintos y agregadoras con títulos genéricos; títulos genéricos."""
+    import datetime as dt
+    items = _single_day_items(conn) if items is None else items
+    by = {}
+    for it in items:
+        if it["source"] in SERIES_SKIP or not it["title_key"] or _generic_site(it): continue
+        k = it["title_key"]
+        if k in CONTAINED_GENERIC or len(k) < 5 or len(k.split()) < 1: continue
+        by.setdefault((it["source"], k), []).append(it)
+    pairs = []
+    for (source, _), group in by.items():
+        if len(group) < 2: continue
+        group.sort(key=lambda it: it["day"])
+        gap = SERIES_COURSE_GAP_DAYS if source == 'web_cccb' else SERIES_GAP_DAYS
+        chain = [group[0]]
+        def close():
+            if 2 <= len(chain) <= SERIES_MAX:
+                head = chain[0]
+                pairs.extend((head["key"], it["key"]) for it in chain[1:] if _same_site(head, it, km=0.1) or (head["venue"] and head["venue"] == it["venue"]))
+        for it in group[1:]:
+            d0, d1 = dt.date.fromisoformat(chain[-1]["day"]), dt.date.fromisoformat(it["day"])
+            if (d1 - d0).days <= gap: chain.append(it)
+            else: close(); chain = [it]
+        close()
+    return pairs
+
+
 def slot_and_session_pairs(conn):
     items = _single_day_items(conn)
-    return slot_pairs(conn, items) + session_pairs(conn, items)
+    return slot_pairs(conn, items) + session_pairs(conn, items) + series_pairs(conn, items)
