@@ -1343,6 +1343,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if own_page_fill and official_page and str(start)[:10]!=str(end)[:10] and not any((hours_by_day or {}).values()):
         page_days={d:h for d,h in (official_page.get('times') or {}).items() if str(start)[:10]<=d<=str(end)[:10]}
         if len(page_days)>=2: hours_by_day=page_days; official_page['applied'].append('funciones')
+        # Sin funciones fechadas: el horario semanal que la página del acto escribe bajo «Data:», «Horari:»… («Diumenges,
+        # 11.30 h», Disseny Hub, 27-10-2026). Solo la página propia del acto en la web de la sala.
+        if not any((hours_by_day or {}).values()):
+            from src.guia_schedule import labeled_schedule
+            by_label=labeled_schedule(official_page.get('excerpt'),start,end)
+            if by_label: hours_by_day=by_label; official_page['applied'].append('horario')
     if official_page and official_page['times']:
         for day,hour in official_page['times'].items():
             same=[o for o in occurrences if o['date']==day]

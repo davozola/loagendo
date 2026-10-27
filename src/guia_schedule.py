@@ -166,6 +166,15 @@ def parse_days(text, start, end):
         return None
     # «Dilluns excepte 12 octubre»: las fechas exceptuadas se restan; si la
     # excepción no son fechas concretas (festius, vacances…), no se asigna.
+    # «Agost tancat», «excepte el mes d'agost», «(excepte agost)» (27-10-2026, Museu Marítim): un mes entero sin
+    # actividad; se quita de la frase y después se restan sus días.
+    closed_months = set()
+    def close_month(match):
+        closed_months.add(MONTHS[next(g for g in match.groups() if g)]); return ' '
+    source = re.sub(r"\(?\s*(?:excepte|excepto)\s+(?:el\s+mes\s+(?:d['’]\s*|de\s+))?" + _MONTH + r"\s*\)?|\b" + _MONTH + r"\s+(?:tancat|cerrado)\b", close_month, source).strip()
+    if closed_months:
+        days = parse_days(source, start, end)
+        return None if days is None else {d for d in days if d.month not in closed_months}
     base, _, excluded = source.partition('excepte')
     if excluded:
         removed = parse_days(excluded, start, end) if not re.search(r'[a-z]', re.sub(_MONTH + '|' + _DAY_GLUE.pattern, ' ', excluded)) else None
@@ -173,7 +182,11 @@ def parse_days(text, start, end):
         return None if removed is None or included is None else included - removed
     rest, dates, weekdays = source, set(), set()
     # «Dissabte 24 d'octubre»: ese día de la semana solo confirma la fecha.
-    confirming = {WEEKDAYS[m.group(1)] for m in re.finditer(r'\b' + _WEEKDAY + r',?\s+(?=\d)', rest)}
+    confirming = {WEEKDAYS[m.group(1)] for m in re.finditer(r'\b' + _WEEKDAY + r'\s+(?=\d)', rest)}
+    # «Dissabte, 30 octubre i 13 novembre» (GuiaBCN, Teatre Goya, 27-10-2026): con coma, si las fechas no caen en ese
+    # día de la semana, no lo confirman: son los sábados más esas fechas. Sin coma («Dissabte 24 d'octubre») sigue
+    # siendo una confirmación y, si no cuadra, la fila no se asigna.
+    listed = {WEEKDAYS[m.group(1)] for m in re.finditer(r'\b' + _WEEKDAY + r',\s+(?=\d)', rest)}
     rest = re.sub(r'\b' + _WEEKDAY + r',?\s+(?=\d)', ' ', rest)
     if re.fullmatch(r"(?:obert\s+|abierto\s+)?(?:cada\s+dia|tots\s+els?\s+dies|todos\s+los\s+d[ií]as|diari(?:ament)?)(?:\s+de\s+l['’]any|\s+del\s+año)?\.?", source):
         return set(_span(start, end))
@@ -201,13 +214,15 @@ def parse_days(text, start, end):
         rest = re.sub(r"\b(?:del?\s+|de\s+l['’]\s*)(\d{1,2})(?:" + _OF + _MONTH + r")?\s+(?:al?|a\s+l['’])\s*(\d{1,2})" + _OF + _MONTH + r'\b', date_range, rest)
         rest = re.sub(r"\b(?:de|del|des\s+de)\s+" + _WEEKDAY + r"\s+(?:a|al|fins\s+a)\s+" + _WEEKDAY + r'\b', weekday_range, rest)
         # Listas: «12 i 19 de desembre» toma el mes del siguiente que se nombra.
-        pending = []
+        pending, outside = [], []
         for match in re.finditer(r'\b(\d{1,2})\b(?:' + _OF + _MONTH + r'\b)?', rest):
             pending.append(int(match.group(1)))
             if match.group(2):
                 for day in pending:
                     value = _dated(day, MONTHS[match.group(2)], start, end)
-                    if not value: raise _Unclear
+                    # Fecha de la lista fuera del periodo de la ficha (ya pasada: la fuente adelanta el inicio a la
+                    # siguiente función): se ignora; si no queda ninguna dentro, la fila no se asigna (abajo).
+                    if not value: outside.append(day); continue
                     dates.add(value)
                 pending = []
         for day in pending:
@@ -240,7 +255,11 @@ def parse_days(text, start, end):
     rest = re.sub(r'\b' + _WEEKDAY + r'\b', ' ', rest)
     if _DAY_GLUE.sub(' ', rest).strip():
         return None
-    if confirming and any(d.weekday() not in confirming for d in dates):
+    if outside and not dates:
+        return None
+    if listed and dates and any(d.weekday() not in listed for d in dates):
+        weekdays |= listed      # «Dissabte, 30 octubre i 13 novembre»: los sábados y, además, esas fechas
+    elif (confirming | listed) and any(d.weekday() not in (confirming | listed) for d in dates):
         return None
     weekdays |= named
     if not dates and not weekdays:
@@ -249,7 +268,7 @@ def parse_days(text, start, end):
     return dates | {d for d in _span(start, end) if d.weekday() in weekdays}
 
 
-_ORDINALS = {'1r': 1, '1er': 1, '1º': 1, 'primer': 1, 'primero': 1, '2n': 2, '2º': 2, 'segon': 2, 'segundo': 2,
+_ORDINALS = {'1r': 1, '1er': 1, '1º': 1, 'primer': 1, 'primero': 1, '2n': 2, '2on': 2, '2º': 2, 'segon': 2, 'segundo': 2, '4rt': 4, '4art': 4,
              '3r': 3, '3er': 3, '3º': 3, 'tercer': 3, 'tercero': 3, '4t': 4, '4º': 4, 'quart': 4, 'cuarto': 4,
              '5è': 5, 'cinquè': 5, 'quinto': 5, 'últim': -1, 'ultim': -1, 'darrer': -1, 'último': -1, 'ultimo': -1}
 _ORDINAL = '(?:' + '|'.join(sorted(map(re.escape, _ORDINALS), key=len, reverse=True)) + ')'
@@ -279,6 +298,9 @@ def period_days(row, start, end):
     return parse_days(row.get('periode'), start, end) if row.get('periode') else None
 
 
+_SCHOOL_ONLY = re.compile(r'(?i)^(?:visites|visita|funcions|funció|sessions|sessió|passis|passi|tallers?)\s+(?:per a\s+|per\s+a\s+)?(?:escoles|escolars|centres educatius|grups escolars)\b\s*(?:\([^)]*\))?\.?$')
+
+
 def schedule_by_day(rows, start, end):
     """{fecha ISO: etiqueta} con los días en que hay actividad.
 
@@ -289,6 +311,11 @@ def schedule_by_day(rows, start, end):
     observaciones («Excepte vacances») no se aplican: la nota se enseña en la
     ficha."""
     start, end = _date(start), _date(end)
+    # Filas solo para escuelas («Visites per a escoles», «Funcions escolars») junto a filas para el público:
+    # no son horario del público y harían chocar las horas de ese día (99400775076).
+    public = [r for r in rows if not (r.get('dies') and _SCHOOL_ONLY.match((r.get('observacions') or '').split(' · ')[0].strip()))]
+    if public and public[0].get('dies') and len(public) < len(rows):
+        rows = [dict(r) for r in public]
     out, origin, conflicts = {}, {}, set()
     single_day = start is not None and start == end
     previous_days, previous_index = None, None
@@ -430,7 +457,10 @@ def _block_rows(block, season):
     heads = list(_WEEKLY_HEAD.finditer(block))
     if not heads and not season:
         # Sin «:»: «els tercers dimecres de mes a les 20 h», «Dimecres, de 16.30 a 19.30 h».
-        m = re.match(r"^(.+?),?\s+((?:a\s+les\b|a\s+las\b|de\s+(?:les\s+)?\d|d['’]\s*\d|des\s+de\b).*)$", block.strip(), re.I)
+        # «Diumenges, 11.30 h» (Disseny Hub, 27-10-2026): la hora sola, sin «a les», también es la hora del día nombrado.
+        m = re.match(r"^(.+?),?\s+((?:a\s+les\b|a\s+las\b|de\s+(?:les\s+)?\d|d['’]\s*\d|des\s+de\b|(?:[01]?\d|2[0-3])(?:[.:][0-5]\d)?\s*h\b).*)$", block.strip(), re.I)
+        # Con la hora sola, los días tienen que empezar por un día de la semana («Abans de res: dimarts 20 h» no vale).
+        if m and re.match(r"(?:[01]?\d|2[0-3])", m.group(2)) and not re.match(r"(?:de\s+|del\s+|els\s+|los\s+)?" + _WEEKDAY, m.group(1), re.I): return None
         return [{'dies': m.group(1), 'hores': _WEEKLY_TAIL.sub('', m.group(2)).strip(' .;,')}] if m and re.search(_WEEKDAY[1:-3] + '|dia|mes', m.group(1), re.I) else None
     if not heads:
         # «Horari d'estiu (de l'1 d'abril al 31 d'octubre) De 10 h a 20 h»: todos los días de la temporada.
@@ -581,3 +611,30 @@ def lines_schedule(text, start, end):
         current = [x for x in (hours.get(d) or '').split(' · ') if x]
         hours[d] = ' · '.join(sorted(set(current + times)))
     return dict(sorted(hours.items()))
+
+
+_LABEL = re.compile(r"^\s*(?:data|dates|dia|dies|fecha|fechas|día|días|horari|horaris|horario|horarios|quan|cuándo|cuando|when)\s*:?\s*(.*)$", re.I)
+
+
+def labeled_schedule(text, start, end):
+    """{fecha: horas} del horario semanal que la página del acto da bajo «Data:», «Horari:», «Fecha:»… (27-10-2026,
+    Disseny Hub «Diumenges, 11.30 h»; Sala Beckett «De dimecres a dissabte, 19:30 h / Diumenge, 18 h»). Se juntan las
+    líneas seguidas que empiezan por un día de la semana bajo la etiqueta (como mucho 4), para no tomar el horario de
+    apertura del pie de página. Lo lee weekly_rows: si no tiene esa forma, nada."""
+    lines = [l.strip() for l in str(text or '').split('\n')]
+    starts_weekday = re.compile(r"^(?:de\s+|del\s+|els\s+|los\s+)?" + _WEEKDAY, re.I)
+    for n, line in enumerate(lines):
+        m = _LABEL.match(line)
+        if not m: continue
+        block = [m.group(1)] if m.group(1) else []
+        for nxt in lines[n + 1:n + 5]:
+            if starts_weekday.match(nxt) and not re.search(r"\d{1,2}/\d{1,2}", nxt): block.append(nxt)
+            elif block: break
+        block = [b for b in block if starts_weekday.match(b)]
+        if not block: continue
+        # «19:30 h» → «19.30 h» (los dos puntos marcan el día en weekly_rows) y «Diumenge, 18 h» → «Diumenge: 18 h».
+        rows_text = ' '.join(re.sub(r",\s+(?=[01]?\d|2[0-3]|a\s+les|de\s)", ': ', re.sub(r"(\d{1,2}):(\d{2})", r"\1.\2", b), count=1) for b in block)
+        rows = weekly_rows(rows_text)
+        hours = schedule_by_day(rows, start, end) if rows else {}
+        if any(hours.values()): return hours
+    return {}

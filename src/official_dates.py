@@ -280,14 +280,15 @@ def page_candidates(conn, limit, today=None):
     try: own = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
         LEFT JOIN official_pages o ON o.source=r.source AND o.id=r.id
         WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.start_date<=? AND r.eligibility<>'exclude' AND r.kind<>'exhibition'
-          AND (o.id IS NULL OR o.checked_at<? OR (o.price='Gratis' AND o.checked_at<'2026-10-24T10:00:00+00:00'))
+          AND (o.id IS NULL OR o.checked_at<? OR (o.price='Gratis' AND o.checked_at<'2026-10-24T10:00:00+00:00')
+               OR (o.url LIKE '%balanaenviu.com/%' AND o.times_json='{}' AND o.checked_at<'2026-10-27T00:00:00+00:00'))
         ORDER BY (o.id IS NOT NULL),
                  EXISTS (SELECT 1 FROM candidate_occurrences c WHERE c.source=r.source AND c.id=r.id AND c.local_time<>''),
                  r.start_date LIMIT ?""", (today.isoformat(), (today + dt.timedelta(days=AHEAD_DAYS)).isoformat(), retry, limit)).fetchall()
     except sqlite3.OperationalError: own = []  # base sin tabla de sesiones (pruebas antiguas)
     out = []
     for source, rid, title, start, end, url in own:
-        if url and usable(url) and _words(title) & _words(urlsplit(url).path.replace("-", " ").replace("_", " ")):
+        if url and usable(url) and same_act(title, urlsplit(url).path):
             out.append((source, rid, title, start, end, url))
         if len(out) >= limit: return out
     for source, rid, title, start, end, raw in rows:
@@ -318,6 +319,27 @@ def _price_of(offers):
     return (fmt(lo) if lo == hi else f"{fmt(lo)} – {fmt(hi)}"), False
 
 
+def calendar_sessions(page, start, end):
+    """{día: [horas]} del calendario de funciones impreso en la página (Balañà). Entre la clase sessionTime y
+    la hora puede ir un icono SVG (27-10-2026: «Galder Varas» 28/10 20:00, 31/10 17:30 y 20:00)."""
+    out = {}
+    for day, block in re.findall(r'data-calendar-sessions="(\d{4}-\d{2}-\d{2})"(.*?)(?=data-calendar-sessions=|</section>|$)', page or "", re.S):
+        hours = re.findall(r'sessionTime[^>]*>(?:\s|<svg.*?</svg>|<span[^>]*>)*(\d{1,2}):(\d{2})', block, re.S)
+        hours = sorted({f"{int(h):02d}:{m}" for h, m in hours})
+        if hours and start <= day <= end: out[day] = hours
+    return out
+
+
+def same_act(title, path):
+    """La ruta de la página es de este acto: comparte palabras propias con el título, o el título va junto
+    («Galder Varas» → /espectaculo/galdervaras-estonoesunaprueba)."""
+    path = path.replace("-", " ").replace("_", " ")
+    if _words(title) & _words(path): return True
+    squash = lambda t: re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", t.lower()).encode("ascii", "ignore").decode())
+    whole = squash(title)
+    return len(whole) >= 8 and whole in squash(path)
+
+
 def page_facts(page, title, start, end):
     """Hora por día y precio de los actos schema.org de la página que son este acto."""
     from src.venue_feeds import jsonld_events, _date, _time
@@ -330,10 +352,8 @@ def page_facts(page, title, start, end):
         if node.get("isAccessibleForFree") in (True, "true", "True", "1") and not price: price, free = "Gratis", True
     # Calendario de funciones impreso en la página (Balañà: cada día un bloque data-calendar-sessions con sus
     # pases, 23-10-2026). Solo completa los días que schema.org no da.
-    for day, block in re.findall(r'data-calendar-sessions="(\d{4}-\d{2}-\d{2})"(.*?)(?=data-calendar-sessions=|</section>|$)', page or "", re.S):
-        hours = re.findall(r'sessionTime[^>]*>\s*(?:<span>)?\s*(\d{1,2}):(\d{2})', block)
-        if hours and start <= day <= end and day not in times:
-            times[day] = f"{int(hours[0][0]):02d}:{hours[0][1]}"
+    for day, hours in calendar_sessions(page, start, end).items():
+        times.setdefault(day, hours[0])
     return times, price, free
 
 
@@ -372,7 +392,7 @@ def read_page(url, title, start, end, fetcher, timeout):
     m = re.search(r"<title>(.*?)</title>", page or "", re.I | re.S)
     ptitle = html.unescape(m.group(1)) if m else ""
     words = _words(title)
-    if not (words & (_words(ptitle) | _words(urlsplit(final or url).path.replace("-", " ")))): return {"status": "no_es_del_acto"}
+    if not (words & _words(ptitle) or same_act(title, urlsplit(final or url).path)): return {"status": "no_es_del_acto"}
     times, price, free = page_facts(page, title, start, end)
     text = page_text(page)
     if not times and start == end:
@@ -380,8 +400,8 @@ def read_page(url, title, start, end, fetcher, timeout):
         # hay una sola hora escrita, es la del acto. Con dos o más (puertas y concierto, horario de taquilla…) no se elige.
         clocks = {f"{int(h):02d}:{m}" for h, m in re.findall(r"(?<![\d:.])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d:])\s*h?", text)}
         if len(clocks) == 1 and clocks != {"00:00"}: times = {start: clocks.pop()}
-    sessions = {}
-    if start == end:
+    sessions = {d: h for d, h in calendar_sessions(page, start, end).items() if len(h) > 1}
+    if start == end and not sessions:
         passes = passes_of(text)
         if passes: sessions = {start: passes}
     return {"status": "ok", "times": times, "price": price, "free": free, "excerpt": excerpt_of(text, title), "sessions": sessions}

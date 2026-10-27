@@ -213,6 +213,35 @@ def day_highlights(items, day, size=None, floor=60):
     pool.sort(key=lambda e: (-e['featured_score'], catalog.featured_rotation(e, day)))
     return [e['key'] for e in catalog.spread_venues(catalog.one_per_title(pool))][:size]
 
+EXPO_FLOOR = 20   # «Selección Ontoca» en Expos (27-10-2026): por debajo, ninguna del tramo se destaca
+
+
+def expo_rank(items, day, floor=None):
+    """{clave: puntos} de las exposiciones abiertas ese día que pueden destacarse en la pestaña Expos.
+
+    Mismas reglas explicables que la portada (catalog.featured_score: peso del espacio, imagen propia,
+    descripción, coincidencia entre fuentes, horario) y +6 si se inauguró hace 14 días o menos. La web
+    elige como mucho una por tramo de 9 filas y una por espacio (static/public.js, expoHighlights)."""
+    floor = EXPO_FLOOR if floor is None else floor
+    pool = []
+    for e in items:
+        if e.get('eligibility') == 'exclude' or not (e.get('kind') == 'exhibition' or e.get('format') == 'exhibition'): continue
+        if not (e['start'] <= day <= e['end']) or (e.get('hours_by_day') and day not in e['hours_by_day']): continue
+        # Solo museos, centros y salas con peso propio (config/venue_prestige.json, 8 puntos o más): la red de
+        # proximidad (centros cívicos, bibliotecas, casals) no se destaca aunque la anuncien varias fuentes.
+        # Un espacio marcado como cerrado («*Tancat temporalment») tampoco.
+        from src.venue_prestige import prestige
+        if prestige(e.get('venue_names'))[0] < 8: continue
+        if re.search(r'\*\s*(?:tancat|tancada|cerrad[oa]|closed)', ' '.join(e.get('venue_names') or []), re.I): continue
+        score, _ = catalog.featured_score(dict(e, featured_date=day), day)
+        opened = (dt.date.fromisoformat(day) - dt.date.fromisoformat(e['start'][:10])).days
+        if 0 <= opened <= 14: score += 6
+        if score >= floor: pool.append((score, catalog.featured_rotation(e, day), e['key']))
+    pool.sort(key=lambda x: (-x[0], x[1]))
+    # El orden ya desempata (rotación diaria): la web solo necesita el puesto.
+    return {k: len(pool) - i for i, (_, _, k) in enumerate(pool)}
+
+
 def compact(event, images, full=True, hidden=frozenset()):
     """The listing record the browser needs, with short keys to keep files small.
 
@@ -674,7 +703,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         whole = [e for e in events if e['start'] <= day <= e['end'] and (e['start'] == e['end'] or not e.get('hours_by_day') or day in e['hours_by_day'])]
         chosen_hl = day_highlights(whole, day); by_key = {e['key']: e for e in whole}
         highlight, highlight_media = chosen_hl, {}
-        for k in chosen_hl:  # imagen de la fuente para la fila destacada (si la hay)
+        ranks_expo = expo_rank(whole, day)
+        for k in [*chosen_hl, *sorted(ranks_expo, key=ranks_expo.get, reverse=True)[:60]]:  # imagen de la fuente para la fila destacada (si la hay)
             first = next((i for i in by_key[k].get('media', []) if not i.get('fallback')), None)
             exported = images.item(first) if first else None
             if exported: highlight_media[k] = exported['url']
@@ -682,7 +712,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         today_only = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=30)
         picks_today = [e for e in today_only['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
-                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'districts': catalog.districts(conn, day)}
+                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'expo_rank': ranks_expo, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:

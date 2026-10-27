@@ -603,7 +603,7 @@ function availability(e, day) {
   // Días con sesión según la fuente (23-10-2026): si la tabla por días cubre esta fecha y no la nombra,
   // ese día no hay sesión (la «Jamboree Jam Session» de Open Data es los lunes 19 y 26: no sale el viernes 23).
   const hbd = hoursByDay(e), hbDays = hbd ? Object.keys(hbd).sort() : [];
-  if (e.start !== e.end && hbDays.length && !(day in hbd) && day >= hbDays[0] && day <= hbDays[hbDays.length - 1]) return {kind: 'run', until: e.end};
+  if (e.start !== e.end && hbDays.length && !(day in hbd) && day <= hbDays[hbDays.length - 1] && (day >= hbDays[0] || hbDays[0] >= today)) { const next = hbDays.find(d => d > day); return {kind: 'run', until: e.end, ...(next ? {next, nextTime: hbd[next]} : {})} }
   if (e.start === e.end) {
     const range = rangeIn(label) || rangeIn(raw);
     if (range) return range.close - range.open >= WIDE_MIN ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
@@ -794,7 +794,11 @@ function buildModel(items, win) {
   // Periodo: cada ficha una sola vez, en su primer día dentro del periodo.
   const buckets = new Map();
   for (const e of items) {
-    const inside = (e.occurrences || []).map(o => o.date).filter(d => d >= win.from && d <= win.to).sort();
+    // Días con sesión: los de las sesiones y los del horario por días de la fuente (27-10-2026: «Contes a la mà»
+    // de GuiaBCN, «20 octubre i 17 novembre», salía hoy «Sin hora» en vez del 17 nov a las 17:30).
+    const byDayKeys = e.start !== e.end ? Object.keys(hoursByDay(e) || {}) : [];
+    const inside = [...new Set([...(e.occurrences || []).map(o => o.date), ...byDayKeys])].filter(d => d >= win.from && d <= win.to).sort();
+    if (!inside.length && byDayKeys.length && byDayKeys.every(d => d < win.from || d > win.to)) continue;   // ninguna sesión en el periodo
     let day = inside[0] || (e.start >= win.from && e.start <= win.to ? e.start : null);
     if (day === now.day && inside.length > 1 && status(availability(e, day), now.min).state === 'past') day = inside.find(d => d > now.day) || day;
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
@@ -850,6 +854,7 @@ function whenCell(e) {
   }
   if (a.kind === 'soon') return `<div class="when w-course"><span class="w-kind">${L('Empieza', 'Comença', 'Starts')}</span><span class="w-mid">${esc(e.start === (e._day || today) ? L('hoy', 'avui', 'today') : labelDate(e.start))}</span>${a.open !== undefined ? `<span class="w-note">${clock(a.open)}–${clock(a.close)}</span>` : ''}</div>`;
   if (a.kind === 'started') return `<div class="when w-course"><span class="w-kind">${L('En marcha', 'En marxa', 'Under way')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
+  if (a.kind === 'run' && a.next) return `<div class="when w-course"><span class="w-kind">${L('Próxima sesión', 'Propera sessió', 'Next session')}</span><span class="w-mid">${esc(labelDate(a.next))}</span>${a.nextTime && PARTS[a.nextTime] === undefined ? `<span class="w-note">${esc(a.nextTime)}</span>` : ''}</div>`;
   if (a.kind === 'run') return `<div class="when w-course"><span class="w-kind">${L('En programación', 'En programació', 'On the programme')}</span><span class="w-mid">${esc(untilText(e, a.until))}</span></div>`;
   if (a.part) return `<div class="when w-tbc"><span class="w-mid">${esc(PARTS[a.part]())}</span><span class="w-note">${a.part === 'programa' ? L('horas en su programa', 'hores al seu programa', 'times in its programme') : L('hora por confirmar', 'hora per confirmar', 'time to be confirmed')}</span></div>`;
   const fixedLater = {'Hora por determinar': L('Hora por determinar', 'Hora per determinar', 'Time to be announced'), 'Horario próximamente': L('Horario próximamente', 'Horari properament', 'Times coming soon')}[e.time_label];
@@ -861,7 +866,7 @@ function whenCell(e) {
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1058,13 +1063,36 @@ function tabHint(counts) {
 }
 // Exposiciones y espacios abiertos: primero las que terminan antes (último día, luego fecha de fin; decisión
 // de David del 25-10-2026) y, a igualdad, la que cierra antes hoy.
+// «Selección Ontoca» en Expos (27-10-2026, David): la lista sigue por cierre; en cada tramo de 9 filas se
+// destaca como mucho una, la mejor puntuada del tramo (expo_rank del día: peso del espacio, imagen, texto,
+// fuentes, recién inaugurada), una por espacio y nunca dos seguidas. La selección de portada va siempre.
+function expoHighlights(list) {
+  list.forEach(e => { e._hl = '' });
+  const rank = state.expoRank || {}, venues = new Set(), venueOf = e => fold(String(e.venue_names?.[0] || '').split(/\s+[-·–]\s+/)[0]);
+  for (let from = 0; from < list.length; from += 9) {
+    const block = list.slice(from, from + 9).map((e, j) => ({e, i: from + j}))
+      .filter(({e, i}) => (state.picks.has(key(e)) || rank[key(e)]) && !venues.has(venueOf(e)) && !list[i - 1]?._hl);
+    block.sort((a, b) => (state.picks.has(key(b.e)) - state.picks.has(key(a.e))) || (rank[key(b.e)] || 0) - (rank[key(a.e)] || 0));
+    const best = block[0];
+    if (best) { best.e._hl = 'pick'; if (venueOf(best.e)) venues.add(venueOf(best.e)) }
+  }
+}
+// Días que le quedan a una exposición (27-10-2026, David): siempre a la vista; con menos de 7, en rojo.
+function daysLeft(e) {
+  if (!isExhibit(e) || e.start === e.end || !e.end) return '';
+  const n = daysBetween(e._day || today, e.end);
+  if (n < 0) return '';
+  const text = n === 0 ? L('Último día', 'Últim dia', 'Last day') : n === 1 ? L('Cierra mañana', 'Tanca demà', 'Closes tomorrow')
+    : n <= 60 ? L(`Quedan ${n} días`, `Queden ${n} dies`, `${n} days left`) : `${L('Hasta el', 'Fins al', 'Until')} ${labelDate(e.end)}`;
+  return `<span class="ev-left${n < 7 ? ' ev-left-soon' : ''}">${esc(text)}</span>`;
+}
 function wideTab(list, live) {
   const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0, endOf = e => String(e._a.until || e.end || '9999');
   const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
   if (state.near) sorted.sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9));   // con «Cerca de mí», por distancia (a igualdad, el orden de cierre)
-  sorted.forEach(e => { e._hl = '' });  // sin destacados: ya va ordenado por cierre
+  expoHighlights(sorted);
   return (sub ? `<p class="ag-tab-note">${esc(sub)}</p>` : '') + `<div class="ag-rows ag-wide">${rows(sorted, 'wide')}</div>`;
 }
 function renderDay(m) {
@@ -1260,7 +1288,7 @@ async function agenda(append = false) {
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
         // Selección Ontoca de ese día (la de la portada): se destaca también en la lista.
-        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set() }
+        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.expoRank = df.expo_rank || {}; state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set(); state.expoRank = {} }
         if (request !== agendaRequest) return;
       } else {
         const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});

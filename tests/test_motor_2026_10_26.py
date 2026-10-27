@@ -151,3 +151,127 @@ class AnuncioDeSalaSinArtista(unittest.TestCase):
         pairs = act_pairs(conn)
         self.assertIn(('venue_songkick:1', 'venue_jamboree:3'), pairs)
         self.assertNotIn(('venue_songkick:1', 'generalitat:2'), pairs)
+
+
+class DiasDeGuiaBCN(unittest.TestCase):
+    def test_dia_de_la_semana_con_coma_y_fechas(self):
+        import datetime as dt
+        from src.guia_schedule import parse_days
+        D = dt.date.fromisoformat
+        got = parse_days('Dissabte, 30 octubre i 13 novembre excepte 5 desembre i 19 desembre', D('2026-10-10'), D('2026-12-26'))
+        self.assertIn(D('2026-10-30'), got); self.assertIn(D('2026-10-31'), got); self.assertIn(D('2026-11-13'), got)
+        self.assertNotIn(D('2026-12-05'), got); self.assertNotIn(D('2026-11-02'), got)
+
+    def test_sin_coma_sigue_siendo_confirmacion(self):
+        import datetime as dt
+        from src.guia_schedule import parse_days
+        D = dt.date.fromisoformat
+        self.assertEqual(parse_days("Dissabte 24 d'octubre", D('2026-10-01'), D('2026-10-31')), {D('2026-10-24')})
+        self.assertIsNone(parse_days("Dissabte 23 d'octubre", D('2026-10-01'), D('2026-10-31')))
+
+    def test_fechas_ya_pasadas_de_la_lista(self):
+        import datetime as dt
+        from src.guia_schedule import parse_days
+        D = dt.date.fromisoformat
+        self.assertEqual(parse_days('6 setembre, 24 octubre i 1 novembre', D('2026-10-20'), D('2026-11-30')), {D('2026-10-24'), D('2026-11-01')})
+        self.assertIsNone(parse_days('6 setembre i 20 setembre', D('2026-10-20'), D('2026-11-30')))
+
+
+class HorarioEnLaPaginaDelActo(unittest.TestCase):
+    def test_bajo_la_etiqueta(self):
+        from src.guia_schedule import labeled_schedule
+        page = 'Escombrar cap a casa\nEn família\n04/10/2026 - 11:30\n-\n25/04/2027 - 13:30\nText.\nData:\nDiumenges, 11.30 h\nDurada de l\'activitat: 2 h'
+        self.assertEqual(labeled_schedule(page, '2026-10-04', '2026-10-12'), {'2026-10-04': '11:30', '2026-10-11': '11:30'})
+
+    def test_varias_lineas_y_dos_puntos_en_la_hora(self):
+        from src.guia_schedule import labeled_schedule
+        page = 'Gola\nDates\nDel 21/10/2026 al 15/11/2026\nHorari\nDe dimecres a dissabte, 20 h\nDiumenge, 18:30 h\nDurada\n2 h'
+        got = labeled_schedule(page, '2026-10-21', '2026-10-27')
+        self.assertEqual(got['2026-10-21'], '20:00'); self.assertEqual(got['2026-10-25'], '18:30'); self.assertNotIn('2026-10-26', got)
+
+    def test_sin_etiqueta_no_lee_el_pie(self):
+        from src.guia_schedule import labeled_schedule
+        self.assertEqual(labeled_schedule('Acte\nDe dimarts a diumenge, de 10 a 20 h', '2026-10-21', '2026-10-27'), {})
+
+
+class OrdinalesYMesesCerrados(unittest.TestCase):
+    def test_ordinal_2on_y_agosto_cerrado(self):
+        from src.guia_schedule import schedule_by_day
+        rows = [{'dies': '2on i 3er diumenge de mes Agost tancat', 'hores': 'a les 11.30 h i a les 12.45 h'}]
+        days = schedule_by_day(rows, '2026-07-01', '2026-10-31')
+        self.assertEqual(days.get('2026-10-11'), '11:30 · 12:45')
+        self.assertIn('2026-10-18', days)
+        self.assertNotIn('2026-10-25', days)
+        self.assertFalse(any(d.startswith('2026-08') for d in days))
+
+    def test_ordinal_4rt(self):
+        from src.guia_schedule import schedule_by_day
+        days = schedule_by_day([{'dies': '4rt dimecres del mes', 'hores': 'de 19.30 a 21 h'}], '2026-10-01', '2026-11-30')
+        self.assertEqual(sorted(days), ['2026-10-28', '2026-11-25'])
+
+    def test_excepte_el_mes_d_agost(self):
+        from src.guia_schedule import schedule_by_day
+        days = schedule_by_day([{'dies': "Dimecres (excepte el mes d'agost)", 'hores': 'de 16 a 20.30 h'}], '2026-07-25', '2026-09-10')
+        self.assertIn('2026-07-29', days)
+        self.assertIn('2026-09-02', days)
+        self.assertFalse(any(d.startswith('2026-08') for d in days))
+
+
+class FilasSoloParaEscuelas(unittest.TestCase):
+    def test_fila_de_escuelas_no_borra_la_hora_del_publico(self):
+        from src.guia_schedule import schedule_by_day
+        rows = [{'dies': 'Divendres', 'hores': 'a les 16.30 h i a les 17.30 h', 'observacions': 'Visites per a públic general'},
+                {'dies': 'Dissabte', 'hores': 'a les 10.00 h'},
+                {'dies': 'Divendres', 'hores': 'de 09.30 h a 11.30 h', 'observacions': 'Visites per a escoles (Cicle Sup. Primària, ESO i Batxillerat) · Durada 2 hores'}]
+        days = schedule_by_day(rows, '2026-10-30', '2026-10-31')
+        self.assertEqual(days, {'2026-10-30': '16:30 · 17:30', '2026-10-31': '10:00'})
+
+    def test_funciones_escolares_fuera_y_nota_con_fechas_se_queda(self):
+        from src.guia_schedule import schedule_by_day
+        rows = [{'dies': 'Divendres', 'hores': 'a les 19.00 h'}, {'dies': 'Dijous', 'hores': 'a les 10.30 h', 'observacions': 'Funcions escolars'}]
+        self.assertEqual(schedule_by_day(rows, '2026-10-29', '2026-10-30'), {'2026-10-30': '19:00'})
+        rows = [{'dies': 'Dijous', 'hores': 'a les 20 h', 'observacions': 'Funcions escolars 12 i 13/01 a les 10:00h'}]
+        self.assertEqual(schedule_by_day(rows, '2026-10-29', '2026-10-29'), {'2026-10-29': '20:00'})
+
+
+class CalendarioDeBalana(unittest.TestCase):
+    PAGE = ('<title>Entrades Galder Varas: Esto no es una prueba - Teatre Borràs</title>'
+            '<div class="ticketsCalendar__sessions" data-calendar-sessions="2026-10-28"><div class="ticketsCalendar__sessionTime">'
+            '<svg width="24"><path d="M12 6V12"></path> </svg> <span>20:00</span></div></div>'
+            '<div class="ticketsCalendar__sessions" data-calendar-sessions="2026-10-31">'
+            '<div class="ticketsCalendar__sessionTime"> <svg><path d="M1"></path></svg> <span>17:30</span> </div>'
+            '<div class="ticketsCalendar__sessionTime"> <svg><path d="M1"></path></svg> <span>20:00</span> </div></div>')
+
+    def test_horas_tras_el_icono_y_todos_los_pases(self):
+        from src.official_dates import calendar_sessions, page_facts
+        self.assertEqual(calendar_sessions(self.PAGE, '2026-10-28', '2026-11-01'), {'2026-10-28': ['20:00'], '2026-10-31': ['17:30', '20:00']})
+        times, _, _ = page_facts(self.PAGE, 'Galder Varas', '2026-10-28', '2026-11-01')
+        self.assertEqual(times, {'2026-10-28': '20:00', '2026-10-31': '17:30'})
+
+    def test_titulo_junto_en_la_ruta(self):
+        from src.official_dates import same_act, read_page
+        self.assertTrue(same_act('Galder Varas', '/espectaculo/galdervaras-estonoesunaprueba'))
+        self.assertFalse(same_act('Varas', '/espectaculo/otra-cosa'))
+        res = read_page('https://www.balanaenviu.com/espectaculo/galdervaras-estonoesunaprueba', 'Galder Varas', '2026-10-28', '2026-11-01',
+                        lambda url, timeout: (200, url, self.PAGE), 5)
+        self.assertEqual(res['sessions'], {'2026-10-31': ['17:30', '20:00']})
+
+
+class SeleccionEnExpos(unittest.TestCase):
+    def ev(self, key, venue, **kw):
+        base = {'key': key, 'source': 's', 'id': key, 'kind': 'exhibition', 'format': 'exhibition', 'start': '2026-10-01', 'end': '2026-12-01',
+                'venue_names': [venue], 'eligibility': 'review', 'media': [{'url': 'x'}], 'has_description': True, 'coordinates': {'lat': 1, 'lon': 2},
+                'time': '10:00', 'occurrences': []}
+        base.update(kw); return base
+
+    def test_solo_espacios_con_peso_y_abiertos(self):
+        from src.publish_static import expo_rank
+        items = [self.ev('a', 'MACBA'), self.ev('b', 'Centre Cívic Can Basté', confirmations=4), self.ev('c', 'Museu Tàpies *Tancat temporalment'),
+                 self.ev('d', 'Fundació Joan Miró', kind='program', format='program')]
+        self.assertEqual(list(expo_rank(items, '2026-10-29')), ['a'])
+
+    def test_recien_inaugurada_sube(self):
+        from src.publish_static import expo_rank
+        items = [self.ev('vieja', 'CCCB'), self.ev('nueva', 'MACBA', start='2026-10-25')]
+        rank = expo_rank(items, '2026-10-29')
+        self.assertGreater(rank['nueva'], rank['vieja'])

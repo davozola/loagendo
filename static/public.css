@@ -534,3 +534,7 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .sheet-program>summary{cursor:pointer;font-weight:600}
 .sheet-program h4{margin:12px 0 4px;font-size:13px;color:var(--muted)}
 .sheet-program ul{margin:0;padding:0;list-style:none}.sheet-program li{padding:3px 0;font-size:14px}.sheet-program small{color:var(--soft)}
+
+/* Días que quedan de una exposición (27-10-2026); con menos de 7, en rojo. */
+.ev-left{color:var(--fg);font-weight:600}
+.ev-left-soon{color:var(--now)}

@@ -1,0 +1,115 @@
+{
+ "day": "2026-10-27",
+ "model": "claude-sonnet-5-5",
+ "sample_size": 79,
+ "composition": {
+  "azar": 39,
+  "reciente": 20,
+  "sospechosa": 20
+ },
+ "patterns": [
+  {
+   "title": "Descripción vacía o de plantilla"
+  },
+  {
+   "title": "Ticketeras admitidas sin filtro de contenido ni de geografía, con atribución genérica"
+  },
+  {
+   "title": "Horario perdido en fichas multi-día con texto de horario"
+  },
+  {
+   "title": "Categoría tomada del tipo de recinto en teatros y auditorios"
+  },
+  {
+   "title": "Tipo de ficha engañoso o inconsistente"
+  },
+  {
+   "title": "Ruido de formato en las descripciones"
+  },
+  {
+   "title": "Organizador: sala, artista o vacío"
+  },
+  {
+   "title": "Canal «familia» incoherente con `publico_familiar`"
+  },
+  {
+   "title": "Hora 23:59 sospechosa"
+  },
+  {
+   "title": "Precio como texto largo"
+  }
+ ],
+ "serious": [
+  {
+   "url": "https://ontoca.com/e/venue_ia_balana/a5c3306dc0e066c6857a9bb0",
+   "key": "venue_ia_balana:a5c3306dc0e066c6857a9bb0",
+   "type": "CATEGORIA",
+   "problem": "concierto de Mocedades y Los Panchos clasificado como Teatro y danza",
+   "proposal": "Pasar a Música y conciertos (evidencia: \"Celebra el 60è aniversari de Mocedades… repassarà els grans himnes\"; certeza: confirmado)",
+   "title": "Mocedades y Los Panchos"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_balana/3abaa14b1c6d02f39a654db6",
+   "key": "venue_ia_balana:3abaa14b1c6d02f39a654db6",
+   "type": "CATEGORIA",
+   "problem": "charla motivacional de Victor Küppers clasificada como Teatro y danza",
+   "proposal": "Pasar a Charlas y visitas (evidencia: \"treballa com a consultor i formador… desenvolupar nous mètodes per a transmetre la motivació\"; certeza: confirmado)",
+   "title": "Victor Küppers"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ticketmaster_es/44bb6c00c471c0f45a6c14c4",
+   "key": "venue_ticketmaster_es:44bb6c00c471c0f45a6c14c4",
+   "type": "CATEGORIA",
+   "problem": "película con orquesta en directo figura como Teatro y danza",
+   "proposal": "Pasar a Música y conciertos (o Cine) (evidencia: \"Con música en directo interpretada por una orquesta sinfónica\"; certeza: confirmado)",
+   "title": "Love Actually en Concierto"
+  },
+  {
+   "url": "https://ontoca.com/e/generalitat/2026100900024",
+   "key": "generalitat:2026100900024",
+   "type": "CATEGORIA",
+   "problem": "festival de artes escénicas clasificado como Cine",
+   "proposal": "Pasar a Teatro y danza (evidencia: \"Dansa, escultura, cinema, performance, poesia i música\"; certeza: confirmado)",
+   "title": "Sâlmon"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_sala_apolo/29fac8352931bd47a57926f1",
+   "key": "venue_sala_apolo:29fac8352931bd47a57926f1",
+   "type": "CATEGORIA",
+   "problem": "título y URL de un ciclo de pase de película (Renaldo & Clara, de Bob Dylan) clasificado como Música",
+   "proposal": "Revisar si es una proyección y pasar a Cine (evidencia: \"empremtes-2026-renaldo-&-clara\"; certeza: sospecha)",
+   "title": "Renaldo & Clara"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_mhc/c727b69ddd438d3ad48ab34c",
+   "key": "venue_ia_mhc:c727b69ddd438d3ad48ab34c",
+   "type": "FECHAS",
+   "problem": "exposición etiquetada como \"Programa / ciclo\" con `hora_ficha: \"Varios días\"`",
+   "proposal": "Tipo Exposición con etiqueta de horario de exposición (evidencia: \"\\\"Visibles\\\" és una exposició que reivindica el paper de les dones…\"; certeza: confirmado)",
+   "title": "Visibles"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_marula/fbe5cfba48da7f3af6bf7c17",
+   "key": "venue_ia_marula:fbe5cfba48da7f3af6bf7c17",
+   "type": "OTRO",
+   "problem": "el título \"Offbeat Jam -Anderson Paak + Jam\" no coincide con la URL y la hora no tiene respaldo en el texto",
+   "proposal": "Verificar título y hora en la fuente (evidencia: \"offbeat-jam-outkast-jam\" y `texto_horario_fuente: \"\"`; certeza: sospecha)",
+   "title": "Offbeat Jam -Anderson Paak + Jam"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_luz_de_gas/15ca31ae47662367dafdb6d6",
+   "key": "venue_ia_luz_de_gas:15ca31ae47662367dafdb6d6",
+   "type": "LUGAR",
+   "problem": "lugar «Sala B» y hora 23:59, probable lectura del nombre de la fiesta «SALAB» como sala",
+   "proposal": "Poner Luz de Gas como lugar y comprobar la hora en la fuente (evidencia: \"Sabado @ SALAB\", `url_fuente: luzdegas.com`; certeza: sospecha)",
+   "title": "Sabado @ SALAB"
+  }
+ ],
+ "usage": {
+  "input_tokens": 43322,
+  "cache_creation_input_tokens": 0,
+  "cache_read_input_tokens": 0,
+  "output_tokens": 23789
+ },
+ "stop_reason": "end_turn"
+}
