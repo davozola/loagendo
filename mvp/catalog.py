@@ -1916,6 +1916,8 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     # Título que se muestra, limpio (src/titles.py, 24-10-2026); el de la fuente queda en source_title.
     from src.titles import display_title
     events['source_title']=events['title']; events['title']=display_title(events['title'],verdict['category'])
+    from src.titles import is_promo
+    events['is_promo']=is_promo(events['source_title'])  # reclamo de venta en el título (28-10-2026): no se destaca
     chans=taxonomy.channels(basis,verdict['category'],override)
     events['channels']=sorted(chans); events['channel_evidence']=chans
     events['series']=taxonomy.series_of(events['title'])

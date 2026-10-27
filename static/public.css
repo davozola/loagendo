@@ -538,3 +538,18 @@ a.cat-pill,a.period-tab{text-decoration:none}
 /* Días que quedan de una exposición (27-10-2026); con menos de 7, en rojo. */
 .ev-left{color:var(--fg);font-weight:600}
 .ev-left-soon{color:var(--now)}
+/* 28-10-2026 (auditoría de usabilidad en móvil): precio corto en la fila; «Ver N actividades más» de cada hora;
+   cabecera y Selección compactas en móvil para llegar antes a la Agenda; «Fin de semana» en los periodos. */
+.ev-price{color:var(--muted);font-weight:600}
+.ag-hourmore,.ag-hourless{margin:4px 0 10px}
+@media(max-width:620px){
+.hero{min-height:0;padding:18px 0 20px;margin-bottom:14px}.hero-inner{gap:6px}
+.hero h1{font-size:30px}.hero-copy{display:none}
+#seleccion .section-head{margin-bottom:10px}
+.curated{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px);scrollbar-width:none}
+.curated::-webkit-scrollbar{display:none}
+.curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
+.pick-large .pick-media,.pick-media{height:150px}.pick-large .pick-title{font-size:19px;-webkit-line-clamp:3}.pick-large .pick-summary{display:none}
+.period-date{grid-column:auto}
+}
+.ag-subhead{margin:10px 0 2px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}

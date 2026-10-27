@@ -12,6 +12,9 @@ Reglas (decisión de David, 24-10-2026, tras la revisión de problemas de la web
   5. Todo en mayúsculas → cada palabra con mayúscula inicial, salvo partículas («de», «la», «i»…)
      y siglas conocidas o sin vocales («GRAN GALA FLAMENCO» → «Gran Gala Flamenco»,
      «EL TENORIU» → «El Tenoriu», «DJ», «BCN», «MACBA» se quedan).
+  6. Reclamos de venta dentro del título (28-10-2026): «DOWNLOAD YOUR FREE PASS», «FREE GUEST LIST *», y las barras «||»
+     que los separan: fuera los reclamos; «||» → «·». «MARTES / TUESDAY at City Hall Club || INSIDE 86|| DOWNLOAD YOUR
+     FREE PASS» → «MARTES / TUESDAY at City Hall Club · INSIDE 86». La ficha se marca como promoción (is_promo).
 No se reescribe nada más: ni sinónimos, ni orden, ni traducción.
 """
 from __future__ import annotations
@@ -85,11 +88,25 @@ def _title_case(t):
     return ' '.join(_word(w, i == 0 or words[i - 1].endswith((':', '-', '–', '"', '«', '“'))) for i, w in enumerate(words))
 
 
+PROMO = re.compile(r"\s*(?:\|{1,2}|\*|-|–)?\s*\b(?:download your free pass|free guest ?list|guest ?list|free pass|free entry)\b\s*(?:\*|\|{1,2})?\s*", re.I)
+
+
+def is_promo(title):
+    return bool(PROMO.search(str(title or '')))
+
+
+def _strip_promo(t):
+    t = PROMO.sub(' ', t)
+    t = re.sub(r'\s*\|{1,2}\s*', ' · ', t)
+    return re.sub(r'^[\s·*|–-]+|[\s·*|–-]+$', '', ' '.join(t.split()))
+
+
 def display_title(title, category=''):
     """El título limpio para mostrar; si nada cambia, el mismo."""
     t = str(title or '')
     if not t.strip(): return t
     t = NEW_MARK.sub('', STATUS_TAIL.sub('', t)); t = NEW_MARK.sub('', t)
+    if PROMO.search(t) or '||' in t: t = _strip_promo(t) or t
     t = _close_quotes(_spaces(t))
     rx = PREFIX.get(category)
     if rx:

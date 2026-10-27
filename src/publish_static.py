@@ -118,7 +118,7 @@ class ImageExporter:
             elif not local_path or not Path(local_path).is_file(): self.stats['skipped_not_local'] += 1
             else:
                 entry = registry_entry(self.registry, source)
-                credit = {'source': source, 'source_label': catalog.SOURCES.get(source, source), 'attribution': entry.get('attribution') or catalog.SOURCES.get(source, source),
+                credit = {'source': source, 'source_label': catalog.SOURCES.get(source, source), 'attribution': credit_name(source, entry),
                           'original_url': original_url, 'license_url': entry.get('license_url', ''), 'basis': 'source_policy'}
                 if sha and sha in self.by_sha:
                     result = {'url': self.by_sha[sha], 'credit': credit}; self.stats['reused'] += 1
@@ -188,6 +188,23 @@ def packed_hours(event, field='hours_by_day'):
 _RELEVANT = {'rx': None}
 
 
+# Las entradas comodín del registro («venue_*», «ticket_*», «venue_ia_*») describen la regla del crédito («Nombre del
+# recinto, con enlace a su página»), no el crédito: la web lo mostraba tal cual (28-10-2026). Se pone el nombre de la sala
+# o de la ticketera; el enlace ya va en la ficha.
+CREDIT_RULE = re.compile(r"^(?:nombre del recinto|nombre de la ticketera|sala que acoge|«datos de la sala»)", re.I)
+
+
+def credit_name(source, entry):
+    text = entry.get('attribution') or ''
+    if text and not CREDIT_RULE.match(text): return text
+    if str(source).startswith('venue_ia_'):
+        from src.ai_agenda import agenda_for_source
+        name = (agenda_for_source(source) or {}).get('name')
+        if name: return name
+    label = str(catalog.SOURCES.get(source) or '').split(' · ')[0].strip()
+    return label or 'Web de la sala'
+
+
 def relevant_venue(event):
     """¿Es en una sala o centro de referencia? (config/salas_relevantes.json)."""
     import unicodedata
@@ -206,7 +223,7 @@ def day_highlights(items, day, size=None, floor=60):
     size = size or HIGHLIGHT_SIZE
     pool = []
     for e in items:
-        if e.get('eligibility') == 'exclude' or e.get('kind') in ('exhibition', 'course') or not e.get('time'): continue
+        if e.get('eligibility') == 'exclude' or e.get('kind') in ('exhibition', 'course') or not e.get('time') or e.get('is_promo'): continue
         if e['start'] != e['end'] and e['occurrences'] and not any(o['date'] == day for o in e['occurrences']): continue
         x = dict(e, featured_date=day); score, _ = catalog.featured_score(x, day)
         if score >= floor: x['featured_score'] = score; pool.append(x)
@@ -283,6 +300,18 @@ def compact(event, images, full=True, hidden=frozenset()):
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento
     if event.get('registration_required'): out['rr'] = 1  # hay que inscribirse: etiqueta «Inscripción» en la fila de cursos (26-10-2026)
     if event.get('sold_out'): out['so'] = event['sold_out'].get('dias') or 1  # entradas agotadas: días que nombra el aviso o 1 = todos
+    # Nivel de la sala (config/venue_prestige.json: 12 referencia, 8 consolidada, 3 proximidad): una de las señales con que
+    # la web ordena dentro de cada hora y en Expos (28-10-2026). Los espacios de arte elegidos para Expos cuentan como 8.
+    from src.venue_prestige import prestige, art_space
+    vt = prestige(event.get('venue_names'))[0]
+    if vt < 8 and art_space(event.get('venue_names')): vt = 8
+    if vt: out['vt'] = vt
+    # Precio corto para la fila (28-10-2026): el importe más bajo en euros que da la fuente y si hay más de uno («desde»).
+    if not event['is_free']:
+        nums = [float(x.replace(',', '.')) for x in re.findall(r'(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur\b)', str(event.get('price_label') or ''), re.I)]
+        nums = [n for n in nums if 0 < n < 1000]
+        if nums: out['pp'] = [min(nums), 1 if any(n != min(nums) for n in nums) else 0]
+    if event.get('is_promo'): out['pm'] = 1  # título con reclamo de venta: no se destaca ni encabeza una hora
     if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse
     if (event.get('confirmations') or 1) >= 3: out['cf'] = event['confirmations']  # lo anuncian tres fuentes o más
     if not full:
@@ -456,6 +485,9 @@ def write_translations(conn, out, shards):
             else: official = official_translations.official_for(conn, k, lang)
             if official: files[shard_of(k)][k] = {'t': official['text'], 'o': 1, 'u': official['url'], 'f': official['date']}; continue
             tr = ai_assist.translation_for(conn, k, text, lang)
+            # Una «traducción» que devuelve el texto de origen (la IA respondió en catalán) no se publica: la web la
+            # presentaba como «Traducción automática» con el original debajo (MNAC, 28-10-2026).
+            if tr and (' '.join(tr['text'].split()) == ' '.join(text.split()) or ai_translate.guess_lang(tr['text']) not in ('', lang)): tr = None
             if tr: files[shard_of(k)][k] = {'t': tr['text'], 'm': tr['model'], 'f': tr['date']}
         for name, records in files.items(): _write_json(out / 'data' / 'tr' / lang / f'{name}.json', records)
         counts[lang] = sum(len(r) for r in files.values()); counts[lang + '_oficiales'] = sum(1 for r in files.values() for v in r.values() if v.get('o'))

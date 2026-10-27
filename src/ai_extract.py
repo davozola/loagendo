@@ -26,7 +26,7 @@ def fold(text):
 _N = r'(\d{1,2})'
 _Y = r"(?:anys|any|anos|ano|years?|a\.)"
 AGE_PATTERNS = [  # (regex, constructor, solo en el título)
-    (re.compile(rf"\bde {_N} a {_N} {_Y}"), lambda a, b: (int(a), int(b)), False),
+    (re.compile(rf"\bde {_N} (?:a|al|fins a|fins als|hasta) {_N} {_Y}"), lambda a, b: (int(a), int(b)), False),  # «de 0 hasta 5 años» (28-10-2026)
     (re.compile(rf"\bentre {_N} [iy] {_N} {_Y}"), lambda a, b: (int(a), int(b)), False),
     (re.compile(rf"\(\s*{_N} ?[-–/a] ?{_N} ?{_Y}"), lambda a, b: (int(a), int(b)), False),
     (re.compile(rf"\b{_N} ?[-–] ?{_N} {_Y}"), lambda a, b: (int(a), int(b)), False),

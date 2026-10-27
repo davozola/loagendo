@@ -276,7 +276,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn) + slot_and_session_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn) + slot_and_session_pairs(conn) + nested_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -729,6 +729,69 @@ def contained_pairs(conn):
             if same_session(a, b): pairs.append((a["key"], b["key"]))
     return list(dict.fromkeys(pairs))
 
+
+
+# Actividad sobre otra (inauguración, salida en grupo, ensayo abierto) y títulos de formato demasiado genéricos.
+NESTED_SKIP = re.compile(r"inaugur|\bsortid[ae]s?\b|tast d.?orquestra")  # sin \b delante: _clean une «d’inauguració» en «dinauguracio»
+NESTED_GENERIC = {"stand up comedy", "concerts", "castaween", "concert solidari"}
+
+
+def nested_pairs(conn):
+    """El mismo acto con un título que contiene al otro, en el mismo sitio y en las mismas fechas (28-10-2026, auditoría
+    de usabilidad): «Ópera – Carmen» (la sala) y «Òpera "Carmen", de Georges Bizet» (Open Data), Apolo, 28-10 a las 19:30;
+    «Galder Varas» (Balañá) y «Monòleg "Esto No Es Una Prueba", amb Galder Varas» (GuiaBCN), Borràs, 28-10 → 1-11;
+    «Exposició "Vuit"» y «Exposició 'Vuit', de Frederic Amat» (Virreina); «Codi Gaudí» y «Experiència immersiva "Codi
+    Gaudí, l'experiència inèdita"» (Espai Imagina / Imagina Centre Audiovisual, a 20 m).
+    Entre fuentes distintas, el título corto (entero o la obra entre comillas) como frase dentro del largo; el mismo sitio;
+    el periodo del uno dentro del otro con duraciones parecidas (±3 días) o el mismo día de inicio; dos palabras o más en
+    el título corto, salvo que las fechas sean idénticas. Nunca una actividad sobre la obra (visita, presentación, taller,
+    inauguración…) ni cursos."""
+    import datetime as dt
+    today = dt.date.today().isoformat()
+    try:
+        rows = conn.execute(f"""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), v.venue, v.lat, v.lon, {_address_col(conn)}
+              FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+              WHERE r.end_date>=? AND r.eligibility<>'exclude'""", (today,)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    items, by_word = [], {}
+    for source, rid, title, start, end, venue, lat, lon, address in rows:
+        clean = _clean(title)
+        if COURSE_TITLE.match(clean) or EXHIBITION_ACTIVITY.match(clean) or NESTED_SKIP.search(clean): continue
+        try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(_end_of(source, start, end))
+        except (TypeError, ValueError): continue
+        keys = [k for k, kind in _title_keys_typed(title) if kind in ("full", "quoted")]
+        it = {"key": f"{source}:{rid}", "source": source, "start": a, "end": b, "days": (b - a).days, "keys": keys, "clean": clean,
+              "venue": venue or "", "lat": lat, "lon": lon, "address": address or ""}
+        if _generic_site(it): continue
+        items.append(it)
+        for k in keys:
+            for w in set(k.split()):
+                if len(w) >= 4: by_word.setdefault(w, []).append(it)
+    pairs = []
+    for a in items:
+        for ks in a["keys"]:
+            words = ks.split()
+            if not words or ks in CONTAINED_GENERIC or ks in NESTED_GENERIC or ROUTE.match(ks): continue
+            longest = max(words, key=len)
+            if len(longest) < 4: continue
+            for b in by_word.get(longest, []):
+                if b is a: continue
+                if b["source"] == a["source"]:
+                    # La misma fuente con la obra dos veces (GuiaBCN: «Bons i dolents» y «Teatre "Bons i Dolents"», Condal): solo con
+                    # el mismo título exacto (entero u obra entre comillas), temporadas de una semana o más solapadas y el mismo sitio.
+                    overlap = (min(a["end"], b["end"]) - max(a["start"], b["start"])).days
+                    if a["key"] < b["key"] and a["clean"] != b["clean"] and ks in b["keys"] and len(ks) >= 8 and min(a["days"], b["days"]) >= 7 and overlap >= 0.5 * min(a["days"], b["days"]) and _same_site(a, b, km=0.15):
+                        pairs.append((a["key"], b["key"]))
+                    continue
+                same_dates = a["start"] == b["start"] and a["end"] == b["end"]
+                if len(words) < 2 and not same_dates: continue
+                if len(ks) < 8 and not same_dates: continue
+                if not any(kl != ks and f" {ks} " in f" {kl} " for kl in b["keys"]): continue
+                inside = (a["start"] >= b["start"] and a["end"] <= b["end"]) or (b["start"] >= a["start"] and b["end"] <= a["end"])
+                if not inside or not (abs(a["days"] - b["days"]) <= 3 or a["start"] == b["start"]): continue
+                if _same_site(a, b, km=0.15): pairs.append((a["key"], b["key"]))
+    return list(dict.fromkeys(pairs))
 
 # Actividades sobre una exposición (visitas, inauguraciones): no son la exposición.
 def umbrella_pairs(conn):

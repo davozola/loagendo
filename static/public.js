@@ -40,7 +40,7 @@ const params = new URLSearchParams(location.search);
 // Preferencias del navegador: nombre nuevo (brollant-*) y, si no existe, el de Loagendo, para no perder eventos guardados.
 function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
 const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca','en'].includes(q) ? q : ['es','ca','en'].includes(saved) ? saved : 'es' })();
-const CA = {'Vista de la agenda': 'Vista de l’agenda', 'Hecho en Barcelona': 'Fet a Barcelona', 'Aviso legal': 'Avís legal', 'Privacidad': 'Privacitat', 'Fuentes': 'Fonts', 'Este fin de semana': 'Aquest cap de setmana', 
+const CA = {'Fin de semana': 'Cap de setmana', 'Vista de la agenda': 'Vista de l’agenda', 'Hecho en Barcelona': 'Fet a Barcelona', 'Aviso legal': 'Avís legal', 'Privacidad': 'Privacitat', 'Fuentes': 'Fonts', 'Este fin de semana': 'Aquest cap de setmana', 
   'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Cartel':'Cartell','Con':'Amb','Público y precio':'Públic i preu','Solo planes para ir con niños':'Només plans per anar amb canalla','Baile':'Ball','Teatro y circo':'Teatre i circ','Temporadas y ciclos':'Temporades i cicles',
   'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
   'Arquitectura y diseño':'Arquitectura i disseny','Arte contemporáneo':'Art contemporani','Arte y manualidades':'Art i manualitats','Ciencia y naturaleza':'Ciència i natura','Clásica y ópera':'Clàssica i òpera','Cocina':'Cuina','Coral y tradicional':'Coral i tradicional','Cuerpo y salud':'Cos i salut','Electrónica':'Electrònica','Flamenco y músicas del mundo':'Flamenc i músiques del món','Fotografía':'Fotografia','Historia y patrimonio':'Història i patrimoni','Humanidades y ciencia':'Humanitats i ciència','Idiomas':'Idiomes','Jazz y blues':'Jazz i blues','Música, danza y teatro':'Música, dansa i teatre','Pintura y dibujo':'Pintura i dibuix','Pop y rock':'Pop i rock','Tecnología':'Tecnologia','Sin clasificar':'Sense classificar','Varios distritos':'Diversos districtes',
@@ -64,7 +64,7 @@ const CA = {'Vista de la agenda': 'Vista de l’agenda', 'Hecho en Barcelona': '
   'Cambiar idioma':'Canvia l\'idioma','mañana.':'demà.','este fin de semana.':'aquest cap de setmana.','esta semana.':'aquesta setmana.','este mes.':'aquest mes.','Exposición':'Exposició','Hoy, lunes':'Avui, dilluns'
 };
 // Inglés (23-10-2026): mismas claves que CA (el texto en castellano).
-const EN = {"Vista de la agenda":"Listings view","Hecho en Barcelona":"Made in Barcelona","Aviso legal":"Legal notice","Privacidad":"Privacy","Fuentes":"Sources","Este fin de semana":"This weekend","Conciertos":"Concerts","Música":"Music","Teatro":"Theatre","Exposiciones":"Exhibitions","Cine":"Cinema","Familia":"Family","Talleres":"Workshops","Deporte":"Sport","Barrio":"Neighbourhood","Teatro y danza":"Theatre and dance","Charlas, visitas y barrio":"Talks, visits and neighbourhood","Talleres y cursos":"Workshops and courses","Con niños":"With kids","Cartel":"Line-up","Con":"With","Público y precio":"Audience and price","Solo planes para ir con niños":"Only plans for kids","Baile":"Dance","Teatro y circo":"Theatre and circus","Temporadas y ciclos":"Seasons and series","Actos y funciones":"Events and shows","Cursos":"Courses","Ciclos y programas":"Series and programmes","Festivales":"Festivals","Actividades continuadas":"Ongoing activities","Arquitectura y diseño":"Architecture and design","Arte contemporáneo":"Contemporary art","Arte y manualidades":"Arts and crafts","Ciencia y naturaleza":"Science and nature","Clásica y ópera":"Classical and opera","Cocina":"Cooking","Coral y tradicional":"Choral and traditional","Cuerpo y salud":"Body and health","Electrónica":"Electronic","Flamenco y músicas del mundo":"Flamenco and world music","Fotografía":"Photography","Historia y patrimonio":"History and heritage","Humanidades y ciencia":"Humanities and science","Idiomas":"Languages","Jazz y blues":"Jazz and blues","Música, danza y teatro":"Music, dance and theatre","Pintura y dibujo":"Painting and drawing","Pop y rock":"Pop and rock","Tecnología":"Technology","Sin clasificar":"Unclassified","Varios distritos":"Several districts","Hoy":"Today","Fecha":"Date","planes":"plans","guardados":"saved","Todos los días":"Every day","Próximos 7 días":"Next 7 days","Periodo de la selección":"Selection period","Selección Ontoca":"Ontoca picks","Próximos 30 días":"Next 30 days","Próximos 3 meses":"Next 3 months","Próximos 6 meses":"Next 6 months","Próximos":"Next","días":"days","Varios días":"Several days","Hora no indicada":"Time not stated","Gratis":"Free","Todo":"All","Todos":"All","Todos los distritos":"All districts","Cualquier hora":"Any time","Con cursos ya empezados":"Including courses under way","Limpiar todo":"Clear all","Quitar filtro":"Remove filter","Ver":"See","más":"more","restantes":"remaining","Reintentar":"Try again","Nada con estos filtros este día. Prueba otro día o quita algún filtro.":"Nothing with these filters on this day. Try another day or remove a filter.","No se pudo cargar la agenda.":"The listings could not be loaded.","No se pudo cargar la selección.":"The selection could not be loaded.","Aún no hay actividades destacadas para estas fechas.":"No featured activities for these dates yet.","No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.":"No locations for these filters. Try another day or check the list.","Mapa de actividades geolocalizadas":"Map of activities","lugares con ubicación · pulsa un punto para abrir la ficha":"places with a location · tap a point to open it","Sin recinto identificado":"No venue identified","Cerrar ficha":"Close","Ver en la fuente oficial":"See on the official source","Web del evento":"Event website","Web de la sala":"Venue website","Cómo llegar":"Directions","Cuándo":"When","Dónde":"Where","Organiza":"Organiser","Consultar fuente":"Check the source","Precio":"Price","Descubre":"Discover","Consultar en la fuente":"Check with the source","Contraste":"Cross-check","Fecha coincidente en":"Same date on","fuentes":"sources","Horario":"Times","Horas publicadas":"Published times","las fuentes no coinciden; confirma en la sala":"sources disagree; check with the venue","Requiere inscripción":"Registration required","Texto de":"Text by","Imagen del equipamiento":"Venue photo","Imagen de la fuente":"Source image","Más imágenes":"More images","Ubicación":"Location","Mapa de":"Map of","la ubicación":"the location","Próximamente en":"Coming up at","esta sala":"this venue","Guardado":"Saved","Guardar":"Save","Compartir":"Share","Añadir al calendario":"Add to calendar","Enlace copiado":"Link copied","Enlace de la ficha":"Link","Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.":"Date and venue collected automatically and cross-checked between sources; details on the venue’s website.","Fuente":"Source","Información recogida automáticamente":"Information collected automatically","confirma horario y precio antes de ir.":"check times and prices before you go.","Saltar a la agenda":"Skip to the listings","Agenda":"Listings","Selección":"Picks","Barrios":"Neighbourhoods","Guardados":"Saved","Ver guardados":"See saved","Cambiar modo claro u oscuro":"Switch light or dark mode","Qué hacer en Barcelona":"What to do in Barcelona","hoy.":"today.","Mil maneras de vivir la ciudad.":"A thousand ways to live the city.","Selección de la semana":"This week’s picks","Buscar en la agenda":"Search the listings","Artista, sala, barrio, obra…":"Artist, venue, neighbourhood, show…","7 días":"7 days","30 días":"30 days","6 meses":"6 months","Elegir una fecha concreta":"Pick a date","Días anteriores":"Previous days","Días siguientes":"Next days","Días de agenda":"Listing days","Periodo":"Period","Filtros":"Filters","Filtros activos":"Active filters","Planes":"Plans","Limpiar":"Clear","Cerrar filtros":"Close filters","Qué te apetece":"What do you fancy","Categoría":"Category","Tipo":"Type","Distrito":"District","Filtrar por distrito":"Filter by district","Formato":"Format","Filtrar por formato":"Filter by format","Todos los formatos":"All formats","Idioma de la actividad":"Language of the activity","Incluir cursos ya empezados":"Include courses under way","Solo gratis":"Free only","Filtrar por horario":"Filter by time","Franja horaria":"Time of day","Mañana":"Morning","Tarde":"Afternoon","Noche":"Evening","Desde":"From","Hasta":"Until","Hora desde":"From time","Hora hasta":"Until time","Quitar horario":"Remove time filter","Vista":"View","Modo de vista":"View mode","Lista":"List","Mapa":"Map","Por sitio":"By venue","Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.":"Times and prices are shown as each source publishes them. Check them before you go.","Por distritos":"By district","Próximos 14 días":"Next 14 days","Fuentes y créditos":"Sources and credits","Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.":"Data: Barcelona City Council (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Barcelona Provincial Council (CC BY 4.0) and venue listings. Check times with the source.","Cambiar idioma":"Change language","mañana.":"tomorrow.","este fin de semana.":"this weekend.","esta semana.":"this week.","este mes.":"this month.","Exposición":"Exhibition","Hoy, lunes":"Today, Monday"};
+const EN = {'Fin de semana': 'Weekend', "Vista de la agenda":"Listings view","Hecho en Barcelona":"Made in Barcelona","Aviso legal":"Legal notice","Privacidad":"Privacy","Fuentes":"Sources","Este fin de semana":"This weekend","Conciertos":"Concerts","Música":"Music","Teatro":"Theatre","Exposiciones":"Exhibitions","Cine":"Cinema","Familia":"Family","Talleres":"Workshops","Deporte":"Sport","Barrio":"Neighbourhood","Teatro y danza":"Theatre and dance","Charlas, visitas y barrio":"Talks, visits and neighbourhood","Talleres y cursos":"Workshops and courses","Con niños":"With kids","Cartel":"Line-up","Con":"With","Público y precio":"Audience and price","Solo planes para ir con niños":"Only plans for kids","Baile":"Dance","Teatro y circo":"Theatre and circus","Temporadas y ciclos":"Seasons and series","Actos y funciones":"Events and shows","Cursos":"Courses","Ciclos y programas":"Series and programmes","Festivales":"Festivals","Actividades continuadas":"Ongoing activities","Arquitectura y diseño":"Architecture and design","Arte contemporáneo":"Contemporary art","Arte y manualidades":"Arts and crafts","Ciencia y naturaleza":"Science and nature","Clásica y ópera":"Classical and opera","Cocina":"Cooking","Coral y tradicional":"Choral and traditional","Cuerpo y salud":"Body and health","Electrónica":"Electronic","Flamenco y músicas del mundo":"Flamenco and world music","Fotografía":"Photography","Historia y patrimonio":"History and heritage","Humanidades y ciencia":"Humanities and science","Idiomas":"Languages","Jazz y blues":"Jazz and blues","Música, danza y teatro":"Music, dance and theatre","Pintura y dibujo":"Painting and drawing","Pop y rock":"Pop and rock","Tecnología":"Technology","Sin clasificar":"Unclassified","Varios distritos":"Several districts","Hoy":"Today","Fecha":"Date","planes":"plans","guardados":"saved","Todos los días":"Every day","Próximos 7 días":"Next 7 days","Periodo de la selección":"Selection period","Selección Ontoca":"Ontoca picks","Próximos 30 días":"Next 30 days","Próximos 3 meses":"Next 3 months","Próximos 6 meses":"Next 6 months","Próximos":"Next","días":"days","Varios días":"Several days","Hora no indicada":"Time not stated","Gratis":"Free","Todo":"All","Todos":"All","Todos los distritos":"All districts","Cualquier hora":"Any time","Con cursos ya empezados":"Including courses under way","Limpiar todo":"Clear all","Quitar filtro":"Remove filter","Ver":"See","más":"more","restantes":"remaining","Reintentar":"Try again","Nada con estos filtros este día. Prueba otro día o quita algún filtro.":"Nothing with these filters on this day. Try another day or remove a filter.","No se pudo cargar la agenda.":"The listings could not be loaded.","No se pudo cargar la selección.":"The selection could not be loaded.","Aún no hay actividades destacadas para estas fechas.":"No featured activities for these dates yet.","No hay ubicaciones geográficas para estos filtros. Prueba otro día o consulta la lista.":"No locations for these filters. Try another day or check the list.","Mapa de actividades geolocalizadas":"Map of activities","lugares con ubicación · pulsa un punto para abrir la ficha":"places with a location · tap a point to open it","Sin recinto identificado":"No venue identified","Cerrar ficha":"Close","Ver en la fuente oficial":"See on the official source","Web del evento":"Event website","Web de la sala":"Venue website","Cómo llegar":"Directions","Cuándo":"When","Dónde":"Where","Organiza":"Organiser","Consultar fuente":"Check the source","Precio":"Price","Descubre":"Discover","Consultar en la fuente":"Check with the source","Contraste":"Cross-check","Fecha coincidente en":"Same date on","fuentes":"sources","Horario":"Times","Horas publicadas":"Published times","las fuentes no coinciden; confirma en la sala":"sources disagree; check with the venue","Requiere inscripción":"Registration required","Texto de":"Text by","Imagen del equipamiento":"Venue photo","Imagen de la fuente":"Source image","Más imágenes":"More images","Ubicación":"Location","Mapa de":"Map of","la ubicación":"the location","Próximamente en":"Coming up at","esta sala":"this venue","Guardado":"Saved","Guardar":"Save","Compartir":"Share","Añadir al calendario":"Add to calendar","Enlace copiado":"Link copied","Enlace de la ficha":"Link","Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.":"Date and venue collected automatically and cross-checked between sources; details on the venue’s website.","Fuente":"Source","Información recogida automáticamente":"Information collected automatically","confirma horario y precio antes de ir.":"check times and prices before you go.","Saltar a la agenda":"Skip to the listings","Agenda":"Listings","Selección":"Picks","Barrios":"Neighbourhoods","Guardados":"Saved","Ver guardados":"See saved","Cambiar modo claro u oscuro":"Switch light or dark mode","Qué hacer en Barcelona":"What to do in Barcelona","hoy.":"today.","Mil maneras de vivir la ciudad.":"A thousand ways to live the city.","Selección de la semana":"This week’s picks","Buscar en la agenda":"Search the listings","Artista, sala, barrio, obra…":"Artist, venue, neighbourhood, show…","7 días":"7 days","30 días":"30 days","6 meses":"6 months","Elegir una fecha concreta":"Pick a date","Días anteriores":"Previous days","Días siguientes":"Next days","Días de agenda":"Listing days","Periodo":"Period","Filtros":"Filters","Filtros activos":"Active filters","Planes":"Plans","Limpiar":"Clear","Cerrar filtros":"Close filters","Qué te apetece":"What do you fancy","Categoría":"Category","Tipo":"Type","Distrito":"District","Filtrar por distrito":"Filter by district","Formato":"Format","Filtrar por formato":"Filter by format","Todos los formatos":"All formats","Idioma de la actividad":"Language of the activity","Incluir cursos ya empezados":"Include courses under way","Solo gratis":"Free only","Filtrar por horario":"Filter by time","Franja horaria":"Time of day","Mañana":"Morning","Tarde":"Afternoon","Noche":"Evening","Desde":"From","Hasta":"Until","Hora desde":"From time","Hora hasta":"Until time","Quitar horario":"Remove time filter","Vista":"View","Modo de vista":"View mode","Lista":"List","Mapa":"Map","Por sitio":"By venue","Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.":"Times and prices are shown as each source publishes them. Check them before you go.","Por distritos":"By district","Próximos 14 días":"Next 14 days","Fuentes y créditos":"Sources and credits","Datos: Ajuntament de Barcelona (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Diputació de Barcelona (CC BY 4.0) y agendas de los equipamientos. Confirma horarios en la fuente.":"Data: Barcelona City Council (Open Data BCN, CC BY 4.0), Generalitat de Catalunya, Barcelona Provincial Council (CC BY 4.0) and venue listings. Check times with the source.","Cambiar idioma":"Change language","mañana.":"tomorrow.","este fin de semana.":"this weekend.","esta semana.":"this week.","este mes.":"this month.","Exposición":"Exhibition","Hoy, lunes":"Today, Monday"};
 const t = s => LANG === 'ca' ? (CA[s] ?? s) : LANG === 'en' ? (EN[s] ?? s) : s;
 const months = LANG === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : LANG === 'ca' ? ['gen','febr','març','abr','maig','juny','jul','ag','set','oct','nov','des'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const weekdays = LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : LANG === 'ca' ? ['dg','dl','dt','dc','dj','dv','ds'] : ['dom','lun','mar','mié','jue','vie','sáb'];
@@ -140,7 +140,7 @@ function rangeWindow() {
 const LANDING = (() => { try { return location.search ? {} : JSON.parse(document.documentElement.dataset.landing || '{}') } catch (_) { return {} } })();
 const landingDay = () => LANDING.day === 'today' ? today : LANDING.day === 'tomorrow' ? addDays(today, 1) : (LANDING.day || '');
 let state = {
-  pickRange: 'week',   // «Selección Ontoca»: 'today' o 'week' (próximos 7 días)
+  pickRange: 'auto',   // «Selección Ontoca»: 'auto' (hoy si quedan planes; si no, 7 días), 'today' o 'week'
   day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
   chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
@@ -171,7 +171,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), venue_tier: c.vt || 0, promo: Boolean(c.pm), price_short: c.pp || null, open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -523,16 +523,29 @@ function pick(e, i) {
   const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
   return `<button class="${i ? 'pick-small' : 'pick-large'}" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
 }
+// «Selección Ontoca» (28-10-2026, David): coherente con el día que se mira. Por defecto, «Hoy» mientras queden al menos
+// tres planes destacados de ese día; si no, los próximos 7 días. Nunca lo que ya ha pasado ni títulos de promoción;
+// como mucho dos de la misma categoría (si hay con qué llenar) y en orden de fecha y hora.
 async function selection() {
   try {
-    // «Selección Ontoca»: hoy (el día que se mira) o los próximos 7 días (25-10-2026).
-    const one = state.pickRange === 'today';
-    document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === state.pickRange)));
-    const d = await get('/api/events?' + new URLSearchParams({day: state.day, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
-    const ranked = d.items.slice();  // already ordered by score and daily rotation
-    // Elegida por la IA (src/ai_select.py): se respeta su orden. Si no, las reglas, con imagen y texto primero.
-    const complete = ranked.filter(e => e.media?.length && e.has_description);
-    const items = (d.ai ? ranked : complete.concat(ranked.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)))).slice(0, 7);
+    const now = madridNow();
+    const fetchPicks = async one => get('/api/events?' + new URLSearchParams({day: state.day, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
+    const when = e => e.featured_date || e.start;
+    const past = e => when(e) < now.day || (when(e) === now.day && e.time && (minutesOf(String(e.time).padStart(5, '0')) ?? 1e4) < now.min - GRACE);
+    const usable = d => d.items.filter(e => !past(e) && !e.promo && !PROMO_TITLE.test(e.title || ''));
+    let one = state.pickRange === 'today', d = await fetchPicks(one), list = usable(d);
+    if (state.pickRange === 'auto') {
+      one = true; d = await fetchPicks(true); list = usable(d);
+      if (list.length < 3) { one = false; d = await fetchPicks(false); list = usable(d) }
+    }
+    document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === (one ? 'today' : 'week'))));
+    // Elegida por la IA (src/ai_select.py): se respeta su orden de preferencia. Si no, las reglas, con imagen y texto primero.
+    const complete = list.filter(e => e.media?.length && e.has_description);
+    const ranked = d.ai ? list : complete.concat(list.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)));
+    const chosen = [], perCat = {};
+    for (const e of ranked) { const c = e.public_category || ''; if ((perCat[c] || 0) < 2) { chosen.push(e); perCat[c] = (perCat[c] || 0) + 1 } if (chosen.length === 7) break }
+    for (const e of ranked) { if (chosen.length >= 7) break; if (!chosen.includes(e)) chosen.push(e) }
+    const items = chosen.sort((a, b) => when(a).localeCompare(when(b)) || String(a.time || '99').localeCompare(String(b.time || '99')));
     const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
     $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
@@ -827,7 +840,8 @@ function buildModel(items, win) {
 
 /* ---------- fila ---------- */
 // «Último día» (23-10-2026): aparte del «hasta las 21:00» de hoy, para no juntar dos «hasta» distintos.
-const lastText = (e, d) => daysBetween(e._day || today, d) <= 0 ? L('Último día', 'Últim dia', 'Last day') : L('Último día: mañana', 'Últim dia: demà', 'Last day: tomorrow');
+// «mañana» solo si se mira hoy (28-10-2026: el sábado una feria que cierra el domingo decía «Último día: mañana»).
+const lastText = (e, d) => daysBetween(e._day || today, d) <= 0 ? L('Último día', 'Últim dia', 'Last day') : (e._day || today) === today ? L('Último día: mañana', 'Últim dia: demà', 'Last day: tomorrow') : `${L('Último día:', 'Últim dia:', 'Last day:')} ${labelDate(d)}`;
 const untilText = (e, d) => { const n = daysBetween(e._day || today, d); return n <= 0 ? L('último día', 'últim dia', 'last day') : n === 1 ? L('hasta mañana', 'fins demà', 'until tomorrow') : `${L('hasta el', 'fins al', 'until')} ${labelDate(d)}` };
 function bar(a, st) {
   const from = 8 * 60, span = 16 * 60, pct = m => Math.max(0, Math.min(100, (m - from) / span * 100)).toFixed(1);
@@ -875,10 +889,20 @@ function whenCell(e) {
   if (e.schedule_hint && !a.courseStart) return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Horario según la fuente', 'Horari segons la font', 'Times per source')}</span><span class="w-short">${L('Ver horario', 'Veure horari', 'See times')}</span></span><span class="w-note">${esc(e.schedule_hint)}</span></div>`;
   return `<div class="when w-tbc"><span class="w-mid"><span class="w-long">${L('Hora por confirmar', 'Hora per confirmar', 'Time to be confirmed')}</span><span class="w-short">${L('Sin hora', 'Sense hora', 'No time')}</span></span>${a.courseStart ? `<span class="w-note">${esc(`${L('inicio de curso', 'inici de curs', 'course starts')}${needsSignup(e) ? ' · ' + L('inscripción', 'inscripció', 'sign-up') : ''} · ${untilText(e, a.until)}`)}</span>` : a.run ? `<span class="w-note">${esc(`${L('en cartel', 'en cartell', 'showing')} ${untilText(e, a.until)}`)}</span>` : `<span class="w-note w-long">${L('confírmala antes de ir', 'confirma-la abans d\'anar-hi', 'check it before you go')}</span>`}</div>`;
 }
+// Precio corto en la fila (28-10-2026): solo si la fuente da importes en euros. Uno → «12 €»; varios → «desde 10 €».
+function priceShort(e) {
+  const f = n => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' €';
+  if (e.price_short) return e.price_short[1] ? `${L('desde', 'des de', 'from')} ${f(e.price_short[0])}` : f(e.price_short[0]);
+  const nums = [...String(e.price_label || '').matchAll(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur)/gi)].map(m => Number(m[1].replace(',', '.'))).filter(n => n > 0 && n < 1000);
+  if (!nums.length) return '';
+  const lo = Math.min(...nums);
+  return nums.some(n => n !== lo) ? `${L('desde', 'des de', 'from')} ${f(lo)}` : f(lo);
+}
+const seriesShort = title => String(title || '').replace(/^\s*patis? escolars? oberts?(?: al barri)?\s*[-–:·]\s*/i, '') || title;
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -997,19 +1021,74 @@ function festGroup(list) {
   const pastHtml = past.length ? `<details class="ev-more fest-past"><summary>${L('Ya pasado hoy', 'Ja passat avui', 'Already over today')} (${past.length})</summary>${past.map(row).join('')}</details>` : '';
   return `<details class="ev-fest-group"><summary><span class="fest-text"><span class="fest-name">${kind}${esc(f.name)}</span><span class="fest-count">${count}</span></span><i aria-hidden="true">+</i></summary>${[...general, ...acts].map(row).join('')}${pastHtml}</details>`;
 }
+// Relevancia dentro de una hora o de un día (28-10-2026, David): una señal simple y explicable, sin IA ni ranking
+// por prestigio solo. Nivel de la sala (config/venue_prestige.json: referencia 3, consolidada 2, proximidad o sin
+// nivel 1), Selección Ontoca, sala relevante, varias fuentes, imagen y descripción propias; los títulos de
+// promoción («FREE GUEST LIST», «DOWNLOAD YOUR FREE PASS») restan. La diversidad la pone rankDiverse.
+const TIER_PTS = {12: 3, 8: 2};
+const PROMO_TITLE = /\b(?:free guest ?list|guest ?list|free pass|download your|free entry list)\b|\|\|/i;
+const hasImage = e => Boolean(e.image || (e.media || []).some(m => m.url && !m.fallback));
+function relevance(e) {
+  let r = TIER_PTS[e.venue_tier] ?? 1;
+  if (state.picks.has(key(e))) r += 2;
+  if (e.relevant) r += 1;
+  if ((e.confirmations || 1) >= 2) r += 0.5;
+  if (hasImage(e)) r += 0.5;
+  if (e.has_description) r += 0.3;
+  if (e._more?.length) r += 2;   // una serie del día reunida en una fila (patios): no se queda detrás de «Ver más»
+  if (e.promo || PROMO_TITLE.test(e.title || '')) r -= 2;
+  return r;
+}
+// Los n primeros por relevancia, restando un punto por cada uno ya elegido del mismo grupo (categoría en la Agenda,
+// espacio en Expos), y al menos dos de la red de proximidad o de salas sin nivel si las hay: el barrio no queda
+// relegado. A igualdad, el orden que traía la lista (la hora). Devuelve el conjunto elegido.
+const isLocal = e => !(e.venue_tier >= 8);
+function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 2) {
+  if (list.length <= n) return new Set(list);
+  const pool = list.map(e => ({e, r: score(e)})), out = [], seen = {};
+  while (out.length < n && pool.length) {
+    let bi = 0, bv = -Infinity;
+    pool.forEach((x, i) => { const v = x.r - penalty * (seen[group(x.e)] || 0); if (v > bv) { bv = v; bi = i } });
+    const [x] = pool.splice(bi, 1); out.push(x); seen[group(x.e)] = (seen[group(x.e)] || 0) + 1;
+  }
+  const want = Math.min(minLocal, list.filter(isLocal).length);
+  for (let k = out.filter(x => isLocal(x.e)).length; k < want; k++) {
+    const add = pool.filter(x => isLocal(x.e)).sort((a, b) => b.r - a.r)[0];
+    const drop = out.filter(x => !isLocal(x.e)).sort((a, b) => a.r - b.r)[0];
+    if (!add || !drop) break;
+    out[out.indexOf(drop)] = add; pool.splice(pool.indexOf(add), 1);
+  }
+  return new Set(out.map(x => x.e));
+}
+// Agenda (28-10-2026, David): como mucho diez actividades por hora, las más relevantes y variadas; el resto a un clic
+// («Ver N actividades más», se puede volver a plegar). Sin plegar con búsqueda, en Guardados, con «Cerca de mí» o
+// cuando los filtros ya dejan una lista manejable. Dentro de la hora, por minuto y luego por relevancia.
+const HOUR_CAP = 10, FILTERED_NO_FOLD = 40;
+const narrowed = () => Boolean(state.cats.length || state.chans.length || state.district || state.free || state.ages.length || state.langs.length || state.hourFrom !== null || state.hourTo !== null);
+const byMinuteThenRelevance = (a, b) => (a._st.sort - b._st.sort) || (relevance(b) - relevance(a)) || byTitle(a, b);
+function hourRows(list, id, fold) {
+  if (state.near) return seriesFold(nearSort(list));
+  if (!fold || list.length <= HOUR_CAP) return seriesFold([...list].sort(byMinuteThenRelevance));
+  const top = rankDiverse(list, HOUR_CAP, e => e.public_category || '', relevance, 1, 3), open = state.expanded.has(id);
+  const first = list.filter(e => top.has(e)).sort(byMinuteThenRelevance), rest = list.filter(e => !top.has(e)).sort(byMinuteThenRelevance);
+  const more = open ? `${seriesFold(rest)}<button class="ag-toggle ag-hourless" type="button" data-hourfold="${esc(id)}">${L('Ver menos', 'Mostra’n menys', 'Show fewer')}</button>`
+    : `<button class="ag-toggle ag-hourmore" type="button" data-hourfold="${esc(id)}">${L(`Ver ${rest.length} actividades más`, `Mostra ${rest.length} activitats més`, `See ${rest.length} more activities`)}</button>`;
+  return seriesFold(first) + more;
+}
 // Series que se reúnen en una sola fila en todo el día, a la hora de la primera (27-10-2026, David): los patios
 // escolares abiertos de un sábado (47) salían repartidos por todas las horas. Sus fichas se ven todas dentro, ordenadas
 // por distrito y escuela (cada una con su hora, su dirección y su enlace); el filtro de distrito se aplica antes.
 const DAY_SERIES = new Set(['patis-escolars-oberts']);
 function gatherSeries(lists) {
   const first = {};
-  for (const l of lists) for (const e of l) e._more = undefined;
+  for (const l of lists) for (const e of l) { e._more = undefined; e._seriesShort = false }
   const out = lists.map(l => l.filter(e => {
     if (!DAY_SERIES.has(e.series)) return true;
     if (!first[e.series]) { first[e.series] = e; e._more = []; return true }
     first[e.series]._more.push(e); return false;
   }));
   const where = e => [t(e.district || ''), e.venue_names?.[0] || ''].join('|');
+  for (const e of Object.values(first)) e._more.forEach(x => { x._seriesShort = true });
   for (const e of Object.values(first)) e._more.sort((a, b) => where(a).localeCompare(where(b), 'es') || String(a._a?.times?.[0] || '').localeCompare(String(b._a?.times?.[0] || '')));
   return out;
 }
@@ -1027,7 +1106,10 @@ function seriesFold(list) {
     // Actividades de un festival: filas normales, sin desplegable (26-10-2026).
     if (String(x.first.series).startsWith('festival:')) return [x.first, ...x.more].map(row).join('');
     const label = x.day ? L(`Ver ${x.more.length} más hoy, por distrito`, `Mostra'n ${x.more.length} més avui, per districte`, `See ${x.more.length} more today, by district`) : `${L('Ver', 'Mostra', 'See')} ${x.more.length} ${L('más de esta serie', 'més d’aquesta sèrie', 'more in this series')}`;
-    return `<div class="ev-series">${row(x.first)}<details class="ev-more"><summary>${label}</summary>${x.more.map(row).join('')}</details></div>`;
+    // Dentro de una serie del día (patios), el nombre de la escuela y un subtítulo por distrito (28-10-2026).
+    let lastD = null;
+    const inner = x.day ? x.more.map(e => { const d = t(e.district || ''); const head = d && d !== lastD ? `<div class="ag-subhead">${esc(d)}</div>` : ''; lastD = d; return head + row(e) }).join('') : x.more.map(row).join('');
+    return `<div class="ev-series">${row(x.first)}<details class="ev-more"><summary>${label}</summary>${inner}</details></div>`;
   }).join('');
 }
 function rows(list, id) {
@@ -1112,13 +1194,26 @@ function daysLeft(e) {
   if (!isExhibit(e) || e.start === e.end || !e.end) return '';
   const n = daysBetween(e._day || today, e.end);
   if (n < 0) return '';
-  const text = n === 0 ? L('Último día', 'Últim dia', 'Last day') : n === 1 ? L('Cierra mañana', 'Tanca demà', 'Closes tomorrow')
+  const text = n === 0 ? L('Último día', 'Últim dia', 'Last day') : n === 1 ? ((e._day || today) === today ? L('Cierra mañana', 'Tanca demà', 'Closes tomorrow') : `${L('Cierra el', 'Tanca el', 'Closes on')} ${labelDate(e.end)}`)
     : n <= 60 ? L(`Quedan ${n} días`, `Queden ${n} dies`, `${n} days left`) : `${L('Hasta el', 'Fins al', 'Until')} ${labelDate(e.end)}`;
   return `<span class="ev-left${n < 7 ? ' ev-left-soon' : ''}">${esc(text)}</span>`;
 }
 function wideTab(list, live) {
   const lastDay = e => e.start !== e.end && daysBetween(e._day || today, e._a.until || e.end) <= 0, endOf = e => String(e._a.until || e.end || '9999');
-  const sorted = [...list].sort((a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b));
+  // Orden de Expos (28-10-2026, David): ya no solo por fecha de cierre (el sábado las 29 primeras eran «último día», 21
+  // de centros cívicos y casals, y el MNAC salía el 28). Relevancia de la exposición (nivel del espacio, puesto en la
+  // selección de Expos del día, imagen, texto) más la urgencia (último día +1,5; cierra en una semana +0,75), con
+  // variedad de espacios y al menos dos de barrio entre las diez primeras; el resto por cierre, como antes.
+  const byClose = (a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b);
+  const rank = state.expoRank || {}, left = e => daysBetween(e._day || today, e._a.until || e.end);
+  const expoScore = e => relevance(e) + (rank[key(e)] ? 1.5 : 0) + (left(e) <= 0 ? 1.5 : left(e) <= 7 ? 0.75 : 0);
+  const byClosed = [...list].sort(byClose), place = e => fold(String(e.venue_names?.[0] || '').split(/\s+[-·–]\s+/)[0]);
+  const top = state.near ? new Set() : rankDiverse(byClosed, 20, place, expoScore, 1.5, 4);
+  // Las de barrio elegidas no van al final del tramo: una de cada cinco filas (puestos 4, 9, 14, 19).
+  const chosen = byClosed.filter(e => top.has(e)).sort((a, b) => expoScore(b) - expoScore(a) || byClose(a, b));
+  const locals = chosen.filter(isLocal), others = chosen.filter(e => !isLocal(e)), head = [];
+  while (locals.length || others.length) head.push(((head.length % 5 === 3 && locals.length) || !others.length) ? locals.shift() : others.shift());
+  const sorted = [...head, ...byClosed.filter(e => !top.has(e))];
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
   if (state.near) sorted.sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9));   // con «Cerca de mí», por distancia (a igualdad, el orden de cierre)
@@ -1154,14 +1249,19 @@ function renderDay(m) {
   // fiable no se dice que estén abiertos: van a «planes sin hora confirmada».
   const wideAllDay = [...s.wide, ...s.wideNoHours], wideList = wideAllDay.filter(isExhibit);
   let openList = wideAllDay.filter(e => !isExhibit(e) && !e._a.noHours), tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && e._a.noHours)].sort(byTitle);
+  // Solo ferias, mercados, fiestas y espacios abiertos en el bloque (28-10-2026): una obra, un concurso o una charla con
+  // un horario largo va a la hora en que abre (si ya está abierta, al grupo «Ahora»).
+  const openSpace = e => isOpenFormat(e) || e.public_category === 'fiestas';
+  timeline = [...timeline, ...openList.filter(e => !openSpace(e))].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || a._st.sort - b._st.sort || byTitle(a, b)); openList = openList.filter(openSpace);
   [timeline, tbcList, openList] = gatherSeries([timeline, tbcList, openList]);
   markHighlights(timeline, state.day);
   // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
-  const nowTimed = timeline.filter(e => hourOf(e) === 'now' && e._a.kind === 'timed');
+  const nowTimed = timeline.filter(e => hourOf(e) === 'now' && (e._a.kind === 'timed' || e._a.kind === 'wide'));
   const tabCounts = {agenda: s.fixed.length + s.tbc.length + wideAllDay.length - wideList.length, expo: wideList.length};
-  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${seriesFold(nearSort(nowTimed))}</div>`;
+  const foldHours = !searching() && !state.savedOnly && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
+  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${hourRows(nowTimed, `h:${state.day}:now`, foldHours)}</div>`;
   let bucket = [];
-  const flush = () => { if (current !== null) groups += seriesFold(nearSort(bucket)) + '</div>'; bucket = [] };
+  const flush = () => { if (current !== null) groups += hourRows(bucket, `h:${state.day}:${current}`, foldHours) + '</div>'; bucket = [] };
   for (const e of timeline) {
     const h = hourOf(e);
     if (h === 'now') continue;
@@ -1193,7 +1293,8 @@ function renderRange(m) {
   const tabCounts = {agenda: buckets.reduce((n, [, l]) => n + l.length, 0), expo: wideAll.length};
   const days = buckets.slice(0, state.shown).map(([d, dayList]) => {
     const [list] = gatherSeries([nearSort(dayList)]);
-    const all = state.openDays.has(d) || list.length <= PER_DAY + 3, shown = all ? list : list.slice(0, PER_DAY);
+    const all = state.openDays.has(d) || list.length <= PER_DAY + 3, top = all || state.near ? null : rankDiverse(list, PER_DAY, e => e.public_category || '', relevance, 1, 4);
+    const shown = all ? list : state.near ? list.slice(0, PER_DAY) : list.filter(e => top.has(e));
     markHighlights(shown, d);
     return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
   }).join('');
@@ -1230,11 +1331,12 @@ function renderAgenda() {
   let tabs = $('agTabs');
   if (!tabs) { tabs = document.createElement('div'); tabs.id = 'agTabs'; tabs.className = 'period-tabs ag-tabs'; tabs.setAttribute('role', 'tablist'); host.before(tabs) }
   tabs.hidden = true;
+  let tabCounts = null;
   if (!items.length) host.innerHTML = `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}</div>`;
   else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].filter(onePlace).slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
   else {
-    const r = model.mode === 'day' ? renderDay(model) : renderRange(model);
+    const r = model.mode === 'day' ? renderDay(model) : renderRange(model); tabCounts = r.counts;
     tabs.innerHTML = tabsHtml(r.counts); tabs.hidden = searching();
     const parts = Object.keys(TABS).filter(k => r.counts[k]);
     if (searching()) host.innerHTML = parts.length ? parts.map(k => `<section class="ag-part" id="ag-part-${k}"><h3 class="ag-part-head">${esc(byLang(TABS[k]))} <span>${r.counts[k].toLocaleString('es-ES')}</span></h3>${r.html[k]}</section>`).join('') : r.html.agenda;
@@ -1246,8 +1348,11 @@ function renderAgenda() {
   const s = model.sections, count = model.mode === 'day' ? s.fixed.length + s.wide.length + s.wideNoHours.length + s.tbc.length : (model.counts.fixed + model.counts.wide + model.counts.tbc), n = count.toLocaleString('es-ES');
   // Búsqueda interna (Matomo trackSiteSearch): con los resultados ya pintados; analytics.js espera a que el término se estabilice.
   if (state.query && !state.savedOnly) { try { window.ontocaAnalytics?.search(state.query, count, state.cats.length === 1 ? state.cats[0] : false) } catch (_) {} }
-  const lead = model.mode === 'day' && model.live ? `<b>${n} ${L('planes disponibles hoy', 'plans disponibles avui', 'plans available today')}</b> ${L('desde las', 'des de les', 'from')} ${clock(model.now.min)}`
-    : model.mode === 'day' ? `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(labelDay(state.day))}` : `<b>${n} ${L('planes', 'plans', 'plans')}</b> · ${esc(win.label)}`;
+  // Cabecera con los mismos números que las pestañas (28-10-2026: decía «116 planes» con «Agenda 35» debajo, porque
+  // sumaba las exposiciones): planes de la Agenda y, aparte, exposiciones abiertas.
+  const ag = tabCounts ? tabCounts.agenda.toLocaleString('es-ES') : n, ex = tabCounts?.expo ? ` · ${tabCounts.expo.toLocaleString('es-ES')} ${L('exposiciones', 'exposicions', 'exhibitions')}` : '';
+  const lead = model.mode === 'day' && model.live ? `<b>${ag} ${L('planes disponibles hoy', 'plans disponibles avui', 'plans available today')}</b> ${L('desde las', 'des de les', 'from')} ${clock(model.now.min)}${ex}`
+    : model.mode === 'day' ? `<b>${ag} ${L('planes', 'plans', 'plans')}</b> · ${esc(labelDay(state.day))}${ex}` : `<b>${ag} ${L('planes', 'plans', 'plans')}</b> · ${esc(win.label)}${ex}`;
   const extra = [state.cats.map(catName).join(' + '), state.chans.map(chanName).join(' + '), state.ages.map(a => byLang(AGE_LABEL[a])).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
   $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
   stick(); mountFilterUi();
@@ -1487,7 +1592,7 @@ async function openDetail(k, focus, opts = {}) {
     const rescued = (e.occurrences || []).find(o => o.evidence_field === 'rescate' && o.date === (e.occurrence_date || state.day));
     const rescuedNote = rescued ? L('Hora leída en la página del acto: confírmala antes de ir', "Hora llegida a la pàgina de l'acte: confirma-la abans d'anar-hi", 'Time read from the event page: please check before you go') : '';
     const scheduleBits = [carriedNote, borrowedNote, rescuedNote, conflict ? L(`Las fuentes dan horas distintas (${conflict.join(' y ')}): confírmalo en la sala`, `Les fonts donen hores diferents (${conflict.join(' i ')}): confirma-ho a la sala`, `Sources give different times (${conflict.join(' and ')}): check with the venue`) : '', e.schedule_days, scheduleExtra(e), e.schedule_note, e.registration_required ? t('Requiere inscripción') : '', e.open_enrollment ? L('Inscripción abierta', 'Inscripció oberta', 'Registration open') : '', e.venue_unconfirmed ? L(`Esta fecha aún no aparece en la agenda de ${e.venue_unconfirmed}: confírmala antes de ir`, `Aquesta data encara no surt a l'agenda de ${e.venue_unconfirmed}: confirma-la abans d'anar-hi`, `This date is not yet on ${e.venue_unconfirmed}’s listings: check it before you go`) : ''].filter(Boolean);
-    const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(scheduleBits.join(' · '))}</p>` : '';
+    const schedule = scheduleBits.length ? `<p class="sheet-schedule"><span>${t('Horario')}</span>${esc(showTime(scheduleBits.join(' · ')))}</p>` : '';
     // Cartel: con hora por artista si la fuente la publica; si no, solo los nombres.
     const timed = (e.lineup_times || []).filter(x => x.name && x.time).sort((a, b) => a.time.localeCompare(b.time));
     const names = e.lineup || [];
@@ -1676,6 +1781,7 @@ document.addEventListener('click', e => {
     stableRender(); const sec = $('ag-' + id); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return
   }
   if (button.dataset.chip) { const k = button.dataset.chip, y = button.getBoundingClientRect().top; if (button.closest('#typeMini')) { state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } stableRender(); return } state.show[k] = !state.show[k]; if (!savedShow) { try { localStorage.setItem('brollant-show', JSON.stringify(state.show)) } catch (_) {} } renderAgenda(); const again = document.querySelector(`#typeTabs [data-chip="${k}"]`); if (again) window.scrollBy(0, again.getBoundingClientRect().top - y); return }
+  if (button.dataset.hourfold) { const id = button.dataset.hourfold; if (state.expanded.has(id)) state.expanded.delete(id); else state.expanded.add(id); stableRender(); return }
   if (button.dataset.openall) { state.expanded.add('openAll'); stableRender(); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
   if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; refresh(); return }
