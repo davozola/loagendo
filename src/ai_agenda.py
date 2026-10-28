@@ -137,7 +137,13 @@ class _Cleaner(HTMLParser):
         if tag in self.BLOCK: self.parts.append('\n')
 
     def handle_data(self, data):
-        if not self.skip and data.strip(): self.parts.append(data)
+        if not self.skip and data.strip():
+            # Dos números de elementos distintos no se pegan (28-10-2026, Documenta: «02/11/2026» y «19:00 h» en dos
+            # <span> daban «02/11/202619:00 h» y la hora no se podía leer). Solo entre cifra y cifra: una palabra
+            # partida en dos etiquetas («<b>B</b>arcelona») sigue entera.
+            prev = next((p for p in reversed(self.parts) if p), '')
+            if prev and prev[-1:].isdigit() and data.lstrip()[:1].isdigit(): self.parts.append(' ')
+            self.parts.append(data)
 
 
 def clean(page, base_url):
@@ -250,11 +256,25 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
         if not d: why.append(f"fecha que no cuadra con su cita: {s.get('fecha')} / {qd!r}"); continue
         hour = ''
         h, qh = str(s.get('hora') or '').strip(), str(s.get('cita_hora') or '')
+        # Hora escrita justo detrás de la fecha (28-10-2026, Zumzeig «Ds 7.11.26 (19:00)», Documenta «02/11/2026 19:00 h»):
+        # si la IA no da hora, se toma con reglas de la aparición de la fecha más cercana al título. Una sola hora,
+        # pegada a esa fecha (como mucho 3 caracteres en medio); la cita es la fecha con su hora, tal cual en la página.
+        def _glued():
+            near = [p for p in dpos if any(-NEAR_DATE_BEFORE <= p - t <= NEAR_DATE_AFTER for t in tpos)] or ([] if not whole_page else dpos)
+            # Primero la aparición que va detrás del título (listados «Título · fecha (hora)»); si no, la de delante.
+            for p in sorted(near, key=lambda p: (not any(0 <= p - t <= NEAR_DATE_AFTER for t in tpos), min(abs(p - t) for t in tpos))):
+                tail = hay[p + len(fold(qd)):p + len(fold(qd)) + 20]
+                m = re.match(r"[\s(,·-]{0,3}([01]?\d|2[0-3])[:.]([0-5]\d)\s*h?\)?(?![\d:.]|\s*(?:-|–|a)\s*\d)", tail)
+                if m: return f"{int(m.group(1)):02d}:{m.group(2)}", (qd + tail[:m.end()]).strip()
+            return '', ''
+        if not h or not re.fullmatch(r"\d{1,2}:\d{2}", h):
+            gh, gq = _glued()
+            if gh: h, qh = gh, gq
         if h:
             hpos = _positions(qh, hay)
             if re.fullmatch(r"\d{1,2}:\d{2}", h) and hpos and _near_(tpos, hpos, NEAR_TIME, NEAR_TIME) and f"{int(h[:-3]):02d}:{h[-2:]}" in times_in(qh):
                 hour = f"{int(h[:-3]):02d}:{h[-2:]}"; out['quotes'].setdefault('time', qh)
-            else: why.append(f"hora sin cita válida: {h} / {qh!r}")
+            else: why.append(f"hora sin cita válida: {h} / {qh!r}")   # una hora de la IA que no cuadra no se sustituye: queda sin hora
         out['sesiones'].append((d.isoformat(), hour)); out['quotes'].setdefault('date', qd)
     p = item.get('periodo') or {}
     if p.get('inicio') and p.get('fin'):
@@ -284,6 +304,14 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
     if m and 1 <= int(m.group(1)) <= len(links):
         url = links[int(m.group(1)) - 1]
         if f"[l{m.group(1)}]" in hay: out['url'] = url
+    # El enlace tiene que ser de ESTE acto (28-10-2026, Zumzeig: cada bloque entero es un enlace y su marca queda detrás,
+    # así que la IA tomaba la del acto anterior: «Krakatoa» → /films/animals-bestials/). Si su ruta no comparte palabras
+    # con el título y otro enlace de la página sí, se usa ese; si no hay ninguno, la página de la agenda.
+    from src.official_dates import same_act
+    if out.get('url') and urlsplit(out['url']).path.strip('/') and not same_act(title, urlsplit(out['url']).path):
+        own = [l for l in links if urlsplit(l).netloc == urlsplit(out['url']).netloc and urlsplit(l).path.strip('/') and same_act(title, urlsplit(l).path)]
+        if len(set(own)) == 1: why.append(f"enlace de otro acto ({out['url']}); vale {own[0]}"); out['url'] = own[0]
+        else: why.append(f"enlace de otro acto descartado: {out['url']}"); out.pop('url')
     return out, why
 
 
@@ -550,6 +578,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
             warn = [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
             # Motivos de cada descarte (28-10-2026): para revisar una agenda nueva sin volver a gastar IA.
             warn += [f"descartado · {str((r.get('item') or {}).get('titulo') or '')[:80]} · {'; '.join(r.get('why') or [])[:240]} · {r.get('page', '')}" for r in res['rejected'][:200]]
+            warn += [f"parcial · {a['titulo'][:80]} · {'; '.join(a.get('why_partial') or [])[:240]} · {a.get('page', '')}" for a in res['accepted'] if a.get('why_partial')][:200]
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=?,rows_received=?,rows_mutated=?,warning_json=? WHERE id=?",
                          (now, len(res['pages']) + images, len(records), mutated, json.dumps(warn), run_id))
         return {'source': source, 'status': 'completed', 'via': sorted({p.get('via') for p in res['pages'] if p.get('via')}), 'rows_received': len(records), 'rows_mutated': mutated,

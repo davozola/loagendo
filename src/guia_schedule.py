@@ -633,8 +633,43 @@ def labeled_schedule(text, start, end):
         block = [b for b in block if starts_weekday.match(b)]
         if not block: continue
         # «19:30 h» → «19.30 h» (los dos puntos marcan el día en weekly_rows) y «Diumenge, 18 h» → «Diumenge: 18 h».
+        # «De dimarts a dissabte a les 20h.» sin coma (El Maldà, 28-10-2026): «a les/a las» delante de la hora hace de separador.
+        block = [b if ':' in re.sub(r"\d{1,2}:\d{2}", '', b) or ',' in b else re.sub(r"\s+(?:a\s+les|a\s+las)\s+(?=\d)", ': ', b, count=1) for b in block]
         rows_text = ' '.join(re.sub(r",\s+(?=[01]?\d|2[0-3]|a\s+les|de\s)", ': ', re.sub(r"(\d{1,2}):(\d{2})", r"\1.\2", b), count=1) for b in block)
         rows = weekly_rows(rows_text)
         hours = schedule_by_day(rows, start, end) if rows else {}
+        # Excepciones escritas junto al horario (28-10-2026, El Maldà «Dilluns a les 20h (9 de novembre no hi ha funció)»):
+        # esos días se quitan; si la excepción no se puede leer con seguridad, no se usa el horario.
+        near = ' '.join(lines[n + 1:n + 8])
+        if _EXC_NOTE.search(near):
+            skip = _exception_days(near, start, end)
+            if skip is None: return {}
+            hours = {d: h for d, h in hours.items() if d not in skip}
         if any(hours.values()): return hours
     return {}
+
+
+_EXC_NOTE = re.compile(r"no hi ha (?:funcio|funció|sessio|sessió)|no hay (?:funcion|función|sesion|sesión)|sense funci|sin funci|excepte|excepto|tret de\b|menys el|except\b|no performance", re.I)
+_MONTHS_EXC = {'gen': 1, 'ene': 1, 'jan': 1, 'feb': 2, 'mar': 3, 'abr': 4, 'apr': 4, 'mai': 5, 'may': 5, 'jun': 6, 'jul': 7, 'ago': 8, 'aug': 8,
+               'set': 9, 'sep': 9, 'oct': 10, 'nov': 11, 'des': 12, 'dic': 12, 'dec': 12}
+
+
+def _exception_days(text, start, end):
+    """Fechas que la excepción nombra («9 de novembre», «9 i 16 de novembre», «9/11»), dentro del periodo; None si no hay ninguna legible."""
+    import datetime as _dt
+    t = text.lower()
+    out = set()
+    for days, mon in re.findall(r"((?:\d{1,2}\s*(?:,|i|y|and)\s*)*\d{1,2})\s+(?:de\s+|d['’]\s*)?([a-zç]{3,})", t):
+        m = _MONTHS_EXC.get(mon[:3])
+        if not m: continue
+        for dd in re.findall(r"\d{1,2}", days):
+            for y in {str(start)[:4], str(end)[:4]}:
+                try: d = _dt.date(int(y), m, int(dd)).isoformat()
+                except ValueError: continue
+                if str(start)[:10] <= d <= str(end)[:10]: out.add(d)
+    for dd, mm in re.findall(r"(?<!\d)(\d{1,2})/(\d{1,2})(?!\d)", t):
+        for y in {str(start)[:4], str(end)[:4]}:
+            try: d = _dt.date(int(y), int(mm), int(dd)).isoformat()
+            except ValueError: continue
+            if str(start)[:10] <= d <= str(end)[:10]: out.add(d)
+    return out or None

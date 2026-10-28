@@ -69,7 +69,26 @@ def registry_entry(registry, source):
 def public_events(conn, today):
     """Every public record that touches the horizon, as independent copies."""
     start = today.isoformat(); end = (today + dt.timedelta(days=HORIZON_DAYS)).isoformat()
-    return [json.loads(json.dumps(e)) for e in catalog.all_events(conn) if catalog.is_public(e) and e['end'] >= start and e['start'] <= end]
+    events = [e for e in catalog.all_events(conn) if catalog.is_public(e) and e['end'] >= start and e['start'] <= end]
+    repeated = songkick_repeats(events)
+    return [json.loads(json.dumps(e)) for e in events if e['key'] not in repeated]
+
+
+def songkick_repeats(events, min_venues=3):
+    """Fichas de Songkick sin hora cuyo título sale en 3 o más salas distintas (28-10-2026: «Hal9000» en Jamboree, Safari,
+    Monumental, Arena…): el nombre de un DJ residente repetido por el directorio, no un acto concreto. No se publican; el
+    registro se conserva. Con hora, o con otra fuente detrás, sí."""
+    from mvp.catalog import clean as _clean
+    venues = {}
+    for e in events:
+        if e.get('source') != 'venue_songkick': continue
+        venues.setdefault(_clean(e.get('title') or ''), set()).add(_clean((e.get('venue_names') or [''])[0]))
+    out = set()
+    for e in events:
+        if e.get('source') != 'venue_songkick' or len(venues.get(_clean(e.get('title') or ''), ())) < min_venues: continue
+        if any(o.get('time') for o in e.get('occurrences') or []) or e.get('time') or (e.get('confirmations') or 1) > 1: continue
+        out.add(e['key'])
+    return out
 
 
 class ImageExporter:

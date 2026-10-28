@@ -1253,14 +1253,16 @@ const OPEN_FIRST = 5;
 const DAY_PLAN_MAX = 42;
 const isDayPlan = (e, day) => daysBetween(e.start, e.end) <= DAY_PLAN_MAX || (hoursByDay(e) && day in hoursByDay(e) && Object.keys(hoursByDay(e)).length <= 12);
 const WIDE_SKIP_TITLE = /\b(?:taller|tallers|curs|curso|joc|juego|congr\w*|jornad\w*|campus|trobada|activitat comunitaria|espai d.aprenentatge|visita|visites|audioguia|street escape|concurs)\b/;
-const WIDE_SKIP_VENUE = /centre civic|casal|biblioteca|espai de (?:persones|gent) gran|associacio|ateneu|ludoteca/;
 // Además, una propuesta concreta (28-10-2026, 10:45, David): el título dice que es una feria, un mercado, una fiesta o un festival.
 // Una temporada temática dentro del horario normal de un recinto («Halloween al Tibidabo», «Castaween al Paradox Museum»,
-// «Creepy Halloween Family al Poble Espanyol») es la visita de siempre con decorado: no entra. Se decide por el tipo de
-// propuesta del título, nunca por el nombre del recinto; para devolver una, basta con ampliar WIDE_EVENT.
-const WIDE_EVENT = /\b(?:fira|fires|feria|ferias|fair|mercat|mercats|mercado|mercados|market|mercadillo|encants|festa|festes|fiesta|fiestas|festival)\b/;
-const isStrongWide = (e, day) => !isExhibit(e) && !e._a.noHours && e.format !== 'course' && e.format !== 'workshop' && isDayPlan(e, day)
-  && e.venue_tier !== 3 && WIDE_EVENT.test(fold(e.title)) && !WIDE_SKIP_TITLE.test(fold(e.title)) && !WIDE_SKIP_VENUE.test(fold(e.venue_names?.[0] || ''));
+// «Creepy Halloween Family al Poble Espanyol») es la visita de siempre con decorado: no entra. Se decide por lo que es la
+// propuesta según su título, nunca por el tipo de recinto (28-10-2026, 11:11: una feria en un centro cívico vale igual).
+// La palabra tiene que ser el núcleo del título: al principio (tras ordinal, comillas o «Tots Sants 2026:»), justo tras «:»,
+// o «market/fair/fest» al final («Residu Zero Market»). «Taller … de la Festa Major» o «Concurs de cartell de la Festa» no.
+const WIDE_EVENT_WORD = '(?:fira|fires|feria|ferias|fair|mercat|mercats|mercado|mercados|market|mercadillo|encants|festa|festes|fiesta|fiestas|festival)';
+const WIDE_EVENT = new RegExp(`(?:^|:\\s*)(?:\\d+\\s*[a-z]{0,2}\\.?\\s+|[ivxlc]+\\s+)?["'«“]?\\s*${WIDE_EVENT_WORD}\\b|\\b(?:market|fair|fest)\\s*$`);
+const isStrongWide = (e, day) => { const t = fold(e.title).replace(/^tots sants \d{4}:\s*/, ''); return !isExhibit(e) && !e._a.noHours && isDayPlan(e, day)
+  && WIDE_EVENT.test(t) && !WIDE_SKIP_TITLE.test(t) };
 // Recordatorio de la tarde (28-10-2026, David): una feria abierta desde antes de las 15:00 vuelve a aparecer a las 15:00 como
 // línea corta («Sigue abierta hasta las 20:00»), si el tramo que cubre las 15:00 cierra a una hora fiable a las 17:00 o después.
 // Misma ficha, no cuenta en los totales ni ocupa sitio en la hora. Pasada la apertura desaparece la fila; pasadas las 15:00,

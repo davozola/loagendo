@@ -1765,16 +1765,29 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
             for o in prefetch.occurrences.get((ms,mi),[]):
                 if (o['date'],o['time']) not in seen_occ: occurrences.append(dict(o)); seen_occ.add((o['date'],o['time']))
         occurrences.sort(key=lambda o:(o['date'],o['time'] or ''))
-        from src.dedupe import source_rank, DIRECTORY_RANK
+        from src.dedupe import source_rank, DIRECTORY_RANK, first_party
         if source_rank(source)>=DIRECTORY_RANK:
+            # 28-10-2026 (David): manda la hora de inicio que da la sala u organizador; «23:59» y «00:00» son la misma
+            # medianoche; si la discrepancia sigue entre fuentes secundarias, se conserva la incertidumbre (no se elige
+            # la más temprana ni por mayoría).
+            same=lambda t:'00:00' if t=='23:59' else t
             for date in sorted({o['date'] for o in occurrences}):
-                times={o['time'] for o in occurrences if o['date']==date and o['time']}
-                own=set(times)
+                times={same(o['time']) for o in occurrences if o['date']==date and o['time']}
+                own=set(times); hall=set()
                 for member in collapsed_members:
                     ms,mi=member.split(':',1)
                     if ms==source: continue
-                    times|={o['time'] for o in prefetch.occurrences.get((ms,mi),[]) if o['date']==date and o['time']}
-                if len(times)>1 and times!=own: time_conflicts[date]=sorted(times)
+                    theirs={same(o['time']) for o in prefetch.occurrences.get((ms,mi),[]) if o['date']==date and o['time']}
+                    times|=theirs
+                    if first_party(ms): hall|=theirs
+                if len(times)>1 and times!=own:
+                    if len(hall)==1:
+                        h=next(iter(hall))
+                        for o in occurrences:
+                            if o['date']==date: o['time']=h; o['evidence_field']='sala'
+                        continue
+                    time_conflicts[date]=sorted(times)
+            _seen=set(); occurrences[:]=[o for o in occurrences if not ((o['date'],o['time']) in _seen or _seen.add((o['date'],o['time'])))]
     events={
         'source':source,'id':id,'key':source+':'+id, 'title':title,
         'source_label':SOURCES.get(source) or projection.get('source_label') or source,'start':start,'end':end,

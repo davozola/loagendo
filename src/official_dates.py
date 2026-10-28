@@ -363,11 +363,23 @@ def page_facts(page, title, start, end, today=None):
     return times, price, free
 
 
+_SCHEDULE_LABEL = re.compile(r"^\s*(?:horari|horaris|horario|horarios|funcions|funciones|data|dates|fecha|fechas)\s*:?\s*$", re.I)
+
+
 def excerpt_of(text, title):
-    """El trozo del texto de la página que habla del acto: desde la primera línea que comparte palabras con el título."""
+    """El trozo del texto de la página que habla del acto: desde la primera línea que comparte palabras con el título.
+    Si el bloque «Horaris:» / «Horario:» queda fuera del recorte (28-10-2026, El Maldà: «HORARIS: De dimarts a dissabte
+    a les 20h. Diumenge a les 12h.» después de la sinopsis y las críticas), se añade al final tal cual (5 líneas)."""
     words = _words(title); lines = text.split("\n")
     first = next((i for i, l in enumerate(lines) if words & _words(l)), None)
-    return "\n".join(lines[first:])[:EXCERPT] if first is not None else ""
+    if first is None: return ""
+    out = "\n".join(lines[first:])[:EXCERPT]
+    for n in range(first, len(lines)):
+        if _SCHEDULE_LABEL.match(lines[n]) and n + 1 < len(lines):
+            block = "\n".join(lines[n:n + 5]).strip()
+            if block and block not in out: out = out + "\n" + block
+            break
+    return out
 
 
 PASSES_RX = re.compile(r"\b(?:\w+\s+)?(?:passis|passi|passades|pases|pase|sessions|sessio|sesiones|sesion|funcions|funciones)\s*:\s*([^\n]{4,160})")
@@ -392,6 +404,11 @@ def passes_of(text):
     return []
 
 
+def _d(v):
+    try: return dt.date.fromisoformat(str(v)[:10])
+    except ValueError: return None
+
+
 def read_page(url, title, start, end, fetcher, timeout):
     status, final, page = fetcher(url, timeout)
     if status != 200: return {"status": f"http_{status}"}
@@ -401,11 +418,20 @@ def read_page(url, title, start, end, fetcher, timeout):
     if not (words & _words(ptitle) or same_act(title, urlsplit(final or url).path)): return {"status": "no_es_del_acto"}
     times, price, free = page_facts(page, title, start, end)
     text = page_text(page)
-    if not times and start == end:
+    one_night = start == end or (_d(end) and _d(start) and (_d(end) - _d(start)).days == 1)
+    if not times and one_night:
         # Página propia de un acto de un solo día sin schema.org (Sala Upload, 23-10-2026): si en todo su texto
         # hay una sola hora escrita, es la del acto. Con dos o más (puertas y concierto, horario de taquilla…) no se elige.
-        clocks = {f"{int(h):02d}:{m}" for h, m in re.findall(r"(?<![\d:.])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d:])\s*h?", text)}
+        # 28-10-2026 (La Deskomunal): también una sola franja «20:00 - 23:30» (su inicio), y también el acto que acaba de
+        # madrugada del día siguiente («nov. 13 - 14»): la hora es la del primer día.
+        clock_rx = r"(?<![\d:.])([01]?\d|2[0-3])[:.]([0-5]\d)(?![\d:])\s*h?"
+        ranges_ = re.findall(clock_rx + r"\s*(?:-|–|a)\s*" + clock_rx, text)
+        clocks = {f"{int(h):02d}:{m}" for h, m in re.findall(clock_rx, text)}
         if len(clocks) == 1 and clocks != {"00:00"}: times = {start: clocks.pop()}
+        elif len(ranges_) == 1 and len(clocks) == 2:
+            h1, m1, h2, m2 = ranges_[0]
+            first_clock = f"{int(h1):02d}:{m1}"
+            if first_clock != "00:00" and clocks == {first_clock, f"{int(h2):02d}:{m2}"}: times = {start: first_clock}
     sessions = {d: h for d, h in calendar_sessions(page, start, end).items() if len(h) > 1}
     if start == end and not sessions:
         passes = passes_of(text)

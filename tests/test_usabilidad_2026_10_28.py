@@ -150,7 +150,7 @@ class WebTests(unittest.TestCase):
         un día con franja larga es una sesión a su hora; el horario amplio fechado (hasta 6 semanas) va a un bloque reducido
         «Durante el día» (5 filas); lo permanente o de meses sigue sin verse."""
         js = (ROOT / 'static' / 'public.js').read_text()
-        for text in ("const DAY_PLAN_MAX = 42", "const isStrongWide = ", "const REMIND_AT = 15 * 60, REMIND_SHOW = 3", "const WIDE_EVENT = ", "WIDE_EVENT.test(fold(e.title))",
+        for text in ("const DAY_PLAN_MAX = 42", "const isStrongWide = ", "const REMIND_AT = 15 * 60, REMIND_SHOW = 3", "const WIDE_EVENT = ", "WIDE_EVENT.test(t)",
                      "live && m.now.min >= REMIND_AT ? []", "e._st.state === 'open' && !isExhibit(e)",
                      "function remindLine(e)", "r.close - REMIND_AT >= 120", "(isWideRange(range) && isOpenFormat(e))", "e._st.state === 'past' || e._st.state === 'started')) s.past.push(e)"):
             self.assertIn(text, js)

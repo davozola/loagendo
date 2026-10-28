@@ -468,10 +468,27 @@ def participation_exclusion(ev, category):
     return None
 
 
+# Higiene de datos (28-10-2026, auditoría de actividades sin hora, punto 7): fichas de prueba de una ticketera y actos de un
+# directorio fuera de Barcelona. Se excluyen con su motivo; el registro se conserva.
+TEST_TITLE = re.compile(r"^\s*test\b.*\b(?:\d{5,}|case)\b")
+OUTSIDE_BCN = re.compile(r"\s(?:spain|espana)$")
+
+
+def hygiene_exclusion(ev):
+    t = norm(ev.get('title'))
+    if TEST_TITLE.search(t):
+        return {'method': 'ficha_de_prueba', 'evidence': 'Ficha de prueba publicada por la ticketera, no un acto (28-10-2026)'}
+    if str(ev.get('source') or '') == 'venue_songkick':
+        places = [str(v) for v in (ev.get('venue_names') or [])]
+        if places and all(OUTSIDE_BCN.search(norm(p)) and 'barcelona' not in norm(p) for p in places):
+            return {'method': 'fuera_de_barcelona', 'evidence': f'El directorio sitúa el acto fuera de Barcelona ({places[0]}) (28-10-2026)'}
+    return None
+
+
 def _classify_rules(ev, override=None):
     out = _base_rules(ev, override)
     if override or out['status'] in ('editorial', 'excluida'): return out
-    cut = participation_exclusion(ev, out['category'])
+    cut = hygiene_exclusion(ev) or participation_exclusion(ev, out['category'])
     if cut: return {'category': EXCLUDED, 'status': 'excluida', 'method': cut['method'], 'evidence': cut['evidence'], 'ambiguous': False}
     return out
 
