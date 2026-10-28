@@ -2,7 +2,8 @@
 
   1. Vuelve a leer, aunque sus páginas no hayan cambiado, las agendas de sala corregidas: Zumzeig (hora pegada a la fecha y
      enlace de otro acto) y Documenta (fecha y hora pegadas al limpiar). Usa la IA de siempre, con su comprobación.
-  2. Relee con reglas (sin IA) la página propia de los actos de sala sin hora de los próximos 30 días (un día o una noche
+  2. Lee las sesiones de los festivales que venden con Codetickets (DART, In-Edit), sin IA.
+  3. Relee con reglas (sin IA) la página propia de los actos de sala sin hora de los próximos 30 días (un día o una noche
      que acaba de madrugada) y de las obras en cartel sin días de función (El Maldà): franja única, bloque «Horaris» y
      excepciones. Lo que encuentra queda en official_pages, con la URL y el extracto como evidencia.
 
@@ -36,6 +37,21 @@ def main():
                 print('agenda', a['slug'], {k: r.get(k) for k in ('status', 'rows_received', 'rejected', 'error')})
                 w = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? ORDER BY id DESC LIMIT 1", ('venue_ia_' + a['slug'],)).fetchone()
                 for line in json.loads((w or ['[]'])[0] or '[]')[:6]: print('   ', line)
+    # Festivales que venden con Codetickets (DART, In-Edit): sus sesiones con hora, sala y precio, sin IA. Si In-Edit llega
+    # entero, la lectura con IA anterior queda sustituida (sus fichas se excluyen con su motivo; no se borran).
+    from src.venue_feeds import sync_venue
+    venues = json.loads((ROOT / 'config' / 'venues.json').read_text(encoding='utf-8'))
+    venues = venues['venues'] if isinstance(venues, dict) else venues
+    for v in venues:
+        if (v.get('feed') or {}).get('kind') == 'codetickets' and v.get('enabled'):
+            r = sync_venue(conn, v)
+            print('codetickets', v['slug'], {k: r.get(k) for k in ('status', 'rows_received', 'rows_mutated', 'error')})
+            if v['slug'] == 'in_edit_festival' and (r.get('rows_received') or 0) >= 50:
+                with conn:
+                    ids = [i for (i,) in conn.execute("SELECT id FROM source_records WHERE source='venue_ia_in_edit' AND eligibility<>'exclude'")]
+                    conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source='venue_ia_in_edit'")
+                    conn.executemany("INSERT OR IGNORE INTO review_flags VALUES (?,?,?)", [('venue_ia_in_edit', i, 'SUPERSEDED_BY_CODETICKETS') for i in ids])
+                print('   lectura con IA de In-Edit sustituida:', len(ids), 'fichas excluidas (se conservan)')
     official_dates.initialize_pages(conn)
     rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
         WHERE r.source LIKE 'venue_ia_%' AND r.eligibility<>'exclude' AND r.kind<>'exhibition'

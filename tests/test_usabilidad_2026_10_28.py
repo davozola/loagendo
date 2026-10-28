@@ -119,7 +119,7 @@ class InEditTests(unittest.TestCase):
     def test_config(self):
         from src.ai_agenda import load_agendas
         a = next(x for x in load_agendas() if x['slug'] == 'in_edit')
-        self.assertTrue(a['activa']); self.assertEqual(a['hasta'], '2026-11-08'); self.assertEqual(len(a['urls']), 11)
+        self.assertFalse(a['activa']); self.assertEqual(a['hasta'], '2026-11-08')  # 28-10 11:30: sustituida por Codetickets; self.assertEqual(len(a['urls']), 11)
         self.assertEqual(a['festival']['slug'], 'in-edit'); self.assertIn('/docs/', a['seguir']['patron']); self.assertTrue(a['seguir']['ficha'])
 
 

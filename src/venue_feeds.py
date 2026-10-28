@@ -813,6 +813,45 @@ def accelevents_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, fetched
 
 
+CODETICKETS_SKIP = re.compile(r"^\s*(?:pack|abonament|abonaments|abono|abonos|bono|bonos|passi|pase|gift|regal)\b", re.I)
+
+
+def codetickets_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Sesiones de un festival que vende con Codetickets (28-10-2026; DART e In-Edit). La API pública que pinta el portal
+    de venta (api.codetickets.com/api/evento/<entidad>/<canal>/eventos) da cada sesión con su título, fecha y hora locales
+    con zona («2026-11-26T17:15:00.000+01:00»), recinto con sala y dirección, precio y enlace de compra. Sin IA.
+    Packs y abonos no son sesiones. Cada sesión, entrada propia: ficha propia del festival (x_festival)."""
+    feed = venue["feed"]; slug = feed["entidad"]
+    status, _, body = fetcher("https://api.codetickets.com/api/entidad/%s" % slug, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en la entidad %s" % (status, slug))
+    ent = json.loads(body)
+    url = "https://api.codetickets.com/api/evento/%s/%s/eventos?lang=es_ES" % (ent["id"], ent["canalId"])
+    status, _, body = fetcher(url, timeout)
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, url))
+    nodes = []
+    for ev in json.loads(body):
+        sessions = ev.get("sesiones") or []
+        if isinstance(sessions, str):
+            try: sessions = json.loads(sessions)
+            except ValueError: sessions = []
+        for se in sessions or [ev]:
+            name = " ".join(str(ev.get("nombre") or se.get("nombre") or "").split())
+            start = str(se.get("fechaInicial") or ev.get("fechaInicial") or "")
+            room = " ".join(str(se.get("recinto") or ev.get("recinto") or "").split())
+            if not name or CODETICKETS_SKIP.search(name) or not re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", start): continue
+            if feed.get("recinto_generico") and room.lower() == feed["recinto_generico"].lower(): continue
+            hall = re.sub(r"\s+-\s+Sala\s+\S+$", "", room, flags=re.I)
+            address = " ".join(str(se.get("recintoDireccion") or ev.get("recintoDireccion") or "").split())
+            node = {"@type": "Event", "name": name, "url": str(ev.get("urlSale") or feed.get("url") or ""), "startDate": start[:16], "endDate": start[:10],
+                    "location": {"@type": "Place", "name": hall or venue["name"], "address": {"@type": "PostalAddress", "streetAddress": address, "addressLocality": "Barcelona"}},
+                    "x_room": room if room != hall else "", "x_festival": feed.get("festival"), "x_time_text": start[11:16], "x_programa": False}
+            price = se.get("precioDesde") if se.get("precioDesde") is not None else ev.get("precioDesde")
+            if price not in (None, "") and ev.get("hayPrecios", True): node["offers"] = {"@type": "Offer", "price": str(price), "priceCurrency": "EUR", "url": node["url"]}
+            if ev.get("urlImage"): node["image"] = ev["urlImage"]
+            nodes.append((feed.get("url") or node["url"], node))
+    return nodes, 2
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -822,7 +861,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule", "accelevents"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule", "accelevents", "codetickets"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -832,7 +871,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes, "accelevents": accelevents_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes, "accelevents": accelevents_nodes, "codetickets": codetickets_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)

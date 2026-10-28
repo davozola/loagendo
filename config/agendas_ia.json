@@ -759,8 +759,8 @@
         "name": "In-Edit Barcelona"
       },
       "hasta": "2026-11-08",
-      "activa": true,
-      "nota": "Piloto In-Edit (28-10-2026, David): las páginas por día de la web oficial listan las películas sin hora; cada ficha de película da las sesiones con día y hora (sin sala). Se leen las fichas enlazadas; la sala es el cine del festival (MOOBY Aribau) salvo que la ficha nombre otro lugar (Blanquerna…). El número de sala solo está en el PDF de horarios y no se lee. Deja de leerse el 9-11. 28-10: «ficha»: las páginas de película son fichas de un acto (la sesión va tras la sinopsis, lejos del título): no se exige cercanía al título, solo citas literales."
+      "activa": false,
+      "nota": "Piloto In-Edit (28-10-2026, David): las páginas por día de la web oficial listan las películas sin hora; cada ficha de película da las sesiones con día y hora (sin sala). Se leen las fichas enlazadas; la sala es el cine del festival (MOOBY Aribau) salvo que la ficha nombre otro lugar (Blanquerna…). El número de sala solo está en el PDF de horarios y no se lee. Deja de leerse el 9-11. 28-10: «ficha»: las páginas de película son fichas de un acto (la sesión va tras la sinopsis, lejos del título): no se exige cercanía al título, solo citas literales. 28-10 (11:30): desactivada; las sesiones llegan de Codetickets (config/venues.json, in_edit_festival), con sala y sin IA."
     }
   ]
 }

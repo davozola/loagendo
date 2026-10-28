@@ -77,3 +77,26 @@ class WebTests(unittest.TestCase):
     def test_conflicto_resuelto_por_la_sala(self):
         src = (ROOT / 'mvp' / 'catalog.py').read_text()
         self.assertIn("same=lambda t:'00:00' if t=='23:59' else t", src); self.assertIn("o['evidence_field']='sala'", src)
+
+
+class CodeticketsTests(unittest.TestCase):
+    def test_sesiones_sin_packs_con_sala_y_precio(self):
+        import json
+        from src.venue_feeds import codetickets_nodes, record_from_jsonld
+        ent = {'id': 814, 'canalId': 4011}
+        evs = [{'nombre': 'Gracias Botero + Botero', 'fechaInicial': '2026-11-26T17:15:00.000+01:00', 'recinto': 'MOOBY Bosque - Sala 3', 'recintoDireccion': 'Rambla de Prat, 16, Gràcia, Barcelona',
+                'precioDesde': 10, 'hayPrecios': True, 'urlSale': 'https://www.codetickets.com/portal/festivaldart/online/37952', 'sesiones': '[]'},
+               {'nombre': 'Pack 4', 'fechaInicial': '2026-10-29T00:00:00.000+01:00', 'recinto': 'Festival In-Edit', 'sesiones': []},
+               {'nombre': 'Out of the Picture (VOSC)', 'recinto': 'Centre Cívic Casa Elizalde', 'urlSale': 'u', 'precioDesde': 0,
+                'sesiones': [{'fechaInicial': '2026-11-19T19:00:00.000+01:00', 'recinto': 'Centre Cívic Casa Elizalde'}]}]
+        def fetcher(url, timeout):
+            return 200, url, json.dumps(ent if '/entidad/' in url else evs)
+        venue = {'slug': 'dart_festival', 'name': 'DART Festival', 'type': 'festival', 'category': 'Cine y audiovisual',
+                 'feed': {'kind': 'codetickets', 'entidad': 'festivaldart', 'url': 'https://www.codetickets.com/portal/festivaldart/online', 'festival': {'slug': 'dart', 'name': 'DART Festival'}}}
+        nodes, _ = codetickets_nodes(venue, fetcher)
+        self.assertEqual([n['name'] for _, n in nodes], ['Gracias Botero + Botero', 'Out of the Picture (VOSC)'])
+        n = nodes[0][1]
+        self.assertEqual((n['startDate'], n['location']['name'], n['x_room'], n['offers']['price']), ('2026-11-26T17:15', 'MOOBY Bosque', 'MOOBY Bosque - Sala 3', '10'))
+        rec = record_from_jsonld(venue, n, nodes[0][0])
+        self.assertEqual((rec['start'], rec['time_text'], rec['eligibility'] != 'exclude'), ('2026-11-26', '17:15', True))
+        self.assertEqual(rec['raw']['item']['x_festival']['slug'], 'dart')

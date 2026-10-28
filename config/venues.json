@@ -771,6 +771,49 @@
         "hasta": "2026-10-30"
       },
       "note": "25-10-2026: programa oficial (151 sesiones) desde la agenda pública de Accelevents; cada edición cambia el identificador del evento (feed.event)."
+    },
+    {
+      "slug": "dart_festival",
+      "name": "DART Festival",
+      "type": "festival",
+      "category": "Cine y audiovisual",
+      "url": "https://www.codetickets.com/portal/festivaldart/online",
+      "site": "https://dart-festival.com/",
+      "enabled": true,
+      "feed": {
+        "kind": "codetickets",
+        "entidad": "festivaldart",
+        "url": "https://www.codetickets.com/portal/festivaldart/online",
+        "festival": {
+          "slug": "dart",
+          "name": "DART Festival"
+        },
+        "hasta": "2026-11-28",
+        "venta": "por_acto"
+      },
+      "note": "28-10-2026 (David): la web de DART no deja leer a ningún robot salvo buscadores (robots.txt: Disallow /). Su venta, Codetickets, publica cada sesión con fecha, hora, sala, dirección y precio en la API pública del portal (sin robots.txt). Sin IA."
+    },
+    {
+      "slug": "in_edit_festival",
+      "name": "In-Edit Barcelona",
+      "type": "festival",
+      "category": "Cine y audiovisual",
+      "url": "https://www.codetickets.com/portal/festival-in-edit/online",
+      "site": "https://es.in-edit.org/",
+      "enabled": true,
+      "feed": {
+        "kind": "codetickets",
+        "entidad": "festival-in-edit",
+        "url": "https://www.codetickets.com/portal/festival-in-edit/online",
+        "festival": {
+          "slug": "in-edit",
+          "name": "In-Edit Barcelona"
+        },
+        "hasta": "2026-11-08",
+        "venta": "por_acto",
+        "recinto_generico": "Festival In-Edit"
+      },
+      "note": "28-10-2026: sesiones de In-Edit desde su venta en Codetickets (fecha, hora, sala de Mooby Aribau y precio), sin IA. Sustituye a la lectura con IA de la web (agenda in_edit, desactivada)."
     }
   ]
 }
