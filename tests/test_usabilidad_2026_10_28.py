@@ -86,6 +86,26 @@ class FestivalGeneralTests(unittest.TestCase):
         self.assertFalse(any('g2' in a or 'g2' in b for a, b in pairs))
 
 
+class InEditTests(unittest.TestCase):
+    """Piloto In-Edit (28-10-2026, David): la web oficial se lee como agenda con IA (páginas por día → fichas de película);
+    cada sesión queda como acto del festival; la agenda deja de leerse cuando acaba."""
+    def test_sesiones_con_festival(self):
+        from src import ai_agenda
+        agenda = {'slug': 'in_edit', 'name': 'Cinema Mooby Aribau', 'address': "Carrer d'Aribau 8-10", 'type': 'cinema', 'festival': {'slug': 'in-edit', 'name': 'In-Edit Barcelona'}}
+        act = {'titulo': 'Broken English', 'sesiones': [('2026-10-29', '21:00')], 'url': 'https://es.in-edit.org/ca/docs/broken-english-3/', 'quotes': {}}
+        recs = ai_agenda.records_for(agenda, [act], 'https://es.in-edit.org/ca/dia-25/29o-26-ca/', 'h', 'm')
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]['raw']['item']['x_festival'], {'slug': 'in-edit', 'name': 'In-Edit Barcelona'})
+        self.assertEqual(recs[0]['start'], '2026-10-29'); self.assertEqual(recs[0]['time_text'], '21:00')
+        self.assertEqual(recs[0]['venues'][0]['name'], 'Cinema Mooby Aribau')
+
+    def test_config(self):
+        from src.ai_agenda import load_agendas
+        a = next(x for x in load_agendas() if x['slug'] == 'in_edit')
+        self.assertTrue(a['activa']); self.assertEqual(a['hasta'], '2026-11-08'); self.assertEqual(len(a['urls']), 11)
+        self.assertEqual(a['festival']['slug'], 'in-edit'); self.assertIn('/docs/', a['seguir']['patron'])
+
+
 class WebTests(unittest.TestCase):
     def test_orden_por_hora_seleccion_y_periodos(self):
         js = (ROOT / 'static' / 'public.js').read_text(); html = (ROOT / 'static' / 'index.html').read_text()

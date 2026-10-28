@@ -342,6 +342,8 @@ def records_for(agenda, accepted, page_url, page_hash, model):
         days = {}
         for day, hour in act['sesiones']: days.setdefault(day, set()).add(hour)
         nodes = []
+        # Festival leído como agenda (28-10-2026, In-Edit): cada sesión es un acto del festival (x_festival, src/festivals.py).
+        if agenda.get('festival'): base['x_festival'] = agenda['festival']
         for day, hours in sorted(days.items()):
             times = sorted(h for h in hours if h)
             # x_time_verified: la hora sale de una cita comprobada en la página (una sesión de club a las 00:00 vale).
@@ -553,7 +555,8 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     from src import ai_assist
     key = ai_assist.load_key()
     if not key: return {'status': 'skipped', 'reason': 'Falta ANTHROPIC_API_KEY en .env'}
-    agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada')]
+    # «hasta» (28-10-2026): un festival leído como agenda (In-Edit) deja de leerse cuando acaba; lo publicado se queda.
+    agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada') and not (a.get('hasta') and (today or dt.date.today()).isoformat() > a['hasta'])]
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()

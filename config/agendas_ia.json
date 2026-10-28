@@ -60,7 +60,8 @@
       "urls": [
         "https://almo2bar.com/"
       ],
-      "activa": false, "nota": "Desactivada el 26-10-2026: almo2bar.com publica en portugués y en reales; no es el local de Bruniquer 59 (auditoría del motor)"
+      "activa": false,
+      "nota": "Desactivada el 26-10-2026: almo2bar.com publica en portugués y en reales; no es el local de Bruniquer 59 (auditoría del motor)"
     },
     {
       "slug": "filmoteca",
@@ -728,6 +729,37 @@
       ],
       "activa": false,
       "nota": "27-10-2026: cine de autor en VOSE (criterio: cines independientes y de autor, no la cartelera comercial). Sin schema.org: IA. Desactivada el 27-10-2026: su robots.txt solo permite Google, Bing y Microsoft (User-agent: * / Disallow: /). Activar solo con permiso escrito del cine o si añaden Ontoca a su robots.txt."
+    },
+    {
+      "slug": "in_edit",
+      "name": "Cinema Mooby Aribau",
+      "address": "Carrer d'Aribau 8-10, 08011 Barcelona",
+      "type": "cinema",
+      "urls": [
+        "https://es.in-edit.org/ca/dia-25/29o-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/30o_26-ca/",
+        "https://es.in-edit.org/ca/dia-25/31o_26-ca/",
+        "https://es.in-edit.org/ca/dia-25/1nov-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/2nov-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/3nov-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/4nov-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/5nov-26-ca/",
+        "https://es.in-edit.org/ca/dia-25/6nov-26-ca/",
+        "https://es.in-edit.org/en/dia-25/7nov-26-en/",
+        "https://es.in-edit.org/en/dia-25/8nov-26-en/"
+      ],
+      "seguir": {
+        "patron": "/docs/[^/]+/?$",
+        "max": 150
+      },
+      "otros_lugares": true,
+      "festival": {
+        "slug": "in-edit",
+        "name": "In-Edit Barcelona"
+      },
+      "hasta": "2026-11-08",
+      "activa": true,
+      "nota": "Piloto In-Edit (28-10-2026, David): las páginas por día de la web oficial listan las películas sin hora; cada ficha de película da las sesiones con día y hora (sin sala). Se leen las fichas enlazadas; la sala es el cine del festival (MOOBY Aribau) salvo que la ficha nombre otro lugar (Blanquerna…). El número de sala solo está en el PDF de horarios y no se lee. Deja de leerse el 9-11."
     }
   ]
 }
