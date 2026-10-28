@@ -1063,12 +1063,14 @@ function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 
 // Agenda (28-10-2026, David): como mucho diez actividades por hora, las más relevantes y variadas; el resto a un clic
 // («Ver N actividades más», se puede volver a plegar). Sin plegar con búsqueda, en Guardados, con «Cerca de mí» o
 // cuando los filtros ya dejan una lista manejable. Dentro de la hora, por minuto y luego por relevancia.
-const HOUR_CAP = 10, FILTERED_NO_FOLD = 40;
+// Validación en la web publicada (28-10-2026): no se pliega por 1 a 3 actividades («Ver 3 más» no ayuda) y con filtros
+// se deja entero hasta 60 planes del día (con «Música», un jueves: 59).
+const HOUR_CAP = 10, HOUR_SLACK = 3, FILTERED_NO_FOLD = 60;
 const narrowed = () => Boolean(state.cats.length || state.chans.length || state.district || state.free || state.ages.length || state.langs.length || state.hourFrom !== null || state.hourTo !== null);
 const byMinuteThenRelevance = (a, b) => (a._st.sort - b._st.sort) || (relevance(b) - relevance(a)) || byTitle(a, b);
 function hourRows(list, id, fold) {
   if (state.near) return seriesFold(nearSort(list));
-  if (!fold || list.length <= HOUR_CAP) return seriesFold([...list].sort(byMinuteThenRelevance));
+  if (!fold || list.length <= HOUR_CAP + HOUR_SLACK) return seriesFold([...list].sort(byMinuteThenRelevance));
   const top = rankDiverse(list, HOUR_CAP, e => e.public_category || '', relevance, 1, 3), open = state.expanded.has(id);
   const first = list.filter(e => top.has(e)).sort(byMinuteThenRelevance), rest = list.filter(e => !top.has(e)).sort(byMinuteThenRelevance);
   const more = open ? `${seriesFold(rest)}<button class="ag-toggle ag-hourless" type="button" data-hourfold="${esc(id)}">${L('Ver menos', 'Mostra’n menys', 'Show fewer')}</button>`
