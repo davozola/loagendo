@@ -61,11 +61,11 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 /* selección de la semana: banda turquesa */
 #seleccion{margin:0 calc(50% - 50vw) 0;width:100vw;padding:clamp(22px,4vw,44px) var(--gutter) clamp(18px,3vw,36px);background:var(--turq);border-bottom:0;box-sizing:border-box}   /* sin hueco blanco hasta la banda de «Cuándo» (28-10-2026) */
 #seleccion .section-head{color:var(--on-color)}
-#seleccion .section-head{max-width:1360px;margin:0 auto 18px}
+#seleccion .section-head{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto 18px}
 #seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
 #seleccion .section-head p{color:var(--on-color)}
-.curated{max-width:1360px;margin:0 auto}
-.pick-bar{max-width:1360px;margin:0 auto 14px}
+.curated{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto}
+.pick-bar{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto 14px}
 .ag-fests{border-color:var(--ink)}.ag-festrow{border-top-color:var(--line)}
 .near-btn,.near-on{border-radius:0;border-color:var(--ink);background:var(--paper)}.near-km{border-radius:0}.near-km.on{background:var(--ink);color:var(--paper)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
 .curated button{border:1px solid var(--on-color);border-radius:0}
@@ -285,3 +285,14 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 #daysPanel{margin-top:12px}#daysPanel[hidden]{display:none}
 .day.day-other{position:relative;flex:0 0 auto;width:auto;padding:6px 12px;display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer}
 .day-other input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+
+/* Escritorio (29-10-2026): la banda de «Cuándo» y la Selección, alineadas con la columna de la agenda (1360 px menos los
+   márgenes) en pantallas grandes; buscador y «Hoy | Elegir día | Periodo» en una fila; categorías y «Cerca de mí» en otra. */
+.panel{grid-template-columns:minmax(0,calc(1360px - 2 * var(--gutter)));justify-content:center}
+@media(min-width:961px){
+  .panel{grid-template-columns:minmax(0,calc(1360px - 2 * var(--gutter) - 572px)) 560px;column-gap:12px}
+  .panel>.panel-top{grid-column:1}.panel>.when-bar{grid-column:2;margin-top:0;align-self:center;max-width:none}
+  .panel>#daysPanel{grid-column:1/-1;margin-top:0}
+  .filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px}.filter-bar .type-mini{order:-1;flex:0 1 auto;min-width:0}
+  .filter-bar .type-mini .cat-bar{margin:0;padding:0}.filter-bar .near-box{margin:0}.filter-bar .near-msg{flex-basis:100%}
+}
