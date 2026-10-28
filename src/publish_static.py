@@ -801,18 +801,21 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for offset in range(HORIZON_DAYS + 1):
         day = (today + dt.timedelta(days=offset)).isoformat()
         page = catalog.query_events(conn, day=day, public=True, page_size=PAGE_SIZE, include_started=False)
-        featured = featured_pool(conn, day, PICK_POOL_WEEK)
+        # Candidatos amplios (400) en los primeros 30 días, donde están las selecciones por tipo y las de la IA; después, 100.
+        wide = PICK_POOL_WEEK if offset <= 30 else PICK_POOL
+        featured = featured_pool(conn, day, wide)
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
-        # Selección de la semana elegida por la IA para ese día (src/ai_select.py): va primero, en su orden.
+        # Selección elegida por la IA para ese día (src/ai_select.py), en los dos alcances (28-10-2026): va primero, en su orden.
         from src.ai_select import picks_for
-        chosen = picks_for(conn, day); ai_pick = False
-        if chosen:
-            pool = {e['key']: e for e in catalog.query_events(conn, day=day, featured=True, public=True, page_size=100)['items']}
+        def with_ai(scope, pool_items, base):
+            chosen = picks_for(conn, day, scope)
+            if not chosen: return base, False
+            pool = {e['key']: e for e in pool_items}
             first = [pool[k] for k in chosen if k in pool]
-            if len(first) >= 5:
-                picks = first + [e for e in picks if e['key'] not in set(chosen)]
-                picks = picks[:FEATURED_SIZE]; ai_pick = True
+            if len(first) < 5: return base, False
+            return (first + [e for e in base if e['key'] not in set(chosen)])[:FEATURED_SIZE], True
+        picks, ai_pick = with_ai('week', featured['items'], picks)
         # Más «Selección Ontoca» para la lista de ese día: los actos de ese día mejor
         # puntuados con las mismas reglas explicables de la portada (featured_score).
         whole = [e for e in events if e['start'] <= day <= e['end'] and (e['start'] == e['end'] or not e.get('hours_by_day') or day in e['hours_by_day'])]
@@ -824,8 +827,9 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             exported = images.item(first) if first else None
             if exported: highlight_media[k] = exported['url']
         # «Selección Ontoca · Hoy» (25-10-2026): las mismas reglas, solo con lo de ese día.
-        today_only = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=PICK_POOL)
+        today_only = featured_pool(conn, day, wide, featured_days=1)
         picks_today = [e for e in today_only['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
+        picks_today, ai_today = with_ai('day', today_only['items'], picks_today)
         # «Selección Ontoca» por tipo (28-10-2026, David): los mejor puntuados de cada categoría, de los mismos candidatos
         # (mismas reglas explicables, sin IA nueva). Fichero aparte, que solo pide la Selección: no pesa en la primera carga.
         _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden),
@@ -833,7 +837,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
                                                             'x': expo_picks(by_key, ranks_expo, images, hidden),
                                                             'f': family_picks(today_only['items'] + featured['items'], images, hidden)})
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
-                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'expo_rank': ranks_expo, 'districts': catalog.districts(conn, day)}
+                     'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'featured_today_ai': ai_today, 'highlight': highlight, 'highlight_media': highlight_media, 'expo_rank': ranks_expo, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])
     shards, cards = {}, {}
     for e in events:

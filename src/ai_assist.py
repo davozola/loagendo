@@ -500,7 +500,7 @@ def run(conn, job=None, requester=_request, today=None):
         selection = None
         if job.get('seleccion', True):
             from src import ai_select
-            selection = ai_select.ensure(conn, key, model=model, requester=requester if requester is not _request else None)
+            selection = ai_select.ensure_ahead(conn, key, model=model, requester=requester if requester is not _request else None)   # hoy y 7 días más, «Hoy» y «7 días» (28-10-2026)
         return {'status': 'completed', 'stored': stored, 'usage': usage, 'submitted': sent, 'selection': selection}
     except urllib.error.HTTPError as err:
         return {'status': 'failed', 'error': f'API de Claude: HTTP {err.code}'}

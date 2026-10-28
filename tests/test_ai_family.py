@@ -64,7 +64,7 @@ class PausedDescriptionsTests(unittest.TestCase):
         conn = sqlite3.connect(':memory:'); ai_assist.initialize(conn); sent = []
         with mock.patch.object(ai_assist, 'load_key', return_value='k'), mock.patch.object(ai_assist, 'collect', return_value=(0, {})), \
              mock.patch.object(ai_assist, 'submit', side_effect=lambda c, k, t, i, m, r: sent.append(t)), \
-             mock.patch('mvp.catalog.all_events', return_value=[]), mock.patch('src.ai_select.ensure', return_value=None):
+             mock.patch('mvp.catalog.all_events', return_value=[]), mock.patch('src.ai_select.ensure_ahead', return_value=None):
             ai_assist.run(conn, job, today='2026-10-20')
         self.assertNotIn('descripcion', sent)
         self.assertFalse(ai_describe.public_enabled())

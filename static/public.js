@@ -235,7 +235,7 @@ const hoursOf = v => (String(v || '').match(/\b(?:[01]\d|2[0-3]):[0-5]\d\b/g) ||
 async function staticEvents(p) {
   const day = p.get('day') || '', from = p.get('date_from') || '', to = p.get('date_to') || '';
   const page = Number(p.get('page') || 1), size = Number(p.get('page_size') || PAGE);
-  if (p.get('featured') === '1') { const d = await dayFile(day || today); const list = p.get('featured_days') === '1' ? (d.featured_today || []) : d.featured; return {items: list.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: list.length, ai: p.get('featured_days') !== '1' && Boolean(d.featured_ai)} }
+  if (p.get('featured') === '1') { const d = await dayFile(day || today); const list = p.get('featured_days') === '1' ? (d.featured_today || []) : d.featured; return {items: list.map((c, i) => ({...expand(c), featured_score: 100 - i})), total: list.length, ai: Boolean(p.get('featured_days') === '1' ? d.featured_today_ai : d.featured_ai)} }
   const filters = {cat: p.getAll('public_category').filter(Boolean), chans: p.getAll('channel').filter(Boolean), ages: p.getAll('edad').filter(Boolean), langs: p.getAll('idioma').filter(Boolean), format: p.get('format') || '', district: p.get('district') || '', free: p.get('free') === '1', query: fold(p.get('query') || ''),
     hourFrom: p.get('hour_from') ? Number(p.get('hour_from')) : null, hourTo: p.get('hour_to') ? Number(p.get('hour_to')) : null, started: p.get('started') !== '0'};
   const plain = !filters.cat.length && !filters.chans.length && !filters.ages.length && !filters.format && !filters.district && !filters.free && !filters.query && filters.hourFrom === null && filters.hourTo === null && !filters.started;
@@ -562,9 +562,11 @@ async function selection() {
     const ranked = d.ai ? list : complete.concat(list.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)));
     // Una semana tiene más donde elegir (28-10-2026, David): «Todo» 10 y cada tipo 8; un día, 7 y 6.
     const size = one ? 7 : 10, perType = one ? 6 : 8;
-    const chosen = [], perCat = {};
-    for (const e of ranked) { const c = e.public_category || ''; if ((perCat[c] || 0) < 2) { chosen.push(e); perCat[c] = (perCat[c] || 0) + 1 } if (chosen.length === size) break }
-    for (const e of ranked) { if (chosen.length >= size) break; if (!chosen.includes(e)) chosen.push(e) }
+    // Con IA (28-10-2026): se respeta su elección (ya viene variada, hasta 3 por categoría); sin IA, las reglas con 2 por
+    // categoría. En los dos casos, nunca dos del mismo festival, ciclo u obra.
+    const chosen = [], perCat = {}, works = new Set(), cap = d.ai ? 3 : 2, work = e => e.festival?.slug || e.series || fold(e.title);
+    for (const e of ranked) { const c = e.public_category || ''; if ((perCat[c] || 0) < cap && !works.has(work(e))) { chosen.push(e); perCat[c] = (perCat[c] || 0) + 1; works.add(work(e)) } if (chosen.length === size) break }
+    for (const e of ranked) { if (chosen.length >= size) break; if (!chosen.includes(e) && !works.has(work(e))) { chosen.push(e); works.add(work(e)) } }
     const byTime = (a, b) => when(a).localeCompare(when(b)) || String(a.time || '99').localeCompare(String(b.time || '99'));
     // Por tipo (28-10-2026, David): los mejor puntuados de cada categoría con las mismas reglas; el tipo sale con 3 o más
     // planes y enseña hasta 6. «Todo» es la selección de siempre. Un tipo elegido se mantiene al cambiar de día si ese día
