@@ -51,6 +51,8 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
 .panel{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 40px rgba(0,0,0,.16)}
 .panel-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 #agendaCount{margin:0;font-size:14px;color:var(--soft)}#agendaCount b{color:var(--fg);font-weight:600}
+/* La línea «219 planes · jue 29 oct · 258 exposiciones» ya está en las pestañas, los días y los filtros (28-10-2026, 19:34). */
+.agenda-head{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* layout */
 .layout{position:relative;display:grid;grid-template-columns:280px minmax(0,1fr);gap:clamp(24px,4vw,48px);align-items:start}
@@ -122,7 +124,7 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
 .curated>button{flex:0 0 calc((100% - 48px) / 4.3);scroll-snap-align:start}.curated>.empty{flex:1}
 .curated .pick-media{height:200px}
 .pick-bar{display:flex;align-items:center;gap:16px;margin:0 0 14px}
-.pick-what{margin:0;font-size:13px;color:var(--soft);flex:1 1 auto}.pick-what:empty{display:none}
+.pick-cats{flex:1 1 auto;min-width:0}.pick-cats[hidden]{display:none}.pick-cats .cat-bar{margin:0}
 .pick-nav{display:flex;align-items:center;gap:6px;margin-left:auto}.pick-nav[hidden]{display:none}
 #pickCount{font-size:14px;font-weight:600;margin-right:6px;white-space:nowrap}
 .pick-arrow{width:44px;height:44px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);font:inherit;font-size:22px;line-height:1;cursor:pointer}
@@ -395,20 +397,28 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Navegación de filtros (21-10-2026): en móvil, botón «Filtros» fijo a todo el ancho; debajo,
    los tipos de plan con sus textos, que se activan sin mover la página */
-.filter-bar{display:none}
+.filter-bar{display:block;margin:0 0 12px}.filter-bar .filters-toggle{display:none}
+/* Fila de «Filtros» y «Cerca de mí»; debajo, la fila de categorías de la Agenda, siempre a la vista (28-10-2026, 19:34). */
+.near-box{display:inline-flex;margin:0 0 8px}
+.near-btn,.near-on{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:var(--surface);color:var(--fg);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.near-on{padding:0 4px 0 12px;gap:4px;cursor:default}.near-km,.near-off{min-height:36px;min-width:44px;padding:0 10px;border:1px solid transparent;border-radius:999px;background:none;color:var(--fg);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.near-km.on{background:var(--fg);color:var(--bg)}
+.near-msg{margin:4px 0 0;font-size:13px;color:var(--soft)}.near-msg[hidden]{display:none}
 .filters-panel .discover{display:block;margin:0}
 .filters-panel .channel-row{flex-wrap:wrap;overflow:visible}
 .filters-panel .age-row{flex-wrap:wrap;overflow:visible;margin:8px 0 0}
 @media(max-width:960px){
   .agenda-head .filters-toggle{display:none}
   .filter-bar{display:block;position:sticky;top:var(--stick,0px);z-index:30;margin:0 calc(-1 * var(--gutter)) 12px;padding:8px var(--gutter);background:var(--bg);border-bottom:1px solid var(--line)}
-  .filter-bar .filters-toggle{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid var(--accent);border-radius:999px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+  .filter-bar .filters-toggle{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid var(--accent);border-radius:999px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+  .filter-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;align-items:center}.filter-bar .near-box{margin:0}.filter-bar .type-mini,.filter-bar .near-msg{grid-column:1/-1}
+  .filter-bar .type-mini .cat-bar{margin-top:8px}
   .content .active-filters{margin:0 0 12px}
   .fab-filters{display:none!important}
 }
 
 /* Tipos de plan en versión corta, fijos bajo «Filtros» al bajar por la lista (21-10-2026) */
-.type-mini{display:block;margin:0}
+.type-mini{display:block;margin:0}.type-mini[hidden]{display:block}
 .type-mini::-webkit-scrollbar{display:none}
 .type-mini[hidden]{display:none}
 .mini-chip{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;min-height:32px;padding:0 4px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
@@ -474,7 +484,6 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Barra rápida de categorías y bloques plegables (23-10-2026, propuesta A + B) */
 .cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
-.cat-top{margin:0 0 18px}.cat-top .cat-bar{margin:0}
 /* Copia compacta de la barra de categorías en la barra fija de «Filtros» (móvil), con el mismo estado (28-10-2026). */
 .type-mini .cat-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;margin:8px calc(-1 * var(--gutter,16px)) 0;padding:0 var(--gutter,16px)}.type-mini .cat-bar::-webkit-scrollbar{display:none}
 .type-mini .cat-pill{min-height:32px;padding:0 10px;font-size:13px;gap:5px}
@@ -581,20 +590,24 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .curated::-webkit-scrollbar{display:none}
 .curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
 .pick-nav{display:none}.pick-bar{margin-bottom:6px}.curated .pick-media{height:120px}.curated .pick-title{-webkit-line-clamp:2;font-size:15px}
-/* Titular en dos líneas y la barra de categorías justo debajo (28-10-2026, David): los planes, antes. */
-.hero h1{font-size:27px;line-height:1.05}.hero h1>span{display:inline}.hero h1 em{display:inline}
-.hero{padding:14px 0 12px;margin-bottom:0}
-.cat-top{margin:0 0 14px}.cat-top .cat-bar{margin:0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
-.cat-top .cat-pill{min-height:38px;padding:0 11px;font-size:14px}
+/* Móvil (28-10-2026): la Selección más compacta; los tipos de la Selección, una fila que se desliza. */
+.hero{padding:14px 0 16px;margin-bottom:0}
+.pick-cats .cat-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter,16px)) 0 0;padding-right:var(--gutter,16px);-webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}.pick-cats .cat-bar::-webkit-scrollbar{display:none}
+.pick-cats .cat-pill{min-height:38px;padding:0 11px;font-size:14px}
 #seleccion{margin-bottom:14px;padding-top:18px;padding-bottom:18px}
 .agenda-head .agenda-title h2{display:none}#agendaCount{font-size:13px}
 .pick-large .pick-media,.pick-media{height:150px}.pick-large .pick-title{font-size:19px;-webkit-line-clamp:3}.pick-large .pick-summary{display:none}
 .period-date{grid-column:auto}
 }
 .ag-subhead{margin:10px 0 2px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-/* Festivales del día en su propia línea (28-10-2026): no son sesiones a una hora. */
-.ag-fests{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 12px;font-size:13px}.ag-fests>span{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;color:var(--muted)}
-.ag-festchip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid var(--line2);border-radius:999px;background:var(--surface);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}.ag-festchip b{font-weight:600}.ag-festchip small{color:var(--soft)}
+/* Festivales del día (28-10-2026, 19:34): plegados en una línea; al abrir, filas iguales con el nombre. No son sesiones. */
+.ag-fests{margin:6px 0 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ag-fests>summary{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none;font-size:14px;font-weight:600}
+.ag-fests>summary::-webkit-details-marker{display:none}.ag-fests>summary:after{content:'+';margin-left:auto;font-size:20px;font-weight:400}.ag-fests[open]>summary:after{content:'−'}
+.ag-fests>summary b{font-weight:500;color:var(--soft)}
+.ag-festrows{display:grid;gap:0;padding:0 0 6px}
+.ag-festrow{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 2px;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.ag-festrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ag-festrow i{font-style:normal;color:var(--soft)}
 /* Recordatorio de la tarde (28-10-2026): «Sigue abierta hasta las 20:00 · Fira…», misma ficha, no es otra sesión */
 .ag-reminders{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
 .ag-remind{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;width:100%;padding:9px 12px;border:1px dashed var(--line2);border-radius:12px;background:transparent;color:var(--fg);font:inherit;font-size:14px;text-align:left;cursor:pointer}

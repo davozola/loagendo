@@ -35,6 +35,11 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .hero-bg{display:none}
 .hero h1{max-width:1100px;font-size:clamp(44px,7.4vw,112px);font-weight:500;letter-spacing:-.045em;line-height:.97}
 .hero h1 em{color:var(--ink);font-weight:700}.hero h1 em.typing:after{background:var(--ink)}
+/* Titular en dos líneas fijas (28-10-2026, 19:34, David): arriba «Qué hacer en Barcelona», abajo la palabra que rota, siempre
+   en una línea (se encoge si es larga). El alto queda reservado y no salta al cambiar la palabra. */
+.hero h1>span,.hero h1 em{display:block;white-space:nowrap}
+.hero h1 em{min-height:1.02em;line-height:1.02}
+@media(max-width:620px){.hero h1{font-size:clamp(28px,8.6vw,36px)}.hero h1 em.long{font-size:.78em;line-height:1.31}.hero{padding:14px 0 16px}}
 .hero-copy{color:var(--ink);font-size:clamp(20px,2vw,30px);font-style:italic;font-weight:500;max-width:none}
 
 /* periodo y días: banda arena */
@@ -58,8 +63,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 #seleccion .section-head p{color:var(--on-color)}
 .curated{max-width:1360px;margin:0 auto}
 .pick-bar{max-width:1360px;margin:0 auto 14px}
-.cat-top{max-width:1360px;margin:0 auto 18px;padding:0 var(--gutter)}
-.ag-festchip{border-radius:0;border-color:var(--ink);background:var(--sand)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
+.ag-fests{border-color:var(--ink)}.ag-festrow{border-top-color:var(--line)}
+.near-btn,.near-on{border-radius:0;border-color:var(--ink);background:var(--paper)}.near-km{border-radius:0}.near-km.on{background:var(--ink);color:var(--paper)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
 .curated button{border:1px solid var(--on-color);border-radius:0}
 .curated button:hover{transform:none;box-shadow:none;border-color:var(--on-color)}
 .pick-large,.pick-small{border-radius:0;padding:0;background:var(--paper);color:var(--ink)}
