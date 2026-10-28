@@ -202,3 +202,9 @@ class SeleccionPorTipoTests(unittest.TestCase):
         ranks = {'a': 5, 'b': 4, 'c': 3, 'd': 2, 'e': 1}
         with mock.patch.object(publish_static, 'compact', lambda e, images, hidden=frozenset(): e['key']):
             self.assertEqual(publish_static.expo_picks(by_key, ranks, None), ['a', 'c', 'e'])
+
+    def test_patios_en_una_fila_en_todos_los_contextos_y_sin_edad_no_indicada(self):
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
+        self.assertIn('gatherSeries([timeline, tbcList])', js)      # un día (con o sin filtros)
+        self.assertIn('gatherSeries([nearSort(dayList)])', js)      # varios días (7 días, fin de semana)
+        self.assertNotIn('AGE_LABEL.nd', js.split('function row(')[1].split('\n')[0])   # la fila no dice «Edad no indicada»

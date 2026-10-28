@@ -149,10 +149,11 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 
 /* destacados (23-10-2026): fondo neutro y marco negro grueso. Antes eran coral, el color de Teatro,
    y un concierto destacado parecía una obra. La foto a todo el ancho y la etiqueta negra se mantienen. */
-.ev.ev-hl{background:var(--surface2);border-radius:0;margin:8px 0;padding:0 12px;border:2px solid var(--ink);color:var(--ink)}
-.ev.ev-hl .ev-title{font-size:clamp(19px,1.9vw,22px);font-weight:700;letter-spacing:-.02em}
+.ev.ev-hl{background:none;border-radius:0;margin:0;padding:0;border:0;color:var(--ink)}
+.ev.ev-hl .ev-title{font-size:1.04em;font-weight:700;letter-spacing:-.02em}
+.ev-thumb{border-radius:0;border:1px solid var(--ink)}
 .ev.ev-hl .ev-meta{color:var(--text2)}
-.hl-img{max-width:none;border-radius:0;aspect-ratio:16/8;margin:2px 0 10px;border:1px solid var(--ink)}
+.hl-img{max-width:300px;border-radius:0;aspect-ratio:16/7;margin:2px 0 6px;border:1px solid var(--ink)}
 .hl-tag,.hl-tag.hl-last,.hl-tag.hl-lastday,.hl-tag.hl-premiere,.hl-tag.hl-onlytoday{display:inline-block;background:var(--on-color);color:#FFF;padding:4px 8px 3px;font-size:11px;letter-spacing:.08em;margin:0 0 6px}
 
 /* festivales: bloque salvia */

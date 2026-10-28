@@ -325,6 +325,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 @media(max-width:620px){
   .ev{gap:6px}
   .ev-main{grid-template-columns:84px minmax(0,1fr);gap:12px;min-height:60px;padding:11px 0}
+  .ev-main:has(.ev-thumb){grid-template-columns:84px 56px minmax(0,1fr);gap:10px}.ev-thumb{width:56px;height:56px}
   .w-big{font-size:21px}.w-mid,.w-state-wide{font-size:14px}.w-bar{width:70px}
   .w-note,.w-kind{font-size:10.5px}
   .ev-title{font-size:15.5px}.ev-meta,.ev-cat{font-size:12.5px}
@@ -437,9 +438,15 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .sheet-fest b{color:var(--fg)}
 
 /* Destacados (21-10-2026): fila con imagen y motivo; pocas por día */
-.ev.ev-hl{background:linear-gradient(90deg,var(--accentSoft),transparent 70%);border-radius:14px;margin:4px 0;padding:0 8px}
-.ev.ev-hl .ev-title{font-size:1.08em}
-.hl-img{display:block;width:100%;max-width:420px;aspect-ratio:16/8;border-radius:10px;overflow:hidden;margin:2px 0 8px;background:var(--surface2)}
+/* Selección en la Agenda (28-10-2026, David): sello y miniatura, sin la caja grande que repetía el carrusel. */
+.ev.ev-hl{background:none;margin:0;padding:0}
+.ev.ev-hl .ev-title{font-size:1.04em}
+.ev-main:has(.ev-thumb){grid-template-columns:clamp(96px,10vw,140px) 64px minmax(0,1fr)}
+.ev-thumb{display:block;width:64px;height:64px;border-radius:8px;overflow:hidden;background:var(--surface2);align-self:center}
+.ev-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* En la pestaña Expos todas son «Arte y exposiciones»: la categoría sobra y deja sitio al cierre y al precio. */
+.ag-wide .ev-catname{display:none}
+.hl-img{display:block;width:100%;max-width:300px;aspect-ratio:16/7;border-radius:10px;overflow:hidden;margin:2px 0 6px;background:var(--surface2)}
 .hl-img img{width:100%;height:100%;object-fit:cover;display:block}
 .hl-tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accentText);margin:0 0 3px}
 .hl-tag.hl-last,.hl-tag.hl-lastday{color:#f5b84a}

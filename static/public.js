@@ -945,11 +945,11 @@ function whenCell(e) {
     if (!a.noHours && a.open === 0 && a.close >= 1439 && !(a.ranges || []).some(r => r.open > 0 || r.close < 1439)) return `<div class="when w-wide"><span class="w-state-wide">${L('Todo el día', 'Tot el dia', 'All day')}</span>${e.start !== e.end ? `<span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span>` : ''}</div>`;
     if (a.noHours) return `<div class="when w-wide"><span class="w-state-wide">${a.until && e.start !== e.end ? (isExhibit(e) ? L('Exposición', 'Exposició', 'Exhibition') : L('Varios días', 'Diversos dies', 'Several days')) : L('Todo el día', 'Tot el dia', 'All day')}</span><span class="w-note${last ? ' urgent' : ''}">${esc(untilText(e, a.until))}</span></div>`;
     let main, note = '', cls = '';
-    if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert', 'Open')}</span>`; if (st.closesIn <= SOON) { note = `${L('cierra en', 'tanca d\'aquí a', 'closes in')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les', 'until')} ${clock(st.closesAt ?? a.close)}` }
+    if (st.state === 'open') { main = `<span class="w-state-wide">${L('Abierto', 'Obert', 'Open')}</span>`; if (st.closesIn <= SOON && !isExhibit(e)) { note = `${L('cierra en', 'tanca d\'aquí a', 'closes in')} ${st.closesIn} min`; cls = 'urgent' } else note = `${L('hasta las', 'fins a les', 'until')} ${clock(st.closesAt ?? a.close)}` }
     else if (st.state === 'soon' || st.state === 'later') { main = `<span class="w-mid">${st.reopens ? L('Reabre', 'Reobre', 'Reopens') : L('Abre', 'Obre', 'Opens')} ${clock(st.opensAt ?? a.open)}</span>`; note = (a.ranges || []).length > 1 ? a.ranges.map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ') : `${L('hasta las', 'fins a les', 'until')} ${clock(a.close)}` }
     else if (st.state === 'past') { main = `<span class="w-mid w-dim">${L('Cerrado ya', 'Ja tancat', 'Closed now')}</span>`; note = `${clock(a.open)}–${clock(a.close)}` }
     else { main = `<span class="w-mid">${(a.ranges || [a]).map(r => `${clock(r.open)}–${clock(r.close)}`).join(' · ')}</span>` }
-    const lastNote = e.start !== e.end && last && cls !== 'urgent' ? `<span class="w-note urgent">${esc(lastText(e, a.until))}</span>` : '';
+    const lastNote = e.start !== e.end && last && cls !== 'urgent' && !isExhibit(e) ? `<span class="w-note urgent">${esc(lastText(e, a.until))}</span>` : '';
     return `<div class="when w-wide">${bar(a, st)}${main}${note ? `<span class="w-note ${cls}">${esc(note)}</span>` : ''}${lastNote}</div>`;
   }
   if (a.kind === 'soon') return `<div class="when w-course"><span class="w-kind">${L('Empieza', 'Comença', 'Starts')}</span><span class="w-mid">${esc(e.start === (e._day || today) ? L('hoy', 'avui', 'today') : labelDate(e.start))}</span>${a.open !== undefined ? `<span class="w-note">${clock(a.open)}–${clock(a.close)}</span>` : ''}</div>`;
@@ -979,7 +979,7 @@ const seriesShort = title => String(title || '').replace(/^\s*patis? escolars? o
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : state.chans.includes('familia') ? `<span class="ev-age age-nd">${esc(byLang(AGE_LABEL.nd))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}${thumb(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1043,10 +1043,17 @@ document.addEventListener('error', ev => {
   const img = ev.target;
   if (img && img.tagName === 'IMG' && img.closest) { const box = img.closest('.hl-img'); if (box) box.remove() }
 }, true);
+// Miniatura en todas las filas de Expos que tienen imagen (28-10-2026, David): para elegir una exposición es el dato que
+// más decide; el 57 % la tienen y solo se veía en 3 de 20.
+function thumb(e) {
+  if (!isExhibit(e)) return '';
+  const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
+  return url ? `<span class="ev-thumb"><img src="${esc(url)}" alt="" loading="lazy"></span>` : '';
+}
 function hlHead(e) {
   if (!e._hl) return '';
   const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
-  return `${url ? `<span class="hl-img"><img src="${esc(url)}" alt="" loading="lazy"></span>` : ''}<span class="hl-tag hl-${e._hl}">${esc(HL_LABEL[e._hl]())}</span>`;
+  return `${url && !isExhibit(e) ? `<span class="hl-img"><img src="${esc(url)}" alt="" loading="lazy"></span>` : ''}<span class="hl-tag hl-${e._hl}">${esc(HL_LABEL[e._hl]())}</span>`;
 }
 
 // Festival: las actividades del mismo festival en un bloque plegado con su nombre y cuántas hay
@@ -1125,7 +1132,7 @@ function relevance(e) {
 // espacio en Expos), y al menos dos de la red de proximidad o de salas sin nivel si las hay: el barrio no queda
 // relegado. A igualdad, el orden que traía la lista (la hora). Devuelve el conjunto elegido.
 const isLocal = e => !(e.venue_tier >= 8);
-function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 2) {
+function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 2, local = isLocal) {
   if (list.length <= n) return new Set(list);
   const pool = list.map(e => ({e, r: score(e)})), out = [], seen = {};
   while (out.length < n && pool.length) {
@@ -1133,10 +1140,10 @@ function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 
     pool.forEach((x, i) => { const v = x.r - penalty * (seen[group(x.e)] || 0); if (v > bv) { bv = v; bi = i } });
     const [x] = pool.splice(bi, 1); out.push(x); seen[group(x.e)] = (seen[group(x.e)] || 0) + 1;
   }
-  const want = Math.min(minLocal, list.filter(isLocal).length);
-  for (let k = out.filter(x => isLocal(x.e)).length; k < want; k++) {
-    const add = pool.filter(x => isLocal(x.e)).sort((a, b) => b.r - a.r)[0];
-    const drop = out.filter(x => !isLocal(x.e)).sort((a, b) => a.r - b.r)[0];
+  const want = Math.min(minLocal, list.filter(local).length);
+  for (let k = out.filter(x => local(x.e)).length; k < want; k++) {
+    const add = pool.filter(x => local(x.e)).sort((a, b) => b.r - a.r)[0];
+    const drop = out.filter(x => !local(x.e)).sort((a, b) => a.r - b.r)[0];
     if (!add || !drop) break;
     out[out.indexOf(drop)] = add; pool.splice(pool.indexOf(add), 1);
   }
@@ -1279,7 +1286,7 @@ function daysLeft(e) {
   const n = daysBetween(e._day || today, e.end);
   if (n < 0) return '';
   const text = n === 0 ? L('Último día', 'Últim dia', 'Last day') : n === 1 ? ((e._day || today) === today ? L('Cierra mañana', 'Tanca demà', 'Closes tomorrow') : `${L('Cierra el', 'Tanca el', 'Closes on')} ${labelDate(e.end)}`)
-    : n <= 60 ? L(`Quedan ${n} días`, `Queden ${n} dies`, `${n} days left`) : `${L('Hasta el', 'Fins al', 'Until')} ${labelDate(e.end)}`;
+    : n <= 60 ? L(`Quedan ${n} días`, `Queden ${n} dies`, `${n} days left`) : `${L('Hasta el', 'Fins al', 'Until')} ${labelDate(e.end)}${e.end.slice(0, 4) !== (e._day || today).slice(0, 4) ? ' ' + e.end.slice(0, 4) : ''}`;
   return `<span class="ev-left${n < 7 ? ' ev-left-soon' : ''}">${esc(text)}</span>`;
 }
 function wideTab(list, live) {
@@ -1289,15 +1296,22 @@ function wideTab(list, live) {
   // selección de Expos del día, imagen, texto) más la urgencia (último día +1,5; cierra en una semana +0,75), con
   // variedad de espacios y al menos dos de barrio entre las diez primeras; el resto por cierre, como antes.
   const byClose = (a, b) => (lastDay(b) - lastDay(a)) || endOf(a).localeCompare(endOf(b)) || ((a._st.closesIn ?? 1e4) - (b._st.closesIn ?? 1e4)) || byTitle(a, b);
-  const rank = state.expoRank || {}, left = e => daysBetween(e._day || today, e._a.until || e.end);
-  const expoScore = e => relevance(e) + (rank[key(e)] ? 1.5 : 0) + (left(e) <= 0 ? 1.5 : left(e) <= 7 ? 0.75 : 0);
-  const byClosed = [...list].sort(byClose), place = e => fold(String(e.venue_names?.[0] || '').split(/\s+[-·–]\s+/)[0]);
-  const top = state.near ? new Set() : rankDiverse(byClosed, 20, place, expoScore, 1.5, 4);
-  // Las de barrio elegidas no van al final del tramo: una de cada cinco filas (puestos 4, 9, 14, 19).
-  const chosen = byClosed.filter(e => top.has(e)).sort((a, b) => expoScore(b) - expoScore(a) || byClose(a, b));
-  const locals = chosen.filter(isLocal), others = chosen.filter(e => !isLocal(e)), head = [];
-  while (locals.length || others.length) head.push(((head.length % 5 === 3 && locals.length) || !others.length) ? locals.shift() : others.shift());
-  const sorted = [...head, ...byClosed.filter(e => !top.has(e))];
+  // Expos por relevancia (28-10-2026, 15:17, David): la urgencia ya no suma puntos (el sábado 7 las tres primeras eran de
+  // último día y 10 de 20); se dice con la etiqueta «Último día» / «Cierra mañana» de la fila. Relevancia = las señales de
+  // siempre más el puesto en el ranking de Expos del día (expo_rank: espacio, imagen propia, texto, fuentes, recién
+  // inaugurada), y en las 20 primeras un espacio solo una vez salvo que no haya otra (penalización, no exclusión), con al
+  // menos 4 de barrio o independientes en su sitio natural, no en posiciones fijas. El resto, por relevancia y cierre.
+  const rank = state.expoRank || {}, maxRank = Math.max(1, ...Object.values(rank)), left = e => daysBetween(e._day || today, e._a.until || e.end);
+  // Un empujón pequeño a lo que cierra (último día +1; esta semana +0,5): una grande en su último día sigue entre las
+  // primeras sin que el cierre mande sobre la relevancia.
+  const expoScore = e => relevance(e) + (rank[key(e)] ? 1 + 2 * rank[key(e)] / maxRank : 0) + (left(e) <= 0 ? 1 : left(e) <= 7 ? 0.5 : 0);
+  const byScore = (a, b) => expoScore(b) - expoScore(a) || byClose(a, b);
+  const byClosed = [...list].sort(byScore), place = e => fold(String(e.venue_names?.[0] || '').split(/\s+[-·–]\s+/)[0]);
+  // Barrio o independiente en Expos: centros de proximidad (nivel 3) y espacios de arte sin nivel que están en el ranking
+  // de Expos (galerías y centros de arte de la lista «exposiciones»); un museo privado sin nivel no cuenta como tal.
+  const indie = e => e.venue_tier === 3 || (!e.venue_tier && Boolean(rank[key(e)]));
+  const top = state.near ? new Set() : rankDiverse(byClosed, 20, place, expoScore, 1.5, 4, indie);
+  const sorted = [...byClosed.filter(e => top.has(e)), ...byClosed.filter(e => !top.has(e))];
   const soonClose = live ? list.filter(e => (e._st.closesIn ?? 1e4) <= 60).length : 0, last = list.filter(lastDay).length;
   const sub = [soonClose ? L(`${soonClose} cierran en menos de una hora`, `${soonClose} tanquen en menys d'una hora`, `${soonClose} close within an hour`) : '', last ? L(`${last} en su último día`, `${last} en el seu últim dia`, `${last} on their last day`) : ''].filter(Boolean).join(' · ');
   if (state.near) sorted.sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9));   // con «Cerca de mí», por distancia (a igualdad, el orden de cierre)
