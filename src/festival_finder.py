@@ -51,12 +51,34 @@ PLATFORMS = [  # (nombre, patrón en el HTML o en la dirección, cómo se leerí
     ('The Events Calendar (WordPress)', re.compile(r"tribe-events|/wp-json/tribe/", re.I), 'api'),
     ('Events Manager (WordPress)', re.compile(r"events-manager|em-calendar|wp-events-plugin", re.I), 'ical'),
     ('iCal', re.compile(r"\.ics\b|webcal://", re.I), 'ical'),
+    ('Codetickets', re.compile(r"codetickets\.com/(?:portal/|entradas/id/\d+/)[a-z0-9-]+", re.I), 'api'),
 ]
+SEASON_DAYS = 31        # más largo es una temporada o un ciclo: no se busca su programa como festival
+AHEAD_DAYS = 75         # festivales que empiezan en los próximos 75 días (o ya en marcha)
+ALERT_DAYS = 7          # cobertura insuficiente a una semana de empezar: aviso
+MAX_IA_PROGRAMS = 8     # programas nuevos que se ponen a leer con IA por pasada
 
 
 def initialize(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS festival_programs (slug TEXT PRIMARY KEY, name TEXT NOT NULL, record TEXT, start TEXT, end TEXT,
       web TEXT, web_how TEXT, web_ok INTEGER, program_url TEXT, reading TEXT, platform TEXT, detail TEXT, checked_at TEXT NOT NULL)""")
+    # Cobertura del programa (28-10-2026, David): sin sesiones, parcial o completa, con cuántas sesiones y días cubiertos.
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(festival_programs)")}
+    for col, decl in (('coverage', "TEXT NOT NULL DEFAULT ''"), ('sessions', 'INTEGER NOT NULL DEFAULT 0'), ('days_covered', "TEXT NOT NULL DEFAULT ''")):
+        if col not in cols: conn.execute(f"ALTER TABLE festival_programs ADD COLUMN {col} {decl}")
+
+
+def coverage(start, end, days, sessions, connected=False):
+    """Cobertura del programa de un festival con lo que tenemos: «sin_sesiones», «parcial» o «completa».
+    Completa solo con evidencia: un conector de su programa oficial o su venta con sesiones, o sesiones en casi todos sus
+    días (80 %) y al menos una por día. Dos sesiones sueltas fuera de las jornadas centrales (DART) son cobertura parcial."""
+    if not sessions: return 'sin_sesiones'
+    if connected: return 'completa'
+    try: a, b = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
+    except ValueError: return 'parcial'
+    span = (b - a).days + 1
+    inside = {d for d in days if start <= d <= end}
+    return 'completa' if span <= SEASON_DAYS and len(inside) >= 0.8 * span and sessions >= span else 'parcial'
 
 
 def _host(url):
@@ -91,12 +113,23 @@ def candidates(conn, today=None):
             except ValueError: pass
         f = fest.of(title, raw_fest, start=start, end=end)
         if not f: continue
-        g = groups.setdefault(f['slug'], {'slug': f['slug'], 'name': f['name'], 'kind': f.get('kind', 'festival'), 'children': 0, 'umbrellas': []})
+        g = groups.setdefault(f['slug'], {'slug': f['slug'], 'name': f['name'], 'kind': f.get('kind', 'festival'), 'children': 0, 'days': set(), 'umbrellas': []})
         if f['umbrella']: g['umbrellas'].append({'record': f'{source}:{rid}', 'title': title, 'start': start, 'end': end, 'raw': raw})
-        else: g['children'] += 1
+        else: g['children'] += 1; g['days'].add(start)
     out = []
+    horizon = (dt.date.fromisoformat(today) + dt.timedelta(days=AHEAD_DAYS)).isoformat()
+    connected = _connected_festivals()
     for g in groups.values():
-        if g['children'] or not g['umbrellas']: continue
+        # Festivales con ficha general (aunque solo la publique una fuente y sea independiente: 28-10-2026, David), de hasta un
+        # mes y que empiezan pronto o ya están en marcha. Las fiestas mayores llegan acto a acto por la agenda municipal.
+        if not g['umbrellas'] or g['kind'] == 'fiesta': continue
+        s0, e0 = min(x['start'] for x in g['umbrellas']), max(x['end'] for x in g['umbrellas'])
+        try: span = (dt.date.fromisoformat(e0) - dt.date.fromisoformat(s0)).days + 1
+        except ValueError: continue
+        if s0 > horizon: continue
+        g['coverage'] = coverage(s0, e0, g['days'], g['children'], g['slug'] in connected)
+        # Festival de más de un mes (Panoràmic, Jazz): sus sesiones llegan una a una; solo se busca su programa si no tiene ninguna.
+        if g['coverage'] == 'completa' or (span > SEASON_DAYS and g['children']): continue
         u = sorted(g['umbrellas'], key=lambda x: x['start'])[0]
         texts = [x['raw'] for x in g['umbrellas']]
         for x in g['umbrellas']:
@@ -106,7 +139,8 @@ def candidates(conn, today=None):
             for (facts,) in conn.execute('SELECT facts_json FROM source_detail_facts WHERE source=? AND id=?', (s, i)) if _has(conn, 'source_detail_facts') else []:
                 texts.append(facts)
         out.append({'slug': g['slug'], 'name': g['name'], 'kind': g['kind'], 'record': u['record'], 'start': min(x['start'] for x in g['umbrellas']),
-                    'end': max(x['end'] for x in g['umbrellas']), 'texts': texts})
+                    'end': max(x['end'] for x in g['umbrellas']), 'texts': texts, 'coverage': g['coverage'], 'sessions': g['children'],
+                    'days': sorted(d for d in g['days'] if s0 <= d <= e0)})
     return sorted(out, key=lambda c: c['start'])
 
 
@@ -171,7 +205,8 @@ def probe(cand, fetcher, robots, key=None, ai=None):
     links = official_links(cand['texts'])
     tried = []
     fallback = None   # primera web de la ficha que responde pero no nombra el festival: solo si no hay otra mejor
-    for url, how in [(u, 'ficha') for u in links[:4]] + ([(None, 'ia')] if not links and key and ai else []):
+    # La búsqueda con IA también cuando los enlaces de la ficha fallan (robots, error o web de otro) (28-10-2026).
+    for url, how in [(u, 'ficha') for u in links[:4]] + ([(None, 'ia')] if key and ai else []):
         if url is None:
             try: url = ai(cand['name'], cand['start'], cand['end'], key)
             except Exception as error: res['detail'] = 'Búsqueda con IA: ' + type(error).__name__; break
@@ -189,9 +224,41 @@ def probe(cand, fetcher, robots, key=None, ai=None):
     if not res['web'] and fallback:
         _read_web(res, *fallback, False, fetcher, robots)
         res['detail'] = 'La web no nombra el festival: comprobar que es la suya antes de conectar'
+    # Si la web no se deja leer o no da un programa legible por reglas, la venta (28-10-2026, DART: robots.txt «Disallow: /»,
+    # pero Codetickets publica cada sesión). Primero un enlace de la ficha o de la web; si no, el nombre del festival.
+    if res.get('platform') not in AUTO_PLATFORMS:
+        ct = codetickets_entity(cand, fetcher, ' '.join(str(t or '') for t in cand['texts']) + ' ' + (res.get('program_url') or ''))
+        if ct:
+            res.update(platform='Codetickets', reading='api', program_url=ct['url'], web_ok=1, web=res['web'] or ct['url'], web_how=res['web_how'] or 'venta')
+            res['detail'] = ('Venta en Codetickets: ' + ct['name'] + (' · ' + res['detail'] if res['detail'] else '')).strip()
     if not res['web'] and tried: res['detail'] = 'Probadas: ' + '; '.join(tried)[:400]
     if not res['web'] and not links and not (key and ai) and not res['detail']: res['detail'] = 'La ficha no trae web y la búsqueda con IA está apagada'
     return res
+
+
+CT_LINK = re.compile(r"codetickets\.com/(?:portal/|entradas/id/\d+/)([a-z0-9-]+)", re.I)
+
+
+def codetickets_entity(cand, fetcher, texts=''):
+    """Entidad de Codetickets del festival: {slug, name, url} o None. Del enlace de venta si lo hay; si no, del nombre del
+    festival («DART» → festivaldart, festival-dart, dart…). Solo vale si el nombre de la entidad contiene el nombre propio
+    del festival (todas sus palabras distintivas)."""
+    from src.festivals import core, fold
+    words = core(cand['name'])
+    if not words: return None
+    slugs = list(dict.fromkeys(m.lower() for m in CT_LINK.findall(texts or '')))
+    joined, dashed = ''.join(sorted(words, key=lambda w: fold(cand['name']).find(w))), '-'.join(sorted(words, key=lambda w: fold(cand['name']).find(w)))
+    slugs += [x for x in (f'festival{joined}', f'festival-{dashed}', dashed, joined, f'{dashed}-festival', f'{joined}festival') if x not in slugs]
+    for slug in slugs[:8]:
+        try: status, _, body = fetcher('https://api.codetickets.com/api/entidad/%s' % slug, 15)
+        except Exception: continue
+        if status != 200: continue
+        try: ent = json.loads(body)
+        except ValueError: continue
+        name = str(ent.get('nombre') or '')
+        if ent.get('id') and ent.get('canalId') and all(re.search(r"\b%s\b" % re.escape(w), fold(name)) for w in words):
+            return {'slug': ent.get('slug') or slug, 'name': name, 'url': 'https://www.codetickets.com/portal/%s/online' % (ent.get('slug') or slug)}
+    return None
 
 
 def _read_web(res, url, final, body, how, ok, fetcher, robots):
@@ -221,10 +288,17 @@ def run(conn, job=None, today=None, fetcher=None, robots=None, key=None, ai=None
     now = now or dt.datetime.now(dt.timezone.utc)
     stamp = now.isoformat(timespec='seconds')
     auto_path = job.get('auto_path')
-    connected = _connected_festivals(auto_path)
+    connected = _connected_festivals(auto_path) | auto_agenda_slugs(job.get('agendas_path'))
     probes = searches = 0
-    new_auto = []
+    new_auto, new_agendas, alerts = [], [], []
+    soon = ((today or dt.date.today()) + dt.timedelta(days=ALERT_DAYS)).isoformat()
     for cand in candidates(conn, today):
+        if cand['start'] <= soon:
+            alerts.append({'festival': cand['name'], 'start': cand['start'], 'end': cand['end'], 'coverage': cand['coverage'], 'sessions': cand['sessions'],
+                           'connected': cand['slug'] in connected})
+        with conn:
+            conn.execute("UPDATE festival_programs SET coverage=?, sessions=?, days_covered=? WHERE slug=?",
+                         (cand['coverage'], cand['sessions'], ','.join(cand['days']), cand['slug']))
         if cand['slug'] in connected: continue
         row = conn.execute('SELECT checked_at FROM festival_programs WHERE slug=?', (cand['slug'],)).fetchone()
         if row and row[0] >= (now - dt.timedelta(days=RECHECK_DAYS)).isoformat(timespec='seconds'): continue
@@ -236,6 +310,9 @@ def run(conn, job=None, today=None, fetcher=None, robots=None, key=None, ai=None
         auto = auto_connector(cand, res) if job.get('conectar', False) else None
         if auto:
             new_auto.append(auto); res['detail'] = ('Conectado solo · ' + res['detail']).rstrip(' ·')
+        elif job.get('conectar', False) and len(new_agendas) < job.get('max_programas_ia', MAX_IA_PROGRAMS):
+            agenda = auto_agenda(cand, res)
+            if agenda: new_agendas.append(agenda); res['detail'] = ('Programa a leer con IA · ' + res['detail']).rstrip(' ·')
         with conn:
             conn.execute("""INSERT INTO festival_programs(slug,name,record,start,end,web,web_how,web_ok,program_url,reading,platform,detail,checked_at)
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET name=excluded.name,record=excluded.record,start=excluded.start,end=excluded.end,
@@ -243,9 +320,13 @@ def run(conn, job=None, today=None, fetcher=None, robots=None, key=None, ai=None
                 platform=excluded.platform,detail=excluded.detail,checked_at=excluded.checked_at""",
                          (cand['slug'], cand['name'], cand['record'], cand['start'], cand['end'], res['web'], res['web_how'], res['web_ok'],
                           res['program_url'], res['reading'], res['platform'], res['detail'], stamp))
+            conn.execute("UPDATE festival_programs SET coverage=?, sessions=?, days_covered=? WHERE slug=?",
+                         (cand['coverage'], cand['sessions'], ','.join(cand['days']), cand['slug']))
     if new_auto: save_auto(new_auto, auto_path)
+    if new_agendas: save_auto_agendas(new_agendas, job.get('agendas_path'))
     path = write_report(conn, today or dt.date.today(), out)
-    return {'status': 'completed', 'revisados': probes, 'busquedas_ia': searches, 'conectados': [a['name'] for a in new_auto], 'informe': str(path), **summary(conn, today)}
+    return {'status': 'completed', 'revisados': probes, 'busquedas_ia': searches, 'conectados': [a['name'] for a in new_auto],
+            'programas_con_ia': [a['name'] for a in new_agendas], 'alertas': alerts, 'informe': str(path), **summary(conn, today)}
 
 
 def _connected_festivals(auto_path=None):
@@ -256,7 +337,8 @@ def _connected_festivals(auto_path=None):
     return {((v.get('feed') or {}).get('festival') or {}).get('slug') for v in venues if v.get('enabled') and (v.get('feed') or {}).get('festival')}
 
 
-AUTO_PLATFORMS = {'Accelevents', 'The Events Calendar (WordPress)', 'JSON-LD'}
+AUTO_PLATFORMS = {'Accelevents', 'The Events Calendar (WordPress)', 'JSON-LD', 'Codetickets'}
+AUTO_AGENDAS_PATH = ROOT / 'data' / 'agendas_auto.json'
 
 
 def auto_connector(cand, res):
@@ -270,12 +352,44 @@ def auto_connector(cand, res):
         m = re.search(r"/e/([^/?#]+)", url) or re.search(r"/e/([^/?#]+)", res.get('web') or '')
         if not m: return None
         feed.update(kind='accelevents', event=m.group(1))
+    elif res['platform'] == 'Codetickets':
+        m = CT_LINK.search(url)
+        if not m: return None
+        feed.update(kind='codetickets', entidad=m.group(1).lower(), venta='por_acto')
     elif res['platform'].startswith('The Events Calendar'):
         parts = urlsplit(url)
         feed.update(kind='tribe_rest', url=f"{parts.scheme}://{parts.netloc}/wp-json/tribe/events/v1/events")
     slug = 'fest_' + re.sub(r'[^a-z0-9]+', '_', cand['slug'].removeprefix('auto-')).strip('_')[:50]
     return {'slug': slug, 'name': cand['name'], 'type': 'festival', 'url': url, 'site': res.get('web') or url, 'enabled': True, 'auto': True, 'feed': feed,
             'note': 'Conectado solo por el buscador de programas (%s): %s' % (dt.date.today().isoformat(), res['platform'])}
+
+
+def auto_agenda(cand, res):
+    """Último recurso (28-10-2026, David): el programa oficial publicado en una página sin datos estructurados se lee con la IA
+    de las agendas de sala (src/ai_agenda.py), con su comprobación sin IA (título, fecha y hora citados en la página, cerca del
+    acto) y siguiendo la página propia de los actos que el listado da sin hora. Solo si la web nombra el festival."""
+    url = res.get('program_url') or ''
+    if res.get('reading') != 'ia' or not url or not res.get('web_ok'): return None
+    slug = 'fest_' + re.sub(r'[^a-z0-9]+', '_', cand['slug'].removeprefix('auto-')).strip('_')[:50]
+    return {'slug': slug, 'name': cand['name'], 'address': '', 'type': 'culture', 'urls': [url], 'otros_lugares': True, 'seguir_actos': 40,
+            'festival': {'slug': cand['slug'], 'name': cand['name']}, 'hasta': cand['end'], 'activa': True, 'auto': True,
+            'nota': 'Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (%s)' % dt.date.today().isoformat()}
+
+
+def save_auto_agendas(entries, path=None):
+    path = Path(path or AUTO_AGENDAS_PATH)
+    try: data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError): data = {'nota': 'Generado por src/festival_finder.py: programas de festival leídos con IA. Para corregir uno, pasarlo a config/agendas_ia.json (manda) o poner activa: false.', 'agendas': []}
+    have = {a['slug'] for a in data['agendas']}
+    data['agendas'] += [e for e in entries if e['slug'] not in have]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return len(data['agendas'])
+
+
+def auto_agenda_slugs(path=None):
+    try: return {(a.get('festival') or {}).get('slug') for a in json.loads(Path(path or AUTO_AGENDAS_PATH).read_text(encoding='utf-8')).get('agendas', []) if a.get('activa')}
+    except (OSError, ValueError): return set()
 
 
 def save_auto(entries, path=None):
@@ -299,14 +413,18 @@ def summary(conn, today=None):
 
 
 def write_report(conn, today, out=REPORT):
-    rows = [dict(zip(('slug', 'name', 'record', 'start', 'end', 'web', 'web_how', 'web_ok', 'program_url', 'reading', 'platform', 'detail', 'checked_at'), r))
-            for r in conn.execute('SELECT slug,name,record,start,end,web,web_how,web_ok,program_url,reading,platform,detail,checked_at FROM festival_programs '
+    rows = [dict(zip(('slug', 'name', 'record', 'start', 'end', 'web', 'web_how', 'web_ok', 'program_url', 'reading', 'platform', 'detail', 'checked_at', 'coverage', 'sessions'), r))
+            for r in conn.execute('SELECT slug,name,record,start,end,web,web_how,web_ok,program_url,reading,platform,detail,checked_at,coverage,sessions FROM festival_programs '
                                   'WHERE COALESCE(end,start)>=? ORDER BY start', (today.isoformat(),))]
     out = Path(out); out.parent.mkdir(parents=True, exist_ok=True)
     out.with_suffix('.json').write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding='utf-8')
     e = lambda v: html.escape(str(v or ''))
     label = {'api': 'Por reglas (API)', 'ical': 'Por reglas (iCal)', 'jsonld': 'Por reglas (JSON-LD)', 'pdf': 'PDF', 'ia': 'Con IA comprobada', '': ''}
-    groups = [('Conectados solos: su programa entra en la ficha del festival', [r for r in rows if r['detail'].startswith('Conectado solo')]),
+    cov = {'sin_sesiones': 'sin sesiones', 'parcial': 'cobertura parcial', 'completa': 'completa'}
+    soon = (today + dt.timedelta(days=ALERT_DAYS)).isoformat()
+    groups = [('Avisos: empiezan en una semana o menos sin programa completo', [r for r in rows if r['start'] <= soon and r.get('coverage') in ('sin_sesiones', 'parcial')]),
+              ('Conectados solos: sus sesiones entran a su hora', [r for r in rows if r['detail'].startswith('Conectado solo')]),
+              ('Programa puesto a leer con IA comprobada', [r for r in rows if r['detail'].startswith('Programa a leer con IA')]),
               ('Programa encontrado, se puede leer por reglas (conector por hacer)', [r for r in rows if r['program_url'] and r['reading'] in ('api', 'ical', 'jsonld') and not r['detail'].startswith('Conectado solo')]),
               ('Programa encontrado, habría que leerlo con IA', [r for r in rows if r['program_url'] and r['reading'] == 'ia']),
               ('Programa en PDF', [r for r in rows if r['program_url'] and r['reading'] == 'pdf']),
@@ -321,7 +439,8 @@ def write_report(conn, today, out=REPORT):
         prog = '<a href="%s">programa</a>' % e(r['program_url']) if r['program_url'] else ''
         return ('<tr><td><b>%s</b><div class=s>%s</div></td><td class=d>%s → %s</td><td>%s<div class=s>%s%s</div></td><td>%s</td><td>%s<div class=s>%s%s</div></td></tr>'
                 % (e(r['name']), e(r['record']), day(r['start']), day(r['end']), web, e(how.get(r['web_how'], '')), warn, prog, e(r['platform']),
-                   e(label.get(r['reading'], '')), (' · ' if r['reading'] and r['detail'] else '') + e(r['detail'])))
+                   e(label.get(r['reading'], '')), (' · ' if r['reading'] and r['detail'] else '') + e(r['detail'])
+                   + (' · <b>%s</b> (%s sesiones)' % (e(cov.get(r.get('coverage') or '', '')), r.get('sessions') or 0) if r.get('coverage') else '')))
     body = ''.join('<h2>%s <span>%d</span></h2><table><tr><th>Festival</th><th>Fechas</th><th>Web</th><th>Programa</th><th>Cómo</th></tr>%s</table>'
                    % (e(t), len(rs), ''.join(row(r) for r in rs)) for t, rs in groups if rs)
     s = summary(conn, today)

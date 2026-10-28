@@ -1550,12 +1550,18 @@ function festLine(e) {
   const d = e.start === e.end ? e.start : state.day, slot = isFestHead(e) ? festSlot(e, d) : null, man = e.manual_hours?.[d];
   const hourLine = slot ? `<p class="sheet-fest-hour">${esc(slot.how === 'primera' ? L('Primera sesión de ese día', "Primera sessió d'aquell dia", 'First session that day') : L('Apertura ese día', 'Obertura aquell dia', 'Opening that day'))}: <b>${esc(slot.time)}</b>${man?.source && safeurl(man.source) ? ` · <a href="${esc(safeurl(man.source))}" target="_blank" rel="noopener noreferrer">${esc(L('fuente', 'font', 'source'))} ↗</a>` : ''}</p>` : '';
   if (!f) return isFestHead(e) ? `<p class="sheet-fest"><span class="fest-kind">${esc(festKind(e))}</span></p>${hourLine}` : '';
-  const n = (store.catalog || []).filter(x => x.festival?.slug === f.slug && !x.festival.umbrella).length;
-  const label = f.umbrella ? L(`Ver sus ${n} actividades`, `Mostra les seves ${n} activitats`, `See its ${n} activities`) : L('Ver todo el festival', 'Mostra tot el festival', 'See the whole festival');
+  const n = festSessions(f.slug);
+  // Ficha del festival con sesiones recuperadas (28-10-2026, David): «12 sesiones · Ver programa». Sin fila sin hora en la Agenda.
+  const label = f.umbrella ? L(`${n} ${n === 1 ? 'sesión' : 'sesiones'} · Ver programa`, `${n} ${n === 1 ? 'sessió' : 'sessions'} · Mostra el programa`, `${n} ${n === 1 ? 'session' : 'sessions'} · See programme`) : L('Ver todo el festival', 'Mostra tot el festival', 'See the whole festival');
   return `<p class="sheet-fest"><span class="fest-kind">${esc(festKind({festival: f}))}</span>${f.umbrella ? '' : L('Forma parte de', 'Forma part de', 'Part of') + ' '}<b>${esc(f.name)}</b>${n ? ` · <button class="linklike" type="button" data-fest="${esc(f.slug)}" data-festname="${esc(f.name)}" data-festfiesta="${f.fiesta ? 1 : 0}" data-fesfrom="${esc(e.start)}" data-festo="${esc(e.end)}">${label}</button>` : ''}</p>${hourLine}`;
 }
+// Sesiones con fecha de un festival en el catálogo (sus actos con ficha propia).
+const festSessions = slug => (store.catalog || []).filter(x => x.festival?.slug === slug && !x.festival.umbrella).length;
 function detailWhen(e) {
   const day = e.start === e.end ? e.start : state.day;
+  // Ficha general de un festival con sesiones: en vez de «Hora no indicada», «Varias sesiones» (28-10-2026).
+  if (e.festival?.umbrella && !e.time && !Object.keys(hoursByDay(e) || {}).length && festSessions(e.festival.slug) > 1)
+    return `${e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`} · ${L('Varias sesiones', 'Diverses sessions', 'Several sessions')}`;
   const when = e.start === e.end ? labelDay(e.start) : `${labelDate(e.start)} – ${labelDate(e.end)}`;
   // Horario oficial del día («09:00–18:00»); si cambia según el día, se dice de qué día es.
   const byDay = hoursByDay(e) || {}, rawDay = e.occurrence_date ? null : byDay[day], dayHours = PARTS[rawDay] ? PARTS[rawDay]().toLowerCase() : rawDay;

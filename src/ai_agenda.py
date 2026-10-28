@@ -83,9 +83,19 @@ TOOL = {'name': 'actos', 'description': 'Actos que anuncia la página, con citas
 
 
 # ---------- configuración ----------
-def load_agendas(path=CONFIG_PATH):
-    try: return json.loads(Path(path).read_text(encoding='utf-8')).get('agendas', [])
-    except (OSError, ValueError): return []
+AUTO_PATH = ROOT / 'data' / 'agendas_auto.json'
+
+
+def load_agendas(path=CONFIG_PATH, auto_path=AUTO_PATH):
+    """Agendas configuradas y, detrás, las que el buscador de programas de festival pone solas (data/agendas_auto.json);
+    si una está en las dos, manda la configurada."""
+    try: out = json.loads(Path(path).read_text(encoding='utf-8')).get('agendas', [])
+    except (OSError, ValueError): out = []
+    if auto_path and path == CONFIG_PATH:
+        have = {a.get('slug') for a in out}
+        try: out += [a for a in json.loads(Path(auto_path).read_text(encoding='utf-8')).get('agendas', []) if a.get('slug') not in have]
+        except (OSError, ValueError): pass
+    return out
 
 
 _BY_SOURCE = {}
@@ -463,6 +473,28 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)
             else: result['rejected'].append({'item': item, 'why': why, 'page': page_url})
         page['events'] = len(items)
+    # Página propia de los actos que el listado da sin hora (28-10-2026, programas de festival): «seguir_actos»: N lee como
+    # mucho N de esas páginas (mismo sitio, enlace del propio acto) y las comprueba como ficha de un acto (whole_page).
+    budget = int(agenda.get('seguir_actos') or 0)
+    if budget:
+        hosts = {urlsplit(p['url']).netloc for p in result['pages'] if p.get('url')}
+        for act in list(result['accepted']):
+            if budget <= 0: break
+            u = act.get('url') or ''
+            if not u or any(h for _, h in act['sesiones']) or urlsplit(u).netloc not in hosts or u in seen: continue
+            seen.add(u); budget -= 1
+            if fetcher is fetch and not robots_allows(u): continue
+            status, final_url, body = fetcher(u, timeout)
+            if status != 200: continue
+            text, links = clean(body, final_url or u); text = text[:MAX_CHARS]
+            for item in ask(agenda, text, final_url or u, today, key, requester=requester, usage=usage):
+                if fold(item.get('titulo') or '') != fold(act['titulo']) and fold(act['titulo']) not in fold(item.get('titulo') or ''): continue
+                got, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'], whole_page=True)
+                if got and any(h for _, h in got['sesiones']):
+                    got['titulo'] = act['titulo']; got['page'] = final_url or u; got['page_hash'] = hashlib.sha256(text.encode()).hexdigest()[:20]; got['why_partial'] = why
+                    got.setdefault('url', u); result['accepted'].append(got)
+                    # La ficha del acto manda sobre la línea sin hora del listado: esa no se publica aparte (sin duplicados).
+                    if act in result['accepted']: result['accepted'].remove(act)
     # Un mismo acto en dos páginas (semanas de la Filmoteca): una sola entrada por título y enlace.
     merged = {}
     for act in result['accepted']:

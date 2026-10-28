@@ -40,7 +40,8 @@ class FinderTests(unittest.TestCase):
             conn.commit()
             cands = {c['name']: c for c in ff.candidates(conn, dt.date(2026, 10, 25))}
             self.assertIn('Festival Panoràmic', cands)
-            self.assertNotIn('Festival RBLS', ' '.join(cands))   # tiene actividades: no es candidato
+            # 28-10-2026: con 2 sesiones en 15 días, cobertura parcial: también se busca su programa.
+            self.assertEqual(cands['Festival RBLS']['coverage'], 'parcial'); self.assertEqual(cands['Festival Panoràmic']['coverage'], 'sin_sesiones')
             pages = {'https://panoramic.example/': HOME, 'https://panoramic.example/e/panoramic/page/schedule': SCHEDULE}
             fetcher = lambda u, t: (200, u, pages[u]) if u in pages else (404, u, '')
             auto = Path(folder) / 'auto.json'

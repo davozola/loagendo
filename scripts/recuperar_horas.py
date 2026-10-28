@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src import ai_agenda, ai_assist, official_dates  # noqa: E402
-from src.venue_feeds import fetch, robots_allows  # noqa: E402
+from src.venue_feeds import fetch, robots_allows, sync_venue  # noqa: E402
 
 DB = ROOT / 'reports' / 'loagendo_v12.sqlite3'
 AGENDAS = ('zumzeig', 'documenta')
@@ -39,7 +39,6 @@ def main():
                 for line in json.loads((w or ['[]'])[0] or '[]')[:6]: print('   ', line)
     # Festivales que venden con Codetickets (DART, In-Edit): sus sesiones con hora, sala y precio, sin IA. Si In-Edit llega
     # entero, la lectura con IA anterior queda sustituida (sus fichas se excluyen con su motivo; no se borran).
-    from src.venue_feeds import sync_venue
     venues = json.loads((ROOT / 'config' / 'venues.json').read_text(encoding='utf-8'))
     venues = venues['venues'] if isinstance(venues, dict) else venues
     for v in venues:
@@ -52,6 +51,25 @@ def main():
                     conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source='venue_ia_in_edit'")
                     conn.executemany("INSERT OR IGNORE INTO review_flags VALUES (?,?,?)", [('venue_ia_in_edit', i, 'SUPERSEDED_BY_CODETICKETS') for i in ids])
                 print('   lectura con IA de In-Edit sustituida:', len(ids), 'fichas excluidas (se conservan)')
+    # Circuito de programas de festival (28-10-2026): busca, conecta solo (venta o datos estructurados) o pone a leer con IA
+    # comprobada el programa publicado, y lee ya lo nuevo. Al final, cobertura y avisos.
+    if '--sin-festivales' not in sys.argv:
+        from src import festival_finder
+        from src.venue_feeds import load_venues
+        cfg = json.loads((ROOT / 'config' / 'automation.json').read_text(encoding='utf-8'))
+        job = next(j for j in cfg['jobs'] if j['name'] == 'festivales-programas')
+        fr = festival_finder.run(conn, job)
+        print('festivales:', {k: fr.get(k) for k in ('revisados', 'busquedas_ia', 'conectados', 'programas_con_ia', 'festivales', 'con_programa')})
+        for v in load_venues():
+            if v.get('auto') and v.get('enabled'):
+                r = sync_venue(conn, v); print('   conectado', v['slug'], {k: r.get(k) for k in ('status', 'rows_received', 'error')})
+        key = ai_assist.load_key()
+        for a in ai_agenda.load_agendas():
+            if a.get('auto') and a.get('activa'):
+                r = ai_agenda.sync_agenda(conn, a, key); print('   programa con IA', a['slug'], {k: r.get(k) for k in ('status', 'rows_received', 'rejected', 'error')})
+        for row in conn.execute("SELECT name, start, end, coverage, sessions, platform, reading, substr(detail,1,90) FROM festival_programs WHERE end>=? ORDER BY start", (today.isoformat(),)):
+            print('   ', row)
+        for al in fr.get('alertas') or []: print('   AVISO', al)
     official_dates.initialize_pages(conn)
     rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), substr(r.end_date,1,10), r.source_url FROM source_records r
         WHERE r.source LIKE 'venue_ia_%' AND r.eligibility<>'exclude' AND r.kind<>'exhibition'

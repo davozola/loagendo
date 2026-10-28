@@ -84,6 +84,15 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG):
     t, horizon = today.isoformat(), (today + dt.timedelta(days=WATCH_AHEAD_DAYS)).isoformat()
     stamp = now.isoformat(timespec='seconds')
     seen = set(); new = []
+    # Sesiones con hora de cada festival en la web (28-10-2026, David): dos sesiones sueltas no son el programa (DART). El festival
+    # sigue pendiente hasta que su cobertura es completa (src/festival_finder.coverage).
+    from src.festival_finder import coverage, _connected_festivals
+    connected = _connected_festivals()
+    kids = {}
+    for e in items:
+        fs = e.get('fs')
+        if fs and not fs[2] and (e.get('tm') or any(o[1] for o in e.get('o') or [])):
+            k = kids.setdefault(fs[0], {'n': 0, 'days': set()}); k['n'] += 1; k['days'].update([o[0] for o in e.get('o') or [] if o[1]] or [e['a']])
     for e in items:
         fs = e.get('fs')
         head = (bool(fs) and bool(fs[2])) or (not fs and e.get('f') == 'festival' and e['a'] != e['b'])
@@ -93,6 +102,9 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG):
         if span > SEASON_DAYS: continue
         key = '%s:%s' % (e['s'], e['i'])
         hours = 'programa' if e.get('pf') else 'a mano' if e.get('mh') else 'por días' if e.get('hb') else 'con sesiones' if any(o[1] for o in e.get('o') or []) else ''
+        if not hours and fs:
+            k = kids.get(fs[0]) or {'n': 0, 'days': set()}
+            if coverage(e['a'], e['b'], k['days'], k['n'], fs[0] in connected) == 'completa': hours = '%d sesiones' % k['n']
         seen.add(key)
         row = conn.execute('SELECT hours, resolved_at FROM festival_hour_watch WHERE key=?', (key,)).fetchone()
         if not row:
