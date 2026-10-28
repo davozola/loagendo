@@ -128,7 +128,7 @@ class WebTests(unittest.TestCase):
         js = (ROOT / 'static' / 'public.js').read_text(); html = (ROOT / 'static' / 'index.html').read_text()
         for text in ('HOUR_CAP = 10', 'function rankDiverse', 'data-hourfold', "L('Ver menos'", "pickRange: 'auto'", 'function priceShort', 'venue_tier: c.vt', 'seriesShort', 'expoScore'):
             self.assertIn(text, js)
-        self.assertIn('data-period="finde"', html)
+        self.assertIn('id="whenPeriod"', html); self.assertIn("['finde', t('Fin de semana')", js)   # 28-10 (23:52): el periodo, en «Periodo ▾»
 
     def test_agenda_cronologica_sin_ahora_ni_horario_amplio(self):
         """28-10-2026 (David): sin grupo «Ahora»; hoy empieza en la hora actual con lo anterior plegado arriba; un horario de
@@ -209,3 +209,20 @@ class SeleccionPorTipoTests(unittest.TestCase):
         self.assertIn('gatherSeries([timeline, tbcList])', js)      # un día (con o sin filtros)
         self.assertIn('gatherSeries([nearSort(dayList)])', js)      # varios días (7 días, fin de semana)
         self.assertNotIn('AGE_LABEL.nd', js.split('function row(')[1].split('\n')[0])   # la fila no dice «Edad no indicada»
+
+
+class CuandoYTitularTests(unittest.TestCase):
+    def test_cuando_titular_y_filtros(self):
+        """28-10-2026 (23:52, David): «Hoy | Elegir día ▾ | Periodo ▾» (el carrusel de días de siempre dentro de «Elegir día», con
+        «Otra fecha» al final); titular al mismo tamaño con solo «Barcelona» en negrita; categorías antes que «Cerca de mí» y
+        «+ Más filtros», que no cuenta el periodo ni la categoría."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
+        css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ('id="whenToday"', 'id="whenDay"', 'id="periodMenu"', 'id="daysPanel" class="days-bar" hidden', 'id="pickDate"', '<strong>Barcelona</strong>', '<span data-i18n>Más filtros</span>'):
+            self.assertIn(text, html)
+        self.assertNotIn('id="periods"', html)
+        self.assertLess(html.index('id="typeMini"'), html.index('id="nearBox"')); self.assertLess(html.index('id="nearBox"'), html.index('id="openFilters"'))
+        for text in ('function periodMenu(open)', "if (other) host.append(other)", "!['range', 'query', 'cat'].includes(f.k)", 'const fit = w =>', 'weekdays[d.getDay()]} ${d.getDate()}'):
+            self.assertIn(text, js)
+        self.assertIn('.hero h1>strong{font-weight:700}', css); self.assertIn('.when-bar{', css)
+

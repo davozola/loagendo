@@ -34,12 +34,15 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .hero{color:var(--ink);min-height:0;padding:clamp(36px,6vw,80px) 0 clamp(28px,4vw,48px);margin-bottom:0}
 .hero-bg{display:none}
 .hero h1{max-width:1100px;font-size:clamp(44px,7.4vw,112px);font-weight:500;letter-spacing:-.045em;line-height:.97}
-.hero h1 em{color:var(--ink);font-weight:700}.hero h1 em.typing:after{background:var(--ink)}
+.hero h1 em{color:var(--ink);font-weight:500}.hero h1 em.typing:after{background:var(--ink)}
 /* Titular en dos líneas fijas (28-10-2026, 19:34, David): arriba «Qué hacer en Barcelona», abajo la palabra que rota, siempre
    en una línea (se encoge si es larga). El alto queda reservado y no salta al cambiar la palabra. */
-.hero h1>span,.hero h1 em{display:block;white-space:nowrap}
-.hero h1 em{min-height:1.02em;line-height:1.02}
-@media(max-width:620px){.hero h1{font-size:clamp(28px,8.6vw,36px)}.hero h1 em.long{font-size:.78em;line-height:1.31}.hero{padding:14px 0 16px}}
+/* Titular (28-10-2026, 23:52, David): todo al mismo tamaño, solo «Barcelona» en negrita; la palabra que cambia, en su línea
+   de altura fija (si no cabe, public.js la reduce lo justo sin mover la caja). Escritorio: «Qué hacer en Barcelona» en una línea. */
+.hero-inner{grid-template-columns:minmax(0,1fr)}.hero h1{min-width:0;font-size:clamp(40px,6.2vw,96px);font-weight:500;line-height:1.02}
+.hero h1>span,.hero h1>strong{display:inline;white-space:nowrap}.hero h1>strong{font-weight:700}
+.hero h1 em{display:block;white-space:nowrap;font-weight:500;min-height:1.02em;line-height:1.02}
+@media(max-width:620px){.hero h1{font-size:clamp(32px,10.2vw,40px)}.hero h1>span,.hero h1>strong{display:block}.hero{padding:14px 0 16px}}
 .hero-copy{color:var(--ink);font-size:clamp(20px,2vw,30px);font-style:italic;font-weight:500;max-width:none}
 
 /* periodo y días: banda arena */
@@ -56,7 +59,7 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 @media(max-width:760px){.period-tabs{border-radius:0}}
 
 /* selección de la semana: banda turquesa */
-#seleccion{margin:0 calc(50% - 50vw) clamp(32px,5vw,56px);width:100vw;padding:clamp(28px,4vw,44px) var(--gutter);background:var(--turq);border-bottom:1px solid var(--ink);box-sizing:border-box}
+#seleccion{margin:0 calc(50% - 50vw) 0;width:100vw;padding:clamp(22px,4vw,44px) var(--gutter) clamp(18px,3vw,36px);background:var(--turq);border-bottom:0;box-sizing:border-box}   /* sin hueco blanco hasta la banda de «Cuándo» (28-10-2026) */
 #seleccion .section-head{color:var(--on-color)}
 #seleccion .section-head{max-width:1360px;margin:0 auto 18px}
 #seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
@@ -91,8 +94,12 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 @media(max-width:960px){
   .filters-panel{border-radius:0;border-right:1px solid var(--ink);padding-left:18px}
   .filter-bar{border-bottom:1px solid var(--ink);background:var(--paper)}
-  .filter-bar .filters-toggle,.filters-toggle{background:var(--ink);border-color:var(--ink);color:var(--paper);border-radius:0}
-  .filters-toggle b{background:var(--paper);color:var(--ink);border-radius:0}
+  .filter-bar .filters-toggle,.filters-toggle{background:var(--paper);border-color:var(--ink);color:var(--ink);border-radius:0;font-weight:600}
+  .filters-toggle b{background:var(--ink);color:var(--paper);border-radius:0}
+  /* 28-10-2026 (David): primero «qué» (categorías, fila fija), luego «Cerca de mí» y «+ Más filtros», dos botones blancos iguales */
+  .filter-bar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:8px}.filter-bar .type-mini{order:-1}.filter-bar .type-mini .cat-bar{margin-top:0}
+  .filter-bar .near-box{display:flex;min-width:0}.filter-bar .near-btn,.filter-bar .near-on{width:100%;justify-content:center;font-size:15px}.filter-bar .near-on{justify-content:space-between}
+  .filter-bar .filters-toggle{font-size:15px}
   .filters-apply{border-radius:0;background:var(--ink)}
   .filters-clear{border-radius:0;border-color:var(--ink)}
   .close.small{border-radius:0;border-color:var(--ink)}
@@ -259,3 +266,22 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .ev-cat>span.ev-left:before{content:none}
 .ev-cat>.ev-left{margin-left:10px;vertical-align:1px}
 .ev-left-soon{background:var(--now);border-color:var(--now);color:#fff}
+
+/* «Cuándo» (28-10-2026, 23:52, David): «Hoy | Elegir día ▾ | Periodo ▾» en una tira en caja. «Elegir día» abre el carrusel de
+   días de siempre, con los fines de semana en color y «Otra fecha» al final; «Periodo», una lista corta con lo que abarca. */
+.when-bar{display:flex;margin-top:12px;max-width:600px;border:1px solid var(--ink);background:var(--paper)}
+.when-btn{flex:1 1 0;min-width:0;height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border:0;border-right:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer}
+.when-btn>span{overflow:hidden;text-overflow:ellipsis}
+#whenToday{flex:0 0 auto;padding:0 18px}
+.when-pop{flex:1 1 0;min-width:0;position:relative;display:flex}.when-pop .when-btn{border-right:0;width:100%}
+.when-btn:hover{background:var(--shade)}.when-btn.active{background:var(--ink);color:var(--paper)}
+.when-caret{font-style:normal;font-size:.75em}
+.period-menu{position:absolute;right:-1px;top:calc(100% + 1px);z-index:60;width:min(calc(100vw - 32px),340px);background:var(--paper);border:1px solid var(--ink);display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.period-menu[hidden]{display:none}
+.period-menu button{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:52px;padding:0 14px;border:0;border-bottom:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
+.period-menu button:last-child{border-bottom:0}.period-menu button:hover{background:var(--shade)}
+.period-menu b,.period-menu small{white-space:nowrap}.period-menu small{font-size:14px;color:var(--text2)}
+.period-menu button[aria-pressed=true]{background:var(--ink);color:var(--paper)}.period-menu button[aria-pressed=true] small{color:var(--paper)}
+#daysPanel{margin-top:12px}#daysPanel[hidden]{display:none}
+.day.day-other{position:relative;flex:0 0 auto;width:auto;padding:6px 12px;display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer}
+.day-other input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
