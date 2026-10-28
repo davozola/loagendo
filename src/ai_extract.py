@@ -74,9 +74,13 @@ def times_in(quote):
     for m in RANGE_RX.finditer(fold(quote)):
         for h, mm in ((m.group(1), m.group(2)), (m.group(3), m.group(4))):
             if 0 <= int(h) <= 24: out.add(f'{int(h) % 24:02d}:{int(mm or 0):02d}')
-    for m in TIME_RX.finditer(fold(quote)):
+    q = fold(quote)
+    for m in TIME_RX.finditer(q):
         h = m.group(1) or m.group(4); mm = m.group(2) or m.group(3) or m.group(5) or '00'
-        if h is not None and 0 <= int(h) <= 24 and 0 <= int(mm) < 60: out.add(f'{int(h) % 24:02d}:{int(mm):02d}')
+        if h is not None and 0 <= int(h) <= 24 and 0 <= int(mm) < 60:
+            out.add(f'{int(h) % 24:02d}:{int(mm):02d}')
+            # «6:30 p.m.» (In-Edit en inglés, 28-10-2026): también la hora de la tarde.
+            if int(h) < 12 and re.match(r"\s*p\.?\s*m\b", q[m.end():m.end() + 8]): out.add(f'{int(h) + 12:02d}:{int(mm):02d}')
     return out
 
 

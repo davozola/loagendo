@@ -213,9 +213,14 @@ def _same_place(a, b):
     return bool(a and b) and (a in b or b in a)
 
 
-def verify(item, text, links, today, salas=None, other_places=False, own_name=''):
-    """(acto comprobado o None, motivos de descarte)."""
+def verify(item, text, links, today, salas=None, other_places=False, own_name='', whole_page=False):
+    """(acto comprobado o None, motivos de descarte).
+
+    ``whole_page`` (28-10-2026, In-Edit): la página es la ficha de un solo acto (enlazada desde la agenda con
+    «seguir»: {«ficha»: true}); su título encabeza la página y las sesiones van después de la sinopsis, así que la
+    cercanía al título no se exige. Las citas siguen teniendo que estar literalmente en la página."""
     hay = fold(text); why = []
+    _near_ = (lambda *a: True) if whole_page else _near
     title = ' '.join(str(item.get('titulo') or '').split())
     tpos = _positions(title, hay)
     if not title or not tpos: return None, ['título que no está en la página']
@@ -233,13 +238,13 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
         # Acto en otro lugar (Goethe-Institut en el Institut français, Casa Amèrica en Cinemes Girona):
         # el lugar tiene que estar escrito en la página, cerca del título.
         place = ' '.join(str(item['sala']).split())
-        if not _near(tpos, _positions(place, hay), 1500, 1500): return None, [f"lugar que no está junto al acto: {place!r}"]
+        if not _near_(tpos, _positions(place, hay), 1500, 1500): return None, [f"lugar que no está junto al acto: {place!r}"]
         out['sala'] = {'name': place, 'address': ''}
     for s in item.get('sesiones') or []:
         qd = str(s.get('cita_fecha') or ''); dpos = _positions(qd, hay)
         if not dpos: why.append(f"cita de fecha que no está en la página: {qd!r}"); continue
         # La fecha va delante (cabecera de día, hasta NEAR_DATE_BEFORE) o justo detrás del título.
-        if not _near(tpos, dpos, NEAR_DATE_BEFORE, NEAR_DATE_AFTER):
+        if not _near_(tpos, dpos, NEAR_DATE_BEFORE, NEAR_DATE_AFTER):
             why.append(f"fecha lejos del título: {qd!r}"); continue
         d = _date_from_quote(s.get('fecha'), qd, today)
         if not d: why.append(f"fecha que no cuadra con su cita: {s.get('fecha')} / {qd!r}"); continue
@@ -247,7 +252,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
         h, qh = str(s.get('hora') or '').strip(), str(s.get('cita_hora') or '')
         if h:
             hpos = _positions(qh, hay)
-            if re.fullmatch(r"\d{1,2}:\d{2}", h) and hpos and _near(tpos, hpos, NEAR_TIME, NEAR_TIME) and f"{int(h[:-3]):02d}:{h[-2:]}" in times_in(qh):
+            if re.fullmatch(r"\d{1,2}:\d{2}", h) and hpos and _near_(tpos, hpos, NEAR_TIME, NEAR_TIME) and f"{int(h[:-3]):02d}:{h[-2:]}" in times_in(qh):
                 hour = f"{int(h[:-3]):02d}:{h[-2:]}"; out['quotes'].setdefault('time', qh)
             else: why.append(f"hora sin cita válida: {h} / {qh!r}")
         out['sesiones'].append((d.isoformat(), hour)); out['quotes'].setdefault('date', qd)
@@ -265,14 +270,14 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
                     cand = dt.date(y, int(first.group(2)), int(first.group(1)))
                     if cand < today: a = cand
                 except ValueError: pass
-        if ppos and a and b and a <= b and (_near(tpos, ppos, 1500, 1500)):
+        if ppos and a and b and a <= b and (_near_(tpos, ppos, 1500, 1500)):
             out['periodo'] = (a.isoformat(), b.isoformat()); out['quotes'].setdefault('date', qp)
         else: why.append(f"periodo sin cita válida: {p!r}")
     if not out['sesiones'] and not out.get('periodo'): return None, why or ['sin fecha comprobada']
     price, qpr = str(item.get('precio') or '').strip(), str(item.get('cita_precio') or '')
     if price:
         ppos = _positions(qpr, hay); digits = re.findall(r"\d+(?:[.,]\d+)?", price)
-        ok = ppos and _near(tpos, ppos, NEAR_PRICE, NEAR_PRICE) and (all(x in qpr for x in digits) if digits else FREE_RX.search(fold(qpr)))
+        ok = ppos and _near_(tpos, ppos, NEAR_PRICE, NEAR_PRICE) and (all(x in qpr for x in digits) if digits else FREE_RX.search(fold(qpr)))
         if ok: out['precio'] = price; out['quotes']['price'] = qpr
         else: why.append(f"precio sin cita válida: {price!r}")
     m = re.fullmatch(r"\[?L(\d+)\]?", str(item.get('enlace') or '').strip())
@@ -413,7 +418,9 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
     # Sin cambios en ninguna página: no se llama a la IA. Si cambia una, se leen todas (las fichas de la
     # agenda se recalculan juntas y lo que falte deja de publicarse).
     if result['unchanged']: return result
+    listing = set(expand_urls(agenda, today))
     for page, text, links, page_url, body in fetched:
+        whole = bool(follow.get('ficha')) and page['url'] not in listing
         # Reglas antes que IA: si la página publica sus actos en schema.org, se toman de ahí (sin tokens).
         nodes = schema_nodes(body, agenda, today)
         if nodes:
@@ -424,9 +431,9 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
-            act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'])
+            act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'], whole_page=whole)
             if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)
-            else: result['rejected'].append({'item': item, 'why': why})
+            else: result['rejected'].append({'item': item, 'why': why, 'page': page_url})
         page['events'] = len(items)
     # Un mismo acto en dos páginas (semanas de la Filmoteca): una sola entrada por título y enlace.
     merged = {}
@@ -479,7 +486,7 @@ def rules_records(agenda, nodes):
     return out
 
 
-def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, timeout=30):
+def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, timeout=30, force=False):
     """Lee una agenda y guarda sus fichas (fuente venue_ia_<slug>)."""
     from src.media import register
     from src.sync import _upsert_record, initialize as init_sync, now_utc
@@ -492,7 +499,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
     with conn:
         run_id = conn.execute('INSERT INTO sync_runs(source,started_at,status,cursor) VALUES(?,?,?,?)', (source, now_utc(), 'running', '0')).lastrowid
     try:
-        res = read_agenda(agenda, today, key, fetcher=fetcher, requester=requester, timeout=timeout, conn=conn, usage=usage)
+        res = read_agenda(agenda, today, key, fetcher=fetcher, requester=requester, timeout=timeout, conn=conn, usage=usage, force=force)
         errors = [p['error'] for p in res['pages'] if p.get('error')]
         if errors and len(errors) == len(res['pages']): raise RuntimeError('; '.join(errors))
         if res['unchanged']:
@@ -541,6 +548,8 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                                  'ON CONFLICT(slug,url) DO UPDATE SET text_hash=excluded.text_hash,checked_at=excluded.checked_at,changed_at=excluded.changed_at,events=excluded.events',
                                  (agenda['slug'], p['url'], p['hash'], now, now, p.get('events', 0)))
             warn = [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
+            # Motivos de cada descarte (28-10-2026): para revisar una agenda nueva sin volver a gastar IA.
+            warn += [f"descartado · {str((r.get('item') or {}).get('titulo') or '')[:80]} · {'; '.join(r.get('why') or [])[:240]} · {r.get('page', '')}" for r in res['rejected'][:200]]
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=?,rows_received=?,rows_mutated=?,warning_json=? WHERE id=?",
                          (now, len(res['pages']) + images, len(records), mutated, json.dumps(warn), run_id))
         return {'source': source, 'status': 'completed', 'via': sorted({p.get('via') for p in res['pages'] if p.get('via')}), 'rows_received': len(records), 'rows_mutated': mutated,

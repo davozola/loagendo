@@ -99,11 +99,28 @@ class InEditTests(unittest.TestCase):
         self.assertEqual(recs[0]['start'], '2026-10-29'); self.assertEqual(recs[0]['time_text'], '21:00')
         self.assertEqual(recs[0]['venues'][0]['name'], 'Cinema Mooby Aribau')
 
+    def test_ficha_de_pelicula_sin_cercania(self):
+        import datetime as dt
+        from src import ai_agenda
+        from src.ai_extract import times_in
+        text = "BROKEN ENGLISH " + "sinopsi " * 300 + " 29 d'octubre, 19.30 h VOSC LP"
+        item = {'titulo': 'Broken English', 'sesiones': [{'fecha': '2026-10-29', 'cita_fecha': "29 d'octubre", 'hora': '19:30', 'cita_hora': '19.30 h'}]}
+        self.assertIsNone(ai_agenda.verify(item, text, [], dt.date(2026, 10, 28))[0])
+        act, _ = ai_agenda.verify(item, text, [], dt.date(2026, 10, 28), whole_page=True)
+        self.assertEqual(act['sesiones'], [('2026-10-29', '19:30')])
+        self.assertIn('18:30', times_in('26 October, 6:30 p.m.'))
+
+    def test_festival_en_la_proyeccion(self):
+        from mvp import catalog
+        pr = catalog.project_raw('venue_ia_in_edit', 'x', 'Broken English', '2026-10-29', '2026-10-29', 'single', '',
+                                 {'item': {'@type': 'Event', 'name': 'Broken English', 'x_festival': {'slug': 'in-edit', 'name': 'In-Edit Barcelona'}}, 'loagendo': {}})
+        self.assertEqual(pr['x_festival']['slug'], 'in-edit')
+
     def test_config(self):
         from src.ai_agenda import load_agendas
         a = next(x for x in load_agendas() if x['slug'] == 'in_edit')
         self.assertTrue(a['activa']); self.assertEqual(a['hasta'], '2026-11-08'); self.assertEqual(len(a['urls']), 11)
-        self.assertEqual(a['festival']['slug'], 'in-edit'); self.assertIn('/docs/', a['seguir']['patron'])
+        self.assertEqual(a['festival']['slug'], 'in-edit'); self.assertIn('/docs/', a['seguir']['patron']); self.assertTrue(a['seguir']['ficha'])
 
 
 class WebTests(unittest.TestCase):
