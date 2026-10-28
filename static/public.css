@@ -565,6 +565,10 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
 .pick-nav{display:none}.pick-bar{margin-bottom:10px}.curated .pick-media{height:150px}
 .pick-cats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px)}.pick-cats::-webkit-scrollbar{display:none}
+/* Tipos en móvil (28-10-2026): una fila que se desliza, como la de la Agenda, sin el número para que quepan 5 de 8 y con
+   el borde derecho fundido mientras queda algo a la derecha (pick-cats-end lo quita al llegar al final). */
+.pick-cats .cat-pill{padding:0 11px;gap:6px}.pick-cats .cat-pill small{display:none}
+.pick-cats:not(.pick-cats-end){-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
 .pick-large .pick-media,.pick-media{height:150px}.pick-large .pick-title{font-size:19px;-webkit-line-clamp:3}.pick-large .pick-summary{display:none}
 .period-date{grid-column:auto}
 }

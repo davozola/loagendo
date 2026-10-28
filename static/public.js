@@ -581,6 +581,12 @@ async function selection() {
       bar.innerHTML = cats.length ? [['', t('Todo'), chosen.length], ...cats.map(c => [c, byLang(CAT_SHORT[c] || CATS[c]), groups[c].length])]
         .map(([c, label, n]) => `<button class="cat-pill${state.pickCat === c ? ' on' : ''}" type="button" data-pickcat="${c}" aria-pressed="${state.pickCat === c}"${c ? ` data-category-color="${c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)} <small>${n}</small></button>`).join('') : '';
     }
+    if (bar && cats.length) {   // el tipo elegido, siempre a la vista en la fila que se desliza (móvil)
+      const on = bar.querySelector('.on');
+      const r = on?.getBoundingClientRect(), box = bar.getBoundingClientRect();
+      if (r && (r.right > box.right - 24 || r.left < box.left)) bar.scrollLeft += r.left - box.left - 16;
+      pickCatsEdge();
+    }
     const items = (state.pickCat ? groups[state.pickCat] : chosen).slice().sort(byTime);
     const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
     $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
@@ -600,6 +606,9 @@ function pickNav() {
   nav.hidden = cards.length <= shown;
   $('pickCount').textContent = `${first + 1}–${last} ${L('de', 'de', 'of')} ${cards.length}`;
   $('pickPrev').disabled = first <= 0; $('pickNext').disabled = last >= cards.length;
+}
+function pickCatsEdge() {
+  const bar = $('pickCats'); if (bar) bar.classList.toggle('pick-cats-end', bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4);
 }
 function pickScroll(dir) {
   const box = $('curated'), cards = box.querySelectorAll('button[data-open]');
@@ -1470,6 +1479,7 @@ function syncMini() {
 }
 document.addEventListener('scroll', () => requestAnimationFrame(syncMini), {passive: true});
 $('curated')?.addEventListener('scroll', () => requestAnimationFrame(pickNav), {passive: true});
+$('pickCats')?.addEventListener('scroll', () => requestAnimationFrame(pickCatsEdge), {passive: true});
 window.addEventListener('resize', () => requestAnimationFrame(pickNav));
 // --stick: cabecera; --agtop: cabecera + barra de filtros fija (móvil), donde se pegan las pestañas; --daytop: debajo de las pestañas.
 function stick() {
