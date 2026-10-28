@@ -64,6 +64,21 @@ class WebTests(unittest.TestCase):
             self.assertIn(text, js)
         self.assertIn('data-period="finde"', html)
 
+    def test_agenda_cronologica_sin_ahora_ni_horario_amplio(self):
+        """28-10-2026 (David): sin grupo «Ahora»; hoy empieza en la hora actual con lo anterior plegado arriba; un horario de
+        apertura no es una sesión (parades de castanyes fuera); total en cada cabecera de hora; etiqueta de festival pulsable
+        con filtro que se mantiene al cambiar de día; el festival de abono sale a su hora de apertura, no a la de la primera sesión."""
+        js = (ROOT / 'static' / 'public.js').read_text()
+        for text in ("const hourKey = e => String(Math.floor(e._st.sort / 60))", "foldHtml('past', L('Anteriores: ya empezadas o acabadas hoy'",
+                     "wideAllDay.filter(e => !isExhibit(e))].sort(byTitle)", "${h} h`} · ${plans(n)}`", "function goFest(d)", "p.fest && base.festival?.slug !== p.fest",
+                     "data-fest=\"${esc(slug)}\"", "program_days: c.pn || null", "if (state.fest) { p.set('fest', state.fest)"):
+            self.assertIn(text, js)
+        for text in ("=== 'now'", "id=\"ag-now\"", 'function openBlock', "const pf = e.program_first?.[day];\n  if (pf) return", "e._st.state === 'started' || e._st.state === 'open')) ? 'now'"):
+            self.assertNotIn(text, js)
+        self.assertNotIn("timeline = [...timeline, ...openList", js)
+        py = (ROOT / 'src' / 'publish_static.py').read_text()
+        self.assertIn("out['pn'] = days", py)
+
 
 class MonumentalTests(unittest.TestCase):
     """28-10-2026 (David): «Monumental Kids» (12–17 h) y «Monumental Club Halloween» (15–23 h) son dos propuestas."""

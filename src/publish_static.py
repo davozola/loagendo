@@ -295,6 +295,9 @@ def compact(event, images, full=True, hidden=frozenset()):
         for p in event['program']:
             if p.get('time') and (p['date'] not in first or p['time'] < first[p['date']]): first[p['date']] = p['time']
         if first: out['pf'] = first  # primera sesión de cada día según su programa oficial (no se extrapola)
+        days = {}
+        for p in event['program']: days[p['date']] = days.get(p['date'], 0) + 1
+        out['pn'] = days  # actuaciones por día del programa oficial: la fila del festival de abono dice cuántas hay (28-10-2026)
     if event.get('manual_hours'): out['mh'] = event['manual_hours']  # hora puesta a mano por David, con su fuente
     if event.get('drop_in'): out['di'] = 1  # la fuente dice que las sesiones son sueltas (mvp.catalog.drop_in)
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento

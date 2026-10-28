@@ -347,6 +347,10 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Resultado encontrado por el cartel («Con Fennesz»), 18-10-2026 */
 .ev-hit{display:block;font-size:.82em;color:var(--accentText);margin:2px 0 1px}
+/* Etiqueta de festival o fiesta pulsable (28-10-2026): filtra la Agenda a sus actos */
+.ev-fest.is-link{cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--accentText) 45%,transparent);text-underline-offset:3px}
+.ev-fest.is-link i{font-style:normal;font-weight:700}
+.ev-fest.is-link:hover,.ev-fest.is-link:focus-visible{text-decoration-color:var(--accentText);outline:none}
 
 /* Canales de descubrimiento (19-10-2026): fila propia sobre la agenda, desplazable en móvil */
 .discover{display:flex;align-items:center;gap:10px;margin:0 0 12px}

@@ -108,7 +108,7 @@ class WebTests(unittest.TestCase):
     def test_patios_reunidos_y_sin_bloques_de_abierto_ni_sin_hora(self):
         # 28-10-2026 (David): fuera el bloque «Abierto ahora / Durante el día»; los planes sin hora no se enseñan (solo al buscar).
         js = (ROOT / 'static' / 'public.js').read_text()
-        for text in ("DAY_SERIES = new Set(['patis-escolars-oberts'])", "'inicio de curso'", 'const showTbc = searching() || state.savedOnly;', "if (showTbc) html += foldBlock('tbc',"):
+        for text in ("DAY_SERIES = new Set(['patis-escolars-oberts'])", "'inicio de curso'", 'const showTbc = searching() || state.savedOnly || Boolean(state.fest);', "if (showTbc) html += foldBlock('tbc',"):
             self.assertIn(text, js)
         self.assertNotIn('html += openBlock(', js)
 

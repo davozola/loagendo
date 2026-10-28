@@ -149,7 +149,7 @@ let state = {
   range: params.get('range') || LANDING.range || '',
   // Pestaña de la agenda (25-10-2026): Agenda (por defecto), Exposiciones o Festivales; /exposiciones abre en la suya.
   tab: ['agenda', 'expo'].includes(params.get('vista')) ? params.get('vista') : LANDING.path === '/exposiciones' ? 'expo' : 'agenda',
-  started: params.get('started') === '1', langs: params.getAll('idioma').filter(l => ACT_LANGS[l]),
+  fest: params.get('fest') || '', festName: params.get('festname') || '', started: params.get('started') === '1', langs: params.getAll('idioma').filter(l => ACT_LANGS[l]),
   savedOnly: false, saved: [], detail: null, page: 1, items: [], total: 0,
 };
 const LANDING_Q = LANDING.path ? stateQuery() : null;   // el filtro con que arrancó la página de entrada (syncUrl)
@@ -171,7 +171,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), venue_tier: c.vt || 0, promo: Boolean(c.pm), price_short: c.pp || null, open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), venue_tier: c.vt || 0, promo: Boolean(c.pm), price_short: c.pp || null, open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, program_days: c.pn || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || ''};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -315,6 +315,14 @@ function rowVenue(e) {
   const site = String(e.venue_names?.[0] || '').split(' · ')[0].trim();
   return site && !MANY_PLACES.test(site) ? `<span class="ev-venue" data-venueq="${esc(site)}" title="${esc(L(`Planes en ${site}`, `Plans a ${site}`, `Plans at ${site}`))}">${esc(venue(e))}</span>` : `<span>${esc(venue(e))}</span>`;
 }
+// Filtro de festival o fiesta (28-10-2026, David): la Agenda del día con solo sus actos, día a día; si el festival aún no ha
+// empezado, su primer día. Nada se pliega ni se esconde dentro del filtro (también la ficha general y lo que no tiene hora).
+function goFest(d) {
+  hideSheet(); state.detail = null; state.fest = d.fest; state.festName = d.festname || ''; state.festFiesta = d.festfiesta === '1'; state.range = '';
+  const from = d.fesfrom || '', to = d.festo || from;
+  if (state.day < from || state.day > to) state.day = from > today ? from : today;
+  track('filtro', 'festival', state.fest); refresh({scroll: true});
+}
 function goVenue(site) {
   track('filtro', 'venue', site);
   hideSheet(); state.detail = null; state.query = site; $('searchInput').value = site; state.day = today; state.range = '183'; refresh({scroll: true});
@@ -339,6 +347,7 @@ function stateQuery() {
   if (state.hourFrom !== null) p.set('from', state.hourFrom); if (state.hourTo !== null) p.set('to', state.hourTo);
   if (state.view !== 'list') p.set('view', state.view); if (state.range) p.set('range', state.range); if (state.started) p.set('started', '1');
   if (state.tab !== 'agenda') p.set('vista', state.tab);
+  if (state.fest) { p.set('fest', state.fest); if (state.festName) p.set('festname', state.festName) }
   return p.toString();
 }
 function syncUrl(push) {
@@ -450,6 +459,7 @@ function activeFilterList() {
   if (state.district) out.push({k: 'district', label: t(state.district)});
   if (state.started) out.push({k: 'started', label: t('Con cursos ya empezados')});
   if (state.range) out.push({k: 'range', label: RANGE_LABELS[state.range] || state.range});
+  if (state.fest) out.push({k: 'fest', label: `${festKind({festival: {fiesta: state.festFiesta}})} · ${state.festName || state.fest}`});
   return out;
 }
 function clearFilter(k) {
@@ -458,6 +468,7 @@ function clearFilter(k) {
   if (k === 'cat') state.cats = []; if (k === 'ch') { state.chans = []; state.ages = [] } if (k === 'edad') state.ages = []; if (k === 'idioma') state.langs = []; if (k === 'format') state.format = ''; if (k === 'free') state.free = false;
   if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
   if (k === 'started') state.started = false
+  if (k === 'fest') { state.fest = ''; state.festName = ''; state.festFiesta = false }
 }
 function renderActive() {
   const list = activeFilterList();
@@ -591,6 +602,10 @@ function rangeIn(s) {
 // Horario amplio por el tramo continuo más largo, no por la primera apertura y el último cierre (27-10-2026): «10:00–13:00 ·
 // 15:30–18:30» son dos sesiones de un curso, no ocho horas y media abierto.
 const longest = r => Math.max(...r.ranges.map(x => x.close - x.open));
+// Horario amplio = espacio o actividad abierta durante horas (28-10-2026, David): no es una sesión. Una franja larga que
+// empieza de noche (una fiesta «23:00–05:00», «00:00–06:00») sí es una sesión con hora de inicio.
+const NIGHT_START = 20 * 60;
+const isWideRange = r => longest(r) >= WIDE_MIN && !(r.open >= NIGHT_START || r.open < NIGHT_END);
 const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
 const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format === 'course';
 // «Exposición» solo para exposiciones: una actividad continuada (ruta, espacio abierto) no lo es (26-10-2026).
@@ -628,7 +643,7 @@ function availability(e, day) {
   if (e.start !== e.end && hbDays.length && !(day in hbd) && day <= hbDays[hbDays.length - 1] && (day >= hbDays[0] || hbDays[0] >= today)) { const next = hbDays.find(d => d > day); return {kind: 'run', until: e.end, ...(next ? {next, nextTime: hbd[next]} : {})} }
   if (e.start === e.end) {
     const range = rangeIn(label) || rangeIn(raw);
-    if (range) return longest(range) >= WIDE_MIN ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
+    if (range) return isWideRange(range) ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
     const times = timesIn(raw);
     return times.length ? {kind: 'timed', times} : {kind: 'tbc'};
   }
@@ -639,7 +654,7 @@ function availability(e, day) {
   if (dayHours && !(needsSignup(e) && !isOpenFormat(e) && span > SHORT_DAYS)) {
     const r = rangeIn(dayHours), ts = timesIn(dayHours);
     // Una exposición o un espacio con horario de apertura es «horario amplio», aunque cada tramo sea corto.
-    if (r) return (longest(r) >= WIDE_MIN || isOpenFormat(e)) ? {kind: 'wide', ...r, until: e.end} : {kind: 'timed', times: [clock(r.open)], endsAt: r.close};
+    if (r) return (isWideRange(r) || isOpenFormat(e)) ? {kind: 'wide', ...r, until: e.end} : {kind: 'timed', times: [clock(r.open)], endsAt: r.close};
     if (ts.length) return {kind: 'timed', times: ts};
   }
   const range = rangeIn(label), times = timesIn(raw);
@@ -660,7 +675,7 @@ function availability(e, day) {
     }
     // Programa o sesiones sueltas ya en marcha: sigue como una temporada (abajo).
   }
-  if (isOpenFormat(e) || (range && longest(range) >= WIDE_MIN)) return {kind: 'wide', until: e.end, ...(range || {noHours: true})};
+  if (isOpenFormat(e) || (range && isWideRange(range))) return {kind: 'wide', until: e.end, ...(range || {noHours: true})};
   // Temporada de semanas con una hora general pero sin saber qué días hay función (24-10-2026): no se
   // presenta como sesión de ese día («temporada · confirma el pase»): va a «planes sin hora confirmada».
   // Las de pocos días (festivales cortos) siguen con su hora.
@@ -799,7 +814,8 @@ function buildModel(items, win) {
   const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
   const place = e => {
     const k = e._a.kind;
-    if ((k === 'timed' || k === 'wide') && e._st.state === 'past') s.past.push(e);
+    // Sin grupo «Ahora» (28-10-2026, David): lo que ya ha empezado hoy va con lo anterior, accesible arriba.
+    if ((k === 'timed' || k === 'wide') && (e._st.state === 'past' || e._st.state === 'started' || e._st.state === 'open')) s.past.push(e);
     else if (k === 'timed') s.fixed.push(e);
     else if (k === 'wide') (e._a.noHours ? s.wideNoHours : s.wide).push(e);
     else if (k === 'skip') return;
@@ -826,7 +842,7 @@ function buildModel(items, win) {
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
     decorate(e, day, day === now.day ? now.min : null);
     if (e._a.kind === 'skip') continue;
-    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && e._st.state === 'past') { place(e); continue }
+    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && ['past', 'started', 'open'].includes(e._st.state)) { place(e); continue }
     if (!buckets.has(day)) buckets.set(day, []);
     buckets.get(day).push(e);
   }
@@ -906,7 +922,7 @@ function row(e) {
 }
 
 /* ---------- render ---------- */
-const hourKey = (e, live) => (live && (e._st.state === 'started' || e._st.state === 'open')) ? 'now' : String(Math.floor(e._st.sort / 60)).padStart(2, '0');
+const hourKey = e => String(Math.floor(e._st.sort / 60)).padStart(2, '0');
 function groupHead(label, cls = '') { return `<div class="ag-stick${cls}"><span>${esc(label)}</span></div>` }
 // Series de fichas casi iguales (p. ej. un patio escolar abierto por escuela): una fila y el resto plegado.
 // Destacados (21-10-2026): pocas filas, con motivo visible. «Selección Ontoca» (la de la portada) y
@@ -1000,7 +1016,12 @@ function festTag(e) {
   const name = f && !f.umbrella && !e._inFest && !bare(e.title).includes(bare(f.name)) ? f.name : '';
   // La hora de la ficha general dice qué es: apertura o primera sesión del día (26-10-2026).
   const how = e._a?.festHour === 'primera' ? L('hora de la primera sesión', 'hora de la primera sessió', 'first session time') : e._a?.festHour === 'apertura' ? L('hora de apertura', "hora d'obertura", 'opening time') : '';
-  return `<span class="ev-hit ev-fest"><span class="fest-kind">${esc(festKind(e))}</span>${name ? esc(name) : how ? esc(how) : ''}</span>`;
+  // Ficha general de un festival de abono (28-10-2026, David): una fila al día, a su hora de apertura, con cuántas
+  // actuaciones tiene ese día según su programa oficial.
+  const n = isFestHead(e) ? e.program_days?.[e._day] : 0, prog = n ? ` · ${n} ${n === 1 ? L('actuación hoy', 'actuació avui', 'show today') : L('actuaciones en el programa', 'actuacions al programa', 'shows in the programme')}` : '';
+  // La etiqueta se puede pulsar (28-10-2026, David): filtra la Agenda a ese festival o fiesta y se mantiene al cambiar de día.
+  const slug = f?.slug || '', act = slug && !state.fest ? ` data-fest="${esc(slug)}" data-festname="${esc(f.name)}" data-festfiesta="${f.fiesta ? 1 : 0}" data-fesfrom="${esc(e.start)}" data-festo="${esc(e.end)}" role="link" tabindex="0"` : '';
+  return `<span class="ev-hit ev-fest${act ? ' is-link' : ''}"${act}><span class="fest-kind">${esc(festKind(e))}</span>${name ? esc(name) : how ? esc(how) : ''}${esc(prog)}${act ? ' <i aria-hidden="true">›</i>' : ''}</span>`;
 }
 // Dentro del bloque del festival, el título sin el nombre del festival delante («…: Fira de vins» → «Fira de vins»).
 function festShort(e) {
@@ -1155,8 +1176,8 @@ function festSlot(e, day) {
   if (dh) { const r = rangeIn(dh), ts = timesIn(dh); if (r) return {time: clock(r.open), how: 'apertura', endsAt: r.close}; if (ts.length) return {time: ts[0], how: 'apertura'} }
   const occ = (e.occurrences || []).filter(o => o.date === day && o.time).map(o => String(o.time).padStart(5, '0')).sort();
   if (occ.length) return {time: occ[0], how: 'apertura'};
-  const pf = e.program_first?.[day];
-  if (pf) return {time: pf, how: 'primera'};
+  // La primera sesión del programa oficial ya no da fila (28-10-2026, David): un festival de abono sale a la hora de
+  // apertura que da la fuente; sin ella, no sale (su programa sigue en la ficha y en el buscador).
   return null;
 }
 function festAvailability(e, day) {
@@ -1224,64 +1245,43 @@ function wideTab(list, live) {
 }
 // «Abierto ahora» / «Abre hoy» (hoy) o «Durante el día» (otras fechas): cinco filas y el resto a un clic.
 const OPEN_FIRST = 5;
-function openBlock(list, live) {
-  if (!list.length) return '';
-  const nowOpen = live ? list.filter(e => e._st.state === 'open') : [], later = live ? list.filter(e => e._st.state !== 'open') : list;
-  nowOpen.sort((a, b) => (b._st.closesIn ?? 0) - (a._st.closesIn ?? 0) || byTitle(a, b)); const opens = e => { const m = e._a.open ?? e._st.sort ?? 1e4; return m < NIGHT_END ? m + 1440 : m };   // de madrugada, al final del día
-  later.sort((a, b) => opens(a) - opens(b) || byTitle(a, b));
-  const all = state.expanded.has('openAll'), total = nowOpen.length + later.length;
-  let room = all ? Infinity : OPEN_FIRST;
-  const part = (title, l) => { const shown = l.slice(0, room); room -= shown.length; return shown.length ? `${groupHead(`${title} · ${l.length.toLocaleString('es-ES')}`)}<div class="ag-rows ag-wide">${seriesFold(shown)}</div>` : '' };
-  const html = live ? part(L('Abierto ahora', 'Obert ara', 'Open now'), nearSort(nowOpen)) + part(L('Abre hoy', 'Obre avui', 'Opens today'), later)
-                    : part(L('Durante el día', 'Durant el dia', 'During the day'), nearSort(later));
-  const more = !all && total > OPEN_FIRST ? `<button class="ag-toggle" type="button" data-openall="1">${L('Ver los', 'Mostra els', 'See all')} ${total.toLocaleString('es-ES')} ${L('espacios, ferias y mercados', 'espais, fires i mercats', 'spaces, fairs and markets')}</button>` : '';
-  return html ? `<div class="ag-group" id="ag-open">${html}${more}</div>` : '';
-}
 function renderDay(m) {
   const s = m.sections, show = state.show, live = m.live;
   const counts = {fixed: s.fixed.length, wide: s.wide.length + s.wideNoHours.length, tbc: s.tbc.length, soon: s.soon.length};
-  const hourOf = e => hourKey(e, live), seasonLast = e => e._a.season ? 1 : 0;
-  let timeline = [...s.fixed].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
+  const hourOf = e => hourKey(e), seasonLast = e => e._a.season ? 1 : 0;
+  // La Agenda es cronológica y solo de sesiones con hora de inicio (28-10-2026, David). Un horario de apertura no convierte
+  // nada en plan del día: ferias, mercados, espacios y «parades de castanyes» con horario amplio se tratan pero no se
+  // enseñan; solo al buscar, en Guardados o dentro del filtro de un festival. Las exposiciones tienen su pestaña.
+  let timeline = [...s.fixed].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let html = chipsHtml(counts), current = null, groups = '';
-  // Festivales con varias actividades este día: un bloque plegado por festival, arriba, en vez de
-  // repartir sus actividades por todas las horas (48h Open House, una fiesta mayor…).
-  // Expos = solo exposiciones (27-10-2026, auditoría conjunta A6): ferias, mercados, espacios abiertos y cursos de
-  // jornada completa siguen en la Agenda, en su bloque «Horario amplio».
-  // Horario amplio arriba (27-10-2026, David): ferias, mercados y espacios abiertos con horario de la fuente. Sin horario
-  // fiable no se dice que estén abiertos: van a «planes sin hora confirmada».
   const wideAllDay = [...s.wide, ...s.wideNoHours], wideList = wideAllDay.filter(isExhibit);
-  let openList = wideAllDay.filter(e => !isExhibit(e) && !e._a.noHours), tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && e._a.noHours)].sort(byTitle);
-  // Solo ferias, mercados, fiestas y espacios abiertos en el bloque (28-10-2026): una obra, un concurso o una charla con
-  // un horario largo va a la hora en que abre (si ya está abierta, al grupo «Ahora»).
-  // Sin bloque de «Abierto ahora / Durante el día» (28-10-2026, David): lo que tiene horario fiable va a la Agenda a su
-  // hora de apertura (o a «Ahora» si ya está abierto); lo que no tiene hora no se muestra (se puede buscar).
-  const openSpace = () => false;
-  timeline = [...timeline, ...openList.filter(e => !openSpace(e))].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || a._st.sort - b._st.sort || byTitle(a, b)); openList = openList.filter(openSpace);
-  [timeline, tbcList, openList] = gatherSeries([timeline, tbcList, openList]);
+  let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e))].sort(byTitle);
+  [timeline, tbcList] = gatherSeries([timeline, tbcList]);
   markHighlights(timeline, state.day);
-  // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
-  const nowTimed = timeline.filter(e => hourOf(e) === 'now' && (e._a.kind === 'timed' || e._a.kind === 'wide'));
-  // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar. La Agenda es lo que
-  // tiene hora con confianza alta.
-  const showTbc = searching() || state.savedOnly;
+  // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar, en Guardados o en el
+  // filtro de un festival (ahí se ve todo lo suyo, también su ficha general). La Agenda es lo que tiene hora con confianza alta.
+  const showTbc = searching() || state.savedOnly || Boolean(state.fest);
   const tabCounts = {agenda: timeline.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
-  const foldHours = !searching() && !state.savedOnly && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
-  if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${hourRows(nowTimed, `h:${state.day}:now`, foldHours)}</div>`;
+  const foldHours = !searching() && !state.savedOnly && !state.fest && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
+  // Hoy la Agenda empieza en la hora actual (28-10-2026, David): lo anterior, ya empezado o acabado, queda arriba plegado.
+  const plans = n => `${n.toLocaleString('es-ES')} ${n === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`;
   let bucket = [];
   const flush = () => { if (current !== null) groups += hourRows(bucket, `h:${state.day}:${current}`, foldHours) + '</div>'; bucket = [] };
+  const headOf = (h, n) => groupHead(`${Number(h) >= 24 ? `${String(Number(h) - 24).padStart(2, '0')} h · ${L('madrugada', 'matinada', 'after midnight')}` : `${h} h`} · ${plans(n)}`);
+  const perHour = {}; for (const e of timeline) perHour[hourOf(e)] = (perHour[hourOf(e)] || 0) + 1 + (e._more ? e._more.length : 0);
   for (const e of timeline) {
     const h = hourOf(e);
-    if (h === 'now') continue;
-    if (h !== current) { flush(); groups += `<div class="ag-group">${groupHead(Number(h) >= 24 ? `${String(Number(h) - 24).padStart(2, '0')} h · ${L('madrugada', 'matinada', 'after midnight')}` : `${h} h`)}`; current = h }
+    if (h !== current) { flush(); groups += `<div class="ag-group">${headOf(h, perHour[h])}`; current = h }
     bucket.push(e);
   }
   flush();
   if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió', 'Series and seasons without session dates'))}${rows(s.run, 'run')}</div>`;
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
+  if (live && s.past.length) html += foldHtml('past', L('Anteriores: ya empezadas o acabadas hoy', 'Anteriors: ja començades o acabades avui', 'Earlier today: already started or over'), s.past);
   html += `<div class="ag-timeline">${groups}</div>`;
-  if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
-  html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past);
+  if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora de inicio`, `${tbcList.length} plans sense hora d'inici`, `${tbcList.length} plans without a start time`), tbcList, L('Espacios y ferias de horario amplio, festivales en varios espacios y actos sin hora publicada', "Espais i fires d'horari ampli, festivals en diversos espais i actes sense hora publicada", 'Open-hours venues and fairs, festivals across venues and events with no published time'), false, ' is-tbc');
+  if (!live) html += foldHtml('past', L('Ya pasado', 'Ja passat', 'Already over'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return {html: {agenda: html, expo: wideTab(wideList, live)}, counts: tabCounts};
 }
@@ -1292,7 +1292,8 @@ function dayHeading(d) {
 }
 function renderRange(m) {
   const show = state.show, s = m.sections;
-  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || (e._a.kind !== 'tbc' && !(e._a.kind === 'wide' && e._a.noHours)));
+  // Solo sesiones con hora de inicio (28-10-2026, David): ni «sin hora» ni horario amplio, salvo al buscar, en Guardados o en el filtro de un festival.
+  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || Boolean(state.fest) || (e._a.kind !== 'tbc' && e._a.kind !== 'wide'));
   const counts = {...m.counts, soon: s.soon.length};
   const seenWide = new Set(), wideAll = [];
   for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && isExhibit(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }
@@ -1410,6 +1411,7 @@ function collectStatic(all, win, p) {
     const upcomingCourse = !active && isPeriodic(base) && !isOpenFormat(base) && base.start > to && base.start <= ahead && daysBetween(base.start, base.end) > SHORT_DAYS;
     if (!active && !upcomingCourse) continue;
     if (filters.query && !queryMatches(searchText(base), filters.query)) continue;
+    if (p.fest && base.festival?.slug !== p.fest) continue;   // etiqueta de festival o fiesta pulsada (28-10-2026)
     if (!catMatch(base, filters.cat) || !chanMatch(base, filters.chans) || !ageMatch(base, filters.ages) || !langMatch(base, filters.langs)) continue;
     if (filters.format && base.format !== filters.format) continue;
     if (filters.free && !base.is_free) continue;
@@ -1457,7 +1459,7 @@ async function agenda(append = false) {
         const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
         const d = await get('/api/events?' + p);
         if (request !== agendaRequest) return;
-        state.items = d.items.filter(e => catMatch(e, state.cats) && chanMatch(e, state.chans) && ageMatch(e, state.ages) && langMatch(e, state.langs)).map(e => ({...e, base_time: e.time}));
+        state.items = d.items.filter(e => catMatch(e, state.cats) && chanMatch(e, state.chans) && ageMatch(e, state.ages) && langMatch(e, state.langs) && (!state.fest || e.festival?.slug === state.fest)).map(e => ({...e, base_time: e.time}));
       }
       state.total = state.items.length;
     }
@@ -1507,7 +1509,7 @@ function festLine(e) {
   if (!f) return isFestHead(e) ? `<p class="sheet-fest"><span class="fest-kind">${esc(festKind(e))}</span></p>${hourLine}` : '';
   const n = (store.catalog || []).filter(x => x.festival?.slug === f.slug && !x.festival.umbrella).length;
   const label = f.umbrella ? L(`Ver sus ${n} actividades`, `Mostra les seves ${n} activitats`, `See its ${n} activities`) : L('Ver todo el festival', 'Mostra tot el festival', 'See the whole festival');
-  return `<p class="sheet-fest"><span class="fest-kind">${esc(festKind({festival: f}))}</span>${f.umbrella ? '' : L('Forma parte de', 'Forma part de', 'Part of') + ' '}<b>${esc(f.name)}</b>${n ? ` · <button class="linklike" type="button" data-festq="${esc(f.name)}" data-fesfrom="${esc(e.start)}" data-festo="${esc(e.end)}">${label}</button>` : ''}</p>${hourLine}`;
+  return `<p class="sheet-fest"><span class="fest-kind">${esc(festKind({festival: f}))}</span>${f.umbrella ? '' : L('Forma parte de', 'Forma part de', 'Part of') + ' '}<b>${esc(f.name)}</b>${n ? ` · <button class="linklike" type="button" data-fest="${esc(f.slug)}" data-festname="${esc(f.name)}" data-festfiesta="${f.fiesta ? 1 : 0}" data-fesfrom="${esc(e.start)}" data-festo="${esc(e.end)}">${label}</button>` : ''}</p>${hourLine}`;
 }
 function detailWhen(e) {
   const day = e.start === e.end ? e.start : state.day;
@@ -1736,6 +1738,7 @@ async function refresh({scroll = false} = {}) {
 let searchTimer = null;
 document.addEventListener('click', e => {
   const vq = e.target.closest('.ev-venue[data-venueq]'); if (vq) { e.preventDefault(); goVenue(vq.dataset.venueq); return }
+  const fq = e.target.closest('.ev-fest[data-fest]'); if (fq) { e.preventDefault(); e.stopPropagation(); goFest(fq.dataset); return }
   const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period]'); if (!button) return;
   if (button.matches('a[data-quickcat],a[data-period]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
@@ -1744,10 +1747,10 @@ document.addEventListener('click', e => {
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
-  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started','fest'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
   if (button.dataset.alerts === 'open') { openAlerts(); return }
-  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district','fest'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
   if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
@@ -1758,12 +1761,7 @@ document.addEventListener('click', e => {
   if (button.dataset.venueq) {
     goVenue(button.dataset.venueq); return
   }
-  if (button.dataset.festq) {
-    // Todas las actividades del festival: búsqueda por su nombre, desde su primer día (o hoy) y sus días.
-    const from = button.dataset.fesfrom > today ? button.dataset.fesfrom : today, span = daysBetween(from, button.dataset.festo || from);
-    hideSheet(); state.detail = null; state.query = button.dataset.festq; $('searchInput').value = state.query; state.day = from;
-    state.range = span <= 0 ? '' : span <= 7 ? '7' : span <= 30 ? '30' : '90'; refresh({scroll: true}); return
-  }
+  if (button.dataset.fest) { goFest(button.dataset); return }
   if (button.dataset.pickrange) { if (button.dataset.pickrange !== state.pickRange) { state.pickRange = button.dataset.pickrange; track('seleccion', 'range_change', state.pickRange); selection() } return }
   if (button.dataset.near) {
     if (button.dataset.near === 'km') { state.nearKm = state.nearKm ? 0 : 1; renderAgenda(); return }
