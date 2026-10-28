@@ -63,3 +63,22 @@ class WebTests(unittest.TestCase):
         for text in ('HOUR_CAP = 10', 'function rankDiverse', 'data-hourfold', "L('Ver menos'", "pickRange: 'auto'", 'function priceShort', 'venue_tier: c.vt', 'seriesShort', 'expoScore'):
             self.assertIn(text, js)
         self.assertIn('data-period="finde"', html)
+
+
+class MonumentalTests(unittest.TestCase):
+    """28-10-2026 (David): «Monumental Kids» (12–17 h) y «Monumental Club Halloween» (15–23 h) son dos propuestas."""
+    def test_la_marca_de_la_fuente_no_decide_sola(self):
+        from src import taxonomy
+        base = {'title': 'Monumental Club Halloween', 'family_audience': True, 'age_max': None, 'venue_names': ['La Monumental'], 'source': 'opendatabcn_agenda'}
+        self.assertNotIn('familia', taxonomy.channels({**base, 'source_text': "I a cabina, HAL9000, Síria DJ i Àsia Knox."}, 'musica'))
+        self.assertIn('familia', taxonomy.channels({**base, 'title': "Taller 'Tastet de danses'", 'source_text': 'agenda octubre 2026 dl dt dc dj dv ds dg 1 2 3'}, 'talleres'))
+        self.assertIn('familia', taxonomy.channels({**base, 'title': 'Monumental Kids Halloween', 'source_text': 'DJ per a nens'}, 'musica'))
+
+    def test_sesion_infantil_y_sesion_de_club_no_se_juntan(self):
+        conn = sqlite3.connect(':memory:')
+        conn.execute('CREATE TABLE source_records (source TEXT, id TEXT, title TEXT)')
+        conn.executemany('INSERT INTO source_records VALUES (?,?,?)', [('a', '1', 'Monumental Club Halloween'), ('b', '2', 'Monumental Kids Halloween'),
+                         ('c', '3', 'Espectacle infantil "Baila a lo loco"'), ('d', '4', 'Baila a lo loco – Tour'), ('e', '5', "'Tardes en família': Taller 'Fanalets'"), ('f', '6', "Taller 'Fanalets'")])
+        self.assertTrue(dedupe._distinct_sessions(conn, 'a:1', 'b:2'))
+        self.assertFalse(dedupe._distinct_sessions(conn, 'c:3', 'd:4'))
+        self.assertFalse(dedupe._distinct_sessions(conn, 'e:5', 'f:6'))

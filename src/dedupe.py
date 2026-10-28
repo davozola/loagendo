@@ -249,6 +249,25 @@ def _collapsible(score, risks):
     return score >= COLLAPSE_MIN_SCORE or (score >= COLLAPSE_MIN_SCORE_SAME_SLOT and "SAME_DAY_SAME_PLACE" in risks) or (score >= MIN_TITLE_SIMILARITY_RARE_TOKEN and "SAME_DATES_SAME_PLACE_RARE_TOKEN" in risks)
 
 
+KIDS_MARK = re.compile(r"^(?:kids|infantil|infantils|nens|nenes|ninos|ninas|petits|peques|canalla|nadons|bebes)$")
+
+
+def _distinct_sessions(conn, a, b):
+    """Dos fichas del mismo día y sitio que son sesiones distintas: cada título tiene una palabra que el otro no, y la
+    de uno es de público infantil («Monumental Kids Halloween» / «Monumental Club Halloween»). Un prefijo de ciclo
+    («Tardes en família: Taller…») no cuenta: ahí uno de los dos títulos no tiene palabras propias."""
+    words = {}
+    for key in (a, b):
+        source, _, rid = key.partition(":")
+        row = conn.execute("SELECT title FROM source_records WHERE source=? AND id=?", (source, rid)).fetchone()
+        # «Espectacle infantil "X"» y «X – Tour» son lo mismo: el género infantil de la obra no distingue sesiones.
+        words[key] = set(re.sub(r"\b(?:espectacle|espectaculo|teatre|teatro|concert|concierto|taller|cinema|musical|activitat) (?:infantil|infantils|familiar)\b", " ", _clean(row[0] if row else "")).split())
+    only_a, only_b = words[a] - words[b], words[b] - words[a]
+    if not only_a or not only_b: return False
+    kids_a, kids_b = any(KIDS_MARK.match(w) for w in only_a), any(KIDS_MARK.match(w) for w in only_b)
+    return kids_a != kids_b
+
+
 def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     """Map every collapsed record key to its canonical twin's key.
 
@@ -267,9 +286,18 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     def union(x, y):
         rx, ry = find(x), find(y)
         if rx != ry: parent[rx] = ry
+    weak = []
     for a, b, score, reason in conn.execute("SELECT a,b,score,reason FROM match_candidates"):
-        if _collapsible(score or 0, (reason or "").split(";")):
+        risks = (reason or "").split(";")
+        if _collapsible(score or 0, risks) and score < COLLAPSE_MIN_SCORE and "SAME_DAY_SAME_PLACE" in risks:
+            weak.append((a, b)); continue   # se comprueba abajo: mismo sitio y día, títulos solo parecidos
+        if _collapsible(score or 0, risks):
             parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
+    # Mismo día y sitio con títulos solo parecidos (28-10-2026, David): «Monumental Kids Halloween» (12:00, DICE) no es
+    # «Monumental Club Halloween» (15:00, Open Data): no se juntan si solo una se dirige al público infantil.
+    for a, b in weak:
+        if _distinct_sessions(conn, a, b): continue
+        parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     # Un festival es una sola ficha: sus fichas en otras fuentes y los
     # conciertos sueltos de artistas de su cartel se agrupan en él.
     # Pares que la IA da por el mismo acto con confianza alta (src/ai_assist.py, trazado en ai_suggestions).

@@ -528,6 +528,10 @@ def family_path(url):
     return next((seg for seg in segments if seg in FAMILY_PATH), '')
 
 
+KIDS_TITLE = re.compile(r"\b(?:famil\w*|infant\w*|kids|nens|nenes|nin[oa]s|petit\w*|canalla|nadons|bebes|contes|titelles|putxinel\w*|patis)\b")
+NIGHT_SIGNAL = re.compile(r"\b(?:dj|djs|dj set|techno|rave|afterparty|after party|club night|clubbing|\+ ?18|majors de 18|mayores de 18|only adults|solo adultos)\b")
+
+
 def channels(ev, category, override=None):
     """{canal: evidencia}. Un evento puede estar en varios; sin canal sigue en la agenda."""
     out = {}
@@ -551,6 +555,15 @@ def channels(ev, category, override=None):
     elif ev.get('ai_family_rec'):
         out['familia'] = f'Recomendación automática (IA): {ev["ai_family_rec"].get("es", "")}'
     if teen and 'familia' in out and not ev.get('family_audience'): out.pop('familia')
+    # La marca de la fuente no decide sola (28-10-2026, David): Open Data marcaba «Monumental Club Halloween» (15–23 h,
+    # conciertos y DJ) como actividad infantil porque ese día hay también «Monumental Kids» (12–17 h). Si la única
+    # razón es la marca de la fuente y el propio acto habla de noche de club (DJ en el cartel o el texto, techno, rave,
+    # +18…) sin nada infantil en el título ni edad, no entra en el canal.
+    if out.get('familia', '').startswith('La fuente la marca') and ev.get('age_max') is None and not KIDS_TITLE.search(title):
+        # «dj» es también «dijous» en los calendarios de GuiaBCN («dl dt dc dj dv ds dg»): esa fila no cuenta.
+        text = re.sub(r"\bdl dt dc dj dv ds dg\b|\bdilluns dimarts dimecres dijous\b", " ", norm(str(ev.get('source_text') or '')[:800]))
+        night = NIGHT_SIGNAL.search(norm(' '.join([ev.get('title') or '', ' '.join(ev.get('lineup') or [])]))) or NIGHT_SIGNAL.search(text)
+        if night: out.pop('familia')
     # Vida de barrio (endurecido 20-10-2026): lo que hace el vecindario, no todo lo que pasa en un
     # equipamiento municipal. Entra: fiestas mayores y de barrio, actividad vecinal o comunitaria,
     # fiestas y mercados en la calle o en equipamientos de proximidad, y actividades puntuales de
