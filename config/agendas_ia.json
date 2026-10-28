@@ -39,7 +39,9 @@
       "urls": [
         "https://www.tradicionarius.cat/ca/programacio"
       ],
-      "activa": true
+      "activa": true,
+      "pausa_hasta": "2026-11-04",
+      "nota": "28-10-2026: la web dice «temporalment fora de servei» (404 en la agenda): en pausa hasta el 4-11, se vuelve a leer sola."
     },
     {
       "slug": "conservatori_liceu",
@@ -683,8 +685,9 @@
       "urls": [
         "https://23robadors.com/"
       ],
-      "activa": true,
-      "nota": "27-10-2026: flamenco y jazz cada día; la página publica sus actos en schema.org (hora y precio): se leen con reglas, sin IA."
+      "activa": false,
+      "nota": "27-10-2026: flamenco y jazz cada día; la página publica sus actos en schema.org (hora y precio): se leen con reglas, sin IA.",
+      "descartada": "Su web responde 403 a nuestro lector desde el primer día (28-10-2026): no se lee ni avisa."
     },
     {
       "slug": "deskomunal",

@@ -304,7 +304,7 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     from src.ai_assist import same_pairs
     for a, b in same_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
-    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn) + slot_and_session_pairs(conn) + nested_pairs(conn):
+    for a, b in festival_pairs(conn) + act_pairs(conn) + title_pairs(conn) + run_pairs(conn) + contained_pairs(conn) + exhibition_pairs(conn) + umbrella_pairs(conn) + slot_and_session_pairs(conn) + nested_pairs(conn) + same_day_pairs(conn):
         parent.setdefault(a, a); parent.setdefault(b, b); union(a, b)
     groups: dict[str, list[str]] = {}
     for key in list(parent):
@@ -1109,3 +1109,58 @@ def series_pairs(conn, items=None):
 def slot_and_session_pairs(conn):
     items = _single_day_items(conn)
     return slot_pairs(conn, items) + session_pairs(conn, items) + series_pairs(conn, items)
+
+
+def _named_site_match(a, b):
+    """Los dos nombres de sitio comparten algo propio («Sala Apolo»/«SALA APOLO», «Museu del Disseny»/«Disseny Hub»), o
+    uno no es un nombre (dirección, coordenadas). Dos centros con nombre propio distinto («Casa Elizalde» y «Tomasa Cuevas»)
+    no son el mismo sitio aunque sus coordenadas caigan cerca (28-10-2026)."""
+    va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
+    va, vb = {w for w in va if len(w) >= 4 and not w.isdigit()}, {w for w in vb if len(w) >= 4 and not w.isdigit()}
+    return bool(va & vb)
+
+
+_GENRE = {'jazz', 'blues', 'soul', 'funk', 'rock', 'punk', 'metal', 'techno', 'house', 'reggaeton', 'salsa', 'flamenco', 'halloween', 'castanyada',
+          'tribute', 'tribut', 'homenatge', 'homenaje', 'showcase', 'night', 'nit', 'noche', 'edition', 'edicion', 'especial', 'special'}
+
+
+def same_day_pairs(conn, today=None, days=60):
+    """Mismo acto de un día publicado por dos fuentes con títulos distintos (28-10-2026, parte diario: «Concert "Hermeto's
+    Mothership"» de Open Data y «Hermeto’s Mothership – A 100% Hermeto Pascoal tribute…» de Jamboree; las sesiones de City
+    Hall en Xceed y en su web; «1968: París i Praga» en CaixaForum y en la agenda municipal). Mismo día, mismo sitio con nombre
+    propio en común (y a menos de 150 m si hay coordenadas), las palabras propias del título más corto todas en el otro (o
+    dos o más en común) y horas compatibles: la misma o una de las dos sin hora. Nunca en sitios genéricos (recorridos,
+    «diversos espais») ni entre dos fichas de la misma fuente."""
+    import datetime as _dt
+    from src.daily_report import DUP_GENERIC
+    today = today or _dt.date.today()
+    end = (today + _dt.timedelta(days=days)).isoformat()
+    try:
+        rows = conn.execute("""SELECT r.source, r.id, r.title, substr(r.start_date,1,10), v.venue, v.lat, v.lon,
+                (SELECT GROUP_CONCAT(local_time) FROM candidate_occurrences o WHERE o.source=r.source AND o.id=r.id AND COALESCE(o.local_time,'')<>'')
+                FROM source_records r LEFT JOIN source_venues v ON v.source=r.source AND v.id=r.id AND v.seq=0
+                WHERE r.eligibility<>'exclude' AND substr(r.start_date,1,10) BETWEEN ? AND ?
+                  AND substr(r.start_date,1,10)=substr(COALESCE(NULLIF(r.end_date,''),r.start_date),1,10)""", (today.isoformat(), end)).fetchall()
+    except sqlite3.DatabaseError:
+        return []
+    by_day = {}
+    for s, i, title, day, venue, lat, lon, times in rows:
+        item = {'key': f'{s}:{i}', 'source': s, 'title': title or '', 'venue': venue or '', 'lat': lat, 'lon': lon, 'address': '',
+                'times': {'00:00' if t == '23:59' else t for t in (times or '').split(',') if t}}
+        if _generic_site(item) or re.match(r"^(?:recorregut|recorrido|ruta|inici|sortida|diferents|diversos|varis)\b", _clean(item['venue'])): continue
+        # Varios sitios en uno («CC La Casa Elizalde, Auditori Sant Martí, CC Vil·la Urània… i CC Tomasa Cuevas»): no es un sitio.
+        if len(re.findall(r",|;|\s(?:i|y)\s", item['venue'])) >= 2: continue
+        item['words'] = {w for k in _title_keys(title or '') for w in k.split() if len(w) >= 4 and w not in DUP_GENERIC and w not in _GENRE} - set(_clean(venue or '').split())
+        if item['words']: by_day.setdefault(day, []).append(item)
+    pairs = []
+    for day, items in by_day.items():
+        for n, a in enumerate(items):
+            for b in items[n + 1:]:
+                if a['source'] == b['source']: continue
+                if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: continue
+                common, least = a['words'] & b['words'], min(len(a['words']), len(b['words']))
+                if not (len(common) >= 2 or (common and len(common) == least)) or len(common) < 0.6 * least: continue
+                if a['times'] and b['times'] and not (a['times'] & b['times']): continue
+                if not _named_site_match(a, b) or not _same_site(a, b, km=0.15): continue
+                pairs.append((a['key'], b['key']))
+    return pairs

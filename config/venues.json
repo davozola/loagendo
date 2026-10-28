@@ -487,12 +487,12 @@
       "name": "Cinemes Girona",
       "type": "cinema",
       "url": "https://www.cinemesgirona.cat/",
-      "enabled": true,
+      "enabled": false,
       "follow_all_links": true,
       "link_pattern": "^https://www\\.cinemesgirona\\.cat/[a-z0-9-]+/?$",
       "exclude_pattern": "/(?:cartellera|properament|familiar|opera-i-ballet|casa-asia|noticies|podcasts|festivals|contacta|qui-som|on-som|pla-de-fidelitat|preus|lloguer|preguntas-frecuentes|politica[a-z-]*|termes[a-z-]*)/?$",
       "max_pages": 40,
-      "note": "23-10-2026: la portada solo trae las sesiones que quedan hoy (de noche, ninguna); las fichas de cada película traen varios días con su JSON-LD ScreeningEvent. Se siguen todas las fichas del sitio (follow_all_links)."
+      "note": "23-10-2026: la portada solo trae las sesiones que quedan hoy (de noche, ninguna); las fichas de cada película traen varios días con su JSON-LD ScreeningEvent. Se siguen todas las fichas del sitio (follow_all_links). 28-10-2026: apagado por decisión de David (como Cinemes Verdi)."
     },
     {
       "slug": "zumzeig",
@@ -513,7 +513,8 @@
       "name": "Cines Verdi",
       "type": "cinema",
       "url": "https://barcelona.cines-verdi.com/",
-      "enabled": false
+      "enabled": false,
+      "note": "Apagado por decisión de David (28-10-2026)."
     },
     {
       "slug": "phenomena",

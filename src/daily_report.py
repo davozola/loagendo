@@ -153,13 +153,31 @@ def _active_sources():
     out = set(_expected_minutes()[0])
     try:
         from src.ai_agenda import load_agendas
-        out |= {'venue_ia_' + a['slug'] for a in load_agendas() if a.get('activa') and not a.get('descartada')}
+        day = dt.date.today().isoformat()
+        out |= {'venue_ia_' + a['slug'] for a in load_agendas() if a.get('activa') and not a.get('descartada')
+                and not (a.get('pausa_hasta') and day <= a['pausa_hasta']) and not (a.get('hasta') and day > a['hasta'])}
     except Exception: pass
     try:
         venues = json.loads((ROOT / 'config' / 'venues.json').read_text(encoding='utf-8'))
         venues = venues['venues'] if isinstance(venues, dict) else venues
-        out |= {'venue_' + v['slug'] for v in venues if v.get('enabled') and v.get('slug')}
+        # Un festival ya terminado («hasta» de su feed) no se lee más: no es una fuente atrasada (28-10-2026, 48h Open House).
+        out |= {'venue_' + v['slug'] for v in venues if v.get('enabled') and v.get('slug') and not ((v.get('feed') or {}).get('hasta') and (v.get('feed') or {}).get('hasta') < dt.date.today().isoformat())}
     except (OSError, ValueError, KeyError, TypeError): pass
+    return out
+
+
+def _disabled_sources():
+    """Salas y agendas apagadas a propósito (enabled: false, activa: false o descartada)."""
+    out = set()
+    try:
+        venues = json.loads((ROOT / 'config' / 'venues.json').read_text(encoding='utf-8'))
+        venues = venues['venues'] if isinstance(venues, dict) else venues
+        out |= {'venue_' + v['slug'] for v in venues if v.get('slug') and not v.get('enabled')}
+    except (OSError, ValueError, KeyError, TypeError): pass
+    try:
+        from src.ai_agenda import load_agendas
+        out |= {'venue_ia_' + a['slug'] for a in load_agendas() if not a.get('activa') or a.get('descartada')}
+    except Exception: pass
     return out
 
 
@@ -220,15 +238,19 @@ def _venues_lost(conn, today):
         s['sources'].add(source)
     from src.taxonomy import OUTDOOR_VENUE, norm
     address = re.compile(r"^(?:carrer|c\.|calle|placa|pl\.|plaza|rambla|gran via|avinguda|av\.|passeig|pg\.|diversos|varios)\b|\d")
+    # Solo salas con conector propio activo (28-10-2026): lo que llega por las agendas municipales sube y baja con su
+    # programación y no es un fallo nuestro; una sala apagada a propósito (Cinemes Girona, Verdi) no se avisa.
+    active = _active_sources(); off = _disabled_sources()
+    own = lambda srcs: any(x.startswith('venue_') and x in active and x not in ('venue_eventbrite', 'venue_songkick', 'venue_dice', 'venue_xceed', 'venue_ticketmaster_es') for x in srcs)
     lost = [dict(s, sources=sorted(s['sources'])) for s in stats.values() if s['past'] >= VENUE_MIN_PAST and s['ahead'] == 0
-            and not address.search(norm(s['venue'])) and not OUTDOOR_VENUE.search(norm(s['venue'])) and s['sources'] != {'venue_eventbrite'}]
+            and not address.search(norm(s['venue'])) and not OUTDOOR_VENUE.search(norm(s['venue'])) and own(s['sources']) and not (s['sources'] & off)]
     return sorted(lost, key=lambda s: -s['past'])
 
 
 def _dup_suspects(conn, today):
     """Actos de un día, mismo día y mismo sitio, de fuentes distintas, con una palabra propia del título en común y sin fusionar.
     No son sospechosos dos pases con horas distintas: son sesiones."""
-    from src.dedupe import canonical_groups, _title_keys, _same_site, _generic_site, _clean
+    from src.dedupe import canonical_groups, _title_keys, _same_site, _generic_site, _clean, _named_site_match
     groups = canonical_groups(conn)
     root = lambda k: groups.get(k, k)
     end = (today + dt.timedelta(days=DUP_DAYS)).isoformat()
@@ -253,6 +275,9 @@ def _dup_suspects(conn, today):
                 common, least = a['words'] & b['words'], min(len(a['words']), len(b['words']))
                 if not common or (len(common) < 2 and len(common) < least) or len(common) < 0.6 * least: continue
                 if a['times'] and b['times'] and not (a['times'] & b['times']): continue   # otra hora: otra sesión
+                # Varios sitios en una ficha, recorridos o dos centros con nombre propio distinto: no son el mismo acto (28-10-2026).
+                if _generic_site(b) or any(len(re.findall(r",|;|\s(?:i|y)\s", x['venue'])) >= 2 for x in (a, b)): continue
+                if not _named_site_match(a, b): continue
                 if _same_site(a, b, km=0.15): out.append({'day': day, 'a': a, 'b': b})
     return out
 
@@ -272,14 +297,26 @@ def _safe(fn, *args, default=None):
     except (sqlite3.DatabaseError, OSError, ValueError, KeyError): return default
 
 
-def _audit(today):
-    """Última auditoría semanal (src/weekly_audit.py) de los últimos 7 días: {day, patterns, serious, file}."""
-    try: files = sorted(AUDIT_DIR.glob('*.json'))
+RESOLVED_AUDIT = AUDIT_DIR / 'resueltos.json'
+
+
+def _audit(today, conn=None):
+    """Última auditoría semanal (src/weekly_audit.py) de los últimos 7 días: {day, patterns, serious, file}.
+    28-10-2026: un error grave ya resuelto no vuelve al parte: corregido después de la auditoría (corrección editorial) o
+    revisado y anotado en reports/auditorias/resueltos.json (también los falsos positivos, con su motivo)."""
+    try: files = sorted(f for f in AUDIT_DIR.glob('*.json') if f.name != RESOLVED_AUDIT.name and f.stem[:4].isdigit())
     except OSError: return None
     for f in reversed(files):
         if (today - dt.timedelta(days=7)).isoformat() <= f.stem[:10] <= today.isoformat():   # nunca una auditoría posterior al día del parte
-            try: return json.loads(f.read_text(encoding='utf-8'))
+            try: data = json.loads(f.read_text(encoding='utf-8'))
             except ValueError: return None
+            try: done = set(json.loads(RESOLVED_AUDIT.read_text(encoding='utf-8')))
+            except (OSError, ValueError): done = set()
+            if conn is not None:
+                try: done |= {f'{s}:{i}' for s, i in conn.execute('SELECT source, id FROM classification_override_log WHERE changed_at>=?', (data.get('day', ''),))}
+                except sqlite3.DatabaseError: pass
+            data['serious'] = [a for a in data.get('serious') or [] if a.get('key') not in done]
+            return data
     return None
 
 
@@ -313,6 +350,25 @@ def date_contradictions(conn, today, limit=40):
                     break
         if len(out) >= limit: break
     return out
+
+
+DATES_SEEN = ROOT / 'reports' / 'partes' / 'fechas_avisadas.json'
+
+
+def _mark_new_dates(items, today, path=None):
+    """Textos de fecha contradictoria (error de la fuente): se avisan una vez, el día que aparecen (28-10-2026); los ya
+    avisados quedan marcados new=False y no vuelven a «Requiere tu atención»."""
+    path = Path(path or DATES_SEEN)
+    try: seen = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError): seen = {}
+    for d in items or []:
+        k = '%s:%s|%s' % (d['source'], d['id'], d['quote'])
+        first = seen.setdefault(k, today.isoformat())
+        d['new'] = first == today.isoformat()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(seen, ensure_ascii=False, indent=0), encoding='utf-8')
+    except OSError: pass
+    return items or []
 
 
 def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None, catalog_path=CATALOG):
@@ -370,8 +426,8 @@ def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None,
             'new': [(d, new_by_day.get(d, 0)) for d in last7], 'traffic': matomo_yesterday(today) if matomo is None else matomo,
             'festivals': _festivals(conn, today), 'ai': _ai(conn, since, today), 'fest_watch': _festival_watch(conn, today, now, catalog_path),
             'freshness': _safe(_freshness, conn, now, default=[]), 'coverage': _safe(_coverage_by, conn, today, default={}),
-            'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]), 'date_text': _safe(date_contradictions, conn, today, default=[]),
-            'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today)}
+            'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]), 'date_text': _mark_new_dates(_safe(date_contradictions, conn, today, default=[]), today),
+            'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today, conn)}
 
 
 def _tokens(value, out):
@@ -463,6 +519,9 @@ def render(data):
     # Trabajos cuya última pasada sigue mal y piden revisión (p. ej. Open Data con 373 filas de 4.905: «suspect»).
     jobs_bad = [f for f in data['failing'] if (f.get('triage') or {}).get('class') == 'revisar' and f['last'] not in ('completed', 'skipped')
                 and f['job'] not in {a['source'] for a in alerts}]
+    # Una fuente con avería suya ya va en «Avería suya · esperar»: no se repite como atrasada (28-10-2026).
+    waiting_src = {a['source'] for a in waiting} | {a['source'].replace('api-', '').replace('-', '_') for a in waiting}
+    fresh = [f for f in fresh if f['source'] not in waiting_src]
     attention = len(review) + len(fresh) + len(jobs_bad) + (1 if lost else 0) + (1 if dups else 0) + (1 if serious else 0)
     state = 'rojo' if any(a['kind'] in ('PUBLISH_STALE', 'ACTS_DROP') for a in alerts) or serious else 'ámbar' if attention or waiting else 'verde'
     dot = {'verde': '#12b76a', 'ámbar': '#f79009', 'rojo': '#d92d20'}[state]
@@ -492,7 +551,7 @@ def render(data):
     if dups:
         items.append('<b>%d posibles duplicados</b> sin fusionar (mismo día, sitio y título; horas distintas no cuentan):%s' % (len(dups), li(
             '%s · %s <span style="color:#777">(%s)</span> = %s <span style="color:#777">(%s)</span>' % (esc(d['day'][8:10] + '/' + d['day'][5:7]), esc(d['a']['title'][:60]), esc(d['a']['source']), esc(d['b']['title'][:60]), esc(d['b']['source'])) for d in dups[:8])))
-    dates_txt = data.get('date_text') or []
+    dates_txt = [d for d in data.get('date_text') or [] if d.get('new', True)]
     if dates_txt:
         items.append('<b>%d textos con día y fecha que no cuadran</b> (de la fuente; no se cambian, revisar o avisar a la fuente):%s' % (len(dates_txt), li(
             '%s <span style="color:#777">(%s)</span> · «%s» es %s' % (esc(d['title'][:60]), esc(d['source']), esc(d['quote']), esc(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'][dt.date.fromisoformat(d['date']).weekday()])) for d in dates_txt[:8])))

@@ -626,7 +626,9 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     key = ai_assist.load_key()
     if not key: return {'status': 'skipped', 'reason': 'Falta ANTHROPIC_API_KEY en .env'}
     # «hasta» (28-10-2026): un festival leído como agenda (In-Edit) deja de leerse cuando acaba; lo publicado se queda.
-    agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada') and not (a.get('hasta') and (today or dt.date.today()).isoformat() > a['hasta'])]
+    # «pausa_hasta» (28-10-2026, Tradicionàrius fuera de servicio): no se lee ni avisa hasta esa fecha; después, sola.
+    day = (today or dt.date.today()).isoformat()
+    agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada') and not (a.get('hasta') and day > a['hasta']) and not (a.get('pausa_hasta') and day <= a['pausa_hasta'])]
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()

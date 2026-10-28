@@ -100,3 +100,40 @@ class CodeticketsTests(unittest.TestCase):
         rec = record_from_jsonld(venue, n, nodes[0][0])
         self.assertEqual((rec['start'], rec['time_text'], rec['eligibility'] != 'exclude'), ('2026-11-26', '17:15', True))
         self.assertEqual(rec['raw']['item']['x_festival']['slug'], 'dart')
+
+
+class ParteTests(unittest.TestCase):
+    def test_mismo_dia_mismo_sitio_titulos_distintos(self):
+        import sqlite3
+        from src import dedupe
+        conn = sqlite3.connect(':memory:')
+        conn.executescript("""CREATE TABLE source_records(source TEXT,id TEXT,title TEXT,start_date TEXT,end_date TEXT,kind TEXT,eligibility TEXT,evidence_level TEXT,source_url TEXT,raw_sha256 TEXT,raw_json TEXT);
+            CREATE TABLE source_venues(source TEXT,id TEXT,seq INTEGER,venue TEXT,address TEXT,lat REAL,lon REAL);
+            CREATE TABLE candidate_occurrences(source TEXT,id TEXT,local_date TEXT,local_time TEXT);""")
+        rows = [('opendatabcn_agenda', '1', "Concert \"Hermeto's Mothership'", 'Jamboree', '19:00'),
+                ('venue_jamboree', '2', 'Hermeto’s Mothership – A 100% Hermeto Pascoal tribute by his band', 'Jamboree Jazz Club', '19:00'),
+                ('web_centres_civics', '3', 'Documental del mes: Les culpables', 'CC La Casa Elizalde, Auditori Sant Martí, CC Vil·la Urània i CC Tomasa Cuevas', ''),
+                ('guiabcn', '4', 'Documental "Les Culpables"', 'Centre Cívic Tomasa Cuevas - Les Corts', ''),
+                ('guiabcn', '5', 'Concert "Jamboree Jazz"', 'Jamboree 3', '')]
+        for s, i, t, v, h in rows:
+            conn.execute("INSERT INTO source_records VALUES (?,?,?,?,?,?,?,?,?,?,?)", (s, i, t, '2026-11-01', '2026-11-01', 'single', 'review', '', '', '', '{}'))
+            conn.execute("INSERT INTO source_venues VALUES (?,?,0,?,?,?,?)", (s, i, v, '', None, None))
+            if h: conn.execute("INSERT INTO candidate_occurrences VALUES (?,?,?,?)", (s, i, '2026-11-01', h))
+        import datetime as _dt
+        pairs = dedupe.same_day_pairs(conn, _dt.date(2026, 10, 28))
+        self.assertEqual(pairs, [('opendatabcn_agenda:1', 'venue_jamboree:2')])
+
+    def test_avisos_de_fecha_una_vez(self):
+        import tempfile, datetime as _dt
+        from src.daily_report import _mark_new_dates
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'f.json'; item = lambda: [{'source': 's', 'id': '1', 'quote': "dissabte 30 d'octubre"}]
+            self.assertTrue(_mark_new_dates(item(), _dt.date(2026, 10, 28), p)[0]['new'])
+            self.assertFalse(_mark_new_dates(item(), _dt.date(2026, 10, 29), p)[0]['new'])
+
+    def test_pausa_y_descartadas_no_avisan(self):
+        import json
+        a = {x['slug']: x for x in json.loads((ROOT / 'config' / 'agendas_ia.json').read_text())['agendas']}
+        self.assertTrue(a['23robadors']['descartada']); self.assertEqual(a['tradicionarius']['pausa_hasta'], '2026-11-04')
+        v = {x['slug']: x for x in json.loads((ROOT / 'config' / 'venues.json').read_text())['venues']}
+        self.assertFalse(v['cinemes_girona']['enabled']); self.assertFalse(v['verdi']['enabled'])
