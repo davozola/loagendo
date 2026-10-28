@@ -957,7 +957,7 @@ def _same_site(a, b, km=0.4):
     d = _km((a["lat"], a["lon"]), (b["lat"], b["lon"]))
     if d is not None: return d <= km
     va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
-    if va & vb: return True
+    if va & vb or _named_site_match(a, b): return True   # también las siglas (CCCB, 28-10-2026)
     # Sin coordenadas y con nombres que no comparten nada propio («L'Auditori» y «Sala 3 Tete Montoliu»): la misma
     # calle y número en las dos direcciones (24-10-2026).
     ka, kb = _address_key(a.get("address")), _address_key(b.get("address"))
@@ -1115,9 +1115,14 @@ def _named_site_match(a, b):
     """Los dos nombres de sitio comparten algo propio («Sala Apolo»/«SALA APOLO», «Museu del Disseny»/«Disseny Hub»), o
     uno no es un nombre (dirección, coordenadas). Dos centros con nombre propio distinto («Casa Elizalde» y «Tomasa Cuevas»)
     no son el mismo sitio aunque sus coordenadas caigan cerca (28-10-2026)."""
-    va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
+    ta, tb = _clean(a["venue"]).split(), _clean(b["venue"]).split()
+    va, vb = set(ta) - SITE_GENERIC, set(tb) - SITE_GENERIC
     va, vb = {w for w in va if len(w) >= 4 and not w.isdigit()}, {w for w in vb if len(w) >= 4 and not w.isdigit()}
-    return bool(va & vb)
+    if va & vb: return True
+    # Siglas (28-10-2026): «CCCB» y «Centre de Cultura Contemporània de Barcelona»; «MNAC» y «Museu Nacional d'Art de Catalunya».
+    small = {"de", "del", "la", "el", "i", "y", "d", "l", "les", "els", "the", "of"}
+    initials = lambda toks: "".join(w[0] for w in toks if w not in small)
+    return (len(ta) == 1 and 3 <= len(ta[0]) <= 6 and ta[0] == initials(tb)) or (len(tb) == 1 and 3 <= len(tb[0]) <= 6 and tb[0] == initials(ta))
 
 
 _GENRE = {'jazz', 'blues', 'soul', 'funk', 'rock', 'punk', 'metal', 'techno', 'house', 'reggaeton', 'salsa', 'flamenco', 'halloween', 'castanyada',
@@ -1147,6 +1152,14 @@ def same_day_item(s, i, title, venue, lat, lon, times):
     return item if any(w or g for w, g, _ in item['sets']) else None
 
 
+_FORMATS = {'seminar': {'seminari', 'seminario', 'taller', 'tallers', 'workshop', 'curs', 'curso', 'laboratori', 'laboratorio'},
+            'talk': {'conferencia', 'xerrada', 'charla', 'debat', 'debate', 'dialeg', 'dialogo', 'presentacio', 'presentacion', 'taula', 'mesa'}}
+def _title_format(title):
+    words = set(_clean(title or '').split())
+    hits = {k for k, v in _FORMATS.items() if words & v}
+    return next(iter(hits)) if len(hits) == 1 else None
+
+
 def same_day_match(a, b):
     """¿Mismo acto? Mismo día ya dado, fuentes distintas, mismo sitio con nombre propio en común y horas compatibles (la misma o
     una de las dos sin hora). Basta una de: las palabras propias del título más corto en el otro (o dos o más en común); el mismo
@@ -1157,9 +1170,18 @@ def same_day_match(a, b):
     if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: return False  # gemelas
     if a['times'] and b['times'] and not (a['times'] & b['times']): return False   # otra hora: otra sesión
     if not _named_site_match(a, b): return False
+    # Mismo ponente, formatos distintos (28-10-2026: «Seminario con Bonnie Honig» y la conferencia «Bonnie Honig» del CCCB el
+    # mismo día): un seminario o taller y una conferencia o debate no son el mismo acto.
+    fa, fb = _title_format(a['title']), _title_format(b['title'])
+    if fa and fb and fa != fb: return False
+    bare = lambda x: len(_clean(x['title']).split()) <= 3
+    if (fa or fb) == 'seminar' and bool(fa) != bool(fb) and (bare(a) or bare(b)) and not (a['times'] & b['times']): return False   # «Bonnie Honig» a secas y un seminario: solo con la misma hora
+    # Títulos en dos idiomas (28-10-2026: «Fotoescrituras» del CCCB y «Debat 'Fotoescriptures…'» de Open Data): dos palabras
+    # con los mismos 8 primeros caracteres cuentan como la misma.
+    same = lambda x, y: x == y or (len(x) >= 8 and len(y) >= 8 and x[:8] == y[:8])
     for wa, ga, la in a['sets']:
         for wb, gb, lb in b['sets']:
-            common, least = wa & wb, min(len(wa), len(wb))
+            common, least = {x for x in wa if any(same(x, y) for y in wb)}, min(len(wa), len(wb))
             if wa and wb and (len(common) >= 2 or (common and len(common) == least)) and len(common) >= 0.6 * least and _same_site(a, b, km=0.15): return True
             if la and la == lb and a['times'] & b['times'] and _same_site(a, b, km=0.15): return True
             if not wa and not wb and ga & gb and _same_site(a, b, km=0.05): return True

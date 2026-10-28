@@ -166,3 +166,18 @@ class ParteTests(unittest.TestCase):
         self.assertTrue(a['23robadors']['descartada']); self.assertEqual(a['tradicionarius']['pausa_hasta'], '2026-11-04')
         v = {x['slug']: x for x in json.loads((ROOT / 'config' / 'venues.json').read_text())['venues']}
         self.assertFalse(v['cinemes_girona']['enabled']); self.assertFalse(v['verdi']['enabled'])
+
+    def test_mismo_dia_titulo_en_dos_idiomas(self):
+        from src.dedupe import same_day_item, same_day_match
+        a = same_day_item('web_cccb', '1', 'Fotoescrituras', 'CCCB', 41.3837, 2.1668, '18:00')
+        b = same_day_item('opendatabcn_agenda', '2', "Debat 'Fotoescriptures. Literatura i fotografia, 200 anys després'", 'Centre de Cultura Contemporània de Barcelona', 41.3838, 2.1667, '18:00')
+        self.assertTrue(same_day_match(a, b))
+
+    def test_mismo_ponente_formatos_distintos_no_se_funden(self):
+        from src.dedupe import same_day_item, same_day_match
+        sem = same_day_item('web_cccb', '1', 'Seminario con Bonnie Honig', 'CCCB', None, None, '10:00')
+        conf = same_day_item('web_cccb', '2', 'Bonnie Honig', 'CCCB', None, None, '18:30')
+        g_sem = same_day_item('guiabcn', '3', "Seminari 'Hipòlit, a la inversa', amb Bonnie Honig", 'Centre de Cultura Contemporània de Barcelona', 41.3838, 2.1667, '')
+        g_conf = same_day_item('guiabcn', '4', "Conferència 'Riure davant del desastre', amb Bonnie Honig", 'Centre de Cultura Contemporània de Barcelona', 41.3838, 2.1667, '18:30')
+        self.assertTrue(same_day_match(sem, g_sem)); self.assertTrue(same_day_match(conf, g_conf))
+        self.assertFalse(same_day_match(sem, g_conf)); self.assertFalse(same_day_match(conf, g_sem))

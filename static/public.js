@@ -547,15 +547,19 @@ function pick(e, i) {
 async function selection() {
   try {
     const now = madridNow();
-    const fetchPicks = async one => get('/api/events?' + new URLSearchParams({day: state.day, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
+    // «Lo mejor del fin de semana» (28-10-2026, David): con el periodo Fin de semana, la selección de 7 días del primer día
+    // del periodo, solo con lo que cae dentro; sin el conmutador Hoy / 7 días. Con 7 días, 30 días o 6 meses: la de 7 días.
+    const win = rangeWindow(), finde = state.range === 'finde' && win, pickDay = finde ? win.from : state.day;
+    const fetchPicks = async one => get('/api/events?' + new URLSearchParams({day: pickDay, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
     const when = e => e.featured_date || e.start;
     const past = e => when(e) < now.day || (when(e) === now.day && e.time && (minutesOf(String(e.time).padStart(5, '0')) ?? 1e4) < now.min - GRACE);
-    const usable = d => d.items.filter(e => !past(e) && !e.promo && !PROMO_TITLE.test(e.title || ''));
-    let one = state.pickRange === 'today', d = await fetchPicks(one), list = usable(d);
-    if (state.pickRange === 'auto') {
+    const usable = d => d.items.filter(e => !past(e) && !e.promo && !PROMO_TITLE.test(e.title || '') && (!finde || when(e) <= win.to));
+    let one = !win && state.pickRange === 'today', d = await fetchPicks(one), list = usable(d);
+    if (!win && state.pickRange === 'auto') {
       one = true; d = await fetchPicks(true); list = usable(d);
       if (list.length < 3) { one = false; d = await fetchPicks(false); list = usable(d) }
     }
+    const rangeBox = document.querySelector('.pick-range'); if (rangeBox) rangeBox.hidden = Boolean(win);
     document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === (one ? 'today' : 'week'))));
     // Elegida por la IA (src/ai_select.py): se respeta su orden de preferencia. Si no, las reglas, con imagen y texto primero.
     const complete = list.filter(e => e.media?.length && e.has_description);
@@ -571,7 +575,7 @@ async function selection() {
     // Por tipo (28-10-2026, David): los mejor puntuados de cada categoría con las mismas reglas; el tipo sale con 3 o más
     // planes y enseña hasta 6. «Todo» es la selección de siempre. Un tipo elegido se mantiene al cambiar de día si ese día
     // tiene bastantes; si no, vuelve a «Todo».
-    const pf = await picksFile(state.day), groups = {};
+    const pf = await picksFile(pickDay), groups = {};
     for (const [c, list] of Object.entries((pf && pf[one ? 't' : 'w']) || {})) {
       const ok = usable({items: list.map(expand)}).slice(0, perType);
       if (ok.length >= 3) groups[c] = ok;
@@ -587,8 +591,8 @@ async function selection() {
     const what = $('pickWhat');
     if (what) what.textContent = want && !sel.length ? L('Sin selección para este filtro; se muestra la general.', 'Sense selecció per a aquest filtre; es mostra la general.', 'No picks for this filter; showing the general ones.') : '';
     const items = want === 'expos' && sel.length ? sel : (sel.length ? sel : chosen).slice().sort(byTime);
-    const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
-    $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
+    const end = new Date(pickDay + 'T12:00:00'); end.setDate(end.getDate() + 6);
+    $('weekRange').textContent = finde ? `${L('Lo mejor del fin de semana', 'El millor del cap de setmana', 'The best of the weekend')} · ${labelDate(win.from)} – ${labelDate(win.to)}` : win ? `${labelDate(pickDay)} – ${labelDate(iso(end))}` : one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
     $('curated').scrollLeft = 0; pickNav();
   } catch (_) { $('curated').innerHTML = `<div class="empty">${t('No se pudo cargar la selección.')}</div>`; pickNav() }
@@ -628,7 +632,7 @@ function pickScroll(dir) {
    (por confirmar); ámbar solo para lo inmediato (ahora, en 20 min, cierra pronto, último día). */
 // Textos en tres idiomas (23-10-2026: inglés): L(castellano, catalán, inglés).
 const L = (es, ca, en) => LANG === 'ca' ? ca : LANG === 'en' ? (en ?? es) : es;
-const TZ = 'Europe/Madrid', GRACE = 15, SOON = 60, WIDE_MIN = 240, SHORT_DAYS = 7, COURSE_AHEAD = 30, STEP = 60, PER_DAY = 15, DAY_CHUNK = 7;
+const TZ = 'Europe/Madrid', GRACE = 15, SOON = 60, WIDE_MIN = 240, SHORT_DAYS = 7, COURSE_AHEAD = 30, STEP = 60, PER_DAY = 10, DAY_CHUNK = 7;   // PER_DAY 15 → 10 (28-10-2026, David)
 const weekdaysLong = LANG === 'en' ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] : LANG === 'ca' ? ['diumenge','dilluns','dimarts','dimecres','dijous','divendres','dissabte'] : ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 function madridNow() {
   const parts = new Intl.DateTimeFormat('en-CA', {timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date());
@@ -1125,13 +1129,17 @@ function relevance(e) {
 // espacio en Expos), y al menos dos de la red de proximidad o de salas sin nivel si las hay: el barrio no queda
 // relegado. A igualdad, el orden que traía la lista (la hora). Devuelve el conjunto elegido.
 const isLocal = e => !(e.venue_tier >= 8);
-function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 2, local = isLocal) {
+// Además (28-10-2026, David), un ajuste suave por espacio: cada sesión ya elegida del mismo sitio resta un punto en la
+// misma hora o día (Teatreneu ×8, Jamboree ×2, Palau ×2 ocupaban plazas); no es una cuota, un concierto bueno sigue entrando.
+const placeOf = e => fold(String(e.venue_names?.[0] || '').split(/\s+[-·–]\s+/)[0]);
+function rankDiverse(list, n, group, score = relevance, penalty = 1, minLocal = 2, local = isLocal, place = null) {
   if (list.length <= n) return new Set(list);
-  const pool = list.map(e => ({e, r: score(e)})), out = [], seen = {};
+  const pool = list.map(e => ({e, r: score(e)})), out = [], seen = {}, seenPlace = {};
   while (out.length < n && pool.length) {
     let bi = 0, bv = -Infinity;
-    pool.forEach((x, i) => { const v = x.r - penalty * (seen[group(x.e)] || 0); if (v > bv) { bv = v; bi = i } });
+    pool.forEach((x, i) => { const v = x.r - penalty * (seen[group(x.e)] || 0) - (place ? (seenPlace[place(x.e)] || 0) : 0); if (v > bv) { bv = v; bi = i } });
     const [x] = pool.splice(bi, 1); out.push(x); seen[group(x.e)] = (seen[group(x.e)] || 0) + 1;
+    if (place) { const pl = place(x.e); if (pl) seenPlace[pl] = (seenPlace[pl] || 0) + 1 }
   }
   const want = Math.min(minLocal, list.filter(local).length);
   for (let k = out.filter(x => local(x.e)).length; k < want; k++) {
@@ -1153,7 +1161,7 @@ const byMinuteThenRelevance = (a, b) => (a._st.sort - b._st.sort) || (relevance(
 function hourRows(list, id, fold) {
   if (state.near) return seriesFold(nearSort(list));
   if (!fold || list.length <= HOUR_CAP + HOUR_SLACK) return seriesFold([...list].sort(byMinuteThenRelevance));
-  const top = rankDiverse(list, HOUR_CAP, e => e.public_category || '', relevance, 1, 3), open = state.expanded.has(id);
+  const top = rankDiverse(list, HOUR_CAP, e => e.public_category || '', relevance, 1, 3, isLocal, placeOf), open = state.expanded.has(id);
   const first = list.filter(e => top.has(e)).sort(byMinuteThenRelevance), rest = list.filter(e => !top.has(e)).sort(byMinuteThenRelevance);
   const more = open ? `${seriesFold(rest)}<button class="ag-toggle ag-hourless" type="button" data-hourfold="${esc(id)}">${L('Ver menos', 'Mostra’n menys', 'Show fewer')}</button>`
     : `<button class="ag-toggle ag-hourmore" type="button" data-hourfold="${esc(id)}">${L(`Ver ${rest.length} actividades más`, `Mostra ${rest.length} activitats més`, `See ${rest.length} more activities`)}</button>`;
@@ -1357,6 +1365,7 @@ function renderDay(m) {
   timeline = [...timeline, ...strong.filter(e => e._st.state !== 'open')].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !strong.includes(e))].sort(byTitle);
   [timeline, tbcList] = gatherSeries([timeline, tbcList]);
+  const fests = festStrip(timeline, state.day); timeline = fests.rest;
   // Abierta a las 15:00 de verdad: el tramo que la cubre (un horario partido «09:00–13:30 · 16:00–17:30» no vale) y 2 h por delante.
   const span15 = e => (e._a.ranges || [{open: e._a.open, close: e._a.close}]).find(r => r.open <= REMIND_AT && r.close - REMIND_AT >= 120 && r.close <= 1440);
   const remindable = live && m.now.min >= REMIND_AT ? [] : strong.filter(e => e._a.close != null && e._a.open < REMIND_AT && span15(e));
@@ -1390,10 +1399,18 @@ function renderDay(m) {
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
   // Lo ya acabado o empezado sin hora de fin fiable no se enseña (28-10-2026, David: su valor es marginal).
-  html += `<div class="ag-timeline">${groups}</div>`;
+  html += fests.html + `<div class="ag-timeline">${groups}</div>`;
   if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora de inicio`, `${tbcList.length} plans sense hora d'inici`, `${tbcList.length} plans without a start time`), tbcList, L('Espacios y ferias de horario amplio, festivales en varios espacios y actos sin hora publicada', "Espais i fires d'horari ampli, festivals en diversos espais i actes sense hora publicada", 'Open-hours venues and fairs, festivals across venues and events with no published time'), false, ' is-tbc');
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return {html: {agenda: html, expo: wideTab(wideList, live)}, counts: tabCounts};
+}
+// Fichas generales de festival (28-10-2026, David): no son una sesión a una hora; van en su propia línea al principio del
+// día («Festivales hoy: Mozilla Festival · Mostra de cinema emergent»), cada una abre su ficha con el programa.
+function festStrip(list, day) {
+  const heads = list.filter(e => isFestHead(e) && !state.fest);
+  if (!heads.length) return {html: '', rest: list};
+  const chips = heads.map(e => `<button type="button" class="ag-festchip" data-open="${esc(key(e))}"><b>${esc(e.festival?.name || e.title)}</b>${e.program_days ? `<small>${esc(String(festSessions(e.festival?.slug) || ''))}${festSessions(e.festival?.slug) ? ' ' + L('sesiones', 'sessions', 'sessions') : ''}</small>` : ''}</button>`).join('');
+  return {html: `<div class="ag-fests"><span>${esc(day === today ? L('Festivales hoy', 'Festivals avui', 'Festivals today') : L('Festivales', 'Festivals', 'Festivals'))}</span>${chips}</div>`, rest: list.filter(e => !heads.includes(e))};
 }
 function dayHeading(d) {
   const date = new Date(d + 'T12:00:00'), rel = d === today ? L('Hoy', 'Avui', 'Today') : d === addDays(today, 1) ? L('Mañana', 'Demà', 'Tomorrow') : '';
@@ -1410,11 +1427,12 @@ function renderRange(m) {
   const buckets = m.buckets.map(([d, l]) => [d, l.filter(visible)]).filter(([, l]) => l.length);
   const tabCounts = {agenda: buckets.reduce((n, [, l]) => n + l.length, 0), expo: wideAll.length};
   const days = buckets.slice(0, state.shown).map(([d, dayList]) => {
-    const [list] = gatherSeries([nearSort(dayList)]);
-    const all = state.openDays.has(d) || list.length <= PER_DAY + 3, top = all || state.near ? null : rankDiverse(list, PER_DAY, e => e.public_category || '', relevance, 1, 4);
+    const [list0] = gatherSeries([nearSort(dayList)]);
+    const fests = festStrip(list0, d), list = fests.rest;
+    const all = state.openDays.has(d) || list.length <= PER_DAY + 3, top = all || state.near ? null : rankDiverse(list, PER_DAY, e => e.public_category || '', relevance, 1, 4, isLocal, placeOf);
     const shown = all ? list : state.near ? list.slice(0, PER_DAY) : list.filter(e => top.has(e));
     markHighlights(shown, d);
-    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
+    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${fests.html}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
   }).join('');
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
   let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`}</div>`;
