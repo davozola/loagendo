@@ -123,6 +123,35 @@ class ParteTests(unittest.TestCase):
         pairs = dedupe.same_day_pairs(conn, _dt.date(2026, 10, 28))
         self.assertEqual(pairs, [('opendatabcn_agenda:1', 'venue_jamboree:2')])
 
+    def test_mismo_dia_nombre_al_principio_y_fiesta_en_el_mismo_sitio(self):
+        from src.dedupe import same_day_item, same_day_match
+        a = same_day_item('venue_xceed', '1', 'NEO Elegance - Halloween: Afrobeats, Hip Hop, RnB, Afrohouse | Mua Mua', 'SEASEACLUB', 41.41371, 2.22914, '23:00')
+        b = same_day_item('venue_dice', '2', 'NEO Elegance - Halloween Masquerade', 'SEASEACLUB', 41.4137558, 2.2292604, '23:00')
+        self.assertTrue(same_day_match(a, b))
+        c = same_day_item('venue_dice', '3', 'NEO Elegance - Halloween Masquerade', 'SEASEACLUB', 41.4137558, 2.2292604, '01:00')
+        self.assertFalse(same_day_match(a, c))   # otra hora: otra sesión
+        g = same_day_item('guiabcn', '4', 'Tots Sants 2026: Castanyada a la Sedeta', 'Centre Cívic La Sedeta', 41.4055765, 2.1676875, '')
+        o = same_day_item('opendatabcn_agenda', '5', 'Festa de la Castanyada, a la Plaça La Sedeta', 'Plaça la Sedeta', 41.4055247, 2.1675071, '17:00')
+        self.assertTrue(same_day_match(g, o))
+        far = same_day_item('opendatabcn_agenda', '6', 'Castanyada', 'Plaça la Sedeta', 41.4065, 2.1690, '17:00')
+        self.assertFalse(same_day_match(g, far))   # solo la fiesta en común: a menos de 50 m
+        self.assertIsNone(same_day_item('guiabcn', '7', 'Tots Sants 2026: Castaween Beats', 'Ruta pels carrers del Guinardó', None, None, ''))
+
+    def test_proceso_interrumpido_es_fallo_suelto(self):
+        from src.daily_report import triage
+        self.assertEqual(triage('JOB', 'Proceso interrumpido antes de finalizar')[0], 'suelto')
+
+    def test_conector_solo_se_prueba_antes_de_conectar(self):
+        from src import festival_finder as ff
+        auto = {'slug': 'fest_x', 'feed': {'kind': 'tribe_rest', 'url': 'https://x.test/wp-json/tribe/events/v1/events',
+                                           'festival': {'slug': 'x', 'name': 'X'}, 'desde': '2026-10-16', 'hasta': '2026-10-29'}}
+        import unittest.mock as m
+        with m.patch('src.venue_feeds.tribe_rest_nodes', return_value=([('u', {'startDate': '2026-12-01'})], 1)):
+            self.assertFalse(ff.trial(auto, None))
+        with m.patch('src.venue_feeds.tribe_rest_nodes', return_value=([('u', {'startDate': '2026-10-20T19:00'})], 1)):
+            self.assertTrue(ff.trial(auto, None))
+        self.assertTrue(ff.trial({'feed': {}}, None))
+
     def test_avisos_de_fecha_una_vez(self):
         import tempfile, datetime as _dt
         from src.daily_report import _mark_new_dates

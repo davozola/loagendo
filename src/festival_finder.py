@@ -308,6 +308,8 @@ def run(conn, job=None, today=None, fetcher=None, robots=None, key=None, ai=None
         probes += 1; searches += int(res['web_how'] == 'ia' or res['detail'].startswith('La búsqueda con IA'))
         # 26-10-2026 (David): sin extractores nuevos; el buscador solo encuentra la web y el enlace al programa oficial.
         auto = auto_connector(cand, res) if job.get('conectar', False) else None
+        if auto and not trial(auto, fetcher):
+            res['detail'] = ('Probado: su programa no da actos en las fechas del festival · ' + res['detail']).rstrip(' ·'); auto = None
         if auto:
             new_auto.append(auto); res['detail'] = ('Conectado solo · ' + res['detail']).rstrip(' ·')
         elif job.get('conectar', False) and len(new_agendas) < job.get('max_programas_ia', MAX_IA_PROGRAMS):
@@ -362,6 +364,18 @@ def auto_connector(cand, res):
     slug = 'fest_' + re.sub(r'[^a-z0-9]+', '_', cand['slug'].removeprefix('auto-')).strip('_')[:50]
     return {'slug': slug, 'name': cand['name'], 'type': 'festival', 'url': url, 'site': res.get('web') or url, 'enabled': True, 'auto': True, 'feed': feed,
             'note': 'Conectado solo por el buscador de programas (%s): %s' % (dt.date.today().isoformat(), res['platform'])}
+
+
+def trial(auto, fetcher):
+    """¿Da el conector actos en las fechas del festival? Se prueba antes de dejarlo conectado (28-10-2026, Flaix de tardor: el
+    calendario de Temporada Alta no daba ninguno y el conector fallaba en cada pasada). Sin plataforma propia (JSON-LD de la
+    página) se conecta y se comprueba al leerlo."""
+    from src import venue_feeds as vf
+    fn = {'tribe_rest': vf.tribe_rest_nodes, 'accelevents': vf.accelevents_nodes, 'codetickets': vf.codetickets_nodes}.get((auto.get('feed') or {}).get('kind'))
+    if fn is None: return True
+    try: nodes, _ = fn(auto, fetcher, 25)
+    except Exception: return False
+    return bool(vf.festival_nodes(auto, [(u, dict(n)) for u, n in nodes]))
 
 
 def auto_agenda(cand, res):

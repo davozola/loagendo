@@ -49,6 +49,9 @@ def triage(kind, detail, age_days=0, recovered=False):
     if kind in ('ACTS_DROP', 'TIME_COVERAGE_DROP') or 'LOW_VOLUME' in text:
         return 'revisar', 'La fuente responde pero llega mucho menos: comprobar con --run-job; si se repite, ha cambiado la web o el parser.'
     if recovered: return 'suelto', 'La última pasada ya fue bien.'
+    # Proceso cortado a medias (28-10-2026): el Mac se reinició o se paró el motor a mano para lanzar algo; la siguiente pasada
+    # lo repite. No es un error de la fuente ni del código.
+    if re.search(r'Proceso interrumpido', text): return 'suelto', 'Se cortó a medias (parada del motor o reinicio del Mac); la siguiente pasada lo repite.'
     if REJECTED.search(text): return 'revisar', 'La fuente rechaza la petición (403/404/robots.txt): revisar la URL o si nos permite leerla.'
     if SERVER_ERROR.search(text):
         if age_days < WAIT_DAYS: return 'esperar', 'Error del servidor de la fuente; lo publicado se queda y se recupera solo. Revisar si sigue dentro de %d días.' % (WAIT_DAYS - age_days)
@@ -248,9 +251,10 @@ def _venues_lost(conn, today):
 
 
 def _dup_suspects(conn, today):
-    """Actos de un día, mismo día y mismo sitio, de fuentes distintas, con una palabra propia del título en común y sin fusionar.
-    No son sospechosos dos pases con horas distintas: son sesiones."""
-    from src.dedupe import canonical_groups, _title_keys, _same_site, _generic_site, _clean, _named_site_match
+    """Actos de un día que la fusión debería haber unido y siguen separados: mismo día y sitio, fuentes distintas, mismo criterio
+    que la fusión (src/dedupe.same_day_match, 28-10-2026: el parte ya no usa un criterio más flojo que avisa cada día de lo
+    mismo). No son sospechosos dos pases con horas distintas: son sesiones."""
+    from src.dedupe import canonical_groups, same_day_item, same_day_match
     groups = canonical_groups(conn)
     root = lambda k: groups.get(k, k)
     end = (today + dt.timedelta(days=DUP_DAYS)).isoformat()
@@ -262,23 +266,13 @@ def _dup_suspects(conn, today):
               AND substr(r.start_date,1,10)=substr(COALESCE(NULLIF(r.end_date,''),r.start_date),1,10)""", (today.isoformat(), end)).fetchall()
     by_day = {}
     for s, i, title, day, venue, lat, lon, times in rows:
-        words = {w for k in _title_keys(title) for w in k.split() if len(w) >= 4 and w not in DUP_GENERIC} - set(_clean(venue or '').split())
-        by_day.setdefault(day, []).append({'key': f'{s}:{i}', 'source': s, 'title': title, 'venue': venue or '', 'lat': lat, 'lon': lon, 'address': '',
-                                           'words': words, 'times': set((times or '').split(',')) - {''}})
+        item = same_day_item(s, i, title, venue, lat, lon, times)
+        if item: by_day.setdefault(day, []).append(item)
     out = []
     for day, items in by_day.items():
         for n, a in enumerate(items):
-            if _generic_site(a): continue
             for b in items[n + 1:]:
-                if a['source'] == b['source'] or root(a['key']) == root(b['key']): continue
-                if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: continue  # gemelas
-                common, least = a['words'] & b['words'], min(len(a['words']), len(b['words']))
-                if not common or (len(common) < 2 and len(common) < least) or len(common) < 0.6 * least: continue
-                if a['times'] and b['times'] and not (a['times'] & b['times']): continue   # otra hora: otra sesión
-                # Varios sitios en una ficha, recorridos o dos centros con nombre propio distinto: no son el mismo acto (28-10-2026).
-                if _generic_site(b) or any(len(re.findall(r",|;|\s(?:i|y)\s", x['venue'])) >= 2 for x in (a, b)): continue
-                if not _named_site_match(a, b): continue
-                if _same_site(a, b, km=0.15): out.append({'day': day, 'a': a, 'b': b})
+                if root(a['key']) != root(b['key']) and same_day_match(a, b): out.append({'day': day, 'a': a, 'b': b})
     return out
 
 
@@ -519,9 +513,9 @@ def render(data):
     # Trabajos cuya última pasada sigue mal y piden revisión (p. ej. Open Data con 373 filas de 4.905: «suspect»).
     jobs_bad = [f for f in data['failing'] if (f.get('triage') or {}).get('class') == 'revisar' and f['last'] not in ('completed', 'skipped')
                 and f['job'] not in {a['source'] for a in alerts}]
-    # Una fuente con avería suya ya va en «Avería suya · esperar»: no se repite como atrasada (28-10-2026).
-    waiting_src = {a['source'] for a in waiting} | {a['source'].replace('api-', '').replace('-', '_') for a in waiting}
-    fresh = [f for f in fresh if f['source'] not in waiting_src]
+    # Una fuente que ya tiene su alerta (avería suya o rechazo) no se repite como atrasada (28-10-2026: Diputació salía dos veces).
+    alert_src = {a['source'] for a in alerts} | {a['source'].replace('api-', '').replace('-', '_') for a in alerts}
+    fresh = [f for f in fresh if f['source'] not in alert_src]
     attention = len(review) + len(fresh) + len(jobs_bad) + (1 if lost else 0) + (1 if dups else 0) + (1 if serious else 0)
     state = 'rojo' if any(a['kind'] in ('PUBLISH_STALE', 'ACTS_DROP') for a in alerts) or serious else 'ámbar' if attention or waiting else 'verde'
     dot = {'verde': '#12b76a', 'ámbar': '#f79009', 'rojo': '#d92d20'}[state]

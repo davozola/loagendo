@@ -1,0 +1,81 @@
+{
+  "nota": "Generado por src/festival_finder.py: programas de festival leídos con IA. Para corregir uno, pasarlo a config/agendas_ia.json (manda) o poner activa: false.",
+  "agendas": [
+    {
+      "slug": "fest_festival_internacional_de_putxinellis",
+      "name": "21è Festival Internacional de Putxinel·lis",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://www.lapuntual.info/ca/2026/10/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-festival-internacional-de-putxinellis",
+        "name": "21è Festival Internacional de Putxinel·lis"
+      },
+      "hasta": "2026-11-01",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-28)"
+    },
+    {
+      "slug": "fest_festival_de_cinema_jueu",
+      "name": "Festival de Cinema Jueu",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://fcjbarcelona.org/peliculas/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-festival-de-cinema-jueu",
+        "name": "Festival de Cinema Jueu"
+      },
+      "hasta": "2026-10-28",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-28)"
+    },
+    {
+      "slug": "fest_festival_rbls",
+      "name": "Festival RBLS",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://rbls.cat/programacio-artistica/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-festival-rbls",
+        "name": "Festival RBLS"
+      },
+      "hasta": "2026-11-20",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-28)"
+    },
+    {
+      "slug": "fest_festival_hilaria",
+      "name": "Festival Hilària 2026",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://hilaria.cat/agenda/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-festival-hilaria",
+        "name": "Festival Hilària 2026"
+      },
+      "hasta": "2026-11-15",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-28)"
+    }
+  ]
+}

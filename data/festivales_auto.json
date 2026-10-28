@@ -1,0 +1,25 @@
+{
+  "nota": "Generado por src/festival_finder.py: programas de festival conectados solos. Para corregir uno, pasarlo a config/venues.json (manda) o poner enabled: false.",
+  "venues": [
+    {
+      "slug": "fest_festival_flaix_de_tardor_bcn",
+      "name": "Festival Flaix de tardor - BCN",
+      "type": "festival",
+      "url": "https://temporada-alta.com/flaix-de-tardor/",
+      "site": "https://temporada-alta.com/flaix-de-tardor/",
+      "enabled": false,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-festival-flaix-de-tardor-bcn",
+          "name": "Festival Flaix de tardor - BCN"
+        },
+        "desde": "2026-10-16",
+        "hasta": "2026-10-29",
+        "url": "https://temporada-alta.com/wp-json/tribe/events/v1/events",
+        "kind": "tribe_rest"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-10-28): The Events Calendar (WordPress) · Apagado el 28-10-2026: el calendario de Temporada Alta no da actos del Flaix de tardor en sus fechas (fallaba en cada pasada)."
+    }
+  ]
+}

@@ -1124,15 +1124,54 @@ _GENRE = {'jazz', 'blues', 'soul', 'funk', 'rock', 'punk', 'metal', 'techno', 'h
           'tribute', 'tribut', 'homenatge', 'homenaje', 'showcase', 'night', 'nit', 'noche', 'edition', 'edicion', 'especial', 'special'}
 
 
+def same_day_item(s, i, title, venue, lat, lon, times):
+    """Ficha de un día para comparar con otras del mismo día (28-10-2026). Una forma de las palabras por cada versión del título
+    (entera y sin el prefijo de campaña: «Tots Sants 2026: Castanyada a la Sedeta» → «castanyada a la sedeta»): palabras propias
+    (sin genéricas, géneros, números ni las del sitio), las de género o fiesta («castanyada», «halloween») y el nombre del
+    principio («NEO Elegance»). None si el sitio no sirve para comparar (recorridos, «diversos espais», varios centros)."""
+    from src.daily_report import DUP_GENERIC
+    item = {'key': f'{s}:{i}', 'source': s, 'title': title or '', 'venue': venue or '', 'lat': lat, 'lon': lon, 'address': '',
+            'times': {'00:00' if t == '23:59' else t for t in (times or '').split(',') if t}}
+    if _generic_site(item) or re.match(r"^(?:recorregut|recorrido|ruta|inici|sortida|diferents|diversos|varis)\b", _clean(item['venue'])): return None
+    # Varios sitios en uno («CC La Casa Elizalde, Auditori Sant Martí, CC Vil·la Urània… i CC Tomasa Cuevas»): no es un sitio.
+    if len(re.findall(r",|;|\s(?:i|y)\s", item['venue'])) >= 2: return None
+    site = set(_clean(venue or '').split())
+    item['sets'] = []
+    for key in _title_keys(title or '') or [_clean(title or '')]:
+        toks = key.split()
+        words = {w for w in toks if len(w) >= 4 and w not in DUP_GENERIC and w not in _GENRE and not w.isdigit()} - site
+        genre = {w for w in toks if w in _GENRE}
+        lead = tuple(toks[:2]) if len(toks) >= 2 and all(len(w) >= 3 and w not in DUP_GENERIC and w not in _GENRE and w not in site and not w.isdigit() for w in toks[:2]) else None
+        item['sets'].append((words, genre, lead))
+    item['words'] = set().union(*(w for w, _, _ in item['sets'])) if item['sets'] else set()
+    return item if any(w or g for w, g, _ in item['sets']) else None
+
+
+def same_day_match(a, b):
+    """¿Mismo acto? Mismo día ya dado, fuentes distintas, mismo sitio con nombre propio en común y horas compatibles (la misma o
+    una de las dos sin hora). Basta una de: las palabras propias del título más corto en el otro (o dos o más en común); el mismo
+    nombre al principio y la misma hora («NEO Elegance - Halloween: Afrobeats…» de Xceed y «NEO Elegance - Halloween Masquerade»
+    de DICE); o, si los dos títulos solo dicen la fiesta («Castanyada a la Sedeta» y «Festa de la Castanyada, a la Plaça La
+    Sedeta»), la misma fiesta a menos de 50 m."""
+    if a['source'] == b['source']: return False
+    if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: return False  # gemelas
+    if a['times'] and b['times'] and not (a['times'] & b['times']): return False   # otra hora: otra sesión
+    if not _named_site_match(a, b): return False
+    for wa, ga, la in a['sets']:
+        for wb, gb, lb in b['sets']:
+            common, least = wa & wb, min(len(wa), len(wb))
+            if wa and wb and (len(common) >= 2 or (common and len(common) == least)) and len(common) >= 0.6 * least and _same_site(a, b, km=0.15): return True
+            if la and la == lb and a['times'] & b['times'] and _same_site(a, b, km=0.15): return True
+            if not wa and not wb and ga & gb and _same_site(a, b, km=0.05): return True
+    return False
+
+
 def same_day_pairs(conn, today=None, days=60):
     """Mismo acto de un día publicado por dos fuentes con títulos distintos (28-10-2026, parte diario: «Concert "Hermeto's
     Mothership"» de Open Data y «Hermeto’s Mothership – A 100% Hermeto Pascoal tribute…» de Jamboree; las sesiones de City
-    Hall en Xceed y en su web; «1968: París i Praga» en CaixaForum y en la agenda municipal). Mismo día, mismo sitio con nombre
-    propio en común (y a menos de 150 m si hay coordenadas), las palabras propias del título más corto todas en el otro (o
-    dos o más en común) y horas compatibles: la misma o una de las dos sin hora. Nunca en sitios genéricos (recorridos,
-    «diversos espais») ni entre dos fichas de la misma fuente."""
+    Hall en Xceed y en su web; «1968: París i Praga» en CaixaForum y en la agenda municipal). Criterio en same_day_match.
+    Nunca en sitios genéricos (recorridos, «diversos espais») ni entre dos fichas de la misma fuente."""
     import datetime as _dt
-    from src.daily_report import DUP_GENERIC
     today = today or _dt.date.today()
     end = (today + _dt.timedelta(days=days)).isoformat()
     try:
@@ -1145,22 +1184,11 @@ def same_day_pairs(conn, today=None, days=60):
         return []
     by_day = {}
     for s, i, title, day, venue, lat, lon, times in rows:
-        item = {'key': f'{s}:{i}', 'source': s, 'title': title or '', 'venue': venue or '', 'lat': lat, 'lon': lon, 'address': '',
-                'times': {'00:00' if t == '23:59' else t for t in (times or '').split(',') if t}}
-        if _generic_site(item) or re.match(r"^(?:recorregut|recorrido|ruta|inici|sortida|diferents|diversos|varis)\b", _clean(item['venue'])): continue
-        # Varios sitios en uno («CC La Casa Elizalde, Auditori Sant Martí, CC Vil·la Urània… i CC Tomasa Cuevas»): no es un sitio.
-        if len(re.findall(r",|;|\s(?:i|y)\s", item['venue'])) >= 2: continue
-        item['words'] = {w for k in _title_keys(title or '') for w in k.split() if len(w) >= 4 and w not in DUP_GENERIC and w not in _GENRE} - set(_clean(venue or '').split())
-        if item['words']: by_day.setdefault(day, []).append(item)
+        item = same_day_item(s, i, title, venue, lat, lon, times)
+        if item: by_day.setdefault(day, []).append(item)
     pairs = []
     for day, items in by_day.items():
         for n, a in enumerate(items):
             for b in items[n + 1:]:
-                if a['source'] == b['source']: continue
-                if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: continue
-                common, least = a['words'] & b['words'], min(len(a['words']), len(b['words']))
-                if not (len(common) >= 2 or (common and len(common) == least)) or len(common) < 0.6 * least: continue
-                if a['times'] and b['times'] and not (a['times'] & b['times']): continue
-                if not _named_site_match(a, b) or not _same_site(a, b, km=0.15): continue
-                pairs.append((a['key'], b['key']))
+                if same_day_match(a, b): pairs.append((a['key'], b['key']))
     return pairs
