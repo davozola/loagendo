@@ -34,6 +34,7 @@ HORIZON_DAYS = catalog.MAX_RANGE_DAYS
 PAGE_SIZE = 50
 FEATURED_SIZE = 12
 PICK_POOL = 100          # candidatos de la Selección por día (antes 30): de ellos salen también las selecciones por tipo
+PICK_POOL_WEEK = 400     # en 7 días los 100 primeros eran casi todo música, charlas y teatro (medido el 28-10-2026): sin cine ni arte
 PICKS_PER_CATEGORY = 8   # por tipo, con margen para lo que ya haya pasado; la web enseña hasta 6 y el tipo solo con 3 o más
 HIGHLIGHT_SIZE = 40  # «Selección Ontoca» en la lista de cada día (además de la de portada)
 DETAIL_SHARDS = 256
@@ -760,7 +761,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for offset in range(HORIZON_DAYS + 1):
         day = (today + dt.timedelta(days=offset)).isoformat()
         page = catalog.query_events(conn, day=day, public=True, page_size=PAGE_SIZE, include_started=False)
-        featured = catalog.query_events(conn, day=day, featured=True, public=True, page_size=PICK_POOL)
+        featured = catalog.query_events(conn, day=day, featured=True, public=True, page_size=PICK_POOL_WEEK)
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         # Selección de la semana elegida por la IA para ese día (src/ai_select.py): va primero, en su orden.
