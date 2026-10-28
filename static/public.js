@@ -891,16 +891,24 @@ function buildModel(items, win) {
     s.soon.sort((a, b) => a.start.localeCompare(b.start) || byTitle(a, b)); s.started.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.other.sort(byTitle);
     return {mode: 'day', day, live, now, sections: s, total: items.length};
   }
-  // Periodo: cada ficha una sola vez, en su primer día dentro del periodo.
-  const buckets = new Map();
+  // Periodo: cada ficha una sola vez, en su primer día dentro del periodo. Salvo funciones en pocos días sueltos (de 2 a 8,
+  // 28-10-2026, David: «En Joan sense por», 31-10, 1, 7 y 8-11, salía solo el primero al buscarla): una fila por día de función.
+  const buckets = new Map(), expanded = [];
   for (const e of items) {
+    e._onlyDay = undefined;
+    const byDayKeys = e.start !== e.end ? Object.keys(hoursByDay(e) || {}).filter(d => timesIn(hoursByDay(e)[d]).length) : [];
+    const days = [...new Set([...(e.occurrences || []).filter(o => o.time).map(o => o.date), ...byDayKeys])].filter(d => d >= win.from && d <= win.to).sort();
+    if (e.start !== e.end && days.length >= 2 && days.length <= 8) days.forEach((d, i) => expanded.push(i ? Object.assign(Object.create(Object.getPrototypeOf(e)), e, {_onlyDay: d}) : Object.assign(e, {_onlyDay: d})));
+    else expanded.push(e);
+  }
+  for (const e of expanded) {
     // Días con sesión: los de las sesiones y los del horario por días de la fuente (27-10-2026: «Contes a la mà»
     // de GuiaBCN, «20 octubre i 17 novembre», salía hoy «Sin hora» en vez del 17 nov a las 17:30).
     const byDayKeys = e.start !== e.end ? Object.keys(hoursByDay(e) || {}) : [];
     const inside = [...new Set([...(e.occurrences || []).map(o => o.date), ...byDayKeys])].filter(d => d >= win.from && d <= win.to).sort();
     if (!inside.length && byDayKeys.length && byDayKeys.every(d => d < win.from || d > win.to)) continue;   // ninguna sesión en el periodo
-    let day = inside[0] || (e.start >= win.from && e.start <= win.to ? e.start : null);
-    if (day === now.day && inside.length > 1 && status(availability(e, day), now.min).state === 'past') day = inside.find(d => d > now.day) || day;
+    let day = e._onlyDay || inside[0] || (e.start >= win.from && e.start <= win.to ? e.start : null);
+    if (!e._onlyDay && day === now.day && inside.length > 1 && status(availability(e, day), now.min).state === 'past') day = inside.find(d => d > now.day) || day;
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
     decorate(e, day, day === now.day ? now.min : null);
     if (e._a.kind === 'skip') continue;
