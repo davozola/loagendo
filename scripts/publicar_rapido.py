@@ -45,7 +45,7 @@ for n in range(DIAS + 1):
         expos += got['items']
         if page >= (got.get('pages') or 1): break
     by_key = {e['key']: e for e in expos}
-    data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images), 'x': ps.expo_picks(by_key, ps.expo_rank(expos, day), images)}
+    data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images), 'x': ps.expo_picks(by_key, ps.expo_rank(expos, day), images), 'f': ps.family_picks(one + week, images)}
     ps._write_json(OUT / 'data' / 'picks' / f'{day}.json', data)
     resumen[day] = {'7 días': {c: len(v) for c, v in data['w'].items()}, 'hoy': {c: len(v) for c, v in data['t'].items()}, 'expos': len(data['x'])}
     print(day, json.dumps(resumen[day], ensure_ascii=False), flush=True)

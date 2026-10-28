@@ -309,6 +309,20 @@ def expo_picks(by_key, ranks, images, hidden=frozenset(), size=8):
     return out
 
 
+def family_picks(items, images, hidden=frozenset(), size=10):
+    """«En familia» en la Selección (28-10-2026, David): los candidatos con público familiar (canal o edad), en su orden de
+    puntuación, una ficha por obra, sin promociones. Primero los del día, luego los de la semana."""
+    out, seen = [], set()
+    for e in items:
+        fam = e.get('family_audience') or 'familia' in (e.get('channels') or []) or e.get('age_max') is not None and (e.get('age_max') or 99) <= 14
+        if not fam or e.get('is_promo') or not (e.get('media') or e.get('has_description')): continue
+        work = (e.get('series') or e.get('title') or '').strip().lower()
+        if work in seen: continue
+        seen.add(work); out.append(compact(e, images, hidden=hidden))
+        if len(out) >= size: break
+    return out
+
+
 def picks_by_category(items, images, hidden=frozenset()):
     """{categoría: [fichas]} con los candidatos de la Selección en su orden de puntuación: con imagen o descripción,
     sin promociones, una ficha por obra y como mucho PICKS_PER_CATEGORY por categoría. Solo las categorías con 3 o más."""
@@ -816,7 +830,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         # (mismas reglas explicables, sin IA nueva). Fichero aparte, que solo pide la Selección: no pesa en la primera carga.
         _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden),
                                                             't': picks_by_category(today_only['items'], images, hidden),
-                                                            'x': expo_picks(by_key, ranks_expo, images, hidden)})
+                                                            'x': expo_picks(by_key, ranks_expo, images, hidden),
+                                                            'f': family_picks(today_only['items'] + featured['items'], images, hidden)})
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
                      'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'expo_rank': ranks_expo, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])

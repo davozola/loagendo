@@ -455,6 +455,13 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 /* Ficha (22-10-2026): enlace a la fuente bajo el texto, «Cómo llegar» bajo el mapa y otros planes del espacio como enlace */
 .sheet-cta-main,.sheet-cta-map{margin:14px 0 0}
 .sheet-cta-main .source-link,.sheet-cta-map .cta-secondary{width:100%}
+/* Botones junto a los datos (28-10-2026): entradas o web y guardar en una fila; el mapa plegado; descripción de 6 líneas. */
+.sheet-actions-top{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px;margin:12px 0 4px}
+.sheet-actions-top .save-link{min-height:48px;display:inline-flex;align-items:center;justify-content:center;margin:0}
+.sheet-place-folded .sheet-place-caption{padding:12px 14px}.sheet-place-caption span{white-space:nowrap}
+.sheet-copy-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden}
+.sheet-more{margin:6px 0 0;font-weight:600}
+@media(max-width:620px){.detail-hero img{height:min(28vh,230px)}.sheet-actions-top{grid-template-columns:minmax(0,1fr) auto}.sheet-actions-top .save-link{padding:0 14px;white-space:nowrap}}
 .sheet-venue-link{margin:18px 0 0}.sheet-venue-link .linklike{font-size:15px;padding:6px 0}
 
 /* Inauguración / clausura de una exposición (22-10-2026) */
