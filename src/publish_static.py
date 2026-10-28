@@ -283,6 +283,18 @@ def expo_rank(items, day, floor=None):
     return {k: len(pool) - i for i, (_, _, k) in enumerate(pool)}
 
 
+def featured_pool(conn, day, size, **kw):
+    """Candidatos de la Selección de un día en su orden, hasta ``size`` (la API da páginas de 100 como mucho)."""
+    first = catalog.query_events(conn, day=day, featured=True, public=True, page_size=100, **kw)
+    items = list(first['items']); page = 1
+    while len(items) < min(size, first.get('total') or 0):
+        page += 1
+        more = catalog.query_events(conn, day=day, featured=True, public=True, page_size=100, page=page, **kw)['items']
+        if not more: break
+        items += more
+    return {**first, 'items': items[:size]}
+
+
 def picks_by_category(items, images, hidden=frozenset()):
     """{categoría: [fichas]} con los candidatos de la Selección en su orden de puntuación: con imagen o descripción,
     sin promociones, una ficha por obra y como mucho PICKS_PER_CATEGORY por categoría. Solo las categorías con 3 o más."""
@@ -761,7 +773,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     for offset in range(HORIZON_DAYS + 1):
         day = (today + dt.timedelta(days=offset)).isoformat()
         page = catalog.query_events(conn, day=day, public=True, page_size=PAGE_SIZE, include_started=False)
-        featured = catalog.query_events(conn, day=day, featured=True, public=True, page_size=PICK_POOL_WEEK)
+        featured = featured_pool(conn, day, PICK_POOL_WEEK)
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         # Selección de la semana elegida por la IA para ese día (src/ai_select.py): va primero, en su orden.

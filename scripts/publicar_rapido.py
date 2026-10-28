@@ -37,7 +37,7 @@ except sqlite3.Error:
 resumen = {}
 for n in range(DIAS + 1):
     day = (today + dt.timedelta(days=n)).isoformat()
-    week = catalog.query_events(conn, day=day, featured=True, public=True, page_size=ps.PICK_POOL_WEEK)['items']
+    week = ps.featured_pool(conn, day, ps.PICK_POOL_WEEK)['items']
     one = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=ps.PICK_POOL)['items']
     data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images)}
     ps._write_json(OUT / 'data' / 'picks' / f'{day}.json', data)
