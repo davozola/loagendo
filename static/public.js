@@ -643,7 +643,9 @@ function availability(e, day) {
   if (e.start !== e.end && hbDays.length && !(day in hbd) && day <= hbDays[hbDays.length - 1] && (day >= hbDays[0] || hbDays[0] >= today)) { const next = hbDays.find(d => d > day); return {kind: 'run', until: e.end, ...(next ? {next, nextTime: hbd[next]} : {})} }
   if (e.start === e.end) {
     const range = rangeIn(label) || rangeIn(raw);
-    if (range) return isWideRange(range) ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
+    // Un día con franja larga (28-10-2026, David): una castañada «15:30–21:00» o una fiesta «12:00–01:00» empieza a
+    // una hora; es una sesión, no un espacio abierto. Solo un formato abierto (exposición, feria) es horario amplio.
+    if (range) return (isWideRange(range) && isOpenFormat(e)) ? {kind: 'wide', ...range, until: e.end} : {kind: 'timed', times: [clock(range.open)], endsAt: range.close};
     const times = timesIn(raw);
     return times.length ? {kind: 'timed', times} : {kind: 'tbc'};
   }
@@ -707,6 +709,12 @@ function status(a, now) {
     const mins = a.times.map(minutesOf).map(m => a.night && m !== null && m < NIGHT_END ? m + 1440 : m);
     if (now === null) return {state: 'scheduled', next: mins[0], sort: mins[0], rest: mins.slice(1)};
     const ahead = mins.filter(m => m >= now), recent = mins.filter(m => m < now && now - m < GRACE);
+    // En curso (28-10-2026, David): ya ha empezado y la fuente da la hora de fin, que aún no ha llegado. Se distingue
+    // de lo acabado; sin hora de fin fiable, lo empezado va con lo anterior.
+    if (a.endsAt != null && !a.season && mins.length === 1 && mins[0] < now) {
+      const end = a.endsAt < mins[0] ? a.endsAt + 1440 : a.endsAt;
+      if (now < end) return {state: 'ongoing', next: mins[0], sort: now - 1, closesAt: end % 1440, closesIn: end - now, rest: []};
+    }
     if (recent.length && !ahead.length && !a.season) return {state: 'started', next: recent[recent.length - 1], sort: now - 1, ago: now - recent[recent.length - 1], rest: []};
     if (!ahead.length) return {state: 'past', next: mins[mins.length - 1], sort: mins[mins.length - 1], rest: []};
     return {state: ahead[0] - now <= SOON ? 'soon' : 'later', next: ahead[0], sort: ahead[0], in: ahead[0] - now, rest: ahead.slice(1), done: mins.length - ahead.length};
@@ -811,11 +819,12 @@ function bucketOf(e) { const k = e._a.kind; return k === 'timed' ? 'fixed' : k }
 function buildModel(items, win) {
   const now = madridNow();
   const decorate = (e, day, nowMin) => { const a = nightAware(e, day, availability(e, day)); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
-  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
+  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: [], ongoing: []};
   const place = e => {
     const k = e._a.kind;
     // Sin grupo «Ahora» (28-10-2026, David): lo que ya ha empezado hoy va con lo anterior, accesible arriba.
-    if ((k === 'timed' || k === 'wide') && (e._st.state === 'past' || e._st.state === 'started' || e._st.state === 'open')) s.past.push(e);
+    if ((k === 'timed' || k === 'wide') && (e._st.state === 'past' || e._st.state === 'started')) s.past.push(e);
+    else if (k === 'timed' && e._st.state === 'ongoing') s.ongoing.push(e);
     else if (k === 'timed') s.fixed.push(e);
     else if (k === 'wide') (e._a.noHours ? s.wideNoHours : s.wide).push(e);
     else if (k === 'skip') return;
@@ -825,7 +834,7 @@ function buildModel(items, win) {
     const day = state.day, live = day === now.day, nowMin = live ? now.min : null;
     for (const e of items) { decorate(e, day, nowMin); place(e) }
     const tl = (a, b) => a._st.sort - b._st.sort || byTitle(a, b);
-    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
+    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.ongoing.sort((a, b) => (a._st.closesAt - b._st.closesAt) || byTitle(a, b)); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
     s.soon.sort((a, b) => a.start.localeCompare(b.start) || byTitle(a, b)); s.started.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.other.sort(byTitle);
     return {mode: 'day', day, live, now, sections: s, total: items.length};
   }
@@ -842,7 +851,7 @@ function buildModel(items, win) {
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
     decorate(e, day, day === now.day ? now.min : null);
     if (e._a.kind === 'skip') continue;
-    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && ['past', 'started', 'open'].includes(e._st.state)) { place(e); continue }
+    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && ['past', 'started', 'ongoing'].includes(e._st.state)) { place(e); continue }
     if (!buckets.has(day)) buckets.set(day, []);
     buckets.get(day).push(e);
   }
@@ -872,6 +881,7 @@ function whenCell(e) {
     let note = '', cls = '';
     if (a.season) { note = L('temporada · confirma el pase', 'temporada · confirma el passi', 'season · check the show time'); cls = 'hint' }
     else if (st.state === 'soon') { note = st.in <= 1 ? L('ahora', 'ara', 'now') : `${L('en', 'd\'aquí a', 'in')} ${st.in} min`; cls = 'urgent' }
+    else if (st.state === 'ongoing') { note = `${L('en curso · hasta las', 'en curs · fins a les', 'in progress · until')} ${clock(st.closesAt)}`; cls = 'urgent' }
     else if (st.state === 'started') { note = `${L('empezó hace', 'va començar fa', 'started')} ${st.ago} min`; cls = 'urgent' }
     else if (a.courseStart) { note = `${L('inicio de curso', 'inici de curs', 'course starts')}${needsSignup(e) ? ' · ' + L('inscripción', 'inscripció', 'sign-up') : ''} · ${untilText(e, a.until)}`; cls = 'hint' }
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia', 'check the day'); cls = 'hint' }
@@ -1245,6 +1255,16 @@ function wideTab(list, live) {
 }
 // «Abierto ahora» / «Abre hoy» (hoy) o «Durante el día» (otras fechas): cinco filas y el resto a un clic.
 const OPEN_FIRST = 5;
+// Plan de estos días con horario amplio: de hasta 6 semanas, o con este día nombrado en el horario por días de la fuente.
+const DAY_PLAN_MAX = 42;
+const isDayPlan = (e, day) => daysBetween(e.start, e.end) <= DAY_PLAN_MAX || (hoursByDay(e) && day in hoursByDay(e) && Object.keys(hoursByDay(e)).length <= 12);
+const DAY_BLOCK_ROWS = 5;
+function dayBlock(list, live) {
+  const id = `day:${state.day}`, open = state.expanded.has(id), shown = open ? list : list.slice(0, DAY_BLOCK_ROWS), left = list.length - shown.length;
+  const title = live ? L('Durante el día', 'Durant el dia', 'During the day') : L('Durante el día', 'Durant el dia', 'During the day');
+  const more = left > 0 ? `<button class="ag-toggle ag-hourmore" type="button" data-hourfold="${esc(id)}">${L(`Ver ${left} más`, `Mostra'n ${left} més`, `See ${left} more`)}</button>` : open && list.length > DAY_BLOCK_ROWS ? `<button class="ag-toggle ag-hourless" type="button" data-hourfold="${esc(id)}">${L('Ver menos', 'Mostra’n menys', 'Show fewer')}</button>` : '';
+  return `<div class="ag-group ag-dayblock" id="ag-dayblock">${groupHead(`${title} · ${list.length} ${list.length === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`)}${seriesFold(shown)}${more}</div>`;
+}
 function renderDay(m) {
   const s = m.sections, show = state.show, live = m.live;
   const counts = {fixed: s.fixed.length, wide: s.wide.length + s.wideNoHours.length, tbc: s.tbc.length, soon: s.soon.length};
@@ -1255,13 +1275,18 @@ function renderDay(m) {
   let timeline = [...s.fixed].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let html = chipsHtml(counts), current = null, groups = '';
   const wideAllDay = [...s.wide, ...s.wideNoHours], wideList = wideAllDay.filter(isExhibit);
-  let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e))].sort(byTitle);
-  [timeline, tbcList] = gatherSeries([timeline, tbcList]);
+  // «Durante el día» (28-10-2026, David): bloque reducido con ferias, mercados y experiencias de horario amplio que son
+  // planes de estos días (fechados: hasta 6 semanas, o un día concreto en el horario por días de la fuente). Lo permanente
+  // o de meses (audioguías, parades de castanyes, espacios de aprendizaje, campus) no sale; se puede buscar.
+  let dayList = wideAllDay.filter(e => !isExhibit(e) && !e._a.noHours && isDayPlan(e, state.day) && e._st.state !== 'past').sort((a, b) => daysBetween(state.day, a.end) - daysBetween(state.day, b.end) || relevance(b) - relevance(a) || byTitle(a, b));
+  let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !dayList.includes(e))].sort(byTitle);
+  let ongoing = s.ongoing;
+  [timeline, tbcList, dayList, ongoing] = gatherSeries([timeline, tbcList, dayList, ongoing]);
   markHighlights(timeline, state.day);
   // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar, en Guardados o en el
   // filtro de un festival (ahí se ve todo lo suyo, también su ficha general). La Agenda es lo que tiene hora con confianza alta.
   const showTbc = searching() || state.savedOnly || Boolean(state.fest);
-  const tabCounts = {agenda: timeline.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
+  const tabCounts = {agenda: timeline.length + ongoing.length + dayList.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
   const foldHours = !searching() && !state.savedOnly && !state.fest && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
   // Hoy la Agenda empieza en la hora actual (28-10-2026, David): lo anterior, ya empezado o acabado, queda arriba plegado.
   const plans = n => `${n.toLocaleString('es-ES')} ${n === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`;
@@ -1269,6 +1294,10 @@ function renderDay(m) {
   const flush = () => { if (current !== null) groups += hourRows(bucket, `h:${state.day}:${current}`, foldHours) + '</div>'; bucket = [] };
   const headOf = (h, n) => groupHead(`${Number(h) >= 24 ? `${String(Number(h) - 24).padStart(2, '0')} h · ${L('madrugada', 'matinada', 'after midnight')}` : `${h} h`} · ${plans(n)}`);
   const perHour = {}; for (const e of timeline) perHour[hourOf(e)] = (perHour[hourOf(e)] || 0) + 1 + (e._more ? e._more.length : 0);
+  for (const e of ongoing) perHour.ongoing = (perHour.ongoing || 0) + 1 + (e._more ? e._more.length : 0);
+  // En curso (28-10-2026, David): lo que ya ha empezado y aún se puede disfrutar, con hora de fin de la fuente.
+  if (live && ongoing.length) groups += `<div class="ag-group" id="ag-ongoing">${groupHead(`${L('En curso', 'En curs', 'In progress')} · ${plans(perHour.ongoing || 0)}`, ' is-now')}${hourRows(ongoing, `h:${state.day}:ongoing`, foldHours)}</div>`;
+  if (dayList.length) groups += dayBlock(dayList, live);
   for (const e of timeline) {
     const h = hourOf(e);
     if (h !== current) { flush(); groups += `<div class="ag-group">${headOf(h, perHour[h])}`; current = h }
@@ -1293,7 +1322,7 @@ function dayHeading(d) {
 function renderRange(m) {
   const show = state.show, s = m.sections;
   // Solo sesiones con hora de inicio (28-10-2026, David): ni «sin hora» ni horario amplio, salvo al buscar, en Guardados o en el filtro de un festival.
-  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || Boolean(state.fest) || (e._a.kind !== 'tbc' && e._a.kind !== 'wide'));
+  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || Boolean(state.fest) || (e._a.kind !== 'tbc' && (e._a.kind !== 'wide' || (!e._a.noHours && isDayPlan(e, e._day)))));
   const counts = {...m.counts, soon: s.soon.length};
   const seenWide = new Set(), wideAll = [];
   for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && isExhibit(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }

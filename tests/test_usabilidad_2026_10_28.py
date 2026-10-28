@@ -99,7 +99,7 @@ class WebTests(unittest.TestCase):
         con filtro que se mantiene al cambiar de día; el festival de abono sale a su hora de apertura, no a la de la primera sesión."""
         js = (ROOT / 'static' / 'public.js').read_text()
         for text in ("const hourKey = e => String(Math.floor(e._st.sort / 60))", "foldHtml('past', L('Anteriores: ya empezadas o acabadas hoy'",
-                     "wideAllDay.filter(e => !isExhibit(e))].sort(byTitle)", "${h} h`} · ${plans(n)}`", "function goFest(d)", "p.fest && base.festival?.slug !== p.fest",
+                     "${h} h`} · ${plans(n)}`", "function goFest(d)", "p.fest && base.festival?.slug !== p.fest",
                      "data-fest=\"${esc(slug)}\"", "program_days: c.pn || null", "if (state.fest) { p.set('fest', state.fest)"):
             self.assertIn(text, js)
         for text in ("=== 'now'", "id=\"ag-now\"", 'function openBlock', "const pf = e.program_first?.[day];\n  if (pf) return", "e._st.state === 'started' || e._st.state === 'open')) ? 'now'"):
@@ -107,6 +107,15 @@ class WebTests(unittest.TestCase):
         self.assertNotIn("timeline = [...timeline, ...openList", js)
         py = (ROOT / 'src' / 'publish_static.py').read_text()
         self.assertIn("out['pn'] = days", py)
+
+    def test_en_curso_y_durante_el_dia(self):
+        """28-10-2026 (David, 08:28): lo empezado con hora de fin fiable que aún no ha llegado es «En curso», no anterior; un acto de
+        un día con franja larga es una sesión a su hora; el horario amplio fechado (hasta 6 semanas) va a un bloque reducido
+        «Durante el día» (5 filas); lo permanente o de meses sigue sin verse."""
+        js = (ROOT / 'static' / 'public.js').read_text()
+        for text in ("state: 'ongoing'", "id=\"ag-ongoing\"", "function dayBlock(list, live)", "const DAY_PLAN_MAX = 42", "const DAY_BLOCK_ROWS = 5",
+                     "(isWideRange(range) && isOpenFormat(e))", "e._st.state === 'past' || e._st.state === 'started')) s.past.push(e)"):
+            self.assertIn(text, js)
 
 
 class MonumentalTests(unittest.TestCase):
