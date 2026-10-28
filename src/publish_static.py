@@ -35,7 +35,7 @@ PAGE_SIZE = 50
 FEATURED_SIZE = 12
 PICK_POOL = 100          # candidatos de la Selección por día (antes 30): de ellos salen también las selecciones por tipo
 PICK_POOL_WEEK = 400     # en 7 días los 100 primeros eran casi todo música, charlas y teatro (medido el 28-10-2026): sin cine ni arte
-PICKS_PER_CATEGORY = 8   # por tipo, con margen para lo que ya haya pasado; la web enseña hasta 6 y el tipo solo con 3 o más
+PICKS_PER_CATEGORY = 10  # por tipo, con margen para lo que ya haya pasado; la web enseña 6 (un día) u 8 (7 días), y el tipo solo con 3 o más
 HIGHLIGHT_SIZE = 40  # «Selección Ontoca» en la lista de cada día (además de la de portada)
 DETAIL_SHARDS = 256
 MAX_IMAGES_PER_EVENT = 3
@@ -293,6 +293,20 @@ def featured_pool(conn, day, size, **kw):
         if not more: break
         items += more
     return {**first, 'items': items[:size]}
+
+
+def expo_picks(by_key, ranks, images, hidden=frozenset(), size=8):
+    """«Expos» en la Selección (28-10-2026, David): las exposiciones del ranking de la pestaña Expos (expo_rank) en su orden,
+    con imagen o descripción y una por espacio, como las que la lista de Expos marca «Selección Ontoca»."""
+    out, venues = [], set()
+    for k in sorted(ranks, key=ranks.get, reverse=True):
+        e = by_key.get(k)
+        if not e or not (e.get('media') or e.get('has_description')): continue
+        venue = ((e.get('venue_names') or [''])[0] or '').strip().lower()
+        if venue and venue in venues: continue
+        venues.add(venue); out.append(compact(e, images, hidden=hidden))
+        if len(out) >= size: break
+    return out
 
 
 def picks_by_category(items, images, hidden=frozenset()):
@@ -801,7 +815,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         # «Selección Ontoca» por tipo (28-10-2026, David): los mejor puntuados de cada categoría, de los mismos candidatos
         # (mismas reglas explicables, sin IA nueva). Fichero aparte, que solo pide la Selección: no pesa en la primera carga.
         _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden),
-                                                            't': picks_by_category(today_only['items'], images, hidden)})
+                                                            't': picks_by_category(today_only['items'], images, hidden),
+                                                            'x': expo_picks(by_key, ranks_expo, images, hidden)})
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],
                      'featured': [compact(e, images, hidden=hidden) for e in picks], 'featured_ai': ai_pick, 'featured_today': [compact(e, images, hidden=hidden) for e in picks_today], 'highlight': highlight, 'highlight_media': highlight_media, 'expo_rank': ranks_expo, 'districts': catalog.districts(conn, day)}
         _write_json(out / 'data' / 'day' / f'{day}.json', days[day])

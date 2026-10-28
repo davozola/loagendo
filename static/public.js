@@ -540,7 +540,7 @@ function pick(e, i) {
   const d = new Date((e.featured_date || e.start) + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
   const meta = esc(catLabel(e));
   const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
-  return `<button class="pick-small" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
+  return `<button class="pick-small" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${e.kind === 'exhibition' && e.end ? `${L('Hasta el', 'Fins al', 'Until')} ${Number(e.end.slice(8, 10))} ${months[Number(e.end.slice(5, 7)) - 1]}${e.end.slice(0, 4) !== state.day.slice(0, 4) ? ' ' + e.end.slice(0, 4) : ''}` : `${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}`}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
 }
 // «Selección Ontoca» (28-10-2026, David): coherente con el día que se mira. Por defecto, «Hoy» mientras queden al menos
 // tres planes destacados de ese día; si no, los próximos 7 días. Nunca lo que ya ha pasado ni títulos de promoción;
@@ -561,25 +561,31 @@ async function selection() {
     // Elegida por la IA (src/ai_select.py): se respeta su orden de preferencia. Si no, las reglas, con imagen y texto primero.
     const complete = list.filter(e => e.media?.length && e.has_description);
     const ranked = d.ai ? list : complete.concat(list.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)));
+    // Una semana tiene más donde elegir (28-10-2026, David): «Todo» 10 y cada tipo 8; un día, 7 y 6.
+    const size = one ? 7 : 10, perType = one ? 6 : 8;
     const chosen = [], perCat = {};
-    for (const e of ranked) { const c = e.public_category || ''; if ((perCat[c] || 0) < 2) { chosen.push(e); perCat[c] = (perCat[c] || 0) + 1 } if (chosen.length === 7) break }
-    for (const e of ranked) { if (chosen.length >= 7) break; if (!chosen.includes(e)) chosen.push(e) }
+    for (const e of ranked) { const c = e.public_category || ''; if ((perCat[c] || 0) < 2) { chosen.push(e); perCat[c] = (perCat[c] || 0) + 1 } if (chosen.length === size) break }
+    for (const e of ranked) { if (chosen.length >= size) break; if (!chosen.includes(e)) chosen.push(e) }
     const byTime = (a, b) => when(a).localeCompare(when(b)) || String(a.time || '99').localeCompare(String(b.time || '99'));
     // Por tipo (28-10-2026, David): los mejor puntuados de cada categoría con las mismas reglas; el tipo sale con 3 o más
     // planes y enseña hasta 6. «Todo» es la selección de siempre. Un tipo elegido se mantiene al cambiar de día si ese día
     // tiene bastantes; si no, vuelve a «Todo».
     const pf = await picksFile(state.day), groups = {};
     for (const [c, list] of Object.entries((pf && pf[one ? 't' : 'w']) || {})) {
-      const ok = usable({items: list.map(expand)}).slice(0, 6);
+      const ok = usable({items: list.map(expand)}).slice(0, perType);
       if (ok.length >= 3) groups[c] = ok;
     }
+    // «Expos» (28-10-2026, David): las del ranking de la pestaña Expos de ese día, en su orden; las mismas que esa lista marca.
+    const expos = ((pf && pf.x) || []).map(expand).filter(e => e.end >= state.day).slice(0, perType);
+    if (expos.length >= 3) groups.expos = expos;
     if (state.pickCat && !groups[state.pickCat]) state.pickCat = '';
     const cats = Object.keys(CATS).filter(c => groups[c]);
+    if (groups.expos) cats.splice(cats.includes('arte') ? cats.indexOf('arte') + 1 : Math.min(cats.length, 4), 0, 'expos');
     const bar = $('pickCats');
     if (bar) {
       bar.hidden = !cats.length;
-      bar.innerHTML = cats.length ? [['', t('Todo'), chosen.length], ...cats.map(c => [c, byLang(CAT_SHORT[c] || CATS[c]), groups[c].length])]
-        .map(([c, label, n]) => `<button class="cat-pill${state.pickCat === c ? ' on' : ''}" type="button" data-pickcat="${c}" aria-pressed="${state.pickCat === c}"${c ? ` data-category-color="${c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)} <small>${n}</small></button>`).join('') : '';
+      bar.innerHTML = cats.length ? [['', t('Todo'), chosen.length], ...cats.map(c => [c, c === 'expos' ? L('Expos', 'Expos', 'Exhibitions') : byLang(CAT_SHORT[c] || CATS[c]), groups[c].length])]
+        .map(([c, label, n]) => `<button class="cat-pill${state.pickCat === c ? ' on' : ''}" type="button" data-pickcat="${c}" aria-pressed="${state.pickCat === c}"${c ? ` data-category-color="${c === 'expos' ? 'arte' : c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)} <small>${n}</small></button>`).join('') : '';
     }
     if (bar && cats.length) {   // el tipo elegido, siempre a la vista en la fila que se desliza (móvil)
       const on = bar.querySelector('.on');
@@ -587,7 +593,7 @@ async function selection() {
       if (r && (r.right > box.right - 24 || r.left < box.left)) bar.scrollLeft += r.left - box.left - 16;
       pickCatsEdge();
     }
-    const items = (state.pickCat ? groups[state.pickCat] : chosen).slice().sort(byTime);
+    const items = state.pickCat === 'expos' ? groups.expos : (state.pickCat ? groups[state.pickCat] : chosen).slice().sort(byTime);
     const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
     $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;

@@ -194,3 +194,11 @@ class SeleccionPorTipoTests(unittest.TestCase):
         html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
         self.assertIn('/data/picks/', js); self.assertIn('data-pickcat', js); self.assertNotIn("'pick-large'", js)
         self.assertIn('id="pickCats"', html); self.assertIn('id="pickNext"', html)
+
+    def test_expos_del_ranking_una_por_espacio(self):
+        from unittest import mock
+        ev = lambda k, v, **kw: {'key': k, 'venue_names': [v], 'media': [{'u': 'x'}], 'has_description': True, **kw}
+        by_key = {'a': ev('a', 'MACBA'), 'b': ev('b', 'MACBA'), 'c': ev('c', 'CCCB'), 'd': ev('d', 'Miró', media=[], has_description=False), 'e': ev('e', 'Fundació Tàpies')}
+        ranks = {'a': 5, 'b': 4, 'c': 3, 'd': 2, 'e': 1}
+        with mock.patch.object(publish_static, 'compact', lambda e, images, hidden=frozenset(): e['key']):
+            self.assertEqual(publish_static.expo_picks(by_key, ranks, None), ['a', 'c', 'e'])

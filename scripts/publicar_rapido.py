@@ -39,9 +39,15 @@ for n in range(DIAS + 1):
     day = (today + dt.timedelta(days=n)).isoformat()
     week = ps.featured_pool(conn, day, ps.PICK_POOL_WEEK)['items']
     one = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=ps.PICK_POOL)['items']
-    data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images)}
+    expos = []
+    for page in range(1, 6):   # exposiciones abiertas ese día, para el ranking de Expos (mismo expo_rank que la publicación)
+        got = catalog.query_events(conn, day=day, public=True, kind='exhibition', page_size=100, page=page)
+        expos += got['items']
+        if page >= (got.get('pages') or 1): break
+    by_key = {e['key']: e for e in expos}
+    data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images), 'x': ps.expo_picks(by_key, ps.expo_rank(expos, day), images)}
     ps._write_json(OUT / 'data' / 'picks' / f'{day}.json', data)
-    resumen[day] = {'7 días': {c: len(v) for c, v in data['w'].items()}, 'hoy': {c: len(v) for c, v in data['t'].items()}}
+    resumen[day] = {'7 días': {c: len(v) for c, v in data['w'].items()}, 'hoy': {c: len(v) for c, v in data['t'].items()}, 'expos': len(data['x'])}
     print(day, json.dumps(resumen[day], ensure_ascii=False), flush=True)
 
 # 2. JS, CSS y portada con sus páginas de entrada (lo mismo que export).
