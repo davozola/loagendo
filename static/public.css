@@ -122,8 +122,7 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
 .curated>button{flex:0 0 calc((100% - 48px) / 4.3);scroll-snap-align:start}.curated>.empty{flex:1}
 .curated .pick-media{height:200px}
 .pick-bar{display:flex;align-items:center;gap:16px;margin:0 0 14px}
-.pick-cats{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 auto}.pick-cats[hidden]{display:none}
-.pick-cats .cat-pill small{font-size:13px;font-weight:500;opacity:.75}
+.pick-what{margin:0;font-size:13px;color:var(--soft);flex:1 1 auto}.pick-what:empty{display:none}
 .pick-nav{display:flex;align-items:center;gap:6px;margin-left:auto}.pick-nav[hidden]{display:none}
 #pickCount{font-size:14px;font-weight:600;margin-right:6px;white-space:nowrap}
 .pick-arrow{width:44px;height:44px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);font:inherit;font-size:22px;line-height:1;cursor:pointer}
@@ -220,7 +219,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .close.small{display:inline-grid;place-items:center}
 .drawer-backdrop{display:block;position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.5)}.drawer-backdrop[hidden]{display:none}
 }
-@media(max-width:760px){.panel-top{flex-direction:column;align-items:stretch}.panel-search{flex:0 0 auto}.period-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;border-radius:22px}.period-tab{padding:0 8px;min-height:40px}.period-date{grid-column:span 2}.days-arrow{display:none}.days{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}.panel{padding:12px}}
+@media(max-width:760px){.panel-top{flex-direction:column;align-items:stretch}.panel-search{flex:0 0 auto}.period-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;width:100%;border-radius:22px}.period-tabs::-webkit-scrollbar{display:none}.period-tab{padding:0 12px;min-height:40px;flex:0 0 auto;white-space:nowrap}.period-date{flex:0 0 auto}.days-arrow{display:none}.days{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}.panel{padding:12px}}
 @media(max-width:620px){
 .nav-wrap{gap:8px;height:60px}
 .nav-wrap nav{display:none}.nav-actions{margin-left:auto}
@@ -409,7 +408,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 }
 
 /* Tipos de plan en versión corta, fijos bajo «Filtros» al bajar por la lista (21-10-2026) */
-.type-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0 0}
+.type-mini{display:block;margin:0}
 .type-mini::-webkit-scrollbar{display:none}
 .type-mini[hidden]{display:none}
 .mini-chip{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;min-height:32px;padding:0 4px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
@@ -468,6 +467,10 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 
 /* Barra rápida de categorías y bloques plegables (23-10-2026, propuesta A + B) */
 .cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.cat-top{margin:0 0 18px}.cat-top .cat-bar{margin:0}
+/* Copia compacta de la barra de categorías en la barra fija de «Filtros» (móvil), con el mismo estado (28-10-2026). */
+.type-mini .cat-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;margin:8px calc(-1 * var(--gutter,16px)) 0;padding:0 var(--gutter,16px)}.type-mini .cat-bar::-webkit-scrollbar{display:none}
+.type-mini .cat-pill{min-height:32px;padding:0 10px;font-size:13px;gap:5px}
 .cat-pill{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 13px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--fg);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 .cat-pill i{width:9px;height:9px;border:1px solid currentColor;background:var(--cat,transparent);flex:none}
 .cat-pill.on{background:var(--fg);border-color:var(--fg);color:var(--bg)}
@@ -570,12 +573,14 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .curated{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px);scrollbar-width:none}
 .curated::-webkit-scrollbar{display:none}
 .curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
-.pick-nav{display:none}.pick-bar{margin-bottom:10px}.curated .pick-media{height:150px}
-.pick-cats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px)}.pick-cats::-webkit-scrollbar{display:none}
-/* Tipos en móvil (28-10-2026): una fila que se desliza, como la de la Agenda, sin el número para que quepan 5 de 8 y con
-   el borde derecho fundido mientras queda algo a la derecha (pick-cats-end lo quita al llegar al final). */
-.pick-cats .cat-pill{padding:0 11px;gap:6px}.pick-cats .cat-pill small{display:none}
-.pick-cats:not(.pick-cats-end){-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
+.pick-nav{display:none}.pick-bar{margin-bottom:6px}.curated .pick-media{height:120px}.curated .pick-title{-webkit-line-clamp:2;font-size:15px}
+/* Titular en dos líneas y la barra de categorías justo debajo (28-10-2026, David): los planes, antes. */
+.hero h1{font-size:27px;line-height:1.05}.hero h1>span{display:inline}.hero h1 em{display:inline}
+.hero{padding:14px 0 12px;margin-bottom:0}
+.cat-top{margin:0 0 14px}.cat-top .cat-bar{margin:0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.cat-top .cat-pill{min-height:38px;padding:0 11px;font-size:14px}
+#seleccion{margin-bottom:14px;padding-top:18px;padding-bottom:18px}
+.agenda-head .agenda-title h2{display:none}#agendaCount{font-size:13px}
 .pick-large .pick-media,.pick-media{height:150px}.pick-large .pick-title{font-size:19px;-webkit-line-clamp:3}.pick-large .pick-summary{display:none}
 .period-date{grid-column:auto}
 }

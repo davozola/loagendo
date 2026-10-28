@@ -192,8 +192,9 @@ class SeleccionPorTipoTests(unittest.TestCase):
     def test_selection_carrusel_y_tipos_en_la_web(self):
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
         html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
-        self.assertIn('/data/picks/', js); self.assertIn('data-pickcat', js); self.assertNotIn("'pick-large'", js)
-        self.assertIn('id="pickCats"', html); self.assertIn('id="pickNext"', html)
+        self.assertIn('/data/picks/', js); self.assertNotIn('data-pickcat', js); self.assertNotIn("'pick-large'", js)
+        self.assertIn('id="pickNext"', html); self.assertNotIn('id="pickCats"', html)   # 28-10 (tarde): una sola barra de categorías para toda la página
+        self.assertIn('id="typeTabs" class="type-tabs cat-top"', html); self.assertIn('catBarHtml(true)', js)
 
     def test_expos_del_ranking_una_por_espacio(self):
         from unittest import mock

@@ -57,7 +57,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 #seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
 #seleccion .section-head p{color:var(--on-color)}
 .curated{max-width:1360px;margin:0 auto}
-.pick-bar{max-width:1360px;margin:0 auto 14px}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
+.pick-bar{max-width:1360px;margin:0 auto 14px}
+.cat-top{max-width:1360px;margin:0 auto 18px;padding:0 var(--gutter)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
 .curated button{border:1px solid var(--on-color);border-radius:0}
 .curated button:hover{transform:none;box-shadow:none;border-color:var(--on-color)}
 .pick-large,.pick-small{border-radius:0;padding:0;background:var(--paper);color:var(--ink)}

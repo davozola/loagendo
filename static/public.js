@@ -141,7 +141,6 @@ const LANDING = (() => { try { return location.search ? {} : JSON.parse(document
 const landingDay = () => LANDING.day === 'today' ? today : LANDING.day === 'tomorrow' ? addDays(today, 1) : (LANDING.day || '');
 let state = {
   pickRange: 'auto',   // «Selección Ontoca»: 'auto' (hoy si quedan planes; si no, 7 días), 'today' o 'week'
-  pickCat: '',         // tipo de la Selección (28-10-2026): '' = «Todo»; se mantiene al cambiar de día si ese día tiene 3 o más
   day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
   chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
   free: params.get('free') === '1', query: params.get('q') || '',
@@ -578,22 +577,14 @@ async function selection() {
     // «Expos» (28-10-2026, David): las del ranking de la pestaña Expos de ese día, en su orden; las mismas que esa lista marca.
     const expos = ((pf && pf.x) || []).map(expand).filter(e => e.end >= state.day).slice(0, perType);
     if (expos.length >= 3) groups.expos = expos;
-    if (state.pickCat && !groups[state.pickCat]) state.pickCat = '';
-    const cats = Object.keys(CATS).filter(c => groups[c]);
-    if (groups.expos) cats.splice(cats.includes('arte') ? cats.indexOf('arte') + 1 : Math.min(cats.length, 4), 0, 'expos');
-    const bar = $('pickCats');
-    if (bar) {
-      bar.hidden = !cats.length;
-      bar.innerHTML = cats.length ? [['', t('Todo'), chosen.length], ...cats.map(c => [c, c === 'expos' ? L('Expos', 'Expos', 'Exhibitions') : byLang(CAT_SHORT[c] || CATS[c]), groups[c].length])]
-        .map(([c, label, n]) => `<button class="cat-pill${state.pickCat === c ? ' on' : ''}" type="button" data-pickcat="${c}" aria-pressed="${state.pickCat === c}"${c ? ` data-category-color="${c === 'expos' ? 'arte' : c}"` : ''}>${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)} <small>${n}</small></button>`).join('') : '';
-    }
-    if (bar && cats.length) {   // el tipo elegido, siempre a la vista en la fila que se desliza (móvil)
-      const on = bar.querySelector('.on');
-      const r = on?.getBoundingClientRect(), box = bar.getBoundingClientRect();
-      if (r && (r.right > box.right - 24 || r.left < box.left)) bar.scrollLeft += r.left - box.left - 16;
-      pickCatsEdge();
-    }
-    const items = state.pickCat === 'expos' ? groups.expos : (state.pickCat ? groups[state.pickCat] : chosen).slice().sort(byTime);
+    // La Selección sigue el filtro de la página (28-10-2026, David): la categoría elegida en la barra única, la pestaña Expos
+    // (exposiciones del ranking de Expos) y el canal En familia (planes familiares). Sin controles propios.
+    const want = state.tab === 'expo' ? 'expos' : state.chans.includes('familia') ? 'familia' : state.cats.length === 1 ? state.cats[0] : '';
+    const fam = ((pf && pf.f) || []).map(expand); if (fam.length) groups.familia = usable({items: fam}).slice(0, perType);
+    const sel = want === 'expos' ? expos : want ? (groups[want] || []) : chosen;
+    const what = $('pickWhat');
+    if (what) what.textContent = want && !sel.length ? L('Sin selección para este filtro; se muestra la general.', 'Sense selecció per a aquest filtre; es mostra la general.', 'No picks for this filter; showing the general ones.') : '';
+    const items = want === 'expos' && sel.length ? sel : (sel.length ? sel : chosen).slice().sort(byTime);
     const end = new Date(state.day + 'T12:00:00'); end.setDate(end.getDate() + 6);
     $('weekRange').textContent = one ? labelDate(state.day) : `${labelDate(state.day)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
@@ -612,9 +603,6 @@ function pickNav() {
   nav.hidden = cards.length <= shown;
   $('pickCount').textContent = `${first + 1}–${last} ${L('de', 'de', 'of')} ${cards.length}`;
   $('pickPrev').disabled = first <= 0; $('pickNext').disabled = last >= cards.length;
-}
-function pickCatsEdge() {
-  const bar = $('pickCats'); if (bar) bar.classList.toggle('pick-cats-end', bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4);
 }
 function pickScroll(dir) {
   const box = $('curated'), cards = box.querySelectorAll('button[data-open]');
@@ -841,19 +829,22 @@ function kmTo(a, b) {
 }
 const kmText = k => k < 1 ? `${Math.max(100, Math.round(k * 10) * 100)} m` : `${k < 10 ? k.toFixed(1).replace('.', LANG === 'en' ? '.' : ',') : Math.round(k)} km`;
 const nearSort = list => state.near ? [...list].sort((a, b) => (a._km ?? 1e9) - (b._km ?? 1e9)) : list;
-function catBarHtml() {
+function catBarHtml(compact = false) {
   const only = state.cats.length === 1 ? state.cats[0] : '';
   // Las categorías con página de entrada (src/landings.py) son enlaces reales, para que Google llegue a ellas
   // desde la portada (25-10-2026); al tocarlas se filtra igual que antes, sin cambiar de página.
   const btn = (c, label) => { const on = c ? only === c : !state.cats.length, href = CAT_LANDING[c];
     const attrs = `class="cat-pill${on ? ' on' : ''}" data-quickcat="${c}" aria-pressed="${on}"${c ? ` data-category-color="${c}"` : ''}`, inner = `${c ? '<i aria-hidden="true"></i>' : ''}${esc(label)}`;
     return href ? `<a href="${href}" ${attrs}>${inner}</a>` : `<button type="button" ${attrs}>${inner}</button>` };
+  if (compact) return `<div class="cat-bar cat-bar-mini" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}</div>`;
   return `<div class="cat-bar" role="group" aria-label="${L('Categoría', 'Categoria', 'Category')}">${btn('', t('Todo'))}${Object.keys(CATS).map(c => btn(c, byLang(CAT_SHORT[c]))).join('')}${nearHtml()}</div>${state.nearMsg ? `<p class="near-msg">${esc(state.nearMsg)}</p>` : ''}`;
 }
 function chipsHtml(counts) {
-  // Antes, los cuatro bloques de tipo; ahora la barra de categorías (en el mismo sitio, fuera de la lista).
+  // Una sola barra de categorías para toda la página (28-10-2026, David): entre el titular y la Selección, y filtra a la vez
+  // la Selección y la Agenda. En móvil, cuando se pierde de vista, la misma fila (mismo estado) dentro de la barra fija de
+  // «Filtros» que ya existía, para cambiar de categoría sin volver arriba.
   const tabs = $('typeTabs'); if (tabs) tabs.innerHTML = catBarHtml();
-  const mini = $('typeMini'); if (mini) mini.innerHTML = '';
+  const mini = $('typeMini'); if (mini) { mini.innerHTML = catBarHtml(true); requestAnimationFrame(syncMini) }
   return '';
 }
 function chipsHtmlOld(counts) {
@@ -1495,11 +1486,10 @@ function mountFilterUi() {
 function syncMini() {
   const tabs = $('typeTabs'), mini = $('typeMini'), bar = $('filterBar'); if (!mini || !bar) return;
   const r = tabs.getBoundingClientRect(), on = getComputedStyle(bar).position === 'sticky' && !!mini.innerHTML && r.height > 0 && r.bottom < bar.getBoundingClientRect().top + 60;
-  if (mini.hidden === on) { mini.hidden = !on; bar.classList.toggle('compact', on); stick() }
+  if (mini.hidden === on) { mini.hidden = !on; bar.classList.toggle('compact', on); stick(); if (on) { const sel = mini.querySelector('.on'); if (sel) mini.querySelector('.cat-bar')?.scrollTo({left: Math.max(0, sel.offsetLeft - 16)}) } }
 }
 document.addEventListener('scroll', () => requestAnimationFrame(syncMini), {passive: true});
 $('curated')?.addEventListener('scroll', () => requestAnimationFrame(pickNav), {passive: true});
-$('pickCats')?.addEventListener('scroll', () => requestAnimationFrame(pickCatsEdge), {passive: true});
 window.addEventListener('resize', () => requestAnimationFrame(pickNav));
 // --stick: cabecera; --agtop: cabecera + barra de filtros fija (móvil), donde se pegan las pestañas; --daytop: debajo de las pestañas.
 function stick() {
@@ -1887,7 +1877,6 @@ document.addEventListener('click', e => {
     goVenue(button.dataset.venueq); return
   }
   if (button.dataset.fest) { goFest(button.dataset); return }
-  if (button.dataset.pickcat !== undefined) { if (button.dataset.pickcat !== state.pickCat) { state.pickCat = button.dataset.pickcat; track('seleccion', 'type_filter', state.pickCat || 'todo'); selection() } return }
   if (button.id === 'pickPrev' || button.id === 'pickNext') { pickScroll(button.id === 'pickNext' ? 1 : -1); return }
   if (button.dataset.pickrange) { if (button.dataset.pickrange !== state.pickRange) { state.pickRange = button.dataset.pickrange; track('seleccion', 'range_change', state.pickRange); selection() } return }
   if (button.dataset.near) {
