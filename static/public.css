@@ -115,11 +115,22 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
 .active-chip{border:1px solid var(--accent);background:var(--accentSoft);color:var(--fg);border-radius:999px;min-height:32px;padding:0 10px 0 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px}.active-chip span{color:var(--accentText)}
 
 /* curated */
-.curated{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+/* Carrusel también en escritorio (28-10-2026, David): todas las fichas iguales, cuatro y el borde de la quinta;
+   tres en tableta; en móvil, 76 % (más abajo). Sin paso automático. */
+.curated{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.curated::-webkit-scrollbar{display:none}
+.curated>button{flex:0 0 calc((100% - 48px) / 4.3);scroll-snap-align:start}.curated>.empty{flex:1}
+.curated .pick-media{height:200px}
+.pick-bar{display:flex;align-items:center;gap:16px;margin:0 0 14px}
+.pick-cats{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 auto}.pick-cats[hidden]{display:none}
+.pick-cats .cat-pill small{font-size:13px;font-weight:500;opacity:.75}
+.pick-nav{display:flex;align-items:center;gap:6px;margin-left:auto}.pick-nav[hidden]{display:none}
+#pickCount{font-size:14px;font-weight:600;margin-right:6px;white-space:nowrap}
+.pick-arrow{width:44px;height:44px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);font:inherit;font-size:22px;line-height:1;cursor:pointer}
+.pick-arrow:disabled{opacity:.35;cursor:default}
 .curated button{border:1px solid var(--line);text-align:left;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
 .curated button:hover{transform:translateY(-2px);border-color:var(--accentText);box-shadow:0 12px 28px rgba(0,0,0,.14)}
 .pick-large,.pick-small{border-radius:18px;padding:10px;background:var(--surface);color:var(--fg);display:flex;flex-direction:column}
-.pick-large{grid-column:span 2;grid-row:span 2}
 .pick-media{width:100%;height:124px;object-fit:cover;border-radius:11px;margin:0 0 10px;background:var(--surface2)}.pick-large .pick-media{height:280px}
 .pick-placeholder{background:linear-gradient(135deg,var(--accentSoft),var(--surface2))}
 .pick-meta{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accentText)}
@@ -200,7 +211,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .cal-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 
 /* responsive */
-@media(max-width:1100px){.curated{grid-template-columns:repeat(3,minmax(0,1fr))}.pick-large{grid-column:span 3;grid-row:auto}.pick-large .pick-media{height:220px}}
+@media(max-width:1100px){.curated>button{flex-basis:calc((100% - 32px) / 3.3)}}
 @media(max-width:960px){
 .layout{grid-template-columns:1fr;gap:0}
 .filters-toggle{display:inline-flex}
@@ -208,7 +219,6 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .filters-panel.open{transform:none}
 .close.small{display:inline-grid;place-items:center}
 .drawer-backdrop{display:block;position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.5)}.drawer-backdrop[hidden]{display:none}
-.curated{grid-template-columns:repeat(2,minmax(0,1fr))}.pick-large{grid-column:span 2}
 }
 @media(max-width:760px){.panel-top{flex-direction:column;align-items:stretch}.panel-search{flex:0 0 auto}.period-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;border-radius:22px}.period-tab{padding:0 8px;min-height:40px}.period-date{grid-column:span 2}.days-arrow{display:none}.days{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}.panel{padding:12px}}
 @media(max-width:620px){
@@ -381,7 +391,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .copy-original{display:block;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 
 /* Selección de la semana con 7 fichas (20-10-2026): en escritorio, las dos últimas ocupan media fila cada una */
-@media(min-width:1101px){.curated .pick-small:nth-child(6),.curated .pick-small:nth-child(7){grid-column:span 2}.curated .pick-small:nth-child(n+6) .pick-media{height:180px}}
+
 
 /* Navegación de filtros (21-10-2026): en móvil, botón «Filtros» fijo a todo el ancho; debajo,
    los tipos de plan con sus textos, que se activan sin mover la página */
@@ -553,6 +563,8 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .curated{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px);scrollbar-width:none}
 .curated::-webkit-scrollbar{display:none}
 .curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
+.pick-nav{display:none}.pick-bar{margin-bottom:10px}.curated .pick-media{height:150px}
+.pick-cats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px)}.pick-cats::-webkit-scrollbar{display:none}
 .pick-large .pick-media,.pick-media{height:150px}.pick-large .pick-title{font-size:19px;-webkit-line-clamp:3}.pick-large .pick-summary{display:none}
 .period-date{grid-column:auto}
 }

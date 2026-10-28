@@ -177,3 +177,20 @@ class MonumentalTests(unittest.TestCase):
         self.assertTrue(dedupe._distinct_sessions(conn, 'a:1', 'b:2'))
         self.assertFalse(dedupe._distinct_sessions(conn, 'c:3', 'd:4'))
         self.assertFalse(dedupe._distinct_sessions(conn, 'e:5', 'f:6'))
+
+
+class SeleccionPorTipoTests(unittest.TestCase):
+    def test_por_categoria_tres_o_mas_una_por_obra_sin_promos(self):
+        from unittest import mock
+        ev = lambda i, cat, title, **kw: {'public_category': cat, 'title': title, 'series': '', 'media': [{'u': 'x'}], 'has_description': True, 'key': f's:{i}', **kw}
+        items = [ev(1, 'musica', 'A'), ev(2, 'musica', 'B'), ev(3, 'musica', 'B'), ev(4, 'musica', 'C'), ev(5, 'musica', 'D', is_promo=True),
+                 ev(6, 'cine', 'X'), ev(7, 'cine', 'Y'), ev(8, 'escena', 'Z', media=[], has_description=False)]
+        with mock.patch.object(publish_static, 'compact', lambda e, images, hidden=frozenset(): e['key']):
+            out = publish_static.picks_by_category(items, None)
+        self.assertEqual(out, {'musica': ['s:1', 's:2', 's:4']})   # B repetida, D promoción; cine solo 2; escena sin imagen ni texto
+
+    def test_selection_carrusel_y_tipos_en_la_web(self):
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
+        html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
+        self.assertIn('/data/picks/', js); self.assertIn('data-pickcat', js); self.assertNotIn("'pick-large'", js)
+        self.assertIn('id="pickCats"', html); self.assertIn('id="pickNext"', html)
