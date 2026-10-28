@@ -1,0 +1,173 @@
+{
+ "day": "2026-10-27",
+ "file": "2026-10-27-repetida",
+ "model": "claude-sonnet-5-5",
+ "sample_size": 159,
+ "composition": {
+  "repetida": 79,
+  "azar": 40,
+  "reciente": 20,
+  "sospechosa": 20
+ },
+ "patterns": [
+  {
+   "title": "Categoría «Teatro y danza» asignada por tipo de recinto, no por naturaleza del acto"
+  },
+  {
+   "title": "Categoría «Cine» por recinto mixto (teatro/cine) sin comprobar el acto"
+  },
+  {
+   "title": "Horario por defecto «23:59» / «00:00» inventado o mal interpretado"
+  },
+  {
+   "title": "Horario de la ficha con una sola hora cuando hay varias sesiones o franja"
+  },
+  {
+   "title": "Horarios por día no concuerdan con el texto de la fuente (grupos, excepciones, días de semana)"
+  },
+  {
+   "title": "Cursos de varios meses (GuiaBCN/OpenData) con un solo horario aplicado a todos los días o a dos grupos"
+  },
+  {
+   "title": "Cursos largos / talleres en la agenda como «actos» y tipo «Curso» frente a «Programa / ciclo» inconsistente"
+  },
+  {
+   "title": "Eventos de Eventbrite: «organiza» = \"Eventbrite\", lugar = dirección, categoría `Comunidad`, y muchos son comerciales o de networking"
+  },
+  {
+   "title": "Songkick/Open sin datos: sin lugar, hora o descripción «at … at …»"
+  },
+  {
+   "title": "Descripciones vacías o de plantilla («Concierto de X en Sala Y el …»)"
+  },
+  {
+   "title": "Precio vacío en fuentes que sí lo publican"
+  },
+  {
+   "title": "Precio incoherente o de otro tipo"
+  },
+  {
+   "title": "Lugar genérico o distrito vacío"
+  },
+  {
+   "title": "Fichas «Programa / ciclo» con título y descripción de otro acto (fuente mal casada)"
+  },
+  {
+   "title": "`publico_familiar` false pero canal «familia» (o contenido claramente infantil)"
+  },
+  {
+   "title": "Exposiciones y programas con `tipo` o categoría engañosa"
+  },
+  {
+   "title": "Fecha o ficha caducada / fuera de rango"
+  },
+  {
+   "title": "Duplicados probables"
+  }
+ ],
+ "serious": [
+  {
+   "url": "https://ontoca.com/e/venue_songkick/94e82b036876eb20eac2622b",
+   "key": "venue_songkick:94e82b036876eb20eac2622b",
+   "type": "FUERA",
+   "problem": "concierto en Granollers, no Barcelona",
+   "proposal": "Excluir (evidencia: \"lugar: Granollers\"; certeza: confirmado)",
+   "title": "Shubiao Quartet"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_eventbrite/56170ee0232fe06070950cf8",
+   "key": "venue_eventbrite:56170ee0232fe06070950cf8",
+   "type": "FUERA",
+   "problem": "networking profesional pharma",
+   "proposal": "Excluir (evidencia: \"if you want to grow in pharma, knowing how CEOs think helps\"; certeza: confirmado)",
+   "title": "CEO's Night Vol. V - Pharma New Talent TALKS"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_eventbrite/d7fb1ce5cd237416c6b0e9cf",
+   "key": "venue_eventbrite:d7fb1ce5cd237416c6b0e9cf",
+   "type": "FUERA",
+   "problem": "clase de cocina turística de pago como programa anual",
+   "proposal": "Excluir (evidencia: \"Paella & Tapas Cooking Class\", 2025-12-14 → 2026-12-15; certeza: confirmado)",
+   "title": "Paella & Tapas Cooking Class with Sangria Making"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_teatreneu/333de04d37dfa030230732fd",
+   "key": "venue_ia_teatreneu:333de04d37dfa030230732fd",
+   "type": "FECHAS",
+   "problem": "rango empieza en 2024 y hora 21:00 contradice \"19.30 h\"",
+   "proposal": "Limitar a futuras y usar 19:30 (evidencia: \"2024-08-02 → 2026-12-04\"; certeza: confirmado)",
+   "title": "Última planta"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_teatreneu/0b5c2fcf2c64637198c427b6",
+   "key": "venue_ia_teatreneu:0b5c2fcf2c64637198c427b6",
+   "type": "HORARIO",
+   "problem": "ficha 16:00 vs fuente 11:00; sesiones desde 2025",
+   "proposal": "Reparar sesiones (evidencia: \"a les 11.00 h\"; certeza: confirmado)",
+   "title": "Una capseta que batega"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_institut_francais/d236c9b589ed1beca0a61949",
+   "key": "venue_ia_institut_francais:d236c9b589ed1beca0a61949",
+   "type": "DESCRIPCION",
+   "problem": "descripción de un taller de teatro en una ficha de exposición",
+   "proposal": "Vaciar descripción (evidencia: \"Atelier théâtre d'octobre à juin\"; certeza: confirmado)",
+   "title": "«Le grand tour en Italie» de Ferrante Ferranti | Casa degli Italiani"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_balana/f3eb26a4d2967aa80af75b20",
+   "key": "venue_ia_balana:f3eb26a4d2967aa80af75b20",
+   "type": "HORARIO",
+   "problem": "ficha 19:30 pero fuente dice 20.30 h",
+   "proposal": "Corregir a 20:30 (evidencia: \"texto_horario_fuente: 20.30 h\"; certeza: confirmado)",
+   "title": "Christian Löffler"
+  },
+  {
+   "url": "https://ontoca.com/e/generalitat/2026102600005",
+   "key": "generalitat:2026102600005",
+   "type": "HORARIO",
+   "problem": "`hora_ficha` 18:00 en un festival de 09:30–18:00",
+   "proposal": "Mostrar franja (evidencia: \"de 9.30 a 18 h\"; certeza: confirmado)",
+   "title": "Difracta"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_marula/369e13505ade181c9459b020",
+   "key": "venue_ia_marula:369e13505ade181c9459b020",
+   "type": "FECHAS",
+   "problem": "fiesta de domingo 00:00–04:30 figura el 29-nov a las 00:00",
+   "proposal": "Revisar si es la noche del sábado 28 (evidencia: \"Los domingos de 00:00H a 4:30H\"; certeza: sospecha)",
+   "title": "Sound-Ay [How Sunday Sound] / Thisorder"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_eventbrite/c6e428d2dc928cf8a281186c",
+   "key": "venue_eventbrite:c6e428d2dc928cf8a281186c",
+   "type": "DUPLICADO",
+   "problem": "mismo evento que Fury en Razzmatazz",
+   "proposal": "Fusionar con https://ontoca.com/e/venue_ia_razzmatazz/8ebdc9b4e53ec2d0ad815fe9 (evidencia: misma fecha, hora 17:00 y descripción idéntica; certeza: confirmado)",
+   "title": "Fury Festival pres. Halloween Warehouse Indoor Rave"
+  },
+  {
+   "url": "https://ontoca.com/e/opendatabcn_agenda/99400745117",
+   "key": "opendatabcn_agenda:99400745117",
+   "type": "LUGAR",
+   "problem": "sin lugar y categoría «Charlas y visitas» para un espectáculo de foc y bastons",
+   "proposal": "Poner Fiestas y mercados (evidencia: \"Espectacle de llum, foc i bastons\"; certeza: confirmado)",
+   "title": "VII Picafoc del Clot"
+  },
+  {
+   "url": "https://ontoca.com/e/venue_ia_espai_texas/9b73f6b10e7c925e18b18478",
+   "key": "venue_ia_espai_texas:9b73f6b10e7c925e18b18478",
+   "type": "CATEGORIA",
+   "problem": "musical teatral como Cine",
+   "proposal": "Pasar a Teatro y danza (evidencia: \"AUTÓNOMOS EL MUSICAL al teatre\"; certeza: confirmado)",
+   "title": "Autónomos el Musical"
+  }
+ ],
+ "usage": {
+  "input_tokens": 86516,
+  "cache_creation_input_tokens": 0,
+  "cache_read_input_tokens": 0,
+  "output_tokens": 11186
+ },
+ "stop_reason": "end_turn"
+}
