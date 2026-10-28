@@ -1255,15 +1255,21 @@ function wideTab(list, live) {
 }
 // «Abierto ahora» / «Abre hoy» (hoy) o «Durante el día» (otras fechas): cinco filas y el resto a un clic.
 const OPEN_FIRST = 5;
-// Plan de estos días con horario amplio: de hasta 6 semanas, o con este día nombrado en el horario por días de la fuente.
+// Horario amplio que merece estar en la Agenda (28-10-2026, David): ferias, mercados, fiestas y experiencias temporales con
+// recinto propio, fechadas (hasta 6 semanas, o el día nombrado en el horario por días de la fuente). No: lo permanente o de
+// meses, talleres, juegos, visitas, congresos, jornadas y actividades de centros cívicos, casals y bibliotecas.
 const DAY_PLAN_MAX = 42;
 const isDayPlan = (e, day) => daysBetween(e.start, e.end) <= DAY_PLAN_MAX || (hoursByDay(e) && day in hoursByDay(e) && Object.keys(hoursByDay(e)).length <= 12);
-const DAY_BLOCK_ROWS = 5;
-function dayBlock(list, live) {
-  const id = `day:${state.day}`, open = state.expanded.has(id), shown = open ? list : list.slice(0, DAY_BLOCK_ROWS), left = list.length - shown.length;
-  const title = live ? L('Durante el día', 'Durant el dia', 'During the day') : L('Durante el día', 'Durant el dia', 'During the day');
-  const more = left > 0 ? `<button class="ag-toggle ag-hourmore" type="button" data-hourfold="${esc(id)}">${L(`Ver ${left} más`, `Mostra'n ${left} més`, `See ${left} more`)}</button>` : open && list.length > DAY_BLOCK_ROWS ? `<button class="ag-toggle ag-hourless" type="button" data-hourfold="${esc(id)}">${L('Ver menos', 'Mostra’n menys', 'Show fewer')}</button>` : '';
-  return `<div class="ag-group ag-dayblock" id="ag-dayblock">${groupHead(`${title} · ${list.length} ${list.length === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`)}${seriesFold(shown)}${more}</div>`;
+const WIDE_SKIP_TITLE = /\b(?:taller|tallers|curs|curso|joc|juego|congr\w*|jornad\w*|campus|trobada|activitat comunitaria|espai d.aprenentatge|visita|visites|audioguia|street escape|concurs)\b/;
+const WIDE_SKIP_VENUE = /centre civic|casal|biblioteca|espai de (?:persones|gent) gran|associacio|ateneu|ludoteca/;
+const isStrongWide = (e, day) => !isExhibit(e) && !e._a.noHours && e.format !== 'course' && e.format !== 'workshop' && isDayPlan(e, day)
+  && e.venue_tier !== 3 && !WIDE_SKIP_TITLE.test(fold(e.title)) && !WIDE_SKIP_VENUE.test(fold(e.venue_names?.[0] || ''));
+// Recordatorio de la tarde (28-10-2026, David): una feria abierta desde la mañana vuelve a aparecer a las 15:00 como línea corta
+// («Sigue abierta hasta las 20:00»), solo si abre antes de las 13:00 y cierra a una hora fiable con al menos 2 h por delante.
+// Misma ficha, no cuenta en los totales ni ocupa sitio en la hora; como mucho 3 al día. Hoy, si ya está abierta, va a «En curso».
+const REMIND_AT = 15 * 60, REMIND_MAX = 3;
+function remindLine(e) {
+  return `<button class="ag-remind" type="button" data-open="${esc(key(e))}"><span>${esc(L('Sigue abierta hasta las', 'Segueix oberta fins a les', 'Still open until'))} ${clock(e._remindClose ?? e._a.close)}</span><b>${esc(e.title)}</b><i aria-hidden="true">›</i></button>`;
 }
 function renderDay(m) {
   const s = m.sections, show = state.show, live = m.live;
@@ -1278,15 +1284,22 @@ function renderDay(m) {
   // «Durante el día» (28-10-2026, David): bloque reducido con ferias, mercados y experiencias de horario amplio que son
   // planes de estos días (fechados: hasta 6 semanas, o un día concreto en el horario por días de la fuente). Lo permanente
   // o de meses (audioguías, parades de castanyes, espacios de aprendizaje, campus) no sale; se puede buscar.
-  let dayList = wideAllDay.filter(e => !isExhibit(e) && !e._a.noHours && isDayPlan(e, state.day) && e._st.state !== 'past').sort((a, b) => daysBetween(state.day, a.end) - daysBetween(state.day, b.end) || relevance(b) - relevance(a) || byTitle(a, b));
-  let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !dayList.includes(e))].sort(byTitle);
-  let ongoing = s.ongoing;
-  [timeline, tbcList, dayList, ongoing] = gatherSeries([timeline, tbcList, dayList, ongoing]);
+  // Horario amplio fuerte (isStrongWide): una fila a su hora de apertura; si ya está abierta hoy, en «En curso». El resto no se enseña.
+  const strong = wideAllDay.filter(e => isStrongWide(e, state.day) && e._st.state !== 'past');
+  timeline = [...timeline, ...strong.filter(e => e._st.state !== 'open')].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
+  let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !strong.includes(e))].sort(byTitle);
+  let ongoing = [...s.ongoing, ...strong.filter(e => e._st.state === 'open')];
+  [timeline, tbcList, ongoing] = gatherSeries([timeline, tbcList, ongoing]);
+  // Abierta a las 15:00 de verdad: el tramo que la cubre (un horario partido «09:00–13:30 · 16:00–17:30» no vale) y 2 h por delante.
+  const span15 = e => (e._a.ranges || [{open: e._a.open, close: e._a.close}]).find(r => r.open <= REMIND_AT && r.close - REMIND_AT >= 120 && r.close <= 1440);
+  const reminders = timeline.filter(e => e._a.kind === 'wide' && e._a.close != null && e._a.open < 13 * 60 && span15(e))
+    .sort((a, b) => relevance(b) - relevance(a) || byTitle(a, b)).slice(0, REMIND_MAX);
+  reminders.forEach(e => { e._remindClose = span15(e).close });
   markHighlights(timeline, state.day);
   // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar, en Guardados o en el
   // filtro de un festival (ahí se ve todo lo suyo, también su ficha general). La Agenda es lo que tiene hora con confianza alta.
   const showTbc = searching() || state.savedOnly || Boolean(state.fest);
-  const tabCounts = {agenda: timeline.length + ongoing.length + dayList.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
+  const tabCounts = {agenda: timeline.length + ongoing.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
   const foldHours = !searching() && !state.savedOnly && !state.fest && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
   // Hoy la Agenda empieza en la hora actual (28-10-2026, David): lo anterior, ya empezado o acabado, queda arriba plegado.
   const plans = n => `${n.toLocaleString('es-ES')} ${n === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`;
@@ -1297,20 +1310,23 @@ function renderDay(m) {
   for (const e of ongoing) perHour.ongoing = (perHour.ongoing || 0) + 1 + (e._more ? e._more.length : 0);
   // En curso (28-10-2026, David): lo que ya ha empezado y aún se puede disfrutar, con hora de fin de la fuente.
   if (live && ongoing.length) groups += `<div class="ag-group" id="ag-ongoing">${groupHead(`${L('En curso', 'En curs', 'In progress')} · ${plans(perHour.ongoing || 0)}`, ' is-now')}${hourRows(ongoing, `h:${state.day}:ongoing`, foldHours)}</div>`;
-  if (dayList.length) groups += dayBlock(dayList, live);
+  const remindHtml = reminders.length ? `<div class="ag-reminders">${reminders.map(remindLine).join('')}</div>` : '';
+  let reminded = !remindHtml;
+  const openReminders = () => { flush(); groups += `<div class="ag-group">${groupHead(perHour['15'] ? `15 h · ${plans(perHour['15'])}` : '15 h')}${remindHtml}`; current = '15'; reminded = true };
   for (const e of timeline) {
     const h = hourOf(e);
+    if (!reminded && Number(h) >= 15) { if (h === '15') { if (current !== '15') openReminders() } else { openReminders(); flush(); current = null } }
     if (h !== current) { flush(); groups += `<div class="ag-group">${headOf(h, perHour[h])}`; current = h }
     bucket.push(e);
   }
+  if (!reminded) openReminders();
   flush();
   if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió', 'Series and seasons without session dates'))}${rows(s.run, 'run')}</div>`;
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
-  if (live && s.past.length) html += foldHtml('past', L('Anteriores: ya empezadas o acabadas hoy', 'Anteriors: ja començades o acabades avui', 'Earlier today: already started or over'), s.past);
+  // Lo ya acabado o empezado sin hora de fin fiable no se enseña (28-10-2026, David: su valor es marginal).
   html += `<div class="ag-timeline">${groups}</div>`;
   if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora de inicio`, `${tbcList.length} plans sense hora d'inici`, `${tbcList.length} plans without a start time`), tbcList, L('Espacios y ferias de horario amplio, festivales en varios espacios y actos sin hora publicada', "Espais i fires d'horari ampli, festivals en diversos espais i actes sense hora publicada", 'Open-hours venues and fairs, festivals across venues and events with no published time'), false, ' is-tbc');
-  if (!live) html += foldHtml('past', L('Ya pasado', 'Ja passat', 'Already over'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return {html: {agenda: html, expo: wideTab(wideList, live)}, counts: tabCounts};
 }
@@ -1322,7 +1338,7 @@ function dayHeading(d) {
 function renderRange(m) {
   const show = state.show, s = m.sections;
   // Solo sesiones con hora de inicio (28-10-2026, David): ni «sin hora» ni horario amplio, salvo al buscar, en Guardados o en el filtro de un festival.
-  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || Boolean(state.fest) || (e._a.kind !== 'tbc' && (e._a.kind !== 'wide' || (!e._a.noHours && isDayPlan(e, e._day)))));
+  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || Boolean(state.fest) || (e._a.kind !== 'tbc' && (e._a.kind !== 'wide' || isStrongWide(e, e._day))));
   const counts = {...m.counts, soon: s.soon.length};
   const seenWide = new Set(), wideAll = [];
   for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && isExhibit(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }

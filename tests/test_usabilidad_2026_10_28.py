@@ -135,7 +135,7 @@ class WebTests(unittest.TestCase):
         apertura no es una sesión (parades de castanyes fuera); total en cada cabecera de hora; etiqueta de festival pulsable
         con filtro que se mantiene al cambiar de día; el festival de abono sale a su hora de apertura, no a la de la primera sesión."""
         js = (ROOT / 'static' / 'public.js').read_text()
-        for text in ("const hourKey = e => String(Math.floor(e._st.sort / 60))", "foldHtml('past', L('Anteriores: ya empezadas o acabadas hoy'",
+        for text in ("const hourKey = e => String(Math.floor(e._st.sort / 60))",
                      "${h} h`} · ${plans(n)}`", "function goFest(d)", "p.fest && base.festival?.slug !== p.fest",
                      "data-fest=\"${esc(slug)}\"", "program_days: c.pn || null", "if (state.fest) { p.set('fest', state.fest)"):
             self.assertIn(text, js)
@@ -150,9 +150,13 @@ class WebTests(unittest.TestCase):
         un día con franja larga es una sesión a su hora; el horario amplio fechado (hasta 6 semanas) va a un bloque reducido
         «Durante el día» (5 filas); lo permanente o de meses sigue sin verse."""
         js = (ROOT / 'static' / 'public.js').read_text()
-        for text in ("state: 'ongoing'", "id=\"ag-ongoing\"", "function dayBlock(list, live)", "const DAY_PLAN_MAX = 42", "const DAY_BLOCK_ROWS = 5",
-                     "(isWideRange(range) && isOpenFormat(e))", "e._st.state === 'past' || e._st.state === 'started')) s.past.push(e)"):
+        for text in ("state: 'ongoing'", "id=\"ag-ongoing\"", "const DAY_PLAN_MAX = 42", "const isStrongWide = ", "const REMIND_AT = 15 * 60, REMIND_MAX = 3",
+                     "function remindLine(e)", "r.close - REMIND_AT >= 120", "(isWideRange(range) && isOpenFormat(e))", "e._st.state === 'past' || e._st.state === 'started')) s.past.push(e)"):
             self.assertIn(text, js)
+        # 28-10-2026 (10:19, David): sin «Anteriores» ni bloque «Durante el día»; horario amplio fuerte a su hora de apertura
+        # y recordatorio a las 15:00 que no cuenta ni ocupa sitio.
+        for text in ('function dayBlock', "L('Anteriores: ya empezadas o acabadas hoy'", 'id="ag-dayblock"'):
+            self.assertNotIn(text, js)
 
 
 class MonumentalTests(unittest.TestCase):
