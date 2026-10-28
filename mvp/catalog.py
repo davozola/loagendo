@@ -2344,6 +2344,7 @@ def is_public(event):
     return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES)
 
 
+MAX_PAGE_SIZE=500   # 28-10-2026: la publicación pide hasta 400 candidatos de la Selección de una vez (antes, cuatro páginas de 100: cuatro veces el trabajo)
 def query_events(conn, *, query='', date='', day='', date_from='', date_to='', category='', public_category='', format='', free=False, district='', source='', status='', kind='', only_sessions=False,featured=False,featured_days=None,curated=False,hour_from=None,hour_to=None,page=1,page_size=24,public=False,include_started=True,subtype='',channel=''):
     """``public`` hides records the sources or the editors excluded (services,
     out-of-town rows, calendar notices, editorial exclusions). The admin console
@@ -2366,7 +2367,7 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
     if hour_to is not None and not 0<=hour_to<=23:raise ValueError('Hora final no válida')
     if hour_from is not None and hour_to is not None and hour_from>hour_to:raise ValueError('Rango horario no válido')
     if page<1 or page>9999:raise ValueError('Página no válida')
-    if page_size<1 or page_size>100:raise ValueError('Tamaño de página no válido')
+    if page_size<1 or page_size>MAX_PAGE_SIZE:raise ValueError('Tamaño de página no válido')
     events=all_events(conn)
     # A candidate occurrence is date-specific, so make it the listing time
     # before applying the hour filter (rather than only after matching).

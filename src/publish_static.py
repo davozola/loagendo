@@ -284,15 +284,9 @@ def expo_rank(items, day, floor=None):
 
 
 def featured_pool(conn, day, size, **kw):
-    """Candidatos de la Selección de un día en su orden, hasta ``size`` (la API da páginas de 100 como mucho)."""
-    first = catalog.query_events(conn, day=day, featured=True, public=True, page_size=100, **kw)
-    items = list(first['items']); page = 1
-    while len(items) < min(size, first.get('total') or 0):
-        page += 1
-        more = catalog.query_events(conn, day=day, featured=True, public=True, page_size=100, page=page, **kw)['items']
-        if not more: break
-        items += more
-    return {**first, 'items': items[:size]}
+    """Candidatos de la Selección de un día en su orden, hasta ``size``, en una sola consulta (cada consulta recalcula la
+    puntuación de todo el día: pedirla por páginas multiplicaba el tiempo de publicación)."""
+    return catalog.query_events(conn, day=day, featured=True, public=True, page_size=min(size, catalog.MAX_PAGE_SIZE), **kw)
 
 
 def expo_picks(by_key, ranks, images, hidden=frozenset(), size=8):

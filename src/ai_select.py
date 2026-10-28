@@ -69,12 +69,7 @@ def candidates(conn, day, scope='week'):
     propios), para que la selección no sea solo grandes equipamientos y música."""
     from mvp import catalog
     kw = {'featured_days': 1} if scope == 'day' else {}
-    items, page = [], 1
-    while len(items) < 400:
-        got = catalog.query_events(conn, day=day, featured=True, public=True, page_size=100, page=page, **kw)
-        items += got['items']
-        if page >= (got.get('pages') or 1): break
-        page += 1
+    items = catalog.query_events(conn, day=day, featured=True, public=True, page_size=400, **kw)['items']
     usable = [e for e in items if (e.get('media') or e.get('has_description')) and not e.get('is_promo')]
     top = usable[:TOP_POOL]
     seen = {e['key'] for e in top}

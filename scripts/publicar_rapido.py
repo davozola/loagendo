@@ -39,11 +39,7 @@ for n in range(DIAS + 1):
     day = (today + dt.timedelta(days=n)).isoformat()
     week = ps.featured_pool(conn, day, ps.PICK_POOL_WEEK)['items']
     one = catalog.query_events(conn, day=day, featured=True, featured_days=1, public=True, page_size=ps.PICK_POOL)['items']
-    expos = []
-    for page in range(1, 6):   # exposiciones abiertas ese día, para el ranking de Expos (mismo expo_rank que la publicación)
-        got = catalog.query_events(conn, day=day, public=True, kind='exhibition', page_size=100, page=page)
-        expos += got['items']
-        if page >= (got.get('pages') or 1): break
+    expos = catalog.query_events(conn, day=day, public=True, kind='exhibition', page_size=500)['items']   # para el ranking de Expos
     by_key = {e['key']: e for e in expos}
     data = {'w': ps.picks_by_category(week, images), 't': ps.picks_by_category(one, images), 'x': ps.expo_picks(by_key, ps.expo_rank(expos, day), images), 'f': ps.family_picks(one + week, images)}
     ps._write_json(OUT / 'data' / 'picks' / f'{day}.json', data)
