@@ -57,6 +57,35 @@ class DuplicadosTests(unittest.TestCase):
         self.assertEqual(dedupe.nested_pairs(conn), [])
 
 
+class FestivalGeneralTests(unittest.TestCase):
+    """28-10-2026 (David): la ficha general del mismo festival en dos fuentes es una («Asian Film Festival Barcelona» de la
+    Generalitat y «14è Asian Film Festival Barcelona» de GuiaBCN, 22 oct–1 nov); ediciones distintas no se juntan."""
+    def test_edicion(self):
+        from src.dedupe import _edition
+        self.assertEqual(_edition('14è Asian Film Festival Barcelona'), 14); self.assertEqual(_edition('Asian Film Festival Barcelona'), 0)
+        self.assertEqual(_edition('4t Lens Dans Festival'), 4); self.assertEqual(_edition('Lens Dans #3 Festival'), 3)
+        self.assertEqual(_edition('XXXIV Festival Internacional de Carilló'), 34); self.assertEqual(_edition('Mostra 3 de novembre'), 0)
+
+    def test_ficha_general_suelta_se_une(self):
+        import sqlite3
+        from src import dedupe, festivals
+        conn = sqlite3.connect(':memory:'); dedupe.initialize(conn)
+        conn.execute("CREATE TABLE source_records(source TEXT,id TEXT,title TEXT,start_date TEXT,end_date TEXT,kind TEXT,eligibility TEXT,evidence_level TEXT,source_url TEXT,raw_sha256 TEXT,raw_json TEXT,PRIMARY KEY(source,id))")
+        conn.execute("CREATE TABLE IF NOT EXISTS source_venues (source TEXT, id TEXT, seq INTEGER, venue TEXT, address TEXT, lat REAL, lon REAL)")
+        rows = [('generalitat', 'g1', 'Asian Film Festival Barcelona', '2026-10-22', '2026-11-01', 'Cinemes Girona'),
+                ('guiabcn', 'b1', '14è Asian Film Festival Barcelona', '2026-10-22', '2026-11-01', 'Fundació Institut Confuci'),
+                ('generalitat', 'g2', '4t Lens Dans Festival', '2026-11-04', '2026-11-14', 'Zumzeig'),
+                ('venue_x', 'x1', 'Lens Dans #3 Festival', '2025-11-13', '2026-11-13', 'Nau Bostik')]
+        for source, rid, title, start, end, venue in rows:
+            conn.execute("INSERT INTO source_records (source, id, title, start_date, end_date, kind, eligibility, evidence_level, source_url, raw_sha256, raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                         (source, rid, title, start, end, 'program', 'review', 'x', '', '', '{}'))
+            conn.execute("INSERT INTO source_venues VALUES (?,?,0,?,?,?,?)", (source, rid, venue, '', None, None))
+        festivals._CACHE.update(key=None, obj=None)
+        pairs = dedupe.umbrella_pairs(conn)
+        self.assertIn(('generalitat:g1', 'guiabcn:b1'), pairs)
+        self.assertFalse(any('g2' in a or 'g2' in b for a, b in pairs))
+
+
 class WebTests(unittest.TestCase):
     def test_orden_por_hora_seleccion_y_periodos(self):
         js = (ROOT / 'static' / 'public.js').read_text(); html = (ROOT / 'static' / 'index.html').read_text()

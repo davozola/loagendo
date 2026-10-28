@@ -837,14 +837,35 @@ def umbrella_pairs(conn):
         return []
     fest = for_conn(conn); by = {}
     for source, rid, title, start, end, venue in rows:
-        f = fest.of(title, venue=venue or "")
-        if f and f["umbrella"]: by.setdefault(f["slug"], []).append((f"{source}:{rid}", start, end))
+        # Con fechas (28-10-2026): la ficha general suelta de un festival sin actividades («Asian Film Festival Barcelona»,
+        # Generalitat, y «14è Asian Film Festival Barcelona», GuiaBCN) solo se reconoce como festival si dura más de un día.
+        f = fest.of(title, venue=venue or "", start=start, end=end)
+        if f and f["umbrella"]: by.setdefault(f["slug"], []).append((f"{source}:{rid}", start, end, _edition(title)))
     pairs = []
     for items in by.values():
-        for i, (ka, a1, a2) in enumerate(items):
-            for kb, b1, b2 in items[i + 1:]:
+        for i, (ka, a1, a2, ea) in enumerate(items):
+            for kb, b1, b2, eb in items[i + 1:]:
+                # Ediciones distintas («Lens Dans #3» de 2025 y «4t Lens Dans Festival»): dos fichas.
+                if ea and eb and ea != eb: continue
                 if a1 <= b2 and b1 <= a2: pairs.append((ka, kb))
     return pairs
+
+
+_ROMAN = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100}
+
+
+def _edition(title):
+    """Número de edición del título («14è», «4t», «#3», «XXXIV», «9a edició») o 0."""
+    t = str(title or "").lower()
+    m = re.search(r"(?:^|\s|#)(\d{1,3})\s*(?:è|é|e|a|o|r|n|t|ª|º)?\b(?!\s*(?:nov|oct|des|gen|feb|mar|abr|mai|jun|jul|ago|set|sep|d'|de\b|h\b|:))|#\s*(\d{1,3})", t)
+    if m: return int(m.group(1) or m.group(2))
+    m = re.match(r"\s*([ivxlc]{1,7})\b", t)
+    if m:
+        total, prev = 0, 0
+        for ch in reversed(m.group(1)):
+            v = _ROMAN[ch]; total += -v if v < prev else v; prev = max(prev, v)
+        return total
+    return 0
 
 
 EXHIBITION_ACTIVITY = re.compile(r"^(?:.*\b)?(?:visita|visites|visitas|inaugur\w*|presentacio|presentacion|taller|tallers|conferencia|xerrada)\b")
