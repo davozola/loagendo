@@ -150,12 +150,13 @@ class WebTests(unittest.TestCase):
         un día con franja larga es una sesión a su hora; el horario amplio fechado (hasta 6 semanas) va a un bloque reducido
         «Durante el día» (5 filas); lo permanente o de meses sigue sin verse."""
         js = (ROOT / 'static' / 'public.js').read_text()
-        for text in ("state: 'ongoing'", "id=\"ag-ongoing\"", "const DAY_PLAN_MAX = 42", "const isStrongWide = ", "const REMIND_AT = 15 * 60, REMIND_MAX = 3",
+        for text in ("const DAY_PLAN_MAX = 42", "const isStrongWide = ", "const REMIND_AT = 15 * 60, REMIND_SHOW = 3", "const WIDE_EVENT = ", "WIDE_EVENT.test(fold(e.title))",
+                     "live && m.now.min >= REMIND_AT ? []", "e._st.state === 'open' && !isExhibit(e)",
                      "function remindLine(e)", "r.close - REMIND_AT >= 120", "(isWideRange(range) && isOpenFormat(e))", "e._st.state === 'past' || e._st.state === 'started')) s.past.push(e)"):
             self.assertIn(text, js)
         # 28-10-2026 (10:19, David): sin «Anteriores» ni bloque «Durante el día»; horario amplio fuerte a su hora de apertura
         # y recordatorio a las 15:00 que no cuenta ni ocupa sitio.
-        for text in ('function dayBlock', "L('Anteriores: ya empezadas o acabadas hoy'", 'id="ag-dayblock"'):
+        for text in ('function dayBlock', "L('Anteriores: ya empezadas o acabadas hoy'", 'id="ag-dayblock"', 'id="ag-ongoing"', "state: 'ongoing'", "foldHtml('past'", 'REMIND_MAX'):
             self.assertNotIn(text, js)
 
 

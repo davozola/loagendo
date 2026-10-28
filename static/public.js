@@ -709,12 +709,6 @@ function status(a, now) {
     const mins = a.times.map(minutesOf).map(m => a.night && m !== null && m < NIGHT_END ? m + 1440 : m);
     if (now === null) return {state: 'scheduled', next: mins[0], sort: mins[0], rest: mins.slice(1)};
     const ahead = mins.filter(m => m >= now), recent = mins.filter(m => m < now && now - m < GRACE);
-    // En curso (28-10-2026, David): ya ha empezado y la fuente da la hora de fin, que aún no ha llegado. Se distingue
-    // de lo acabado; sin hora de fin fiable, lo empezado va con lo anterior.
-    if (a.endsAt != null && !a.season && mins.length === 1 && mins[0] < now) {
-      const end = a.endsAt < mins[0] ? a.endsAt + 1440 : a.endsAt;
-      if (now < end) return {state: 'ongoing', next: mins[0], sort: now - 1, closesAt: end % 1440, closesIn: end - now, rest: []};
-    }
     if (recent.length && !ahead.length && !a.season) return {state: 'started', next: recent[recent.length - 1], sort: now - 1, ago: now - recent[recent.length - 1], rest: []};
     if (!ahead.length) return {state: 'past', next: mins[mins.length - 1], sort: mins[mins.length - 1], rest: []};
     return {state: ahead[0] - now <= SOON ? 'soon' : 'later', next: ahead[0], sort: ahead[0], in: ahead[0] - now, rest: ahead.slice(1), done: mins.length - ahead.length};
@@ -819,12 +813,11 @@ function bucketOf(e) { const k = e._a.kind; return k === 'timed' ? 'fixed' : k }
 function buildModel(items, win) {
   const now = madridNow();
   const decorate = (e, day, nowMin) => { const a = nightAware(e, day, availability(e, day)); return Object.assign(e, {_a: a, _st: status(a, nowMin), _day: day}) };
-  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: [], ongoing: []};
+  const s = {fixed: [], wide: [], wideNoHours: [], tbc: [], run: [], soon: [], started: [], past: [], other: []};
   const place = e => {
     const k = e._a.kind;
     // Sin grupo «Ahora» (28-10-2026, David): lo que ya ha empezado hoy va con lo anterior, accesible arriba.
     if ((k === 'timed' || k === 'wide') && (e._st.state === 'past' || e._st.state === 'started')) s.past.push(e);
-    else if (k === 'timed' && e._st.state === 'ongoing') s.ongoing.push(e);
     else if (k === 'timed') s.fixed.push(e);
     else if (k === 'wide') (e._a.noHours ? s.wideNoHours : s.wide).push(e);
     else if (k === 'skip') return;
@@ -834,7 +827,7 @@ function buildModel(items, win) {
     const day = state.day, live = day === now.day, nowMin = live ? now.min : null;
     for (const e of items) { decorate(e, day, nowMin); place(e) }
     const tl = (a, b) => a._st.sort - b._st.sort || byTitle(a, b);
-    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.ongoing.sort((a, b) => (a._st.closesAt - b._st.closesAt) || byTitle(a, b)); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
+    s.fixed.sort(tl); s.wide.sort(tl); s.past.sort(tl); s.tbc.sort(byTitle); s.run.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.wideNoHours.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b));
     s.soon.sort((a, b) => a.start.localeCompare(b.start) || byTitle(a, b)); s.started.sort((a, b) => a.end.localeCompare(b.end) || byTitle(a, b)); s.other.sort(byTitle);
     return {mode: 'day', day, live, now, sections: s, total: items.length};
   }
@@ -851,7 +844,7 @@ function buildModel(items, win) {
     if (!day) day = win.from;                      // ya en marcha al empezar el periodo: su primer día es hoy
     decorate(e, day, day === now.day ? now.min : null);
     if (e._a.kind === 'skip') continue;
-    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && ['past', 'started', 'ongoing'].includes(e._st.state)) { place(e); continue }
+    if (e._a.kind === 'started' || e._a.kind === 'soon' || (e._a.kind === 'timed' || e._a.kind === 'wide') && (['past', 'started'].includes(e._st.state) || (e._st.state === 'open' && !isExhibit(e)))) { place(e); continue }
     if (!buckets.has(day)) buckets.set(day, []);
     buckets.get(day).push(e);
   }
@@ -881,7 +874,6 @@ function whenCell(e) {
     let note = '', cls = '';
     if (a.season) { note = L('temporada · confirma el pase', 'temporada · confirma el passi', 'season · check the show time'); cls = 'hint' }
     else if (st.state === 'soon') { note = st.in <= 1 ? L('ahora', 'ara', 'now') : `${L('en', 'd\'aquí a', 'in')} ${st.in} min`; cls = 'urgent' }
-    else if (st.state === 'ongoing') { note = `${L('en curso · hasta las', 'en curs · fins a les', 'in progress · until')} ${clock(st.closesAt)}`; cls = 'urgent' }
     else if (st.state === 'started') { note = `${L('empezó hace', 'va començar fa', 'started')} ${st.ago} min`; cls = 'urgent' }
     else if (a.courseStart) { note = `${L('inicio de curso', 'inici de curs', 'course starts')}${needsSignup(e) ? ' · ' + L('inscripción', 'inscripció', 'sign-up') : ''} · ${untilText(e, a.until)}`; cls = 'hint' }
     else if (a.confirmDay) { note = L('confirma el día', 'confirma el dia', 'check the day'); cls = 'hint' }
@@ -1262,12 +1254,18 @@ const DAY_PLAN_MAX = 42;
 const isDayPlan = (e, day) => daysBetween(e.start, e.end) <= DAY_PLAN_MAX || (hoursByDay(e) && day in hoursByDay(e) && Object.keys(hoursByDay(e)).length <= 12);
 const WIDE_SKIP_TITLE = /\b(?:taller|tallers|curs|curso|joc|juego|congr\w*|jornad\w*|campus|trobada|activitat comunitaria|espai d.aprenentatge|visita|visites|audioguia|street escape|concurs)\b/;
 const WIDE_SKIP_VENUE = /centre civic|casal|biblioteca|espai de (?:persones|gent) gran|associacio|ateneu|ludoteca/;
+// Además, una propuesta concreta (28-10-2026, 10:45, David): el título dice que es una feria, un mercado, una fiesta o un festival.
+// Una temporada temática dentro del horario normal de un recinto («Halloween al Tibidabo», «Castaween al Paradox Museum»,
+// «Creepy Halloween Family al Poble Espanyol») es la visita de siempre con decorado: no entra. Se decide por el tipo de
+// propuesta del título, nunca por el nombre del recinto; para devolver una, basta con ampliar WIDE_EVENT.
+const WIDE_EVENT = /\b(?:fira|fires|feria|ferias|fair|mercat|mercats|mercado|mercados|market|mercadillo|encants|festa|festes|fiesta|fiestas|festival)\b/;
 const isStrongWide = (e, day) => !isExhibit(e) && !e._a.noHours && e.format !== 'course' && e.format !== 'workshop' && isDayPlan(e, day)
-  && e.venue_tier !== 3 && !WIDE_SKIP_TITLE.test(fold(e.title)) && !WIDE_SKIP_VENUE.test(fold(e.venue_names?.[0] || ''));
-// Recordatorio de la tarde (28-10-2026, David): una feria abierta desde la mañana vuelve a aparecer a las 15:00 como línea corta
-// («Sigue abierta hasta las 20:00»), solo si abre antes de las 13:00 y cierra a una hora fiable con al menos 2 h por delante.
-// Misma ficha, no cuenta en los totales ni ocupa sitio en la hora; como mucho 3 al día. Hoy, si ya está abierta, va a «En curso».
-const REMIND_AT = 15 * 60, REMIND_MAX = 3;
+  && e.venue_tier !== 3 && WIDE_EVENT.test(fold(e.title)) && !WIDE_SKIP_TITLE.test(fold(e.title)) && !WIDE_SKIP_VENUE.test(fold(e.venue_names?.[0] || ''));
+// Recordatorio de la tarde (28-10-2026, David): una feria abierta desde antes de las 15:00 vuelve a aparecer a las 15:00 como
+// línea corta («Sigue abierta hasta las 20:00»), si el tramo que cubre las 15:00 cierra a una hora fiable a las 17:00 o después.
+// Misma ficha, no cuenta en los totales ni ocupa sitio en la hora. Pasada la apertura desaparece la fila; pasadas las 15:00,
+// el recordatorio. Se ven 3 y el resto con «Ver más».
+const REMIND_AT = 15 * 60, REMIND_SHOW = 3;
 function remindLine(e) {
   return `<button class="ag-remind" type="button" data-open="${esc(key(e))}"><span>${esc(L('Sigue abierta hasta las', 'Segueix oberta fins a les', 'Still open until'))} ${clock(e._remindClose ?? e._a.close)}</span><b>${esc(e.title)}</b><i aria-hidden="true">›</i></button>`;
 }
@@ -1286,20 +1284,21 @@ function renderDay(m) {
   // o de meses (audioguías, parades de castanyes, espacios de aprendizaje, campus) no sale; se puede buscar.
   // Horario amplio fuerte (isStrongWide): una fila a su hora de apertura; si ya está abierta hoy, en «En curso». El resto no se enseña.
   const strong = wideAllDay.filter(e => isStrongWide(e, state.day) && e._st.state !== 'past');
+  // Solo lo que está por venir (28-10-2026, 10:45, David): sin «En curso» ni «Anteriores». Lo ya abierto hoy no tiene fila;
+  // si aún no son las 15:00, le queda el recordatorio.
   timeline = [...timeline, ...strong.filter(e => e._st.state !== 'open')].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !strong.includes(e))].sort(byTitle);
-  let ongoing = [...s.ongoing, ...strong.filter(e => e._st.state === 'open')];
-  [timeline, tbcList, ongoing] = gatherSeries([timeline, tbcList, ongoing]);
+  [timeline, tbcList] = gatherSeries([timeline, tbcList]);
   // Abierta a las 15:00 de verdad: el tramo que la cubre (un horario partido «09:00–13:30 · 16:00–17:30» no vale) y 2 h por delante.
   const span15 = e => (e._a.ranges || [{open: e._a.open, close: e._a.close}]).find(r => r.open <= REMIND_AT && r.close - REMIND_AT >= 120 && r.close <= 1440);
-  const reminders = timeline.filter(e => e._a.kind === 'wide' && e._a.close != null && e._a.open < 13 * 60 && span15(e))
-    .sort((a, b) => relevance(b) - relevance(a) || byTitle(a, b)).slice(0, REMIND_MAX);
+  const remindable = live && m.now.min >= REMIND_AT ? [] : strong.filter(e => e._a.close != null && e._a.open < REMIND_AT && span15(e));
+  const reminders = remindable.sort((a, b) => relevance(b) - relevance(a) || byTitle(a, b));
   reminders.forEach(e => { e._remindClose = span15(e).close });
   markHighlights(timeline, state.day);
   // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar, en Guardados o en el
   // filtro de un festival (ahí se ve todo lo suyo, también su ficha general). La Agenda es lo que tiene hora con confianza alta.
   const showTbc = searching() || state.savedOnly || Boolean(state.fest);
-  const tabCounts = {agenda: timeline.length + ongoing.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
+  const tabCounts = {agenda: timeline.length + remindable.filter(e => !timeline.includes(e)).length + (showTbc ? tbcList.length : 0), expo: wideList.length};
   const foldHours = !searching() && !state.savedOnly && !state.fest && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
   // Hoy la Agenda empieza en la hora actual (28-10-2026, David): lo anterior, ya empezado o acabado, queda arriba plegado.
   const plans = n => `${n.toLocaleString('es-ES')} ${n === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}`;
@@ -1307,10 +1306,8 @@ function renderDay(m) {
   const flush = () => { if (current !== null) groups += hourRows(bucket, `h:${state.day}:${current}`, foldHours) + '</div>'; bucket = [] };
   const headOf = (h, n) => groupHead(`${Number(h) >= 24 ? `${String(Number(h) - 24).padStart(2, '0')} h · ${L('madrugada', 'matinada', 'after midnight')}` : `${h} h`} · ${plans(n)}`);
   const perHour = {}; for (const e of timeline) perHour[hourOf(e)] = (perHour[hourOf(e)] || 0) + 1 + (e._more ? e._more.length : 0);
-  for (const e of ongoing) perHour.ongoing = (perHour.ongoing || 0) + 1 + (e._more ? e._more.length : 0);
-  // En curso (28-10-2026, David): lo que ya ha empezado y aún se puede disfrutar, con hora de fin de la fuente.
-  if (live && ongoing.length) groups += `<div class="ag-group" id="ag-ongoing">${groupHead(`${L('En curso', 'En curs', 'In progress')} · ${plans(perHour.ongoing || 0)}`, ' is-now')}${hourRows(ongoing, `h:${state.day}:ongoing`, foldHours)}</div>`;
-  const remindHtml = reminders.length ? `<div class="ag-reminders">${reminders.map(remindLine).join('')}</div>` : '';
+  const rid = `r:${state.day}`, ropen = state.expanded.has(rid), rleft = reminders.length - REMIND_SHOW;
+  const remindHtml = reminders.length ? `<div class="ag-reminders">${(ropen ? reminders : reminders.slice(0, REMIND_SHOW)).map(remindLine).join('')}${rleft > 0 ? `<button class="ag-toggle ${ropen ? 'ag-hourless' : 'ag-hourmore'}" type="button" data-hourfold="${esc(rid)}">${ropen ? L('Ver menos', 'Mostra’n menys', 'Show fewer') : L(`Ver ${rleft} más que siguen abiertas`, `Mostra'n ${rleft} més que segueixen obertes`, `See ${rleft} more still open`)}</button>` : ''}</div>` : '';
   let reminded = !remindHtml;
   const openReminders = () => { flush(); groups += `<div class="ag-group">${groupHead(perHour['15'] ? `15 h · ${plans(perHour['15'])}` : '15 h')}${remindHtml}`; current = '15'; reminded = true };
   for (const e of timeline) {
@@ -1355,7 +1352,6 @@ function renderRange(m) {
   let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`}</div>`;
   if (rest) html += `<button class="ag-toggle ag-moredays" type="button" data-moredays="1">${L('Ver más días', 'Mostra més dies', 'See more days')} · ${rest.toLocaleString('es-ES')} ${L('actividades más', 'activitats més', 'more activities')}</button>`;
   if (state.started && s.started.length) html += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
-  html += foldHtml('past', L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other);
   return {html: {agenda: html, expo: wideTab(wideAll, false), }, counts: tabCounts};
 }
