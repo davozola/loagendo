@@ -1253,13 +1253,18 @@ function renderDay(m) {
   let openList = wideAllDay.filter(e => !isExhibit(e) && !e._a.noHours), tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && e._a.noHours)].sort(byTitle);
   // Solo ferias, mercados, fiestas y espacios abiertos en el bloque (28-10-2026): una obra, un concurso o una charla con
   // un horario largo va a la hora en que abre (si ya está abierta, al grupo «Ahora»).
-  const openSpace = e => isOpenFormat(e) || e.public_category === 'fiestas';
+  // Sin bloque de «Abierto ahora / Durante el día» (28-10-2026, David): lo que tiene horario fiable va a la Agenda a su
+  // hora de apertura (o a «Ahora» si ya está abierto); lo que no tiene hora no se muestra (se puede buscar).
+  const openSpace = () => false;
   timeline = [...timeline, ...openList.filter(e => !openSpace(e))].sort((a, b) => (hourOf(a) === 'now' ? -1 : 0) - (hourOf(b) === 'now' ? -1 : 0) || Number(hourOf(a)) - Number(hourOf(b)) || a._st.sort - b._st.sort || byTitle(a, b)); openList = openList.filter(openSpace);
   [timeline, tbcList, openList] = gatherSeries([timeline, tbcList, openList]);
   markHighlights(timeline, state.day);
   // «Ahora»: primero lo que acaba de empezar; luego lo abierto ahora, cerrando antes primero, con tope.
   const nowTimed = timeline.filter(e => hourOf(e) === 'now' && (e._a.kind === 'timed' || e._a.kind === 'wide'));
-  const tabCounts = {agenda: s.fixed.length + s.tbc.length + wideAllDay.length - wideList.length, expo: wideList.length};
+  // Planes sin hora (28-10-2026, David): se tratan pero no se enseñan en la Agenda; solo al buscar. La Agenda es lo que
+  // tiene hora con confianza alta.
+  const showTbc = searching() || state.savedOnly;
+  const tabCounts = {agenda: timeline.length + (showTbc ? tbcList.length : 0), expo: wideList.length};
   const foldHours = !searching() && !state.savedOnly && !(narrowed() && timeline.length <= FILTERED_NO_FOLD);
   if (nowTimed.length) groups += `<div class="ag-group" id="ag-now">${groupHead(`${L('Ahora', 'Ara', 'Now')} · ${clock(m.now.min)}`, ' is-now')}${hourRows(nowTimed, `h:${state.day}:now`, foldHours)}</div>`;
   let bucket = [];
@@ -1274,8 +1279,8 @@ function renderDay(m) {
   if (state.query && s.run.length) groups += `<div class="ag-group" id="ag-run">${groupHead(L('Ciclos y temporadas sin fechas de sesión', 'Cicles i temporades sense dates de sessió', 'Series and seasons without session dates'))}${rows(s.run, 'run')}</div>`;
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
-  html += openBlock(openList, live) + `<div class="ag-timeline">${groups}</div>`;
-  html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
+  html += `<div class="ag-timeline">${groups}</div>`;
+  if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora confirmada`, `${tbcList.length} plans sense hora confirmada`, `${tbcList.length} plans without a confirmed time`), tbcList, L('Festivales en varios espacios y actos sin hora publicada', 'Festivals en diversos espais i actes sense hora publicada', 'Festivals across venues and events with no published time'), false, ' is-tbc');
   html += foldHtml('past', live ? L('Ya empezado o cerrado hoy', 'Ja començat o tancat avui', 'Already started or closed today') : L('Ya pasado', 'Ja passat', 'Already over'), s.past);
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return {html: {agenda: html, expo: wideTab(wideList, live)}, counts: tabCounts};
@@ -1287,7 +1292,7 @@ function dayHeading(d) {
 }
 function renderRange(m) {
   const show = state.show, s = m.sections;
-  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query));
+  const visible = e => (e._a.kind !== 'wide' || !isExhibit(e)) && (e._a.kind !== 'run' || Boolean(state.query)) && (Boolean(state.query) || state.savedOnly || (e._a.kind !== 'tbc' && !(e._a.kind === 'wide' && e._a.noHours)));
   const counts = {...m.counts, soon: s.soon.length};
   const seenWide = new Set(), wideAll = [];
   for (const [, l] of m.buckets) for (const e of l) if (e._a.kind === 'wide' && isExhibit(e) && !seenWide.has(key(e))) { seenWide.add(key(e)); wideAll.push(e) }
@@ -1338,7 +1343,7 @@ function renderAgenda() {
   else if (state.view === 'map') { const s = model.sections, located = [...s.fixed, ...(model.buckets || []).flatMap(([, l]) => l), ...s.wide].filter(onePlace).slice(0, 600); host.innerHTML = mapView(located); hydrateMap(located) }
   else if (state.view === 'venue') host.innerHTML = venueView(items.filter(e => !['started'].includes(e._a?.kind)));
   else {
-    const r = model.mode === 'day' ? renderDay(model) : renderRange(model); tabCounts = r.counts;
+    const r = model.mode === 'day' ? renderDay(model) : renderRange(model); tabCounts = state.tabCounts = r.counts;
     tabs.innerHTML = tabsHtml(r.counts); tabs.hidden = searching();
     const parts = Object.keys(TABS).filter(k => r.counts[k]);
     if (searching()) host.innerHTML = parts.length ? parts.map(k => `<section class="ag-part" id="ag-part-${k}"><h3 class="ag-part-head">${esc(byLang(TABS[k]))} <span>${r.counts[k].toLocaleString('es-ES')}</span></h3>${r.html[k]}</section>`).join('') : r.html.agenda;
@@ -1367,7 +1372,7 @@ function mountFilterUi() {
     foot.innerHTML = `<button id="filtersClear" class="filters-clear" type="button">${L('Limpiar', 'Esborra', 'Clear')}</button><button id="filtersApply" class="filters-apply" type="button"></button>`;
     $('filters').append(foot);
   }
-  const n = state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
+  const n = state.tabCounts ? state.tabCounts.agenda + (state.tabCounts.expo || 0) : state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
   $('filtersApply').textContent = `${L('Ver', 'Mostra', 'See')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans', 'plans')}`;
 }
 function syncMini() {

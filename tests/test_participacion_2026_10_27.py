@@ -105,12 +105,12 @@ class ExposicionesTests(unittest.TestCase):
 
 
 class WebTests(unittest.TestCase):
-    def test_horario_amplio_arriba_y_patios_reunidos(self):
+    def test_patios_reunidos_y_sin_bloques_de_abierto_ni_sin_hora(self):
+        # 28-10-2026 (David): fuera el bloque «Abierto ahora / Durante el día»; los planes sin hora no se enseñan (solo al buscar).
         js = (ROOT / 'static' / 'public.js').read_text()
-        self.assertIn("html += openBlock(openList, live) + `<div class=\"ag-timeline\">", js)
-        for text in ("'Abierto ahora'", "'Abre hoy'", "'Durante el día'", 'OPEN_FIRST = 5', "DAY_SERIES = new Set(['patis-escolars-oberts'])", "'inicio de curso'"):
+        for text in ("DAY_SERIES = new Set(['patis-escolars-oberts'])", "'inicio de curso'", 'const showTbc = searching() || state.savedOnly;', "if (showTbc) html += foldBlock('tbc',"):
             self.assertIn(text, js)
-        self.assertNotIn('Horario amplio: ferias, mercados y espacios abiertos', js)
+        self.assertNotIn('html += openBlock(', js)
 
 
 if __name__ == '__main__':
