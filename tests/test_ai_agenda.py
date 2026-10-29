@@ -134,3 +134,29 @@ class DateFormatTests(unittest.TestCase):
         act, _ = ai_agenda.verify({'titulo': 'Café-philo', 'sala': 'Institut français de Barcelona', 'sesiones': [{'fecha': '2026-10-20', 'cita_fecha': '20 octubre'}]},
                                   text, links, TODAY, None, True, 'Institut français de Barcelona')
         self.assertNotIn('sala', act)
+
+
+class CabecerasDeMesTests(unittest.TestCase):
+    """29-10-2026, Antic Teatre: listado de todo el año con cabeceras de mes y días «Dv. 03»."""
+    PAGE = '\n'.join(['Programació', 'Juliol 2026'] + [f'Dv. {d:02d}\nObra de juliol {d}' for d in range(1, 30)]
+                     + ['Novembre 2026', 'Dj. 26', 'DVOYE', 'Dv. 27', 'DVOYE'])
+
+    def test_cada_trozo_empieza_con_la_cabecera_vigente(self):
+        parts = ai_agenda.chunks(self.PAGE, size=120)
+        self.assertGreater(len(parts), 2)
+        for part in parts[1:]:
+            self.assertRegex(part.split('\n')[0], r'^(Juliol|Novembre) 2026$')
+        for part in parts:   # los días de noviembre siempre llevan delante su cabecera
+            if 'DVOYE' in part: self.assertLess(part.find('Novembre 2026'), part.find('DVOYE')); self.assertGreaterEqual(part.find('Novembre 2026'), 0)
+
+    def test_sin_cabeceras_los_trozos_no_cambian(self):
+        text = '\n'.join(f'Línia {i}' for i in range(60))
+        self.assertEqual(''.join(ai_agenda.chunks(text, size=100)), text + '\n')
+
+    def test_dia_de_la_semana_abreviado_tiene_que_cuadrar(self):
+        today = dt.date(2026, 10, 29)
+        self.assertIsNone(ai_agenda._date_from_quote('2026-11-03', 'Dv. 03', today))          # el 3-11-2026 es martes
+        self.assertEqual(ai_agenda._date_from_quote('2026-11-03', 'Dm. 03', today), dt.date(2026, 11, 3))
+        self.assertEqual(ai_agenda._date_from_quote('2026-11-04', 'Dx. 04', today), dt.date(2026, 11, 4))
+        self.assertEqual(ai_agenda._date_from_quote('2026-11-26', 'Dj. 26', today), dt.date(2026, 11, 26))
+        self.assertEqual(ai_agenda._date_from_quote('2026-11-12', '12 novembre', today), dt.date(2026, 11, 12))  # sin abreviatura, como antes

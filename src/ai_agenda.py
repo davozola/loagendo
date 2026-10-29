@@ -33,7 +33,7 @@ from src.ai_extract import fold, times_in
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / 'config' / 'agendas_ia.json'
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2            # 2 (29-10-2026): cabecera de mes vigente en cada trozo; cambia la huella de las páginas, así que todas se releen una vez
 LABEL = 'Datos de la sala'
 CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
@@ -49,6 +49,8 @@ MONTH_RX = re.compile(r"\b(gener|febrer|marc|abril|maig|juny|juliol|agost|setemb
 WEEKDAYS = {0: ('dilluns', 'lunes', 'monday', 'dl', 'lun'), 1: ('dimarts', 'martes', 'tuesday', 'dt', 'mar'), 2: ('dimecres', 'miercoles', 'wednesday', 'dc', 'mie', 'mi'),
             3: ('dijous', 'jueves', 'thursday', 'dj', 'jue', 'ju'), 4: ('divendres', 'viernes', 'friday', 'dv', 'vie', 'vi'),
             5: ('dissabte', 'sabado', 'saturday', 'ds', 'sab', 'sa'), 6: ('diumenge', 'domingo', 'sunday', 'dg', 'dom', 'do')}
+WEEKDAY_SHORT = {0: {'dl'}, 1: {'dt', 'dm'}, 2: {'dc', 'dx'}, 3: {'dj'}, 4: {'dv'}, 5: {'ds'}, 6: {'dg'}}
+WEEKDAY_SHORT_RX = re.compile(r"\b(dl|dt|dm|dc|dx|dj|dv|ds|dg)\.?\s*(\d{1,2})(?!\d)")
 WEEKDAY_FULL = re.compile(r"\b(dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|miercoles|jueves|viernes|sabado|domingo|"
                           r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b")
 CANCELLED_RX = re.compile(r"\b(?:ajornat|ajornada|aplazad[oa]|cancel[.·]?lat|cancel[.·]?lada|cancelad[oa]|anul[.·]?lat|anul[.·]?lada|anulad[oa]|suspes|suspesa|suspendid[oa]|postponed|cancelled|canceled)\b")
@@ -68,6 +70,7 @@ Reglas estrictas:
 - precio y cita_precio solo si la página lo escribe para ese acto.
 - enlace: la marca [Ln] que va justo con ese acto en el texto, si la hay (por ejemplo L12); si no, vacío.
 - No incluyas actos ya pasados respecto a la fecha de hoy.
+- Si la página agrupa los días bajo cabeceras de mes («Novembre 2026»), esa cabecera da el mes y el año de los días que hay debajo hasta la siguiente; la primera línea del texto puede repetir la cabecera vigente.
 - En una noticia, la fecha de publicación no es la del acto: usa solo la fecha en que el acto ocurre, tal como la escribe el texto.
 Responde con la herramienta actos."""
 
@@ -172,10 +175,21 @@ def clean(page, base_url):
     return joined, parser.links
 
 
+MONTH_HEADING_RX = re.compile(r"(gener|febrer|marc|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre|enero|febrero|marzo|mayo|junio|julio|"
+                              r"agosto|septiembre|setiembre|octubre|noviembre|diciembre|january|february|march|april|may|june|july|august|september|"
+                              r"october|november|december)(?: de)? (20\d\d)")
+
+
 def chunks(text, size=CHUNK_CHARS):
-    out, cur = [], ''
+    """Trozos de unas ``size`` letras por líneas enteras. Si la página ordena sus días bajo cabeceras de mes
+    («Novembre 2026», «Dj. 12»…), cada trozo empieza con la cabecera vigente, que es una línea de la propia página
+    (29-10-2026, Antic Teatre: sin ella, la IA daba a los días de un trozo sin mes el mes en curso)."""
+    out, cur, heading, cur_has_heading = [], '', '', False
     for line in text.split('\n'):
-        if len(cur) + len(line) + 1 > size and cur: out.append(cur); cur = ''
+        if len(cur) + len(line) + 1 > size and cur:
+            out.append(cur); cur = ''; cur_has_heading = False
+            if heading and not MONTH_HEADING_RX.fullmatch(fold(line)): cur = heading + '\n'
+        if MONTH_HEADING_RX.fullmatch(fold(line)): heading = line
         cur += line + '\n'
     if cur.strip(): out.append(cur)
     return out
@@ -217,6 +231,10 @@ def _date_from_quote(iso, quote, today, allow_past=False):
         if probe != d: return None
     wd = WEEKDAY_FULL.findall(q)
     if len(set(wd)) == 1 and wd[0] not in WEEKDAYS[d.weekday()]: return None
+    # Abreviatura catalana pegada al día (29-10-2026, Antic Teatre: «Dv. 03» de julio publicado como martes 3 de
+    # noviembre): si la cita la da, tiene que ser la de ese día de la semana.
+    short = {a for a, n in WEEKDAY_SHORT_RX.findall(q) if int(n) == d.day}
+    if short and not short & WEEKDAY_SHORT[d.weekday()]: return None
     return d
 
 
@@ -442,7 +460,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         status, final_url, body = fetcher(url, timeout)
         if status != 200: result['pages'].append({'url': url, 'error': f'HTTP {status}'}); continue
         text, links = clean(body, final_url or url)
-        text = text[:MAX_CHARS]; digest = hashlib.sha256(text.encode()).hexdigest()[:20]
+        text = text[:MAX_CHARS]; digest = hashlib.sha256(f'{PROMPT_VERSION}\0{text}'.encode()).hexdigest()[:20]
         result['text_chars'] += len(text)
         page = {'url': url, 'hash': digest, 'chars': len(text)}
         if conn is not None and not force:
