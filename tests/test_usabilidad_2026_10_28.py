@@ -226,3 +226,15 @@ class CuandoYTitularTests(unittest.TestCase):
             self.assertIn(text, js)
         self.assertIn('.hero h1>strong{font-weight:700}', css); self.assertIn('.when-bar{', css)
 
+    def test_escritorio_b1(self):
+        """29-10-2026 (David, variante B1): en escritorio, columna de filtros desde arriba con «Cuándo» (periodos y calendario)
+        y «Dónde»; buscador, «Qué» en pestañas, título y Agenda/Expos sobre la lista; los mismos controles del móvil, recolocados."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
+        css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ('id="deskWhen"', 'id="deskTop"', 'id="deskHead"', 'id="deskNear"', 'id="viewSeg"', 'class="group where-group"'):
+            self.assertIn(text, html)
+        self.assertLess(html.index('id="deskWhen"'), html.index('class="group where-group"')); self.assertLess(html.index('class="group where-group"'), html.index('class="group discover"'))
+        for text in ("matchMedia('(min-width: 961px)')", 'function deskLayout()', 'function deskWhen()', 'data-calnav', "['searchForm', 'deskTop'], ['typeMini', 'deskTop']"):
+            self.assertIn(text, js)
+        self.assertIn('@media(min-width:961px){\n  :root{--page:1920px}', css)
+

@@ -56,7 +56,7 @@ const CA = {'Fin de semana': 'Cap de setmana', 'Vista de la agenda': 'Vista de l
   'Fecha y sala recogidas automáticamente y contrastadas entre fuentes; el detalle, en la web de la sala.':'Data i sala recollides automàticament i contrastades entre fonts; el detall, al web de la sala.','Fuente':'Font','Información recogida automáticamente':'Informació recollida automàticament','confirma horario y precio antes de ir.':'confirma l\'horari i el preu abans d\'anar-hi.',
   // index.html
   'Saltar a la agenda':'Salta a l\'agenda','Agenda':'Agenda','Selección':'Selecció','Barrios':'Barris','Guardados':'Desats','Ver guardados':'Mostra els desats','Cambiar modo claro u oscuro':'Canvia el mode clar o fosc',
-  'Qué hacer en Barcelona':'Què fer a Barcelona','Qué hacer en':'Què fer a','Más filtros':'Més filtres','Elegir día':'Tria el dia','Otra fecha':'Una altra data','Cuándo':'Quan','hoy.':'avui.','Mil maneras de vivir la ciudad.':'Mil maneres de viure la ciutat.',
+  'Qué hacer en Barcelona':'Què fer a Barcelona','Qué hacer en':'Què fer a','Más filtros':'Més filtres','Dónde':'On','Elegir día':'Tria el dia','Otra fecha':'Una altra data','Cuándo':'Quan','hoy.':'avui.','Mil maneras de vivir la ciudad.':'Mil maneres de viure la ciutat.',
   'Selección de la semana':'Selecció de la setmana','Buscar en la agenda':'Cerca a l\'agenda','Artista, sala, barrio, obra…':'Artista, sala, barri, obra…','7 días':'7 dies','30 días':'30 dies','6 meses':'6 mesos','Elegir una fecha concreta':'Tria una data concreta','Días anteriores':'Dies anteriors','Días siguientes':'Dies següents','Días de agenda':'Dies d\'agenda','Periodo':'Període',
   'Filtros':'Filtres','Filtros activos':'Filtres actius','Planes':'Plans','Limpiar':'Esborra','Cerrar filtros':'Tanca els filtres','Qué te apetece':'Què et ve de gust','Categoría':'Categoria','Tipo':'Tipus','Distrito':'Districte','Filtrar por distrito':'Filtra per districte','Formato':'Format','Filtrar por formato':'Filtra per format','Todos los formatos':'Tots els formats','Idioma de la actividad':'Idioma de l\'activitat','Incluir cursos ya empezados':'Inclou cursos ja començats','Solo gratis':'Només gratis','Filtrar por horario':'Filtra per horari','Franja horaria':'Franja horària','Mañana':'Matí','Tarde':'Tarda','Noche':'Nit','Desde':'Des de','Hasta':'Fins a','Hora desde':'Hora des de','Hora hasta':'Hora fins a','Quitar horario':'Treu l\'horari','Vista':'Vista','Modo de vista':'Mode de vista','Lista':'Llista','Mapa':'Mapa','Por sitio':'Per lloc',
   'Los horarios y precios se muestran tal como los publica cada fuente. Confírmalos antes de ir.':'Els horaris i preus es mostren tal com els publica cada font. Confirma\'ls abans d\'anar-hi.','Por distritos':'Per districtes','Próximos 14 días':'Propers 14 dies','Fuentes y créditos':'Fonts i crèdits',
@@ -542,6 +542,7 @@ function days() {
   $('whenPeriodLabel').textContent = mode === 'period' ? (PERIOD_SHORT[r] ? byLang(PERIOD_SHORT[r]) : win.label) : t('Periodo');
   $('pickDateLabel').textContent = mode === 'day' && state.day > addDays(today, 27) ? labelDate(state.day) : t('Otra fecha');
   const picker = $('dayPicker'); picker.min = today; picker.max = addDays(today, MAX_DAYS); picker.value = win ? '' : state.day;
+  deskWhen();
 }
 const PERIOD_SHORT = {finde: ['Finde', 'Cap de set.', 'Weekend'], '7': ['7 días', '7 dies', '7 days'], '30': ['30 días', '30 dies', '30 days'], '90': ['3 meses', '3 mesos', '3 months'], '183': ['6 meses', '6 mesos', '6 months'], all: ['Todo', 'Tot', 'All']};
 function periodMenu(open) {
@@ -555,6 +556,52 @@ function periodMenu(open) {
   menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
 }
 document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.target.closest('.when-pop')) periodMenu(false) });
+
+/* ---------- escritorio (29-10-2026, David, variante B1) ----------
+   A partir de 961 px: la columna de filtros arranca bajo la Selección con «Cuándo» (periodos y un calendario de cinco
+   semanas, fines de semana en coral) y «Dónde» («Cerca de mí» y distrito); sobre la agenda, el buscador, «Qué» como
+   pestañas, el título de lo que se ve con Lista/Mapa/Por sitio y, pegadas a la lista, Agenda/Expos. Son los mismos
+   controles del móvil, recolocados: al volver a móvil regresan a su sitio. */
+const DESK = matchMedia('(min-width: 961px)');
+const deskMarks = {};
+function deskLayout() {
+  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear'], ['viewSeg', 'deskView']];
+  for (const [id, slot] of moves) {
+    const el = $(id), to = $(slot); if (!el || !to) continue;
+    if (!deskMarks[id]) { deskMarks[id] = document.createComment(id); el.before(deskMarks[id]) }
+    if (DESK.matches) { if (el.parentElement !== to) to.append(el) } else if (el.previousSibling !== deskMarks[id]) deskMarks[id].after(el);
+  }
+  deskWhen();
+}
+function deskWhen() {
+  const host = $('deskWhen'); if (!host || !DESK.matches) return;
+  const win = rangeWindow(), r = state.range || '';
+  const chips = [['today', t('Hoy')], ['finde', byLang(PERIOD_SHORT.finde)], ['7', byLang(PERIOD_SHORT['7'])], ['30', byLang(PERIOD_SHORT['30'])], ['183', byLang(PERIOD_SHORT['183'])]];
+  const on = k => k === 'today' ? !win && state.day === today : r === k;
+  const wd = (new Date(today + 'T12:00:00').getDay() + 6) % 7, first = addDays(today, -wd), last = addDays(today, MAX_DAYS);
+  const focus = win ? win.from : state.day;   // que se vea el día o el periodo elegido
+  const weeksTo = Math.floor((new Date(focus + 'T12:00:00') - new Date(first + 'T12:00:00')) / 6048e5);
+  if (state.calOff === undefined || (!state.calKeep && (weeksTo < state.calOff || weeksTo > state.calOff + 4))) state.calOff = Math.max(0, weeksTo - 1);
+  const start = addDays(first, state.calOff * 7), end = addDays(start, 34);
+  const md = v => { const d = new Date(v + 'T12:00:00'); return months[d.getMonth()] };
+  const dows = L('L M X J V S D', 'Dl Dt Dc Dj Dv Ds Dg', 'M T W T F S S').split(' ');
+  let cells = '';
+  for (let i = 0; i < 35; i++) {
+    const v = addDays(start, i), n = Number(v.slice(8, 10));
+    if (v < today || v > last) { cells += `<span class="dw-day out">${n}</span>`; continue }
+    const sel = win ? v >= win.from && v <= win.to : v === state.day;
+    cells += `<button type="button" class="dw-day${i % 7 >= 5 ? ' we' : ''}${sel ? ' on' : ''}${v === today ? ' today' : ''}" data-day="${v}" aria-pressed="${sel}" aria-label="${esc(labelDay(v))}">${n}</button>`;
+  }
+  host.innerHTML = `<span class="dw-title">${t('Cuándo')}</span><div class="dw-periods">${chips.map(([k, label]) => `<button type="button" data-period="${k}" aria-pressed="${on(k)}">${esc(label)}</button>`).join('')}</div>`
+    + `<div class="dw-nav"><button type="button" data-calnav="-1" aria-label="${L('Semanas anteriores', 'Setmanes anteriors', 'Previous weeks')}"${state.calOff ? '' : ' disabled'}>‹</button><b>${md(start) === md(end) ? md(start) : `${md(start)} – ${md(end)}`}</b><button type="button" data-calnav="1" aria-label="${L('Semanas siguientes', 'Setmanes següents', 'Next weeks')}">›</button></div>`
+    + `<div class="dw-grid">${dows.map(d => `<span class="dw-dow">${d}</span>`).join('')}${cells}</div>`;
+  const title = $('deskTitle');
+  if (title) {
+    const d = new Date(state.day + 'T12:00:00'), day = `${weekdaysLong[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+    title.textContent = state.query ? `«${state.query}»` : win ? `${win.label} · ${labelDate(win.from)} – ${labelDate(win.to)}` : state.day === today ? `${t('Hoy')}, ${day}` : day.replace(/^./, c => c.toUpperCase());
+  }
+}
+DESK.addEventListener('change', () => { deskLayout(); requestAnimationFrame(stick) });
 
 /* ---------- selection ---------- */
 function pick(e, i) {
@@ -1969,10 +2016,11 @@ document.addEventListener('click', e => {
   if (button.dataset.hourfold) { const id = button.dataset.hourfold; if (state.expanded.has(id)) state.expanded.delete(id); else state.expanded.add(id); stableRender(); return }
   if (button.dataset.openall) { state.expanded.add('openAll'); stableRender(); return }
   if (button.dataset.step) { const id = button.dataset.step; state.limits[id] = (state.limits[id] || STEP) + STEP; stableRender(); return }
+  if (button.dataset.calnav) { state.calOff = Math.max(0, (state.calOff || 0) + Number(button.dataset.calnav)); state.calKeep = true; deskWhen(); return }
   if (button.id === 'whenDay') { state.dayOpen = !state.dayOpen; periodMenu(false); days(); return }
   if (button.id === 'whenPeriod') { periodMenu($('periodMenu').hidden); return }
-  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; state.dayOpen = true; refresh(); return }
-  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; state.dayOpen = false; periodMenu(false); refresh(); return }
+  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; state.dayOpen = true; state.calKeep = false; refresh(); return }
+  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; state.dayOpen = false; state.calKeep = false; periodMenu(false); refresh(); return }
   if (button.dataset.category !== undefined) {
     const c = button.dataset.category; track('filtro', 'filter_category', c || 'todas', c && !state.cats.includes(c) ? 1 : 0);
     state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
@@ -2062,7 +2110,7 @@ function typeHero() {
   let theme = 'dark'; try { theme = pref('theme') || 'dark' } catch (_) {}
   // v1: oscuro por defecto. v2 (22-10-2026): sigue el modo del sistema. En las dos, el botón sol/luna lo cambia y se recuerda.
   if (SKIN === 'v2') theme = 'light';  // v2 solo en claro (23-10-2026: el oscuro no convenció; los colores siguen con nombre por si se retoma)
-  document.documentElement.dataset.theme = theme; translatePage(); typeHero();
+  document.documentElement.dataset.theme = theme; translatePage(); typeHero(); deskLayout();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
   saveState(); await refresh();
   if (initial) { state.detail = null; syncUrl(); openDetail(initial, null, {origin: 'enlace'}) }  // list entry first, then the sheet: Back shows the agenda

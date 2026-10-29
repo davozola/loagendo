@@ -61,11 +61,11 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 /* selección de la semana: banda turquesa */
 #seleccion{margin:0 calc(50% - 50vw) 0;width:100vw;padding:clamp(22px,4vw,44px) var(--gutter) clamp(18px,3vw,36px);background:var(--turq);border-bottom:0;box-sizing:border-box}   /* sin hueco blanco hasta la banda de «Cuándo» (28-10-2026) */
 #seleccion .section-head{color:var(--on-color)}
-#seleccion .section-head{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto 18px}
+#seleccion .section-head{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto 18px}
 #seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
 #seleccion .section-head p{color:var(--on-color)}
-.curated{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto}
-.pick-bar{max-width:calc(1360px - 2 * var(--gutter));margin:0 auto 14px}
+.curated{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto}
+.pick-bar{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto 14px}
 .ag-fests{border-color:var(--ink)}.ag-festrow{border-top-color:var(--line)}
 .near-btn,.near-on{border-radius:0;border-color:var(--ink);background:var(--paper)}.near-km{border-radius:0}.near-km.on{background:var(--ink);color:var(--paper)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
 .curated button{border:1px solid var(--on-color);border-radius:0}
@@ -288,11 +288,53 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 
 /* Escritorio (29-10-2026): la banda de «Cuándo» y la Selección, alineadas con la columna de la agenda (1360 px menos los
    márgenes) en pantallas grandes; buscador y «Hoy | Elegir día | Periodo» en una fila; categorías y «Cerca de mí» en otra. */
-.panel{grid-template-columns:minmax(0,calc(1360px - 2 * var(--gutter)));justify-content:center}
+.panel{grid-template-columns:minmax(0,calc(var(--page) - 2 * var(--gutter)));justify-content:center}
 @media(min-width:961px){
   .panel{grid-template-columns:minmax(0,calc(1360px - 2 * var(--gutter) - 572px)) 560px;column-gap:12px}
   .panel>.panel-top{grid-column:1}.panel>.when-bar{grid-column:2;margin-top:0;align-self:center;max-width:none}
   .panel>#daysPanel{grid-column:1/-1;margin-top:0}
   .filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px}.filter-bar .type-mini{order:-1;flex:0 1 auto;min-width:0}
   .filter-bar .type-mini .cat-bar{margin:0;padding:0}.filter-bar .near-box{margin:0}.filter-bar .near-msg{flex-basis:100%}
+}
+
+/* Escritorio, variante B1 (29-10-2026, David): ancho completo (hasta 1920 px); columna de filtros desde arriba con
+   «Cuándo» (periodos y calendario) y «Dónde»; sobre la agenda, buscador, «Qué» en pestañas, título y Agenda/Expos. */
+:root{--page:1360px}
+.desk-only{display:none}
+@media(min-width:961px){
+  :root{--page:1920px}
+  .nav-wrap,main,footer{max-width:var(--page)}.hero-inner{max-width:var(--page)}
+  .panel-wrap,#filterBar{display:none}
+  .filters-panel .cat-group,.filters-panel .view-group{display:none}
+  .desk-only{display:block}.desk-head.desk-only{display:flex}
+  .layout{grid-template-columns:300px minmax(0,1fr);gap:40px}
+  .filters-panel{top:calc(var(--stick,64px) + 12px);max-height:calc(100vh - var(--stick,64px) - 24px);padding-top:24px}
+  .desk-top{margin:24px 0 12px;display:flex;flex-direction:column;gap:6px}
+  .desk-top .panel-search{margin:0;flex:none}.desk-top .search-box{min-height:46px;border:1px solid var(--ink);border-radius:0;background:var(--paper)}
+  .desk-top .search-box input{height:44px;font-size:16px}
+  .desk-top .type-mini .cat-bar{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;border-bottom:1px solid var(--ink);overflow:visible}
+  .desk-top .type-mini .cat-pill{min-height:48px;padding:0 14px;border:0;border-bottom:4px solid transparent;border-radius:0;background:transparent;color:var(--ink);font-size:16px;font-weight:500;margin-bottom:-1px}
+  .desk-top .type-mini .cat-pill.on{border-bottom-color:var(--ink);background:transparent;color:var(--ink);font-weight:700}
+  .desk-top .type-mini .cat-pill:hover{background:var(--shade)}
+  .desk-head{align-items:flex-end;gap:16px;margin:6px 0 12px}
+  .desk-head h2{margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+  #deskView{margin-left:auto}#deskView .seg button{min-height:32px;font-size:14px;padding:0 12px}
+  .desk-when{background:var(--sand);border:1px solid var(--ink);padding:14px;margin:0 0 20px;color:var(--ink)}
+  .dw-title{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .dw-periods{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 12px}
+  .dw-periods button{height:30px;padding:0 10px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .dw-periods button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+  .dw-nav{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:6px}
+  .dw-nav button{width:32px;height:28px;border:0;background:none;color:var(--ink);font-size:20px;line-height:1;cursor:pointer}.dw-nav button[disabled]{opacity:.3;cursor:default}
+  .dw-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
+  .dw-dow{font-size:11px;font-weight:600;padding-bottom:2px}
+  .dw-day{height:32px;padding:0;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+  .dw-day.we{background:var(--coral)}.dw-day.today{font-weight:700}
+  .dw-day.on{background:var(--ink);color:var(--paper)}
+  .dw-day:hover:not(.on){outline:2px solid var(--ink);outline-offset:-3px}
+  .dw-day.out{display:grid;place-items:center;border-color:transparent;background:transparent;color:rgba(0,0,0,.35);cursor:default;outline:0}
+  .where-group #deskNear{margin-bottom:8px}.where-group .near-box{display:flex;margin:0}
+  .where-group .near-btn,.where-group .near-on{width:100%;min-height:34px;font-size:14px;justify-content:flex-start}
+  .where-group .near-on{justify-content:space-between}
+  .ag-tabs .period-tab{min-height:44px;font-size:16px}
 }
