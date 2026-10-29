@@ -517,3 +517,11 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .alert-band .ab-alert span{display:none}
   .alert-band .ab-alert{width:48px;justify-content:center;padding:0}
 }
+
+/* Barra de categorías (29-10-2026, David): si se ha desplazado, una celda estrecha «‹» a la izquierda (tapa el trozo
+   de la anterior que asoma) avisa de que hay más categorías a ese lado, como el «›» de la derecha. */
+.filter-bar .type-mini:before,.desk-top .type-mini:before{content:'‹';position:absolute;left:0;top:0;bottom:0;z-index:1;width:28px;display:flex;align-items:center;justify-content:center;background:var(--paper);border-right:1px solid var(--ink);font-size:22px;font-weight:600;pointer-events:none}
+.desk-top .type-mini:before{bottom:1px}
+.filter-bar .type-mini.at-start:before,.desk-top .type-mini.at-start:before{display:none}
+@media(min-width:961px){.filter-bar .type-mini:before{display:none}}
+@media(max-width:960px){.desk-top .type-mini:before{display:none}}

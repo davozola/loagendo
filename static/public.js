@@ -565,7 +565,7 @@ const PERIOD_SHORT = {finde: ['Finde', 'Cap de set.', 'Weekend'], '7': ['7 días
 // Si se entró por la celda «Cuándo» del móvil, al elegir día o periodo se cierra el panel y se ve la lista
 function whenDone() { if (state.whenEntry && !DESK.matches && $('filters').classList.contains('open')) { state.whenEntry = false; openDrawer(false); scrollToId('agenda') } }
 // Carrusel de categorías: la flecha del borde desaparece al llegar al final
-document.addEventListener('scroll', e => { const bar = e.target; if (bar?.classList?.contains('cat-bar')) bar.parentElement?.classList.toggle('at-end', bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4) }, true);
+document.addEventListener('scroll', e => { const bar = e.target; if (bar?.classList?.contains('cat-bar')) { bar.parentElement?.classList.toggle('at-end', bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4); bar.parentElement?.classList.toggle('at-start', bar.scrollLeft <= 4) } }, true);
 function periodMenu(open) {
   const menu = $('periodMenu'), btn = $('whenPeriod');
   if (open) {
@@ -951,7 +951,7 @@ function chipsHtml(counts) {
   // «Filtros» que ya existía, para cambiar de categoría sin volver arriba.
   // La Agenda tiene su propia fila de categorías, siempre a la vista y fija bajo «Filtros» (28-10-2026, 19:34, David); la de
   // la Selección va dentro de la Selección. «Cerca de mí», al lado de «Filtros».
-  const mini = $('typeMini'); if (mini) { mini.innerHTML = catBarHtml(true); mini.hidden = false; const sel = mini.querySelector('.on'), row = mini.querySelector('.cat-bar'); if (sel && row) row.scrollLeft = sel.offsetLeft - row.offsetLeft; if (row) mini.classList.toggle('at-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 4) }   // la elegida, al principio de la barra (29-10-2026)
+  const mini = $('typeMini'); if (mini) { mini.innerHTML = catBarHtml(true); mini.hidden = false; const sel = mini.querySelector('.on'), row = mini.querySelector('.cat-bar'); if (sel && row) row.scrollLeft = Math.max(0, sel.offsetLeft - row.offsetLeft - 28); if (row) { mini.classList.toggle('at-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 4); mini.classList.toggle('at-start', row.scrollLeft <= 4) } }   // deja asomar la anterior bajo la flecha «‹» (29-10-2026)   // la elegida, al principio de la barra (29-10-2026)
   const near = $('nearBox'); if (near) near.innerHTML = nearHtml();
   const msg = $('nearMsg'); if (msg) { msg.textContent = state.nearMsg || ''; msg.hidden = !state.nearMsg }
   requestAnimationFrame(stick);

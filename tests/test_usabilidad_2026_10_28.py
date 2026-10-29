@@ -288,7 +288,7 @@ class CuandoYTitularTests(unittest.TestCase):
         línea a sangre, solo con filtros que un aviso guarda, y con ✕ que la oculta durante la visita."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
-        for text in ('function alertBand()', 'row.scrollLeft = sel.offsetLeft - row.offsetLeft'):
+        for text in ('function alertBand()', 'row.scrollLeft = Math.max(0, sel.offsetLeft - row.offsetLeft - 28)'):
             self.assertIn(text, js)
         for text in ('--sel:#404040', '.filter-bar .type-mini .cat-pill.on{background:var(--sel)', '.ag-tabs .period-tab.active{background:var(--sel)',
                      'background:#FCF0C7'):
@@ -321,3 +321,11 @@ class CuandoYTitularTests(unittest.TestCase):
         Expos; ahora cualquier otra categoría abre la Agenda."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
         self.assertIn("if (state.catsKey !== undefined) state.tab = catsKey === 'arte' ? 'expo' : 'agenda'", js)
+
+    def test_flecha_izquierda_en_la_barra_de_categorias(self):
+        """29-10-2026 (David): con la barra desplazada, una celda «‹» a la izquierda avisa de que hay más categorías."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        self.assertIn("mini.classList.toggle('at-start', row.scrollLeft <= 4)", js)
+        self.assertIn("bar.parentElement?.classList.toggle('at-start', bar.scrollLeft <= 4)", js)
+        self.assertIn(".filter-bar .type-mini:before,.desk-top .type-mini:before{content:'‹'", css)
+        self.assertIn('.filter-bar .type-mini.at-start:before,.desk-top .type-mini.at-start:before{display:none}', css)
