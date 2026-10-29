@@ -247,3 +247,10 @@ class CuandoYTitularTests(unittest.TestCase):
         self.assertIn('.ev.ev-hl{background:#EEE8FA;border-radius:0;border:1px solid var(--ink)', css); self.assertNotIn('.ev-body>.ev-meta{grid-column:2', css)
         self.assertIn('.content .ev{margin-left:calc(-1 * var(--bleedL))', css); self.assertIn('.ag-wide{background:#f8f8f6}', css)
 
+    def test_filas_a_sangre_escritorio(self):
+        """29-10-2026 (David): filtros y buscador a sangre en escritorio, cabecera de «Filtros» en petróleo, Planes en filas."""
+        css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ('.filters-panel>.filters-head{margin:0;min-height:78px', 'background:var(--petrol);color:#fff', '#channels .channel-chip{display:flex;width:100%',
+                     '.desk-top .search-box{min-height:78px;border:0', '.filters-panel .group legend{float:left'):
+            self.assertIn(text, css)
+

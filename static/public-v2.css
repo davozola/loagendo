@@ -310,9 +310,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel .cat-group,.filters-panel .view-group{display:none}
   .desk-only{display:block}.desk-head.desk-only{display:flex}
   .layout{grid-template-columns:300px minmax(0,1fr);gap:40px}
-  .filters-panel{top:calc(var(--stick,64px) + 12px);max-height:calc(100vh - var(--stick,64px) - 24px);padding-top:24px}
-  .desk-top{margin:24px 0 12px;display:flex;flex-direction:column;gap:6px}
-  .desk-top .panel-search{margin:0;flex:none}.desk-top .search-box{min-height:46px;border:1px solid var(--ink);border-radius:0;background:var(--paper)}
+  .desk-top{margin:0 0 12px;display:flex;flex-direction:column;gap:6px}
   .desk-top .search-box input{height:44px;font-size:16px}
   .desk-top .type-mini .cat-bar{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;border-bottom:1px solid var(--ink);overflow:visible}
   .desk-top .type-mini .cat-pill{min-height:48px;padding:0 14px;border:0;border-bottom:4px solid transparent;border-radius:0;background:transparent;color:var(--ink);font-size:16px;font-weight:500;margin-bottom:-1px}
@@ -362,3 +360,30 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .content .ag-tabs{box-shadow:0 -8px 0 var(--paper),calc(-1 * var(--bleedL)) 0 0 var(--paper),var(--bleedR) 0 0 var(--paper)}
 /* Expos en móvil: las etiquetas («Hasta el 28 mar 2027», «Gratis») bajan de línea en vez de cortarse */
 .ag-wide .ev-cat{white-space:normal;line-height:1.9}
+
+/* Filas a sangre en escritorio (29-10-2026, David): el buscador es una banda de la altura de la cabecera de «Filtros»;
+   la columna de filtros va del borde de la página a su línea, con secciones separadas por líneas, «Cuándo» como banda
+   arena, «Cerca de mí» y distrito como filas, Planes uno debajo de otro con su casilla y la cabecera en petróleo. */
+@media(min-width:961px){
+  .filters-panel{margin-left:calc(-1 * var(--gutter));padding:0;top:var(--stick,64px);max-height:calc(100vh - var(--stick,64px))}
+  .filters-panel>*{padding-left:var(--gutter) !important;padding-right:24px !important;box-sizing:border-box}
+  .filters-panel>.filters-head{margin:0;min-height:78px;padding-top:14px !important;padding-bottom:14px !important;background:var(--petrol);color:#fff;border-bottom:1px solid var(--ink)}
+  .filters-panel>.filters-head h2,.filters-panel>.filters-head .linklike{color:#fff}
+  .filters-panel>.desk-when{margin:0;border:0;border-bottom:1px solid var(--ink);padding-top:16px !important;padding-bottom:18px !important}
+  .filters-panel>.group{border-top:0;border-bottom:1px solid var(--line);padding-top:14px;padding-bottom:16px}
+  .filters-panel .group legend{float:left;width:100%;margin-bottom:8px;font-size:18px}
+  .filters-panel .group legend+*{clear:both}
+  .filters-panel>.filters-note{padding-top:14px}
+  .desk-top .panel-search{margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));flex:none}
+  .desk-top .search-box{min-height:78px;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding-left:var(--bleedL);padding-right:var(--bleedR);background:var(--paper)}
+  .filters-panel>.where-group,.filters-panel>.discover{padding-bottom:0}
+  .where-group #deskNear{margin:0 -24px 0 calc(-1 * var(--gutter))}
+  .where-group .near-btn,.where-group .near-on{width:100%;min-height:44px;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px}
+  .where-group .select{display:block;width:calc(100% + var(--gutter) + 24px);margin:0 -24px 0 calc(-1 * var(--gutter));min-height:44px;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px;background-position:right 24px center}
+  #channels{display:block;margin:0 -24px 0 calc(-1 * var(--gutter))}
+  #channels .channel-chip{display:flex;width:100%;min-height:42px;margin:0;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
+  #channels .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
+  #channels .channel-chip.active{background:var(--ink);color:var(--paper)}
+  #channels .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
+  .filters-panel #ages{padding:10px 0 14px}
+}
