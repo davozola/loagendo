@@ -49,7 +49,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .panel-wrap{margin:0 calc(50% - 50vw) 0;width:100vw}
 .panel{border-radius:0;box-shadow:none;border:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--sand);color:var(--on-color);padding:14px var(--gutter);max-width:none}
 .search-box{border-radius:0;border-color:var(--on-color);background:var(--paper);color:var(--ink)}
-.search-box:focus-within{box-shadow:none;border-color:var(--on-color);outline:2px solid var(--on-color)}
+/* Buscador al escribir (29-10-2026, David): sin recuadro negro; el cursor ya indica dónde se escribe */
+.search-box:focus-within{box-shadow:none;outline:none}.search-box input:focus,.search-box input:focus-visible{outline:none}
 .period-tabs{background:transparent;border-radius:0;padding:0;gap:2px}
 .period-tab{border-radius:0;color:var(--on-color);font-weight:600}.period-tab:hover{background:rgba(0,0,0,.06);color:var(--on-color)}.period-tab.active{background:var(--active-bg);color:var(--active-fg)}
 .days-arrow{border-radius:0;border-color:var(--on-color);background:var(--paper);color:var(--ink)}
@@ -359,8 +360,6 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .content .ag-stick.is-now{border-bottom-color:var(--now)}
 /* Expos: sin el tipo (oculto), la primera etiqueta no lleva ni margen ni «·» delante («Fins al 28 març 2027») */
 .ag-wide .ev-cat>.ev-catname+*{margin-left:0}.ag-wide .ev-cat>.ev-catname+*:before{content:none}
-/* Las pestañas Agenda/Expos, fijas al bajar, tapan también los lados (el gris de Expos llega al borde) */
-.content .ag-tabs{box-shadow:0 -8px 0 var(--paper),calc(-1 * var(--bleedL)) 0 0 var(--paper),var(--bleedR) 0 0 var(--paper)}
 /* Expos en móvil: las etiquetas («Hasta el 28 mar 2027», «Gratis») bajan de línea en vez de cortarse */
 .ag-wide .ev-cat{white-space:normal;line-height:1.9}
 
@@ -390,3 +389,14 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   #channels .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
   .filters-panel #ages{padding:10px 0 14px}
 }
+
+/* A sangre también Agenda/Expos y Festivales (29-10-2026, David) */
+.content .ag-tabs{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));box-shadow:0 -8px 0 var(--paper)}
+.content .ag-fests{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));padding-left:var(--bleedL);padding-right:var(--bleedR);margin-top:0;border-top:0}
+/* Selección: el título y «Hoy / Próximos 7 días» en la misma línea, la fecha debajo (29-10-2026) */
+#seleccion .section-head{display:grid;grid-template-columns:auto auto minmax(0,1fr);column-gap:20px;row-gap:2px;align-items:center}
+#seleccion .sel-title{display:contents}
+#seleccion .section-head h2{grid-column:1;grid-row:1}
+#seleccion .pick-range{grid-column:2;grid-row:1;margin:0;justify-self:start}
+#seleccion #weekRange{grid-column:1 / -1;grid-row:2}
+@media(max-width:620px){#seleccion .section-head{grid-template-columns:minmax(0,1fr);row-gap:6px}#seleccion .pick-range{grid-column:1;grid-row:3}#seleccion #weekRange{grid-row:2}}

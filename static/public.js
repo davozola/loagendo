@@ -589,7 +589,7 @@ function deskWhen() {
   for (let i = 0; i < 35; i++) {
     const v = addDays(start, i), n = Number(v.slice(8, 10));
     if (v < today || v > last) { cells += `<span class="dw-day out">${n}</span>`; continue }
-    const sel = win ? v >= win.from && v <= win.to : v === state.day;
+    const sel = win ? Boolean(state.range) && v >= win.from && v <= win.to : v === state.day;   // una búsqueda sin periodo no pinta todo el calendario
     cells += `<button type="button" class="dw-day${i % 7 >= 5 ? ' we' : ''}${sel ? ' on' : ''}${v === today ? ' today' : ''}" data-day="${v}" aria-pressed="${sel}" aria-label="${esc(labelDay(v))}">${n}</button>`;
   }
   host.innerHTML = `<span class="dw-title">${t('Cuándo')}</span><div class="dw-periods">${chips.map(([k, label]) => `<button type="button" data-period="${k}" aria-pressed="${on(k)}">${esc(label)}</button>`).join('')}</div>`
