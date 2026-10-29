@@ -315,3 +315,9 @@ class CuandoYTitularTests(unittest.TestCase):
             self.assertIn(text, js)
         for text in ('#activeFilters{display:none !important}', '.alert-band:not([hidden]){display:flex}', '.alert-band .ab-clear{display:none}'):
             self.assertIn(text, css)
+
+    def test_cambiar_de_categoria_vuelve_a_la_agenda(self):
+        """29-10-2026 (David): «Arte» abre Expos, pero al pasar después a otra categoría (o a «Todo») se volvía a quedar en
+        Expos; ahora cualquier otra categoría abre la Agenda."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
+        self.assertIn("if (state.catsKey !== undefined) state.tab = catsKey === 'arte' ? 'expo' : 'agenda'", js)

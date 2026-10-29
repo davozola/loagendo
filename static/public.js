@@ -1566,7 +1566,7 @@ function renderAgenda() {
   }
   // Con «Arte» como única categoría se abre Exposiciones, como antes el bloque (25-10-2026).
   const catsKey = state.cats.join(',');
-  if (catsKey !== state.catsKey) { if (state.catsKey !== undefined && catsKey === 'arte') state.tab = 'expo'; state.catsKey = catsKey }
+  if (catsKey !== state.catsKey) { if (state.catsKey !== undefined) state.tab = catsKey === 'arte' ? 'expo' : 'agenda'; state.catsKey = catsKey }   // al cambiar de categoría: Arte abre Expos; cualquier otra, la Agenda (29-10-2026, David)
   let tabs = $('agTabs');
   if (!tabs) { tabs = document.createElement('div'); tabs.id = 'agTabs'; tabs.className = 'period-tabs ag-tabs'; tabs.setAttribute('role', 'tablist'); host.before(tabs) }
   tabs.hidden = true;
