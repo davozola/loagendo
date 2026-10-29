@@ -325,9 +325,11 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   #deskView{margin-left:auto}#deskView .seg button{min-height:32px;font-size:14px;padding:0 12px}
   .desk-when{background:var(--sand);border:1px solid var(--ink);padding:14px;margin:0 0 20px;color:var(--ink)}
   .dw-title{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-  .dw-periods{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 12px}
-  .dw-periods button{height:30px;padding:0 10px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-  .dw-periods button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+  /* Periodos de «Cuándo» como pestañas de texto, igual que «Qué» (29-10-2026, David, opción 3) */
+  .dw-periods{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:8px;margin:8px 0 14px;border-bottom:1px solid var(--ink)}
+  .dw-periods button{height:34px;padding:0;margin-bottom:-1px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--ink);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer}
+  .dw-periods button:hover{border-bottom-color:rgba(0,0,0,.3)}
+  .dw-periods button[aria-pressed=true]{background:transparent;color:var(--ink);border-bottom-color:var(--ink);font-weight:700}
   .dw-nav{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:6px}
   .dw-nav button{width:32px;height:28px;border:0;background:none;color:var(--ink);font-size:20px;line-height:1;cursor:pointer}.dw-nav button[disabled]{opacity:.3;cursor:default}
   .dw-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
