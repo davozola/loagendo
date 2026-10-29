@@ -244,5 +244,6 @@ class CuandoYTitularTests(unittest.TestCase):
         html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         self.assertNotIn('id="actLangs"', html)
         self.assertNotIn("content:'+';font-size:30px", css); self.assertIn('.ev .save:before{content:\'\';display:block;width:24px', css)
-        self.assertIn('.ev.ev-hl{background:#EEE8FA', css); self.assertIn('.ev-body>.ev-meta{grid-column:2', css)
+        self.assertIn('.ev.ev-hl{background:#EEE8FA;border-radius:0;border:1px solid var(--ink)', css); self.assertNotIn('.ev-body>.ev-meta{grid-column:2', css)
+        self.assertIn('.content .ev{margin-left:calc(-1 * var(--bleedL))', css); self.assertIn('.ag-wide{background:#f8f8f6}', css)
 

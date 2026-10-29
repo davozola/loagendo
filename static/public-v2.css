@@ -16,7 +16,7 @@
 :root,html[data-theme=light],html[data-theme=dark]{
   --sand:#F9D779;--turq:#23CED9;--coral:#FCA47C;--petrol:#097C87;--sage:#A1CCA6;--lilac:#BBA6EA;--cobalt:#3D5BD9;
   --ink:#000;--paper:#fff;--on-color:#000;--active-bg:#000;--active-fg:#fff;--text2:#444;--bar:#e3e3e3;--petrol-text:#097C87;--footer:var(--ink);--footer-ink:var(--paper);--shade:rgba(0,0,0,.06);
-  --bg:var(--paper);--surface:var(--paper);--surface2:#f4f4f1;--fg:var(--ink);--muted:#2b2b2b;--soft:#555;--line:#e3e3e3;--line2:var(--ink);
+  --bg:var(--paper);--surface:var(--paper);--surface2:#f4f4f1;--fg:var(--ink);--muted:#2b2b2b;--soft:#555;--line:#d6d6d6;--line2:var(--ink);
   --hover:rgba(0,0,0,.05);--header:var(--paper);--accent:var(--ink);--accentText:var(--petrol-text);--accentSoft:rgba(9,124,135,.10);--onAccent:var(--paper);--radius:0px;
   --fixed:#097C87;--fixedSoft:#097C87;--fixedLine:var(--ink);--wide:#0a6f78;--wideSoft:#23CED9;--wideLine:var(--ink);--now:#b4400f;--nowLine:#b4400f}
 body{font-family:'Inter Tight','Helvetica Neue',Arial,sans-serif;background:var(--paper);color:var(--ink)}
@@ -164,8 +164,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 
 /* destacados (23-10-2026): fondo neutro y marco negro grueso. Antes eran coral, el color de Teatro,
    y un concierto destacado parecía una obra. La foto a todo el ancho y la etiqueta negra se mantienen. */
-/* Selección Ontoca en la lista (29-10-2026, David): fondo lila claro a todo el ancho de la columna */
-.ev.ev-hl{background:#EEE8FA;border-radius:0;margin:0 -12px;padding:0 12px;border:0;border-bottom:1px solid var(--line);color:var(--ink)}
+/* Selección Ontoca en la lista (29-10-2026, David): fondo lila claro y reborde negro */
+.ev.ev-hl{background:#EEE8FA;border-radius:0;border:1px solid var(--ink);color:var(--ink)}
 .ev.ev-hl .ev-title{font-size:1.04em;font-weight:700;letter-spacing:-.02em}
 .ev-thumb{border-radius:0;border:1px solid var(--ink)}
 .ev.ev-hl .ev-meta{color:var(--text2)}
@@ -226,7 +226,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .cat-pill i{border-color:var(--ink)}
 .cat-pill.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}.cat-pill.on i{border-color:var(--paper)}
 .ag-block{border-radius:0;border-color:var(--ink);background:var(--paper)}
-.ag-wide{background:var(--surface2)}
+.ag-wide{background:#f8f8f6}
 .ag-block .ag-rows .ev{border-bottom-color:var(--line)}
 
 /* Fuentes y créditos (23-10-2026): la misma página, con el estilo de la v2. */
@@ -341,10 +341,13 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .ag-tabs .period-tab{min-height:44px;font-size:16px}
 }
 
-/* Lista a todo el ancho de su columna en pantallas anchas (29-10-2026, David): hora · título y tipo · sala y barrio · guardar */
-@media(min-width:1200px){
-  .ev-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.62fr);column-gap:36px;align-items:center}
-  .ev-body>*{grid-column:1;justify-self:start}.ev-body>.ev-title{justify-self:stretch}
-  .ev-body>.ev-meta{grid-column:2;grid-row:1 / span 8;align-self:center;justify-self:stretch;min-width:0;margin:0;font-size:14px;white-space:normal;overflow:visible}
-  .ev-body>.ev-meta .ev-venue{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-}
+
+/* Filas de borde a borde de su columna (29-10-2026, David): las líneas divisorias, el lila de la Selección y el gris de
+   Expos llegan hasta la línea de los filtros y el borde de la página; el texto sigue alineado con el resto. */
+:root{--bleedL:var(--gutter);--bleedR:var(--gutter)}
+@media(min-width:961px){:root{--bleedL:40px}}
+.content .ev{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));padding-left:var(--bleedL);padding-right:var(--bleedR)}
+.content .ag-wide{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR))}
+.content .ag-wide .ev{margin-left:0;margin-right:0}
+.content .ev-fest-group>.ev{margin:0 -12px;padding:0 12px}
+@media(min-width:961px){.content .ev.ev-hl{border-left-width:0}}
