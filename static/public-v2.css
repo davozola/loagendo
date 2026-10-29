@@ -403,3 +403,65 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 #seleccion .pick-range{grid-column:2;grid-row:1;margin:0;justify-self:start}
 #seleccion #weekRange{grid-column:1 / -1;grid-row:2}
 @media(max-width:620px){#seleccion .section-head{grid-template-columns:minmax(0,1fr);row-gap:6px}#seleccion .pick-range{grid-column:1;grid-row:3}#seleccion #weekRange{grid-row:2}}
+
+/* ======== Móvil a sangre (29-10-2026, David, opción B1) ========
+   Arriba solo el buscador (banda), una fila con «Cuándo» (arena, abre el panel por el calendario) y «Filtros» (petróleo)
+   y el carrusel de categorías en celdas. «Cuándo», «Cerca de mí», distrito y Planes van en el panel de filtros, que
+   sigue el estilo de escritorio. */
+.mob-row{display:none}
+@media(max-width:960px){
+  .panel{background:var(--paper);padding:0;border-top:1px solid var(--ink);border-bottom:0}
+  .panel .when-bar,.panel #daysPanel{display:none !important}
+  .panel-top{margin:0;gap:0}
+  .panel-search{margin:0;flex:1 1 auto;width:100%}
+  .content .ag-tabs{width:auto}
+  .panel .search-box{min-height:54px;border:0;border-radius:0;padding:0 var(--gutter);background:var(--paper)}
+  .panel .search-box input{height:52px;font-size:16px}
+  .filter-bar{display:block !important;margin:0 calc(-1 * var(--gutter)) 0 !important;padding:0 !important;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink) !important;background:var(--paper)}
+  .mob-row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);border-bottom:1px solid var(--ink)}
+  .mob-when{min-width:0;height:52px;border:0;border-right:1px solid var(--ink);background:var(--sand);color:var(--ink);font:inherit;text-align:left;padding:0 var(--gutter);display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+  .mob-when span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .mob-when b{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mob-when b:after{content:' ▾';font-size:.8em}
+  .filter-bar .filters-toggle{display:flex !important;width:100%;height:52px;min-height:52px;border:0 !important;border-radius:0;background:var(--petrol) !important;color:#fff !important;justify-content:flex-start;gap:8px;padding:0 var(--gutter);font-size:16px;font-weight:700}
+  .filter-bar .filters-toggle b{margin-left:auto;background:#fff;color:var(--petrol)}
+  .filter-bar>.near-box{display:none}
+  .filter-bar .type-mini{position:relative}
+  .filter-bar .type-mini .cat-bar{display:flex;flex-wrap:nowrap;gap:0;margin:0 !important;padding:0 !important;overflow-x:auto;scrollbar-width:none}
+  .filter-bar .type-mini .cat-pill{flex:none;min-height:48px;padding:0 16px;border:0;border-right:1px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);font-size:15px;font-weight:600;gap:8px}
+  .filter-bar .type-mini .cat-pill.on{background:var(--ink);color:var(--paper)}
+  .filter-bar .type-mini .cat-pill.on i{border-color:var(--paper)}
+  .filter-bar .type-mini:after{content:'›';position:absolute;right:0;top:0;bottom:0;width:56px;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;background:linear-gradient(90deg,rgba(255,255,255,0),var(--paper) 60%);font-size:22px;font-weight:600;pointer-events:none}
+  .filter-bar .type-mini.at-end:after{display:none}
+  /* el panel de filtros, como en escritorio */
+  .filters-panel{padding:0 !important}
+  .filters-panel>*{padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
+  .filters-panel>.filters-head{position:sticky;top:0;z-index:5;margin:0 !important;min-height:60px;background:var(--petrol);color:#fff;border-bottom:1px solid var(--ink)}
+  .filters-panel>.filters-head h2,.filters-panel>.filters-head .linklike{color:#fff}
+  .filters-panel>.filters-head .close.small{border-color:#fff;color:#fff;background:transparent}
+  .filters-panel>.desk-when{display:block;margin:0;background:var(--sand);border-bottom:1px solid var(--ink);padding-top:14px !important;padding-bottom:16px !important}
+  .filters-panel #deskNear{display:block;margin:0 -16px}
+  .dw-title{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .dw-periods{display:flex;justify-content:space-between;gap:8px;margin:8px 0 12px;border-bottom:1px solid var(--ink)}
+  .dw-periods button{height:38px;padding:0;margin-bottom:-1px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-weight:500;white-space:nowrap}
+  .dw-periods button[aria-pressed=true]{border-bottom-color:var(--ink);font-weight:700}
+  .dw-nav{display:flex;justify-content:space-between;align-items:center;font-size:15px;margin-bottom:6px}
+  .dw-nav button{width:40px;height:34px;border:0;background:none;color:var(--ink);font-size:22px}.dw-nav button[disabled]{opacity:.3}
+  .dw-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+  .dw-dow{font-size:11px;font-weight:600}
+  .dw-day{height:40px;padding:0;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:15px}
+  .dw-day.we{background:var(--coral)}.dw-day.today{font-weight:700}.dw-day.on{background:var(--ink);color:var(--paper)}
+  .dw-day.out{display:grid;place-items:center;border-color:transparent;background:transparent;color:rgba(0,0,0,.35)}
+  .filters-panel>.group{border-top:0;border-bottom:1px solid var(--line);padding-top:14px;padding-bottom:14px}
+  .filters-panel .group legend{float:left;width:100%;margin-bottom:8px;font-size:18px}
+  .filters-panel .group legend+*{clear:both}
+  .filters-panel>.where-group,.filters-panel>.discover{padding-bottom:0}
+  .where-group .near-box{display:flex;margin:0}
+  .where-group .near-btn,.where-group .near-on{width:100%;min-height:46px;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;justify-content:flex-start}
+  .where-group .near-on{justify-content:space-between}
+  .where-group .select{display:block;width:calc(100% + 32px);margin:0 -16px;min-height:46px;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;background-position:right 16px center}
+  #channels{display:block;margin:0 -16px}
+  #channels .channel-chip{display:flex;width:100%;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
+  #channels .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
+  #channels .channel-chip.active{background:var(--ink);color:var(--paper)}
+  #channels .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
+}

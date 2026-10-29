@@ -218,10 +218,10 @@ class CuandoYTitularTests(unittest.TestCase):
         «+ Más filtros», que no cuenta el periodo ni la categoría."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
         css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
-        for text in ('id="whenToday"', 'id="whenDay"', 'id="periodMenu"', 'id="daysPanel" class="days-bar" hidden', 'id="pickDate"', '<strong>Barcelona</strong>', '<span data-i18n>Más filtros</span>'):
+        for text in ('id="whenToday"', 'id="whenDay"', 'id="periodMenu"', 'id="daysPanel" class="days-bar" hidden', 'id="pickDate"', '<strong>Barcelona</strong>', '<span data-i18n>Filtros</span>', 'id="whenOpen"'):
             self.assertIn(text, html)
         self.assertNotIn('id="periods"', html)
-        self.assertLess(html.index('id="typeMini"'), html.index('id="nearBox"')); self.assertLess(html.index('id="nearBox"'), html.index('id="openFilters"'))
+        self.assertLess(html.index('id="whenOpen"'), html.index('id="openFilters"')); self.assertLess(html.index('id="openFilters"'), html.index('id="typeMini"'))   # 29-10 (B1): Cuándo y Filtros, luego categorías
         for text in ('function periodMenu(open)', "if (other) host.append(other)", "!['range', 'query', 'cat'].includes(f.k)", 'const fit = w =>', 'weekdays[d.getDay()]} ${d.getDate()}'):
             self.assertIn(text, js)
         self.assertIn('.hero h1>strong{font-weight:700}', css); self.assertIn('.when-bar{', css)
@@ -271,4 +271,14 @@ class CuandoYTitularTests(unittest.TestCase):
             self.assertEqual(r['days'], 10); self.assertIn('id="deskWhen"', index); self.assertIn('data-skin="v2"', index)
             self.assertIn(f"public.js?v={r['versions']['public.js']}", index); self.assertTrue((out / 'hoy.html').exists())
         self.assertIn('refresh_shell', (ROOT / 'scripts' / 'publicar_rapido.command').read_text(encoding='utf-8'))
+
+    def test_movil_a_sangre_b1_y_expos(self):
+        """29-10-2026 (David, opción B1): en móvil, buscador a sangre, «Cuándo» y «Filtros» en una fila, categorías en celdas;
+        «Cuándo» (calendario) y «Cerca de mí» dentro del panel de filtros; Expos sin miniatura, como la Agenda."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ("['nearBox', 'deskNear', true]", "if (button.id === 'whenOpen')", 'function whenDone()', "return '';   // 29-10-2026 (David): Expos con la misma maquetación",
+                     "shown = list.filter(f => f.k !== 'range')"):
+            self.assertIn(text, js)
+        for text in ('.mob-when{', '.filter-bar .type-mini .cat-pill{flex:none;min-height:48px', '.filters-panel>.desk-when{display:block', '.filter-bar .type-mini.at-end:after{display:none}'):
+            self.assertIn(text, css)
 

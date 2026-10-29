@@ -479,8 +479,8 @@ function clearFilter(k) {
   if (k === 'fest') { state.fest = ''; state.festName = ''; state.festFiesta = false }
 }
 function renderActive() {
-  const list = activeFilterList();
-  $('activeFilters').innerHTML = list.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (list.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
+  const list = activeFilterList(), shown = list.filter(f => f.k !== 'range');   // el periodo ya se ve en «Cuándo» (calendario y celda del móvil)
+  $('activeFilters').innerHTML = shown.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (shown.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
   if (ALERTS && alertFilters()) $('activeFilters').insertAdjacentHTML('beforeend', `<button class="alert-cta" type="button" data-alerts="open"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}</button>`);
   // «Más filtros» cuenta solo lo que se elige dentro: el periodo, la búsqueda y la categoría ya se ven fuera (28-10-2026)
   const n = list.filter(f => !['range', 'query', 'cat'].includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
@@ -512,7 +512,7 @@ function hourMatches(e) {
   return hs.some(v => { const h = Number(v.slice(0, 2)); return h >= (state.hourFrom ?? 0) && h <= (state.hourTo ?? 23) });
 }
 function openDrawer(open) {
-  const panel = $('filters'); panel.classList.toggle('open', open); $('drawerBackdrop').hidden = !open; $('openFilters').setAttribute('aria-expanded', String(open));
+  const panel = $('filters'); panel.classList.toggle('open', open); $('drawerBackdrop').hidden = !open; $('openFilters').setAttribute('aria-expanded', String(open)); $('whenOpen')?.setAttribute('aria-expanded', String(open && Boolean(state.whenEntry)));
   document.body.classList.toggle('drawer-open', open);
   if (open) $('closeFilters').focus(); else $('openFilters').focus();
 }
@@ -542,9 +542,17 @@ function days() {
   $('whenPeriodLabel').textContent = mode === 'period' ? (PERIOD_SHORT[r] ? byLang(PERIOD_SHORT[r]) : win.label) : t('Periodo');
   $('pickDateLabel').textContent = mode === 'day' && state.day > addDays(today, 27) ? labelDate(state.day) : t('Otra fecha');
   const picker = $('dayPicker'); picker.min = today; picker.max = addDays(today, MAX_DAYS); picker.value = win ? '' : state.day;
+  // Móvil (29-10-2026, opción B1): la celda «Cuándo» dice lo que se ve y abre el panel de filtros por el calendario
+  const wl = $('whenOpenLabel');
+  if (wl) { const d = new Date(state.day + 'T12:00:00'), short = `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+    wl.textContent = mode === 'period' ? `${PERIOD_SHORT[r] ? byLang(PERIOD_SHORT[r]) : win.label}${r === 'all' ? '' : ` · ${labelDate(win.from)}–${labelDate(win.to)}`}` : mode === 'today' ? `${t('Hoy')}, ${short}` : short.replace(/^./, c => c.toUpperCase()) }
   deskWhen();
 }
 const PERIOD_SHORT = {finde: ['Finde', 'Cap de set.', 'Weekend'], '7': ['7 días', '7 dies', '7 days'], '30': ['30 días', '30 dies', '30 days'], '90': ['3 meses', '3 mesos', '3 months'], '183': ['6 meses', '6 mesos', '6 months'], all: ['Todo', 'Tot', 'All']};
+// Si se entró por la celda «Cuándo» del móvil, al elegir día o periodo se cierra el panel y se ve la lista
+function whenDone() { if (state.whenEntry && !DESK.matches && $('filters').classList.contains('open')) { state.whenEntry = false; openDrawer(false); scrollToId('agenda') } }
+// Carrusel de categorías: la flecha del borde desaparece al llegar al final
+document.addEventListener('scroll', e => { const bar = e.target; if (bar?.classList?.contains('cat-bar')) bar.parentElement?.classList.toggle('at-end', bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4) }, true);
 function periodMenu(open) {
   const menu = $('periodMenu'), btn = $('whenPeriod');
   if (open) {
@@ -565,16 +573,17 @@ document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.targ
 const DESK = matchMedia('(min-width: 961px)');
 const deskMarks = {};
 function deskLayout() {
-  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear'], ['viewSeg', 'deskView']];
-  for (const [id, slot] of moves) {
+  // «Cerca de mí» va siempre en «Dónde» del panel de filtros (29-10-2026, David: en móvil también, opción B1)
+  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView']];
+  for (const [id, slot, always] of moves) {
     const el = $(id), to = $(slot); if (!el || !to) continue;
     if (!deskMarks[id]) { deskMarks[id] = document.createComment(id); el.before(deskMarks[id]) }
-    if (DESK.matches) { if (el.parentElement !== to) to.append(el) } else if (el.previousSibling !== deskMarks[id]) deskMarks[id].after(el);
+    if (DESK.matches || always) { if (el.parentElement !== to) to.append(el) } else if (el.previousSibling !== deskMarks[id]) deskMarks[id].after(el);
   }
   deskWhen();
 }
 function deskWhen() {
-  const host = $('deskWhen'); if (!host || !DESK.matches) return;
+  const host = $('deskWhen'); if (!host) return;   // también en el panel de filtros del móvil (29-10-2026)
   const win = rangeWindow(), r = state.range || '';
   const chips = [['today', t('Hoy')], ['finde', byLang(PERIOD_SHORT.finde)], ['7', byLang(PERIOD_SHORT['7'])], ['30', byLang(PERIOD_SHORT['30'])], ['183', byLang(PERIOD_SHORT['183'])]];
   const on = k => k === 'today' ? !win && state.day === today : r === k;
@@ -1123,6 +1132,7 @@ document.addEventListener('error', ev => {
 // Miniatura en todas las filas de Expos que tienen imagen (28-10-2026, David): para elegir una exposición es el dato que
 // más decide; el 57 % la tienen y solo se veía en 3 de 20.
 function thumb(e) {
+  return '';   // 29-10-2026 (David): Expos con la misma maquetación que la Agenda, sin miniatura (el texto quedaba comprimido)
   if (!isExhibit(e)) return '';
   const url = (e.media || []).find(x => x.url && !x.fallback)?.url || e.image || state.pickMedia?.[key(e)] || '';
   return url ? `<span class="ev-thumb"><img src="${esc(url)}" alt="" loading="lazy"></span>` : '';
@@ -1968,7 +1978,8 @@ document.addEventListener('click', e => {
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
-  if (button.id === 'openFilters' || button.id === 'fabFilters') { openDrawer(true); return }
+  if (button.id === 'whenOpen') { state.whenEntry = true; openDrawer(true); $('filters').scrollTop = 0; return }
+  if (button.id === 'openFilters' || button.id === 'fabFilters') { state.whenEntry = false; openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
   if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started','fest'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
@@ -2019,8 +2030,8 @@ document.addEventListener('click', e => {
   if (button.dataset.calnav) { state.calOff = Math.max(0, (state.calOff || 0) + Number(button.dataset.calnav)); state.calKeep = true; deskWhen(); return }
   if (button.id === 'whenDay') { state.dayOpen = !state.dayOpen; periodMenu(false); days(); return }
   if (button.id === 'whenPeriod') { periodMenu($('periodMenu').hidden); return }
-  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; state.dayOpen = true; state.calKeep = false; refresh(); return }
-  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; state.dayOpen = false; state.calKeep = false; periodMenu(false); refresh(); return }
+  if (button.dataset.day) { track('filtro', 'filter_date', button.dataset.day === today ? 'hoy' : 'dia'); state.day = button.dataset.day; state.range = ''; state.dayOpen = true; state.calKeep = false; whenDone(); refresh(); return }
+  if (button.dataset.period !== undefined) { track('filtro', 'filter_date', button.dataset.period === 'today' ? 'hoy' : button.dataset.period ? `${button.dataset.period}_dias` : 'hoy'); if (button.dataset.period === 'today') { state.day = today; state.range = '' } else state.range = button.dataset.period; state.dayOpen = false; state.calKeep = false; periodMenu(false); whenDone(); refresh(); return }
   if (button.dataset.category !== undefined) {
     const c = button.dataset.category; track('filtro', 'filter_category', c || 'todas', c && !state.cats.includes(c) ? 1 : 0);
     state.cats = !c ? [] : state.cats.includes(c) ? state.cats.filter(x => x !== c) : [...state.cats, c];
