@@ -378,13 +378,18 @@ function alertFilters() {
 }
 const alertLabel = f => [...f.cats.map(catName), ...f.chans.map(chanName), f.district ? t(f.district) : '', f.free ? t('Gratis') : '', f.q ? `«${f.q}»` : ''].filter(Boolean).join(' · ');
 let turnstileToken = '', turnstileWidget = null;
-// Móvil (29-10-2026, David): franja «Avísame» de una línea bajo las categorías, solo con filtros que un aviso
-// puede guardar; con ✕ deja de salir durante esa visita.
-let alertBandOff = false; try { alertBandOff = sessionStorage.getItem('ontoca-alertband') === 'off' } catch (_) {}
+// Franja de filtros (29-10-2026, David, opción 1): una sola banda a sangre bajo las categorías con lo que se está
+// filtrando, «Limpiar» y, si los filtros se pueden guardar como aviso, «Crear aviso». Sustituye a los chips con ✕.
+// El periodo no sale: ya se ve en «Cuándo».
+const BELL = '<svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>';
 function alertBand() {
-  const el = $('alertBand'); if (!el) return; const f = ALERTS && !alertBandOff ? alertFilters() : null;
-  el.hidden = !f; if (!f) { el.innerHTML = ''; return }
-  el.innerHTML = `<button class="ab-open" type="button" data-alerts="open"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="ab-txt">${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}: <b>${esc(alertLabel(f))}</b></span><span class="ab-go"><span class="ab-go-txt">${L('Crear aviso', 'Crea l\'avís', 'Create alert')}</span></span></button><button class="ab-off" type="button" data-alertband="off" aria-label="${L('Ocultar aviso', 'Amaga l\'avís', 'Hide')}">✕</button>`;
+  const el = $('alertBand'); if (!el) return;
+  const list = activeFilterList().filter(f => f.k !== 'range'), f = ALERTS ? alertFilters() : null;
+  el.hidden = !list.length; if (!list.length) { el.innerHTML = ''; return }
+  el.classList.toggle('has-alert', Boolean(f));
+  el.innerHTML = `<button class="ab-what" type="button" data-filtersband="open" aria-label="${L('Ver filtros', 'Veure filtres', 'See filters')}"><span class="ab-txt">${L('Filtrando', 'Filtrant', 'Filtering')}: <b>${list.map(x => esc(x.label)).join(' · ')}</b></span></button>`
+    + `<button class="ab-clear" type="button" data-clear="all">${t('Limpiar')}</button>`
+    + (f ? `<button class="ab-alert" type="button" data-alerts="open" aria-label="${L('Crear aviso de novedades', 'Crea un avís de novetats', 'Create an alert for new plans')}">${BELL}<span>${L('Crear aviso', 'Crea l\'avís', 'Create alert')}</span></button>` : '');
 }
 function loadTurnstile() {
   if (!TURNSTILE_KEY) return;
@@ -488,8 +493,7 @@ function clearFilter(k) {
 }
 function renderActive() {
   const list = activeFilterList(), shown = list.filter(f => f.k !== 'range' && f.k !== 'cat');   // el periodo ya se ve en «Cuándo»; la categoría, en la barra de categorías (29-10-2026)
-  $('activeFilters').innerHTML = shown.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (shown.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
-  if (ALERTS && alertFilters()) $('activeFilters').insertAdjacentHTML('beforeend', `<button class="alert-cta" type="button" data-alerts="open"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}</button>`);
+  $('activeFilters').innerHTML = '';   // 29-10-2026: lo activo se resume en la franja de filtros (alertBand)
   alertBand();
   // «Más filtros» cuenta solo lo que se elige dentro: el periodo, la búsqueda y la categoría ya se ven fuera (28-10-2026)
   const n = list.filter(f => !['range', 'query', 'cat'].includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
@@ -1992,7 +1996,7 @@ document.addEventListener('click', e => {
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
   if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started','fest'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
-  if (button.dataset.alertband === 'off') { alertBandOff = true; try { sessionStorage.setItem('ontoca-alertband', 'off') } catch (_) {} alertBand(); return }
+  if (button.dataset.filtersband === 'open') { if (!DESK.matches) { state.whenEntry = false; openDrawer(true) } return }
   if (button.dataset.alerts === 'open') { openAlerts(); return }
   if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district','fest'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }

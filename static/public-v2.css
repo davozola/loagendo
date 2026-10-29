@@ -471,22 +471,8 @@ footer a{color:var(--footer-ink);text-decoration:underline}
    «Avísame» como franja fina a sangre en arena claro, una línea y con ✕; en escritorio sigue el botón. */
 .ag-tabs .period-tab.active{background:var(--sel);color:#fff}
 .alert-band{display:none}
+#activeFilters{display:none !important}
 @media(max-width:960px){
-  #activeFilters .alert-cta{display:none}
-  .alert-band{display:flex;align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));background:#FCF0C7;border-bottom:1px solid var(--ink)}
-  .alert-band[hidden]{display:none}
-  .alert-band .ab-open{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:44px;padding:0 4px 0 var(--bleedL);border:0;background:transparent;color:var(--ink);font:inherit;font-size:14.5px;text-align:left;cursor:pointer}
-  .alert-band .ab-open svg{flex:none}
-  .alert-band .ab-txt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .alert-band .ab-txt b{font-weight:700}
-  .alert-band .ab-go{flex:none;font-size:20px;font-weight:600;line-height:1}
-  .alert-band .ab-go-txt{display:none}
-  .alert-band .ab-go:after{content:'›'}
-  .alert-band .ab-off{flex:none;width:44px;height:44px;border:0;border-left:1px solid rgba(0,0,0,.18);background:transparent;color:var(--ink);font-size:15px;cursor:pointer}
-  #activeFilters{margin:10px 0 12px}
-  #activeFilters:not(:has(.active-chip,.linklike)){display:none}
-  /* con la franja justo encima, la sombra blanca de las pestañas fijas taparía su borde: pasa a ser ese borde */
-  .content:has(#activeFilters:not(:has(.active-chip,.linklike))) .alert-band:not([hidden]) ~ .ag-tabs{box-shadow:0 -1px 0 var(--ink)}
 }
 
 /* Escritorio, opción B (29-10-2026, David): categorías en celdas a sangre repartidas en todo el ancho (si no caben,
@@ -505,18 +491,29 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .desk-top .type-mini .cat-pill.on{background:var(--sel);color:#fff;font-weight:700}
   .desk-top .type-mini .cat-pill.on i{border-color:#fff}
   .desk-top .type-mini .cat-pill.on:hover{background:var(--sel)}
-  #activeFilters .alert-cta{display:none}
-  #activeFilters:not(:has(.active-chip,.linklike)){display:none}
-  #activeFilters{margin:14px 0 0}
-  .alert-band{display:flex;align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));background:#FCF0C7;border-bottom:1px solid var(--ink)}
-  .alert-band[hidden]{display:none}
-  .alert-band .ab-open{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:36px;padding:0 0 0 var(--bleedL);border:0;background:transparent;color:var(--ink);font:inherit;font-size:15px;text-align:left;cursor:pointer}
-  .alert-band .ab-open svg{flex:none}
-  .alert-band .ab-txt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .alert-band .ab-txt b{font-weight:700}
-  .alert-band .ab-go{flex:none;margin-left:auto;padding:0 18px;font-size:15px;font-weight:700}
-  .alert-band .ab-go-txt{text-decoration:underline;text-underline-offset:3px}
-  .alert-band .ab-go:after{content:'›';margin-left:6px}
-  .alert-band .ab-open:hover .ab-go{color:var(--petrol-text)}
-  .alert-band .ab-off{flex:none;width:36px;height:36px;border:0;border-left:1px solid rgba(0,0,0,.18);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+}
+
+/* Franja de filtros (29-10-2026, David, opción 1): sustituye a los chips con ✕. Una banda arena a sangre bajo las
+   categorías: «Filtrando: …», «Limpiar» y, si se puede guardar como aviso, «Crear aviso» en su celda. */
+.alert-band{align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));background:#FCF0C7;border-bottom:1px solid var(--ink)}
+.alert-band:not([hidden]){display:flex}
+.alert-band button{border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.alert-band .ab-what{flex:1 1 auto;min-width:0;display:flex;align-items:center;padding:0 12px 0 var(--bleedL);text-align:left;font-size:14.5px}
+.alert-band .ab-txt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-band .ab-txt b{font-weight:700}
+.alert-band .ab-clear{flex:none;padding:0 14px;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.alert-band .ab-alert{flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--ink);font-size:14.5px;font-weight:700}
+.alert-band .ab-alert:hover,.alert-band .ab-clear:hover{color:var(--petrol-text)}
+@media(min-width:961px){
+  .alert-band{min-height:38px}
+  .alert-band .ab-what{cursor:default}
+  .alert-band .ab-alert{padding:0 var(--bleedR) 0 18px}
+}
+@media(max-width:960px){
+  .alert-band{min-height:44px}
+  .content:has(.alert-band:not([hidden])) .ag-tabs{box-shadow:0 -1px 0 var(--ink)}
+  .alert-band .ab-what:after{content:'›';margin-left:6px;font-size:18px;font-weight:600}
+  .alert-band .ab-clear{display:none}
+  .alert-band .ab-alert span{display:none}
+  .alert-band .ab-alert{width:48px;justify-content:center;padding:0}
 }

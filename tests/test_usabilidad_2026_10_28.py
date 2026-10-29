@@ -288,11 +288,10 @@ class CuandoYTitularTests(unittest.TestCase):
         línea a sangre, solo con filtros que un aviso guarda, y con ✕ que la oculta durante la visita."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
-        for text in ("f.k !== 'range' && f.k !== 'cat'", 'function alertBand()', "const f = ALERTS && !alertBandOff ? alertFilters() : null",
-                     "button.dataset.alertband === 'off'", "sessionStorage.setItem('ontoca-alertband', 'off')", 'row.scrollLeft = sel.offsetLeft - row.offsetLeft'):
+        for text in ('function alertBand()', 'row.scrollLeft = sel.offsetLeft - row.offsetLeft'):
             self.assertIn(text, js)
         for text in ('--sel:#404040', '.filter-bar .type-mini .cat-pill.on{background:var(--sel)', '.ag-tabs .period-tab.active{background:var(--sel)',
-                     '.alert-band{display:flex', 'background:#FCF0C7', 'height:44px', '#activeFilters .alert-cta{display:none}'):
+                     'background:#FCF0C7'):
             self.assertIn(text, css)
         self.assertLess(html.index('id="alertBand"'), html.index('id="activeFilters"'))
 
@@ -301,7 +300,18 @@ class CuandoYTitularTests(unittest.TestCase):
         desplazables si no caben), la elegida en gris carbón; «Avísame» como franja de 36 px a sangre con «Crear aviso» y ✕."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         for text in ('.desk-top .type-mini .cat-pill{flex:1 1 0;min-width:max-content', '.desk-top .type-mini .cat-pill.on{background:var(--sel)',
-                     '.alert-band .ab-open{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:36px', '.desk-top .type-mini.at-end:after{display:none}'):
+                     '.desk-top .type-mini.at-end:after{display:none}'):
             self.assertIn(text, css)
         for text in ("L('Crear aviso', 'Crea l\\'avís', 'Create alert')", "mini.classList.toggle('at-end'"):
             self.assertIn(text, js)
+
+    def test_franja_de_filtros_sustituye_a_los_chips(self):
+        """29-10-2026 (David, opción 1): los chips con ✕ desaparecen; una sola franja a sangre dice qué se está filtrando,
+        con «Limpiar» y «Crear aviso» (solo si los filtros se pueden guardar). En móvil abre el panel de filtros."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ("$('activeFilters').innerHTML = '';", "activeFilterList().filter(f => f.k !== 'range'), f = ALERTS ? alertFilters() : null",
+                     "L('Filtrando', 'Filtrant', 'Filtering')", 'class="ab-clear" type="button" data-clear="all"', 'class="ab-alert" type="button" data-alerts="open"',
+                     "if (button.dataset.filtersband === 'open') { if (!DESK.matches)"):
+            self.assertIn(text, js)
+        for text in ('#activeFilters{display:none !important}', '.alert-band:not([hidden]){display:flex}', '.alert-band .ab-clear{display:none}'):
+            self.assertIn(text, css)
