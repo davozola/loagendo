@@ -353,7 +353,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 @media(min-width:961px){.content .ev.ev-hl{border-left-width:0}}
 
 /* Cabeceras de hora (29-10-2026, David): la hora encima y la línea debajo, de borde a borde como las filas */
-.content .ag-stick{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));padding:16px var(--bleedR) 8px var(--bleedL);border-bottom:1px solid var(--ink)}
+.content .ag-stick{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));padding:18px var(--bleedR) 8px var(--bleedL);border-bottom:1px solid var(--ink);font-size:16px}
 .content .ag-stick:after{display:none}
 .content .ag-stick.is-now{border-bottom-color:var(--now)}
 /* Expos: sin el tipo (oculto), la primera etiqueta no lleva ni margen ni «·» delante («Fins al 28 març 2027») */
