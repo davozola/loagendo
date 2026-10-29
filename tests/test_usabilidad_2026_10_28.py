@@ -295,3 +295,13 @@ class CuandoYTitularTests(unittest.TestCase):
                      '.alert-band{display:flex', 'background:#FCF0C7', 'height:44px', '#activeFilters .alert-cta{display:none}'):
             self.assertIn(text, css)
         self.assertLess(html.index('id="alertBand"'), html.index('id="activeFilters"'))
+
+    def test_escritorio_b_categorias_a_sangre_y_avisame(self):
+        """29-10-2026 (David, opción B de escritorio): categorías en celdas a sangre repartidas en todo el ancho (a su medida y
+        desplazables si no caben), la elegida en gris carbón; «Avísame» como franja de 36 px a sangre con «Crear aviso» y ✕."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        for text in ('.desk-top .type-mini .cat-pill{flex:1 1 0;min-width:max-content', '.desk-top .type-mini .cat-pill.on{background:var(--sel)',
+                     '.alert-band .ab-open{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:36px', '.desk-top .type-mini.at-end:after{display:none}'):
+            self.assertIn(text, css)
+        for text in ("L('Crear aviso', 'Crea l\\'avís', 'Create alert')", "mini.classList.toggle('at-end'"):
+            self.assertIn(text, js)

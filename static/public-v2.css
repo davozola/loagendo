@@ -480,9 +480,43 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .alert-band .ab-txt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .alert-band .ab-txt b{font-weight:700}
   .alert-band .ab-go{flex:none;font-size:20px;font-weight:600;line-height:1}
+  .alert-band .ab-go-txt{display:none}
+  .alert-band .ab-go:after{content:'›'}
   .alert-band .ab-off{flex:none;width:44px;height:44px;border:0;border-left:1px solid rgba(0,0,0,.18);background:transparent;color:var(--ink);font-size:15px;cursor:pointer}
   #activeFilters{margin:10px 0 12px}
   #activeFilters:not(:has(.active-chip,.linklike)){display:none}
   /* con la franja justo encima, la sombra blanca de las pestañas fijas taparía su borde: pasa a ser ese borde */
   .content:has(#activeFilters:not(:has(.active-chip,.linklike))) .alert-band:not([hidden]) ~ .ag-tabs{box-shadow:0 -1px 0 var(--ink)}
+}
+
+/* Escritorio, opción B (29-10-2026, David): categorías en celdas a sangre repartidas en todo el ancho (si no caben,
+   cada una a su medida y la fila se desplaza), la elegida en gris carbón; «Avísame» como franja de 36 px a sangre. */
+@media(min-width:961px){
+  .desk-top{gap:0;margin-bottom:0}
+  #deskHead{margin-top:18px}
+  .desk-top .type-mini{position:relative}
+  .desk-top .type-mini:after{content:'›';position:absolute;right:0;top:0;bottom:1px;width:64px;display:flex;align-items:center;justify-content:flex-end;padding-right:14px;background:linear-gradient(90deg,rgba(255,255,255,0),var(--paper) 60%);font-size:22px;font-weight:600;pointer-events:none}
+  .desk-top .type-mini.at-end:after{display:none}
+  .desk-top .type-mini{margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL))}
+  .desk-top .type-mini .cat-bar{flex-wrap:nowrap;gap:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--ink)}
+  .desk-top .type-mini .cat-bar::-webkit-scrollbar{display:none}
+  .desk-top .type-mini .cat-pill{flex:1 1 0;min-width:max-content;justify-content:center;min-height:48px;padding:0 18px;margin:0;border:0;border-right:1px solid var(--ink);font-size:15px;gap:8px}
+  .desk-top .type-mini .cat-pill:last-child{border-right:0}
+  .desk-top .type-mini .cat-pill.on{background:var(--sel);color:#fff;font-weight:700}
+  .desk-top .type-mini .cat-pill.on i{border-color:#fff}
+  .desk-top .type-mini .cat-pill.on:hover{background:var(--sel)}
+  #activeFilters .alert-cta{display:none}
+  #activeFilters:not(:has(.active-chip,.linklike)){display:none}
+  #activeFilters{margin:14px 0 0}
+  .alert-band{display:flex;align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));background:#FCF0C7;border-bottom:1px solid var(--ink)}
+  .alert-band[hidden]{display:none}
+  .alert-band .ab-open{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;height:36px;padding:0 0 0 var(--bleedL);border:0;background:transparent;color:var(--ink);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+  .alert-band .ab-open svg{flex:none}
+  .alert-band .ab-txt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .alert-band .ab-txt b{font-weight:700}
+  .alert-band .ab-go{flex:none;margin-left:auto;padding:0 18px;font-size:15px;font-weight:700}
+  .alert-band .ab-go-txt{text-decoration:underline;text-underline-offset:3px}
+  .alert-band .ab-go:after{content:'›';margin-left:6px}
+  .alert-band .ab-open:hover .ab-go{color:var(--petrol-text)}
+  .alert-band .ab-off{flex:none;width:36px;height:36px;border:0;border-left:1px solid rgba(0,0,0,.18);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
 }
