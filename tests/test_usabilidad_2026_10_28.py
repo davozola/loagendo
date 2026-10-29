@@ -277,8 +277,21 @@ class CuandoYTitularTests(unittest.TestCase):
         «Cuándo» (calendario) y «Cerca de mí» dentro del panel de filtros; Expos sin miniatura, como la Agenda."""
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         for text in ("['nearBox', 'deskNear', true]", "if (button.id === 'whenOpen')", 'function whenDone()', "return '';   // 29-10-2026 (David): Expos con la misma maquetación",
-                     "shown = list.filter(f => f.k !== 'range')"):
+                     "shown = list.filter(f => f.k !== 'range'"):
             self.assertIn(text, js)
-        for text in ('.mob-when{', '.filter-bar .type-mini .cat-pill{flex:none;min-height:48px', '.filters-panel>.desk-when{display:block', '.filter-bar .type-mini.at-end:after{display:none}'):
+        for text in ('.mob-when{', '.filter-bar .type-mini .cat-pill{flex:none;min-height:38px', '.filters-panel>.desk-when{display:block', '.filter-bar .type-mini.at-end:after{display:none}'):
             self.assertIn(text, css)
 
+    def test_movil_b_categorias_gris_y_avisame(self):
+        """29-10-2026 (David, opción B): barra de categorías de 38 px sin chip de la categoría (ya se ve en la barra) y con la
+        elegida al principio; selección en gris carbón #404040 en categorías y Agenda/Expos; «Avísame» como franja de una
+        línea a sangre, solo con filtros que un aviso guarda, y con ✕ que la oculta durante la visita."""
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8'); css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
+        html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
+        for text in ("f.k !== 'range' && f.k !== 'cat'", 'function alertBand()', "const f = ALERTS && !alertBandOff ? alertFilters() : null",
+                     "button.dataset.alertband === 'off'", "sessionStorage.setItem('ontoca-alertband', 'off')", 'row.scrollLeft = sel.offsetLeft - row.offsetLeft'):
+            self.assertIn(text, js)
+        for text in ('--sel:#404040', '.filter-bar .type-mini .cat-pill.on{background:var(--sel)', '.ag-tabs .period-tab.active{background:var(--sel)',
+                     '.alert-band{display:flex', 'background:#FCF0C7', 'height:44px', '#activeFilters .alert-cta{display:none}'):
+            self.assertIn(text, css)
+        self.assertLess(html.index('id="alertBand"'), html.index('id="activeFilters"'))

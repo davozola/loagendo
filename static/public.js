@@ -378,6 +378,14 @@ function alertFilters() {
 }
 const alertLabel = f => [...f.cats.map(catName), ...f.chans.map(chanName), f.district ? t(f.district) : '', f.free ? t('Gratis') : '', f.q ? `«${f.q}»` : ''].filter(Boolean).join(' · ');
 let turnstileToken = '', turnstileWidget = null;
+// Móvil (29-10-2026, David): franja «Avísame» de una línea bajo las categorías, solo con filtros que un aviso
+// puede guardar; con ✕ deja de salir durante esa visita.
+let alertBandOff = false; try { alertBandOff = sessionStorage.getItem('ontoca-alertband') === 'off' } catch (_) {}
+function alertBand() {
+  const el = $('alertBand'); if (!el) return; const f = ALERTS && !alertBandOff ? alertFilters() : null;
+  el.hidden = !f; if (!f) { el.innerHTML = ''; return }
+  el.innerHTML = `<button class="ab-open" type="button" data-alerts="open"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="ab-txt">${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}: <b>${esc(alertLabel(f))}</b></span><span class="ab-go" aria-hidden="true">›</span></button><button class="ab-off" type="button" data-alertband="off" aria-label="${L('Ocultar aviso', 'Amaga l\'avís', 'Hide')}">✕</button>`;
+}
 function loadTurnstile() {
   if (!TURNSTILE_KEY) return;
   const render = () => { try { turnstileWidget = window.turnstile.render('#alertsTurnstile', {sitekey: TURNSTILE_KEY, language: LANG, callback: tok => { turnstileToken = tok }, 'expired-callback': () => { turnstileToken = '' }}) } catch (_) {} };
@@ -479,9 +487,10 @@ function clearFilter(k) {
   if (k === 'fest') { state.fest = ''; state.festName = ''; state.festFiesta = false }
 }
 function renderActive() {
-  const list = activeFilterList(), shown = list.filter(f => f.k !== 'range');   // el periodo ya se ve en «Cuándo» (calendario y celda del móvil)
+  const list = activeFilterList(), shown = list.filter(f => f.k !== 'range' && f.k !== 'cat');   // el periodo ya se ve en «Cuándo»; la categoría, en la barra de categorías (29-10-2026)
   $('activeFilters').innerHTML = shown.map(f => `<button class="active-chip" type="button" data-clear="${esc(f.k)}" aria-label="${t('Quitar filtro')} ${esc(f.label)}">${esc(f.label)} <span aria-hidden="true">✕</span></button>`).join('') + (shown.length > 1 ? `<button class="linklike" type="button" data-clear="all">${t('Limpiar todo')}</button>` : '');
   if (ALERTS && alertFilters()) $('activeFilters').insertAdjacentHTML('beforeend', `<button class="alert-cta" type="button" data-alerts="open"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>${L('Avísame de novedades', 'Avisa\'m de novetats', 'Email me what\'s new')}</button>`);
+  alertBand();
   // «Más filtros» cuenta solo lo que se elige dentro: el periodo, la búsqueda y la categoría ya se ven fuera (28-10-2026)
   const n = list.filter(f => !['range', 'query', 'cat'].includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
@@ -938,7 +947,7 @@ function chipsHtml(counts) {
   // «Filtros» que ya existía, para cambiar de categoría sin volver arriba.
   // La Agenda tiene su propia fila de categorías, siempre a la vista y fija bajo «Filtros» (28-10-2026, 19:34, David); la de
   // la Selección va dentro de la Selección. «Cerca de mí», al lado de «Filtros».
-  const mini = $('typeMini'); if (mini) { mini.innerHTML = catBarHtml(true); mini.hidden = false; const sel = mini.querySelector('.on'), row = mini.querySelector('.cat-bar'); if (sel && row && sel.offsetLeft > row.clientWidth - 40) row.scrollLeft = sel.offsetLeft - 16 }
+  const mini = $('typeMini'); if (mini) { mini.innerHTML = catBarHtml(true); mini.hidden = false; const sel = mini.querySelector('.on'), row = mini.querySelector('.cat-bar'); if (sel && row) row.scrollLeft = sel.offsetLeft - row.offsetLeft }   // la elegida, al principio de la barra (29-10-2026)
   const near = $('nearBox'); if (near) near.innerHTML = nearHtml();
   const msg = $('nearMsg'); if (msg) { msg.textContent = state.nearMsg || ''; msg.hidden = !state.nearMsg }
   requestAnimationFrame(stick);
@@ -1983,6 +1992,7 @@ document.addEventListener('click', e => {
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
   if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started','fest'].forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
+  if (button.dataset.alertband === 'off') { alertBandOff = true; try { sessionStorage.setItem('ontoca-alertband', 'off') } catch (_) {} alertBand(); return }
   if (button.dataset.alerts === 'open') { openAlerts(); return }
   if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district','fest'].forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
