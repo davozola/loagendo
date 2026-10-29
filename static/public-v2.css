@@ -351,3 +351,14 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .content .ag-wide .ev{margin-left:0;margin-right:0}
 .content .ev-fest-group>.ev{margin:0 -12px;padding:0 12px}
 @media(min-width:961px){.content .ev.ev-hl{border-left-width:0}}
+
+/* Cabeceras de hora (29-10-2026, David): la hora encima y la línea debajo, de borde a borde como las filas */
+.content .ag-stick{margin-left:calc(-1 * var(--bleedL));margin-right:calc(-1 * var(--bleedR));padding:16px var(--bleedR) 8px var(--bleedL);border-bottom:1px solid var(--ink)}
+.content .ag-stick:after{display:none}
+.content .ag-stick.is-now{border-bottom-color:var(--now)}
+/* Expos: sin el tipo (oculto), la primera etiqueta no lleva ni margen ni «·» delante («Fins al 28 març 2027») */
+.ag-wide .ev-cat>.ev-catname+*{margin-left:0}.ag-wide .ev-cat>.ev-catname+*:before{content:none}
+/* Las pestañas Agenda/Expos, fijas al bajar, tapan también los lados (el gris de Expos llega al borde) */
+.content .ag-tabs{box-shadow:0 -8px 0 var(--paper),calc(-1 * var(--bleedL)) 0 0 var(--paper),var(--bleedR) 0 0 var(--paper)}
+/* Expos en móvil: las etiquetas («Hasta el 28 mar 2027», «Gratis») bajan de línea en vez de cortarse */
+.ag-wide .ev-cat{white-space:normal;line-height:1.9}
