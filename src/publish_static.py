@@ -590,6 +590,49 @@ def credits_html(registry=None, generated_at='', counts=None, skin_css=''):
 PUBLIC_SKIN = 'v2'
 
 
+def write_shell(static_dir, out, site_url, alerts, today, days):
+    """La app (index.html) y las páginas de entrada (/hoy, /fin-de-semana…), con los ficheros de static/ copiados y versionados.
+    La usan la publicación completa y la rápida (29-10-2026: la rápida solo copiaba CSS y JS y dejaba el index.html anterior,
+    así que un cambio de estructura salía a medias). Devuelve las versiones de public.css, public.js y public-v2.css."""
+    out = Path(out)
+    # Front end: the same files the local server serves, switched to static mode.
+    index = (Path(static_dir) / 'index.html').read_text(encoding='utf-8').replace('<html lang="es"', '<html lang="es" data-static="1"', 1)
+    if site_url: index = index.replace('</head>', f'<link rel="canonical" href="{html.escape(site_url.rstrip("/"))}/"></head>', 1)
+    for name in STATIC_FILES:
+        (out / name).parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(Path(static_dir) / name, out / name)
+    # Browsers keep /public.js and /public.css across deploys unless their address
+    # changes: the shell references them by content version, so a new app is seen
+    # on the next load, while the shell itself is always revalidated (_headers).
+    versions = {name: hashlib.sha256((out / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
+    for name in ('public.css', 'public.js'):
+        index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
+    if PUBLIC_SKIN == 'v2': index = v2_index(index, versions['public-v2.css'])
+    # Avisos por correo (alertas/): el botón solo aparece con alerts.enabled y la clave pública de Turnstile
+    # (config/automation.json, trabajo publicar-web). Apagado mientras no estén la privacidad y las claves.
+    alerts = alerts or {}
+    if alerts.get('enabled') and alerts.get('turnstile_site_key'):
+        index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
+    from src import landings   # las páginas de entrada ya no se enlazan en el pie (25-10-2026); siguen en el sitemap
+    (out / 'index.html').write_text(index, encoding='utf-8')
+    # Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…): la app con su filtro y la lista en el HTML.
+    landing_pages = landings.pages(today)
+    for page in landing_pages:
+        target = out / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
+    return versions
+
+
+def refresh_shell(out_dir='dist', static_dir='static', site_url=None, alerts=None):
+    """Publicación rápida (scripts/publicar_rapido.command): rehace index.html y las páginas de entrada con los datos ya
+    publicados en dist/data (meta.json y los días), sin tocar el catálogo. Devuelve un resumen."""
+    out = Path(out_dir)
+    meta = json.loads((out / 'data' / 'meta.json').read_text(encoding='utf-8'))
+    today = dt.date.fromisoformat(meta['today'])
+    days = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in sorted((out / 'data' / 'day').glob('*.json'))}
+    versions = write_shell(static_dir, out, site_url or meta.get('site_url') or '', alerts, today, days)
+    return {'status': 'completed', 'today': meta['today'], 'days': len(days), 'versions': versions}
+
+
 def v2_index(index, version):
     """La app con el estilo de la versión 2: la misma app y los mismos datos, con public-v2.css
     encima de public.css y solo modo claro. Se sirve en la portada; /v2/ redirige a ella."""
@@ -865,30 +908,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     counts = {'events': len(events), 'images': images.stats['exported'] + images.stats['reused'], 'days': len(days), 'detail_shards': len(shards), 'translations': translations['traducidas']}
     sources = {s: {'label': catalog.SOURCES.get(s, s), 'attribution': registry_entry(registry, s).get('attribution', ''), 'license_url': registry_entry(registry, s).get('license_url', '')} for s in sorted({e['source'] for e in events}) if registry_entry(registry, s).get('public_credit') is not False}
     _write_json(out / 'data' / 'meta.json', {'generated_at': generated_at, 'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'counts': counts, 'sources': sources, 'site_url': site_url.rstrip('/') if site_url else ''})
-    # Front end: the same files the local server serves, switched to static mode.
-    index = (Path(static_dir) / 'index.html').read_text(encoding='utf-8').replace('<html lang="es"', '<html lang="es" data-static="1"', 1)
-    if site_url: index = index.replace('</head>', f'<link rel="canonical" href="{html.escape(site_url.rstrip("/"))}/"></head>', 1)
-    for name in STATIC_FILES:
-        (out / name).parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(Path(static_dir) / name, out / name)
-    # Browsers keep /public.js and /public.css across deploys unless their address
-    # changes: the shell references them by content version, so a new app is seen
-    # on the next load, while the shell itself is always revalidated (_headers).
-    versions = {name: hashlib.sha256((out / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
-    for name in ('public.css', 'public.js'):
-        index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
-    if PUBLIC_SKIN == 'v2': index = v2_index(index, versions['public-v2.css'])
-    # Avisos por correo (alertas/): el botón solo aparece con alerts.enabled y la clave pública de Turnstile
-    # (config/automation.json, trabajo publicar-web). Apagado mientras no estén la privacidad y las claves.
-    alerts = alerts or {}
-    if alerts.get('enabled') and alerts.get('turnstile_site_key'):
-        index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
-    from src import landings   # las páginas de entrada ya no se enlazan en el pie (25-10-2026); siguen en el sitemap
-    (out / 'index.html').write_text(index, encoding='utf-8')
-    # Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…): la app con su filtro y la lista en el HTML.
-    landing_pages = landings.pages(today)
-    for page in landing_pages:
-        target = out / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
+    versions = write_shell(static_dir, out, site_url, alerts, today, days)
     skin = f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else ''
     (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts, skin_css=skin), encoding='utf-8')
     from src import legal_pages   # Aviso legal y Privacidad (25-10-2026); /privacidad la piden las alertas
@@ -902,7 +922,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     # (/v2/e/* lo redirige su función, functions/v2/e/[[path]].js).
     (out / '_redirects').write_text('/v2 / 301\n/v2/ / 301\n', encoding='utf-8')
     (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
-    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landing_pages])
+    from src import landings
+    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landings.pages(today)])
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()

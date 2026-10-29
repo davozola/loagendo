@@ -250,7 +250,25 @@ class CuandoYTitularTests(unittest.TestCase):
     def test_filas_a_sangre_escritorio(self):
         """29-10-2026 (David): filtros y buscador a sangre en escritorio, cabecera de «Filtros» en petróleo, Planes en filas."""
         css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
-        for text in ('.filters-panel>.filters-head{margin:0;min-height:78px', 'background:var(--petrol);color:#fff', '#channels .channel-chip{display:flex;width:100%',
-                     '.desk-top .search-box{min-height:78px;border:0', '.filters-panel .group legend{float:left'):
+        for text in ('.filters-panel>.filters-head{margin:0;min-height:66px', 'background:var(--petrol);color:#fff', '#channels .channel-chip{display:flex;width:100%',
+                     '.desk-top .search-box{min-height:66px;border:0', '.filters-panel .group legend{float:left'):
             self.assertIn(text, css)
+
+    def test_publicacion_rapida_rehace_la_pagina(self):
+        """29-10-2026: la publicación rápida rehace index.html y las páginas de entrada con los datos ya publicados (antes solo
+        copiaba CSS y JS y la página seguía siendo la de la última publicación completa)."""
+        import json, tempfile, datetime as dt
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / 'data' / 'day').mkdir(parents=True)
+            today = dt.date(2026, 10, 29)
+            (out / 'data' / 'meta.json').write_text(json.dumps({'today': today.isoformat(), 'site_url': 'https://ontoca.com'}), encoding='utf-8')
+            for i in range(10):
+                d = (today + dt.timedelta(days=i)).isoformat()
+                (out / 'data' / 'day' / f'{d}.json').write_text(json.dumps({'day': d, 'total': 0, 'items': []}), encoding='utf-8')
+            r = publish_static.refresh_shell(out, ROOT / 'static')
+            index = (out / 'index.html').read_text(encoding='utf-8')
+            self.assertEqual(r['days'], 10); self.assertIn('id="deskWhen"', index); self.assertIn('data-skin="v2"', index)
+            self.assertIn(f"public.js?v={r['versions']['public.js']}", index); self.assertTrue((out / 'hoy.html').exists())
+        self.assertIn('refresh_shell', (ROOT / 'scripts' / 'publicar_rapido.command').read_text(encoding='utf-8'))
 

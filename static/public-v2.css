@@ -59,11 +59,14 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 @media(max-width:760px){.period-tabs{border-radius:0}}
 
 /* selección de la semana: banda turquesa */
-#seleccion{margin:0 calc(50% - 50vw) 0;width:100vw;padding:clamp(22px,4vw,44px) var(--gutter) clamp(18px,3vw,36px);background:var(--turq);border-bottom:0;box-sizing:border-box}   /* sin hueco blanco hasta la banda de «Cuándo» (28-10-2026) */
+#seleccion{margin:0 calc(50% - 50vw) 0;width:100vw;padding:clamp(16px,2.2vw,28px) var(--gutter) clamp(18px,3vw,36px);background:var(--turq);border-bottom:0;box-sizing:border-box}   /* sin hueco blanco hasta la banda de «Cuándo» (28-10-2026) */
 #seleccion .section-head{color:var(--on-color)}
 #seleccion .section-head{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto 18px}
 #seleccion .section-head h2{font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.035em}
 #seleccion .section-head p{color:var(--on-color)}
+/* La fecha de la Selección, debajo del título y algo más grande (29-10-2026, David) */
+#seleccion .section-head{align-items:center}.sel-title{display:flex;flex-direction:column;gap:2px}
+#seleccion #weekRange{font-size:clamp(16px,1.3vw,19px);font-weight:500}
 .curated{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto}
 .pick-bar{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto 14px}
 .ag-fests{border-color:var(--ink)}.ag-festrow{border-top-color:var(--line)}
@@ -367,7 +370,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 @media(min-width:961px){
   .filters-panel{margin-left:calc(-1 * var(--gutter));padding:0;top:var(--stick,64px);max-height:calc(100vh - var(--stick,64px))}
   .filters-panel>*{padding-left:var(--gutter) !important;padding-right:24px !important;box-sizing:border-box}
-  .filters-panel>.filters-head{margin:0;min-height:78px;padding-top:14px !important;padding-bottom:14px !important;background:var(--petrol);color:#fff;border-bottom:1px solid var(--ink)}
+  .filters-panel>.filters-head{margin:0;min-height:66px;padding-top:10px !important;padding-bottom:10px !important;background:var(--petrol);color:#fff;border-bottom:1px solid var(--ink)}
   .filters-panel>.filters-head h2,.filters-panel>.filters-head .linklike{color:#fff}
   .filters-panel>.desk-when{margin:0;border:0;border-bottom:1px solid var(--ink);padding-top:16px !important;padding-bottom:18px !important}
   .filters-panel>.group{border-top:0;border-bottom:1px solid var(--line);padding-top:14px;padding-bottom:16px}
@@ -375,7 +378,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel .group legend+*{clear:both}
   .filters-panel>.filters-note{padding-top:14px}
   .desk-top .panel-search{margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));flex:none}
-  .desk-top .search-box{min-height:78px;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding-left:var(--bleedL);padding-right:var(--bleedR);background:var(--paper)}
+  .desk-top .search-box{min-height:66px;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding-left:var(--bleedL);padding-right:var(--bleedR);background:var(--paper)}
   .filters-panel>.where-group,.filters-panel>.discover{padding-bottom:0}
   .where-group #deskNear{margin:0 -24px 0 calc(-1 * var(--gutter))}
   .where-group .near-btn,.where-group .near-on{width:100%;min-height:44px;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px}

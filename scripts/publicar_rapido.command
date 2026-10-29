@@ -1,10 +1,10 @@
 #!/bin/bash
 # Doble clic: publicación rápida (1-2 min) de cambios de diseño o de código de la web (26-10-2026).
-# Sirve para cambios en static/ (CSS, JS, iconos) y en functions/ (alta de avisos, fichas…). NO recalcula
+# Sirve para cambios en static/ (HTML, CSS, JS, iconos) y en functions/ (alta de avisos, fichas…). NO recalcula
 # los datos: si el cambio necesita datos nuevos (un campo nuevo en el catálogo), hace falta la publicación
 # completa (publicar_hoy.command o la automática cada 3 horas).
 # Pasos: 1) espera si hay una publicación completa en marcha  2) comprueba el JS  3) commit y push
-#        4) copia static/ en dist/  5) sube dist/ a Cloudflare (lo mismo que la publicación completa al final)
+#        4) copia static/ en dist/ y rehace index.html y las páginas de entrada  5) sube dist/ a Cloudflare (lo mismo que la publicación completa al final)
 cd "$(dirname "$0")/.." || exit 1
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 pausa() { echo; read -n 1 -s -r -p "Pulsa cualquier tecla para cerrar…"; exit "${1:-0}"; }
@@ -36,15 +36,16 @@ MSG_FILE=tmp/mensaje-commit.txt
 git commit -q -F "$MSG_FILE" && mv "$MSG_FILE" tmp/mensaje-commit-usado.txt || echo "  (nada nuevo que guardar)"
 git push -q && echo "✓ Subido a GitHub" || echo "  (no se pudo hacer push; sigo con la publicación)"
 
-echo "4/5 · Copiar static/ en dist/"
-python3 - <<'PY' || { echo "✗ No se pudieron copiar los archivos."; pausa 1; }
-import re, shutil
-from pathlib import Path
-src = Path('src/publish_static.py').read_text(encoding='utf-8')
-names = re.findall(r"'([^']+)'", re.search(r"STATIC_FILES = \(([^)]*)\)", src, re.S).group(1))
-for n in names:
-    (Path('dist') / n).parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(Path('static') / n, Path('dist') / n)
-print(f"   {len(names)} archivos: {', '.join(names)}")
+echo "4/5 · Copiar static/ y rehacer la página (index.html y páginas de entrada)"
+# 29-10-2026: antes solo se copiaban CSS y JS y el index.html seguía siendo el de la última publicación completa,
+# así que un cambio de estructura (nuevos bloques en la página) salía a medias. Ahora se rehace con los datos ya publicados.
+python3 - <<'PY' || { echo "✗ No se pudo rehacer la página."; pausa 1; }
+import json
+from src import publish_static
+cfg = json.load(open('config/automation.json', encoding='utf-8'))
+job = next((j for j in cfg.get('jobs', []) if j.get('kind') == 'publish'), {})
+r = publish_static.refresh_shell('dist', 'static', job.get('site_url'), job.get('alerts'))
+print(f"   {r['days']} días publicados del {r['today']} · página rehecha")
 PY
 
 echo "5/5 · Subir a Cloudflare"
