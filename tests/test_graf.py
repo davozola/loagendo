@@ -1,6 +1,7 @@
 """GRAF (graf.cat): feed iCal + ficha de cada acto; solo Barcelona (20-10-2026)."""
 import datetime as dt
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -99,3 +100,38 @@ class GrafTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class GrafDireccionDelDirectorioTests(unittest.TestCase):
+    """30-10-2026, Malpaís: la ficha da «C/ de l'Encuny 24, 1a planta», sin código postal ni ciudad."""
+    SPACES = ('var venues = [{"id":9,"slug":"malpais","address":"<h5>Malpa\\u00eds</h5>Carrer de l\'Encuny, 24<br>08038 Barcelona","opening":[""]},'
+              '{"id":10,"slug":"fora","address":"<h5>Espai Fora</h5>Carrer Major, 3<br>08201 Sabadell","opening":[""]}];\n')
+
+    def record(self, venue, address):
+        return {'source': 'web_graf', 'id': venue, 'url': 'https://graf.cat/events/event/' + venue, 'start': '2026-10-30', 'end': '2026-10-30',
+                'venues': [{'name': venue, 'address': ''}], 'raw': {'item': {}}, 'alerts': [], 'price_text': '', 'eligibility': 'review',
+                '_detail': {'address': address, 'description': 'x', 'price': '', 'image': '', 'web': ''}}
+
+    def run_details(self, records):
+        spaces = web_agendas.graf_spaces(self.SPACES)
+        self.assertEqual(spaces['malpais']['address'], "Carrer de l'Encuny, 24, 08038 Barcelona")
+        conn = sqlite3.connect(':memory:'); conn.execute('CREATE TABLE source_records (source TEXT, id TEXT, raw_json TEXT)')
+        for r in records: r['raw']['item']['graf_detail'] = r.pop('_detail')
+        conn.executemany('INSERT INTO source_records VALUES (?,?,?)', [(r['source'], r['id'], json.dumps(r['raw'])) for r in records])
+        web_agendas._add_graf_details(conn, records, lambda u, t: '', 5, spaces=spaces)
+        return records
+
+    def test_direccion_sin_ciudad_toma_la_del_directorio(self):
+        r, = self.run_details([self.record('Malpaís', "C/ de l'Encuny 24, 1a planta")])
+        self.assertNotEqual(r['eligibility'], 'exclude')
+        self.assertEqual(r['venues'][0]['address'], "Carrer de l'Encuny, 24, 08038 Barcelona")
+        self.assertEqual(r['raw']['item']['address_from'], web_agendas.GRAF_SPACES_URL)
+
+    def test_la_ficha_que_nombra_otra_ciudad_manda(self):
+        r, = self.run_details([self.record('Malpaís', 'Plaça Major 1, 08201 Sabadell')])
+        self.assertEqual(r['eligibility'], 'exclude')
+
+    def test_espacio_del_directorio_fuera_de_barcelona_sigue_fuera(self):
+        r, = self.run_details([self.record('Espai Fora', 'Carrer Major, 3')])
+        self.assertEqual(r['eligibility'], 'exclude')
+

@@ -378,7 +378,9 @@ GRAF_SPACES_URL = 'https://graf.cat/espais/'
 
 def graf_spaces(page):
     """Directorio de espacios de GRAF (/espais/ lleva «var venues = [...]»): nombre, dirección y
-    horario de apertura tal como lo publica cada espacio. {nombre normalizado: espacio}."""
+    horario de apertura tal como lo publica cada espacio. {nombre normalizado: espacio}.
+    La dirección del directorio lleva código postal y ciudad («Carrer de l'Encuny, 24 · 08038 Barcelona»),
+    que la ficha del acto a veces omite (30-10-2026, Malpaís)."""
     m = re.search(r'var venues\s*=\s*(\[.*?\]);\s*\n', page or '', re.S)
     if not m: return {}
     try: items = json.loads(m.group(1))
@@ -387,9 +389,11 @@ def graf_spaces(page):
     for item in items:
         name = re.search(r'<h5>(.*?)</h5>', str(item.get('address') or ''), re.S)
         opening = '\n'.join(x.strip() for x in str((item.get('opening') or [''])[0] or '').replace('\u2028', '\n').splitlines() if x.strip())
-        if not name or not opening: continue
+        rest = str(item.get('address') or '')[name.end():] if name else ''
+        address = ', '.join(x for x in (_graf_text(part) for part in re.split(r'<br\s*/?>|\n|</?p>|</?div>', rest)) if x)
+        if not name or not (opening or address): continue
         name = _graf_text(name.group(1))
-        out[_space_key(name)] = {'name': name, 'slug': item.get('slug', ''), 'opening': opening[:600], 'source_url': GRAF_SPACES_URL}
+        out[_space_key(name)] = {'name': name, 'slug': item.get('slug', ''), 'opening': opening[:600], 'address': address[:200], 'source_url': GRAF_SPACES_URL}
     return out
 
 
@@ -407,6 +411,14 @@ def _match_space(spaces, name):
     if key in spaces: return spaces[key]
     found = [v for k, v in spaces.items() if len(k) >= 8 and (' %s ' % k) in (' %s ' % key)]
     return found[0] if len(found) == 1 else None
+
+
+def _names_place(address):
+    """La dirección dice dónde está: un código postal o una ciudad tras la última coma («…, Sabadell»)."""
+    a = (address or '').strip()
+    if re.search(r'\b\d{5}\b', a): return True
+    tail = a.rsplit(',', 1)[-1].strip() if ',' in a else ''
+    return bool(tail) and not re.search(r'\d|planta|pis|baix|local|nau|porta|escala', tail.lower())
 
 
 def in_barcelona(address):
@@ -438,9 +450,14 @@ def _add_graf_details(conn, records, fetcher, timeout, budget=400, spaces=None):
         # Exposición de varios días en un espacio del directorio de GRAF: su horario de apertura,
         # tal cual y con su procedencia (20-10-2026). Un acto de un día no lo hereda.
         space = _match_space(spaces, record['venues'][0].get('name'))
-        if space and record['start'] != record['end']:
+        if space and space.get('opening') and record['start'] != record['end']:
             record['raw']['item']['space_opening'] = space
         address = (detail or {}).get('address', '')
+        # Dirección sin código postal ni ciudad en la ficha («C/ de l'Encuny 24, 1a planta», 30-10-2026, Malpaís):
+        # vale la del espacio en el directorio de GRAF, con su procedencia. Si la ficha nombra otra ciudad, manda la ficha.
+        if space and space.get('address') and in_barcelona(space['address']) and not _names_place(address):
+            record['venues'][0]['address'] = space['address']; record['raw']['item']['address_from'] = GRAF_SPACES_URL
+            address = space['address']
         if not address or not in_barcelona(address):
             record['eligibility'] = 'exclude'; record['alerts'] = record['alerts'] + ['OUTSIDE_BARCELONA' if address else 'ADDRESS_UNKNOWN']
 
