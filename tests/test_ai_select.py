@@ -1,4 +1,4 @@
-"""Selección de la semana con IA: reparto, variedad, relleno con reglas y guardado."""
+"""Selección con IA: variedad, sin relleno con reglas (30-10-2026), populares aparte y guardado."""
 import json
 import tempfile
 import unittest
@@ -14,24 +14,38 @@ def item(n, cat):
 
 
 class PickTests(unittest.TestCase):
-    def test_balances_popular_and_discovery_and_caps_categories(self):
+    def test_caps_categories_without_repeating(self):
         items = [item(i, c) for i, c in enumerate(['musica'] * 5 + ['escena', 'arte', 'cine', 'charlas', 'talleres'])]
-        rows = [(0, 'popular', 'a'), (1, 'popular', 'b'), (2, 'popular', 'c'), (5, 'popular', 'd'), (6, 'popular', 'e'),
-                (7, 'descubrimiento', 'f'), (8, 'descubrimiento', 'g'), (99, 'popular', 'x'), (7, 'descubrimiento', 'dup')]
+        rows = [(0, 'seleccion', 'a'), (1, 'seleccion', 'b'), (2, 'seleccion', 'c'), (3, 'seleccion', 'x'), (5, 'seleccion', 'd'),
+                (6, 'seleccion', 'e'), (99, 'seleccion', 'x'), (6, 'seleccion', 'dup')]
         out = ai_select.pick(rows, items)
-        self.assertEqual(len(out), 8)   # 10 fichas, 5 de música: como mucho 3 por categoría (28-10-2026)
-        self.assertLessEqual(sum(1 for e, _, _ in out if e['public_category'] == 'musica'), 3)
-        self.assertEqual(len({e['key'] for e, _, _ in out}), 8)                                # sin repetir
-        self.assertEqual([k for _, k, _ in out][:7], ['popular'] * 5 + ['descubrimiento'] * 2)   # sin cuotas por tipo
+        self.assertEqual([e['key'] for e, _, _ in out], ['s:0', 's:1', 's:2', 's:5', 's:6'])   # como mucho 3 de música, sin repetir
 
-    def test_fills_with_rules_when_the_answer_is_short(self):
+    def test_no_fill_with_rules_when_the_answer_is_short(self):
         items = [item(i, c) for i, c in enumerate(['musica', 'escena', 'arte', 'cine', 'charlas', 'talleres', 'fiestas', 'deporte'])]
-        out = ai_select.pick([(3, 'descubrimiento', 'raro')], items)
-        self.assertEqual((len(out), out[0][0]['key'], out[1][1]), (8, 's:3', 'reglas'))   # 8 candidatos: se completan todos
+        out = ai_select.pick([(3, 'seleccion', 'raro')], items)
+        self.assertEqual([e['key'] for e, _, _ in out], ['s:3'])   # 30-10-2026: mejor menos y mejores
+
+    def test_no_repeated_venue_counting_inner_rooms(self):
+        items = [dict(item(0, 'musica'), venue_names=['Palau de la Música Catalana']), dict(item(1, 'escena'), venue_names=['Palau de la Música Catalana · Sala Petit']),
+                 dict(item(2, 'arte'), venue_names=['MACBA'])]
+        out = ai_select.pick([(0, 'seleccion', 'a'), (1, 'seleccion', 'b'), (2, 'seleccion', 'c')], items)
+        self.assertEqual([e['key'] for e, _, _ in out], ['s:0', 's:2'])
+
+    def test_populars_accept_objects_and_strings(self):
+        items = [item(i, 'musica') for i in range(4)]
+        msg = {'content': [{'type': 'tool_use', 'input': {'elegidas': [{'n': 0, 'motivo': 'm'}], 'populares': [{'n': 1}, '2', 'x']}}]}
+        chosen, pops = ai_select.parse(msg, items)
+        self.assertEqual([e['key'] for e in pops], ['s:1', 's:2'])
+
+    def test_populars_skip_chosen_and_repeated_works(self):
+        items = [item(0, 'musica'), item(1, 'musica'), dict(item(2, 'escena'), series='queen'), dict(item(3, 'escena'), series='queen'), item(4, 'cine')]
+        chosen = ai_select.pick([(0, 'seleccion', 'a')], items)
+        self.assertEqual([e['key'] for e in ai_select.populars([0, 2, 3, 4, 77], items, chosen)], ['s:2', 's:4'])
 
     def test_no_two_of_the_same_festival_or_series(self):
         items = [dict(item(i, 'escena'), festival={'slug': 'salmon'}) for i in range(2)] + [dict(item(2, 'musica'), series='jam'), dict(item(3, 'musica'), series='jam'), item(4, 'cine')]
-        out = ai_select.pick([(0, 'popular', 'a'), (1, 'popular', 'b'), (2, 'popular', 'c'), (3, 'popular', 'd'), (4, 'popular', 'e')], items)
+        out = ai_select.pick([(0, 'seleccion', 'a'), (1, 'seleccion', 'b'), (2, 'seleccion', 'c'), (3, 'seleccion', 'd'), (4, 'seleccion', 'e')], items)
         self.assertEqual([e['key'] for e, _, _ in out], ['s:0', 's:2', 's:4'])
 
 
@@ -43,7 +57,7 @@ class EnsureTests(unittest.TestCase):
             calls = []
             def requester(method, url, key, body=None, timeout=60, raw=False):
                 calls.append(body); return {'content': [{'type': 'tool_use', 'name': 'seleccionar', 'input': {'elegidas': [
-                    {'n': i, 'tipo': 'popular' if i < 4 else 'descubrimiento', 'motivo': 'm'} for i in range(10)]}}], 'usage': {'input_tokens': 10}}
+                    {'n': i, 'motivo': 'm'} for i in range(9)], 'populares': [9, 10, 0]}}], 'usage': {'input_tokens': 10}}
             from unittest import mock
             with mock.patch.object(ai_select, 'candidates', lambda conn, day, scope='week': items), mock.patch.object(ai_select, '_payload', lambda n, e: {'n': n, 'titulo': e['title']}):
                 out = ai_select.ensure(conn, 'k', day='2026-10-20', requester=requester)
@@ -51,8 +65,9 @@ class EnsureTests(unittest.TestCase):
                 today = ai_select.ensure(conn, 'k', day='2026-10-20', scope='day', requester=requester)
             self.assertEqual((out['status'], again['status'], today['status'], len(calls)), ('completed', 'already_done', 'completed', 2))
             self.assertIn('Selección Ontoca', calls[0]['system'][0]['text']); self.assertIn('solo el día', calls[1]['system'][0]['text'])
-            self.assertEqual(ai_select.picks_for(conn, '2026-10-20'), [f's:{i}' for i in range(10)])
-            self.assertEqual(ai_select.picks_for(conn, '2026-10-20', 'day'), [f's:{i}' for i in range(10)])
+            self.assertEqual(ai_select.picks_for(conn, '2026-10-20'), [f's:{i}' for i in range(9)])
+            self.assertEqual(ai_select.picks_for(conn, '2026-10-20', 'day'), [f's:{i}' for i in range(9)])
+            self.assertEqual(ai_select.populars_for(conn, '2026-10-20'), ['s:9', 's:10'])   # sin las elegidas
 
     def test_ensure_ahead_covers_eight_days_in_both_scopes(self):
         from unittest import mock

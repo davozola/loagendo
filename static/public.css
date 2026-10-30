@@ -614,3 +614,5 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .ag-remind span{grid-column:1/-1;color:var(--accentText);font-size:13px}
 .ag-remind b{font-weight:600;min-width:0}
 .ag-remind i{font-style:normal;color:var(--soft);font-size:18px}
+/* «Popular» (30-10-2026, David): se ve, pero sin el color de la Selección */
+.hl-tag.hl-popular{color:#e8e8e8}

@@ -525,3 +525,6 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .filter-bar .type-mini.at-start:before,.desk-top .type-mini.at-start:before{display:none}
 @media(min-width:961px){.filter-bar .type-mini:before{display:none}}
 @media(max-width:960px){.desk-top .type-mini:before{display:none}}
+/* «Popular» (30-10-2026, David): se ve, pero sin el color de la Selección */
+.hl-tag.hl-popular{background:transparent;color:var(--ink,#000);border:1px solid var(--ink,#000);padding:3px 7px 2px}
+.ev.ev-hl.ev-hl-popular{background:#F2F0EA}

@@ -1078,7 +1078,7 @@ const seriesShort = title => String(title || '').replace(/^\s*patis? escolars? o
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ' ev-hl' : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}${thumb(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl ? ` ev-hl ev-hl-${e._hl}` : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}${thumb(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -1105,8 +1105,10 @@ function runOf(e) {
   return r && r.n >= 3 ? r : null;
 }
 function hlReason(e, day) {
-  // Selección Ontoca: la de la portada, o lo que anuncian tres fuentes o más.
-  if (state.picks.has(key(e)) || (e.confirmations || 1) >= 3) return 'pick';
+  // Selección Ontoca: solo lo que eligió la IA con la línea editorial (30-10-2026, David). «Popular»: las grandes citas que
+  // la IA marca aparte o que anuncian tres fuentes o más; se ven, sin decir que las hemos elegido.
+  if (state.picks.has(key(e))) return 'pick';
+  if (state.popular?.has(key(e)) || (e.confirmations || 1) >= 3) return 'popular';
   if (!e.relevant || !day) return '';  // el resto, solo en salas y centros de referencia
   const cat = e.public_category || e.category;
   const runs = e.start !== e.end, longRun = runs && daysBetween(e.start, e.end) >= 14;
@@ -1121,8 +1123,8 @@ function hlReason(e, day) {
   // («Solo hoy» se descartó: muchas salas publican cada función como ficha de un día y no podemos asegurar que sea única.)
   return '';
 }
-const HL_LABEL = {pick: () => L('Selección Ontoca', 'Selecció Ontoca', 'Ontoca pick'), premiere: () => L('Estreno', 'Estrena', 'Premiere'), last: () => L('Últimos días', 'Últims dies', 'Last days'), lastday: () => L('Último día', 'Últim dia', 'Last day'), onlytoday: () => L('Solo hoy', 'Només avui', 'Today only')};
-const HL_ORDER = {pick: 0, premiere: 1, lastday: 2, last: 3, onlytoday: 4};
+const HL_LABEL = {pick: () => L('Selección Ontoca', 'Selecció Ontoca', 'Ontoca pick'), premiere: () => L('Estreno', 'Estrena', 'Premiere'), last: () => L('Últimos días', 'Últims dies', 'Last days'), lastday: () => L('Último día', 'Últim dia', 'Last day'), popular: () => L('Popular', 'Popular', 'Popular'), onlytoday: () => L('Solo hoy', 'Només avui', 'Today only')};
+const HL_ORDER = {pick: 0, popular: 1, premiere: 2, lastday: 3, last: 4, onlytoday: 5};
 function markHighlights(list, day) {
   list.forEach(e => { e._hl = '' });
   const cands = list.filter(e => !e._inFest && hlReason(e, day)).sort((a, b) => HL_ORDER[hlReason(a, day)] - HL_ORDER[hlReason(b, day)] || (b.confirmations || 1) - (a.confirmations || 1));
@@ -1220,6 +1222,7 @@ const hasImage = e => Boolean(e.image || (e.media || []).some(m => m.url && !m.f
 function relevance(e) {
   let r = TIER_PTS[e.venue_tier] ?? 1;
   if (state.picks.has(key(e))) r += 2;
+  else if (state.popular?.has(key(e))) r += 2;   // 30-10-2026: lo que antes era «Selección» por reglas sigue igual de visible
   if (e.relevant) r += 1;
   if ((e.confirmations || 1) >= 2) r += 0.5;
   if (hasImage(e)) r += 0.5;
@@ -1673,7 +1676,7 @@ async function agenda(append = false) {
         if (request !== agendaRequest) return;
         state.items = collectStatic(all, win, state);
         // Selección Ontoca de ese día (la de la portada): se destaca también en la lista.
-        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured || []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.expoRank = df.expo_rank || {}; state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set(); state.expoRank = {} }
+        try { const df = await dayFile(win ? today : state.day); state.picks = new Set([...(df.featured_ai ? df.featured || [] : []).map(c => `${c.s}:${c.i}`), ...(df.highlight || [])]); state.popular = new Set(df.popular || []); state.expoRank = df.expo_rank || {}; state.pickMedia = Object.fromEntries([...(df.featured || []), ].filter(c => c.m?.[0]?.u && !c.m[0].fb).map(c => [`${c.s}:${c.i}`, c.m[0].u])); Object.assign(state.pickMedia, df.highlight_media || {}) } catch (_) { state.picks = new Set(); state.popular = new Set(); state.expoRank = {} }
         if (request !== agendaRequest) return;
       } else {
         const p = new URLSearchParams({...(win ? {date_from: win.from, date_to: win.to} : {day: state.day}), public_category: state.cats.length === 1 ? state.cats[0] : '', channel: state.chans.length === 1 ? state.chans[0] : '', format: state.format, district: state.district, free: state.free ? '1' : '', query: state.query, hour_from: state.hourFrom ?? '', hour_to: state.hourTo ?? '', started: '1', page: '1', page_size: '5000', public: '1'});
