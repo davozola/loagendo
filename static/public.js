@@ -1133,9 +1133,12 @@ function markHighlights(list, day) {
   let used = 0;
   for (const e of cands) {
     if (used >= cap) break;
-    const i = pos.get(e);
-    if (list[i - 1]?._hl || list[i + 1]?._hl) continue;
-    e._hl = hlReason(e, day); used++;
+    const i = pos.get(e), r = hlReason(e, day);
+    // Sin dos destacadas seguidas del mismo tipo; una «Popular» sí puede ir junto a una «Selección» (30-10-2026, David:
+    // La Oreja de Van Gogh se quedaba sin destacar por tener al lado L'Atlàntida de Falla).
+    const clash = n => n?._hl && !((n._hl === 'pick' && r === 'popular') || (n._hl === 'popular' && r === 'pick'));
+    if (clash(list[i - 1]) || clash(list[i + 1])) continue;
+    e._hl = r; used++;
   }
 }
 // Imagen de un destacado que no carga (23-10-2026): fuera el recuadro vacío. Los errores de carga no suben
