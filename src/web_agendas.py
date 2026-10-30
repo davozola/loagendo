@@ -41,7 +41,10 @@ SOURCES = {
     # charlas. Feed iCal completo (fechas, horas, espacio, coordenadas, imagen) + ficha de cada
     # acto (dirección, texto, precio, web propia). Decisión de David (20-10-2026): se usa todo,
     # con crédito a GRAF y al espacio. La ciudad se comprueba en la ficha: solo Barcelona.
-    'web_graf': {'url': 'https://graf.cat/feed/eo-events/', 'venue': 'GRAF', 'address': 'Catalunya', 'max_bytes': 16_000_000, 'timeout': 120, 'retries': 1},
+    # 30-10-2026: el feed completo (todo desde 2015, ~3,7 MB) tarda más de lo que aguanta su servidor y da HTTP 500;
+    # se pide solo lo que empieza entre hace 12 meses y dentro de 7 (Event Organiser, ~1,2 MB en ~6 s), que cubre
+    # el horizonte de parse_graf (183 días) y las exposiciones largas. Lo de antes que ya teníamos no se borra.
+    'web_graf': {'url': 'https://graf.cat/feed/eo-events/?event_start_after=-12%20months&event_start_before=%2B7%20months', 'venue': 'GRAF', 'address': 'Catalunya', 'max_bytes': 16_000_000, 'timeout': 120, 'retries': 1},
 }
 
 MONTHS = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12,
