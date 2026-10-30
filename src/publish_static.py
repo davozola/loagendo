@@ -317,11 +317,13 @@ def family_picks(items, images, hidden=frozenset(), size=10):
     return out
 
 
-def picks_by_category(items, images, hidden=frozenset()):
+def picks_by_category(items, images, hidden=frozenset(), pinned=()):
     """{categoría: [fichas]} con los candidatos de la Selección en su orden de puntuación: con imagen o descripción,
-    sin promociones, una ficha por obra y como mucho PICKS_PER_CATEGORY por categoría. Solo las categorías con 3 o más."""
+    sin promociones, una ficha por obra y como mucho PICKS_PER_CATEGORY por categoría. Solo las categorías con 3 o más.
+    Las fijadas a mano (``pinned``, 30-10-2026) van primero en su categoría."""
     out, seen = {}, set()
-    for e in items:
+    pinned_keys = {e['key'] for e in pinned}
+    for e in [*pinned, *[x for x in items if x['key'] not in pinned_keys]]:
         cat = e.get('public_category') or ''
         if not cat or e.get('is_promo') or not (e.get('media') or e.get('has_description')): continue
         work = (cat, (e.get('series') or e.get('title') or '').strip().lower())
@@ -342,6 +344,7 @@ def compact(event, images, full=True, hidden=frozenset()):
         'v': [v for v in event['venue_names'][:2]], 'g': [round(event['coordinates']['lat'], 5), round(event['coordinates']['lon'], 5)] if event.get('coordinates') else None,
         'o': [[o['date'], o['time'] or ''] for o in event['occurrences']][:80], 'fr': 1 if event['is_free'] else 0, 'ch': event.get('channels') or [], 'tm': event.get('time') or '', 'tl': event['time_label'],
     }
+    if event.get('selection_pin'): out['sp'] = 1   # fijada a mano en la Selección (30-10-2026)
     vv = _VERIFIED_VENUE.get(event.get('key') or f"{event['source']}:{event['id']}")
     if vv: out['v'] = [vv]; out['g'] = None  # varias sedes: sin un punto en el mapa
     if event.get('time_conflicts'): out['tc'] = event['time_conflicts']
@@ -835,6 +838,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     # One ranked first page per day in the horizon, so the first paint and any
     # day tap work before the catalogue has finished loading.
     days = {}
+    all_by_key = {e['key']: e for e in events}   # fichas fijadas a mano en la Selección (30-10-2026)
     for offset in range(HORIZON_DAYS + 1):
         day = (today + dt.timedelta(days=offset)).isoformat()
         page = catalog.query_events(conn, day=day, public=True, page_size=PAGE_SIZE, include_started=False)
@@ -844,15 +848,23 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         # Selección elegida por la IA para ese día (src/ai_select.py), en los dos alcances (28-10-2026): va primero, en su orden.
-        from src.ai_select import picks_for, populars_for, MIN_SIZE
-        # Solo lo que eligió la IA, sin completar con las reglas (30-10-2026, David: calidad antes que popularidad).
+        from src.ai_select import picks_for, populars_for, pinned_for, pinned_day, MIN_SIZE
+        # Solo lo que eligió la IA, sin completar con las reglas (30-10-2026, David: calidad antes que popularidad). Las fijadas
+        # a mano (config/seleccion_manual.json) van delante aunque las reglas no las hayan propuesto como candidatas.
         def with_ai(scope, pool_items, base):
-            chosen = picks_for(conn, day, scope)
-            if not chosen: return base, False
+            chosen, pins = picks_for(conn, day, scope), pinned_for(day, scope)
             pool = {e['key']: e for e in pool_items}
-            first = [pool[k] for k in chosen if k in pool]
-            if len(first) < MIN_SIZE: return base, False
+            def get(k):
+                if k in pool: return dict(pool[k], selection_pin=k in pins)
+                if k in pins and k in all_by_key: return dict(all_by_key[k], featured_date=pinned_day(k, day, scope), selection_pin=True)
+            first = [x for x in (get(k) for k in chosen) if x]
+            if len([x for x in first if not x.get('selection_pin')]) < MIN_SIZE:
+                pinned = [x for x in first if x.get('selection_pin')]
+                return (pinned + [e for e in base if e['key'] not in set(pins)])[:FEATURED_SIZE], False
             return first[:FEATURED_SIZE], True
+        def pinned_items(scope):
+            pins = pinned_for(day, scope)
+            return [dict(all_by_key[k], featured_date=pinned_day(k, day, scope), selection_pin=True) for k in pins if k in all_by_key]
         picks, ai_pick = with_ai('week', featured['items'], picks)
         # Más «Selección Ontoca» para la lista de ese día: los actos de ese día mejor
         # puntuados con las mismas reglas explicables de la portada (featured_score).
@@ -880,8 +892,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         picks_today, ai_today = with_ai('day', today_only['items'], picks_today)
         # «Selección Ontoca» por tipo (28-10-2026, David): los mejor puntuados de cada categoría, de los mismos candidatos
         # (mismas reglas explicables, sin IA nueva). Fichero aparte, que solo pide la Selección: no pesa en la primera carga.
-        _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden),
-                                                            't': picks_by_category(today_only['items'], images, hidden),
+        _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden, pinned=pinned_items('week')),
+                                                            't': picks_by_category(today_only['items'], images, hidden, pinned=pinned_items('day')),
                                                             'x': expo_picks(by_key, ranks_expo, images, hidden),
                                                             'f': family_picks(today_only['items'] + featured['items'], images, hidden)})
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],

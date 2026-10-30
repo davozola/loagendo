@@ -1,0 +1,11 @@
+{
+  "nota": "Selección Ontoca fijada a mano por David (30-10-2026). Cada ficha (fuente:id, la clave que da la web o el parte) entra en la Selección los días indicados: en las filas de esos días y en el carrusel «Hoy» de esos días y «7 días» cuando alguno caiga dentro, la primera de su categoría. No cambia lo que elige la IA; se suma delante. Se quita borrando la entrada.",
+  "fijadas": [
+    {
+      "ficha": "opendatabcn_agenda:99400281354",
+      "titulo": "MIRA Festival 2026",
+      "dias": ["2026-11-06", "2026-11-07"],
+      "motivo": "Decisión editorial de David (30-10-2026)"
+    }
+  ]
+}

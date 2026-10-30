@@ -192,15 +192,42 @@ def ensure_ahead(conn, key, model=None, requester=None, today=None, ahead=AHEAD_
             'skipped': [(r['day'], r['scope'], r.get('reason')) for r in out if r['status'] == 'skipped']}
 
 
+MANUAL_PATH = ROOT / 'config' / 'seleccion_manual.json'
+
+
+def _window(day, scope):
+    d = dt.date.fromisoformat(day)
+    return [day] if scope == 'day' else [(d + dt.timedelta(days=i)).isoformat() for i in range(7)]
+
+
+def pinned_for(day, scope='week', path=None):
+    """Fichas fijadas a mano en la Selección (config/seleccion_manual.json, 30-10-2026) con algún día dentro del alcance."""
+    try: rows = json.loads(Path(path or MANUAL_PATH).read_text(encoding='utf-8')).get('fijadas') or []
+    except (OSError, ValueError): return []
+    win = set(_window(day, scope))
+    return [str(r['ficha']) for r in rows if r.get('ficha') and win & set(r.get('dias') or [])]
+
+
+def pinned_day(key, day, scope='week', path=None):
+    """El primer día fijado de esa ficha dentro del alcance (para la fecha de la tarjeta)."""
+    try: rows = json.loads(Path(path or MANUAL_PATH).read_text(encoding='utf-8')).get('fijadas') or []
+    except (OSError, ValueError): return day
+    win = _window(day, scope)
+    days = sorted(d for r in rows if str(r.get('ficha')) == key for d in (r.get('dias') or []) if d in win)
+    return days[0] if days else day
+
+
 def picks_for(conn, day, scope='week'):
-    """Claves elegidas por la IA para ese día y alcance (en orden) o [] si no hay selección."""
+    """Claves de la Selección para ese día y alcance, en orden: primero las fijadas a mano y después las de la IA."""
+    pins = pinned_for(day, scope)
     try: row = conn.execute('SELECT picks_json FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
-    except Exception: return []
-    return [p['key'] for p in json.loads(row[0])] if row else []
+    except Exception: row = None
+    return pins + [k for k in ([p['key'] for p in json.loads(row[0])] if row else []) if k not in pins]
 
 
 def populars_for(conn, day, scope='week'):
     """Claves de las «populares» de ese día y alcance (30-10-2026) o []."""
     try: row = conn.execute('SELECT popular_json FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
     except Exception: return []
-    return [p['key'] for p in json.loads(row[0])] if row and row[0] else []
+    pins = set(pinned_for(day, scope))
+    return [p['key'] for p in json.loads(row[0]) if p['key'] not in pins] if row and row[0] else []

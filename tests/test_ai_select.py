@@ -49,6 +49,26 @@ class PickTests(unittest.TestCase):
         self.assertEqual([e['key'] for e, _, _ in out], ['s:0', 's:2', 's:4'])
 
 
+class PinnedTests(unittest.TestCase):
+    def test_pinned_first_in_scope_and_not_popular(self):
+        with tempfile.TemporaryDirectory() as folder:
+            cfg = Path(folder) / 'manual.json'
+            cfg.write_text(json.dumps({'fijadas': [{'ficha': 'op:mira', 'dias': ['2026-11-06', '2026-11-07']}]}))
+            from unittest import mock
+            with mock.patch.object(ai_select, 'MANUAL_PATH', cfg):
+                self.assertEqual(ai_select.pinned_for('2026-11-06', 'day'), ['op:mira'])
+                self.assertEqual(ai_select.pinned_for('2026-11-05', 'day'), [])
+                self.assertEqual(ai_select.pinned_for('2026-10-31', 'week'), ['op:mira'])   # del 31-10 al 6-11
+                self.assertEqual(ai_select.pinned_for('2026-10-30', 'week'), [])
+                self.assertEqual(ai_select.pinned_day('op:mira', '2026-11-02', 'week'), '2026-11-06')
+                conn = connect(Path(folder) / 't.sqlite3'); ai_select.initialize(conn)
+                conn.execute("INSERT INTO ai_selection(day,scope,created_at,model,prompt_version,candidates_json,picks_json,popular_json) VALUES('2026-11-06','day','x','m','v','[]',?,?)",
+                             (json.dumps([{'key': 's:1'}, {'key': 'op:mira'}]), json.dumps([{'key': 'op:mira'}, {'key': 's:9'}])))
+                self.assertEqual(ai_select.picks_for(conn, '2026-11-06', 'day'), ['op:mira', 's:1'])
+                self.assertEqual(ai_select.populars_for(conn, '2026-11-06', 'day'), ['s:9'])
+                self.assertEqual(ai_select.picks_for(conn, '2026-11-05', 'day'), [])
+
+
 class EnsureTests(unittest.TestCase):
     def test_one_call_per_day_and_stored_with_reasons(self):
         with tempfile.TemporaryDirectory() as folder:
