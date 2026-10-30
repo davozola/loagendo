@@ -26,7 +26,7 @@ MAX_PER_CAT = 3
 AHEAD_DAYS = 7          # hoy y los siete días siguientes, en los dos alcances: 16 llamadas al día como mucho
 REFERENCE_TIER = 12     # config/venue_prestige.json: equipamientos de referencia
 PROMPT_VERSION = 3          # 3 (30-10-2026): calidad antes que popularidad, sin relleno, «populares» aparte
-MIN_SIZE = 5
+MIN_SIZE = 3            # 30-10-2026: con menos de 3 elegidas queda la selección de reglas; con 3 o 4 salen esas (mejor menos y mejores)
 MAX_POPULAR = 8
 SCOPES = ('day', 'week')
 
