@@ -1,5 +1,5 @@
 {
-  "nota": "Horas de festivales puestas a mano (26-10-2026). Cada día es explícito: no se extrapola a otros días. 'ficha' es la clave que da el parte diario (fuente:id); 'tipo': apertura o primera sesión; 'fuente': de dónde sale la hora. Ninguna actualización lo sobrescribe.",
+  "nota": "Horas de festivales puestas a mano (26-10-2026). Cada día es explícito: no se extrapola a otros días. 'ficha' es la clave que da el parte diario (fuente:id); 'tipo': apertura o primera sesión; 'fuente': de dónde sale la hora. Ninguna actualización lo sobrescribe. Descartados (30-10-2026): festivales sin hora ni sesiones que no se quieren en la Agenda; solo quita el aviso del parte diario (la ficha no se borra y sigue al buscar).",
   "ejemplo": {
     "ficha": "guiabcn:99400000000",
     "dias": {
@@ -10,5 +10,11 @@
     "fuente": "https://web-oficial-del-festival/programa",
     "nota": ""
   },
-  "horarios": []
+  "horarios": [],
+  "ejemplo_descartado": {
+    "ficha": "guiabcn:99400000000",
+    "motivo": "paraguas de varios espacios sin programa propio",
+    "fecha": "2026-10-30"
+  },
+  "descartados": []
 }

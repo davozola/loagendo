@@ -1468,7 +1468,6 @@ function renderDay(m) {
   timeline = [...timeline, ...strong.filter(e => e._st.state !== 'open')].sort((a, b) => Number(hourOf(a)) - Number(hourOf(b)) || seasonLast(a) - seasonLast(b) || a._st.sort - b._st.sort || byTitle(a, b));
   let tbcList = [...s.tbc, ...wideAllDay.filter(e => !isExhibit(e) && !strong.includes(e))].sort(byTitle);
   [timeline, tbcList] = gatherSeries([timeline, tbcList]);
-  const fests = festStrip(timeline, state.day); timeline = fests.rest;
   // Abierta a las 15:00 de verdad: el tramo que la cubre (un horario partido «09:00–13:30 · 16:00–17:30» no vale) y 2 h por delante.
   const span15 = e => (e._a.ranges || [{open: e._a.open, close: e._a.close}]).find(r => r.open <= REMIND_AT && r.close - REMIND_AT >= 120 && r.close <= 1440);
   const remindable = live && m.now.min >= REMIND_AT ? [] : strong.filter(e => e._a.close != null && e._a.open < REMIND_AT && span15(e));
@@ -1502,21 +1501,15 @@ function renderDay(m) {
   if (state.started && s.started.length) groups += `<div class="ag-group" id="ag-started">${groupHead(L('Talleres y cursos ya empezados', 'Tallers i cursos ja començats', 'Workshops and courses already under way'))}${rows(s.started, 'started')}</div>`;
   if (!groups) groups = `<div class="empty">${live ? L('Por hoy ya no queda nada con estos filtros. Mira mañana o quita algún filtro.', 'Per avui ja no queda res amb aquests filtres. Mira demà o treu algun filtre.', 'Nothing left today with these filters. Look at tomorrow or remove a filter.') : t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`;
   // Lo ya acabado o empezado sin hora de fin fiable no se enseña (28-10-2026, David: su valor es marginal).
-  html += fests.html + `<div class="ag-timeline">${groups}</div>`;
+  html += `<div class="ag-timeline">${groups}</div>`;
   if (showTbc) html += foldBlock('tbc', L(`${tbcList.length} planes sin hora de inicio`, `${tbcList.length} plans sense hora d'inici`, `${tbcList.length} plans without a start time`), tbcList, L('Espacios y ferias de horario amplio, festivales en varios espacios y actos sin hora publicada', "Espais i fires d'horari ampli, festivals en diversos espais i actes sense hora publicada", 'Open-hours venues and fairs, festivals across venues and events with no published time'), false, ' is-tbc');
   html += foldHtml('other', L('Otras actividades', 'Altres activitats', 'Other activities'), s.other, L('Sin tipo claro; las revisaremos', 'Sense tipus clar; les revisarem', 'No clear type; we will review them'));
   return {html: {agenda: html, expo: wideTab(wideList, live)}, counts: tabCounts};
 }
-// Fichas generales de festival (28-10-2026, David): no son una sesión a una hora; van en su propia línea al principio del
-// día («Festivales hoy: Mozilla Festival · Mostra de cinema emergent»), cada una abre su ficha con el programa.
-function festStrip(list, day) {
-  const heads = list.filter(e => isFestHead(e) && !state.fest);
-  if (!heads.length) return {html: '', rest: list};
-  // Plegados en una línea y, al abrir, filas iguales con el nombre (28-10-2026, 19:34, David).
-  const rows = heads.map(e => `<button type="button" class="ag-festrow" data-open="${esc(key(e))}"><span>${esc(e.festival?.name || e.title)}</span><i aria-hidden="true">›</i></button>`).join('');
-  const label = day === today ? L('Festivales hoy', 'Festivals avui', 'Festivals today') : L('Festivales', 'Festivals', 'Festivals');
-  return {html: `<details class="ag-fests"><summary>${esc(label)} <b>${heads.length}</b></summary><div class="ag-festrows">${rows}</div></details>`, rest: list.filter(e => !heads.includes(e))};
-}
+// Sin línea «Festivales hoy» (30-10-2026, David): vuelve la decisión del 28-10 por la mañana. Un festival con hora de
+// apertura de la fuente (abono con recinto propio: MIRA, Mozilla) sale a esa hora en la cronología con «N actuaciones»;
+// uno sin hora fiable ni sesiones no sale en la Agenda (sí al buscar y con el filtro) y llega al parte diario para que
+// David le ponga hora o lo descarte (config/horarios_festivales.json).
 function dayHeading(d) {
   const date = new Date(d + 'T12:00:00'), rel = d === today ? L('Hoy', 'Avui', 'Today') : d === addDays(today, 1) ? L('Mañana', 'Demà', 'Tomorrow') : '';
   const weekend = date.getDay() === 0 || date.getDay() === 6;
@@ -1533,11 +1526,11 @@ function renderRange(m) {
   const tabCounts = {agenda: buckets.reduce((n, [, l]) => n + l.length, 0), expo: wideAll.length};
   const days = buckets.slice(0, state.shown).map(([d, dayList]) => {
     const [list0] = gatherSeries([nearSort(dayList)]);
-    const fests = festStrip(list0, d), list = fests.rest;
+    const list = list0;
     const all = state.openDays.has(d) || list.length <= PER_DAY + 3, top = all || state.near ? null : rankDiverse(list, PER_DAY, e => e.public_category || '', relevance, 1, 4, isLocal, placeOf);
     const shown = all ? list : state.near ? list.slice(0, PER_DAY) : list.filter(e => top.has(e));
     markHighlights(shown, d);
-    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${fests.html}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
+    return `<div class="ag-group ag-day" id="day-${d}">${dayHeading(d)}${seriesFold(shown)}${all ? '' : `<button class="ag-toggle ag-dayall" type="button" data-dayall="${d}">${L('Ver las', 'Mostra les', 'See all')} ${list.length.toLocaleString('es-ES')} ${L('de este día', 'd\'aquest dia', 'on this day')}</button>`}</div>`;
   }).join('');
   const rest = buckets.slice(state.shown).reduce((n, [, l]) => n + l.length, 0);
   let html = chipsHtml(counts) + `<div class="ag-timeline">${days || `<div class="empty">${t('Nada con estos filtros este día. Prueba otro día o quita algún filtro.')}${tabHint(tabCounts)}</div>`}</div>`;

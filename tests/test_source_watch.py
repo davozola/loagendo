@@ -86,7 +86,7 @@ class ReportTests(unittest.TestCase):
             conn.execute("INSERT INTO source_alerts(source,kind,detail,first_seen_at,last_seen_at) VALUES('web_y','ACTS_DROP','0 actos','2026-10-26T06:00:00+00:00','2026-10-26T06:00:00+00:00')")
             conn.execute("INSERT INTO automation_runs(job_name,source,kind,started_at,finished_at,status,result_json) VALUES('publicar-web','','publish','2026-10-26T05:00:00+00:00','2026-10-26T05:30:00+00:00','completed',?)",
                          (json.dumps({'counts': {'events': 9623, 'upcoming_14_days': 4100}, 'deploy': {'status': 'completed'}}),))
-            data = daily_report.collect(conn, today=day, now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'no.json', matomo=False)
+            data = daily_report.collect(conn, today=day, now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'no.json', matomo=False, catalog_path=Path(folder) / 'sin-catalogo.json')
             subject, body, text = daily_report.render(data)
             self.assertIn('1 para revisar', subject); self.assertIn('9.623', body); self.assertIn('web_y', body)   # parte breve (26-10-2026)
             r = daily_report.run(conn, {'to': 'hola@ontoca.com'}, today=day, send=lambda *a: {'status': 'skipped'}, out_dir=Path(folder) / 'partes')
@@ -123,7 +123,7 @@ class AiBlockTests(unittest.TestCase):
             conn.execute(log, ('datos', 'guiabcn:0', 'h', 'm', 1, '{}', 1.0, '2 datos descartados por no pasar la comprobación de cita', '2026-10-26T05:00:00+00:00'))
             conn.execute("INSERT INTO automation_runs(job_name,source,kind,started_at,finished_at,status,result_json) VALUES('ia-asistente','','ai','2026-10-26T04:00:00+00:00','2026-10-26T04:10:00+00:00','completed',?)",
                          (json.dumps({'usage': {'input_tokens': 1200, 'output_tokens': 300}}),))
-            data = daily_report.collect(conn, today=dt.date(2026, 10, 26), now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'x', matomo=False)
+            data = daily_report.collect(conn, today=dt.date(2026, 10, 26), now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'x', matomo=False, catalog_path=Path(folder) / 'sin-catalogo.json')
             ai = data['ai']
             self.assertEqual((ai['tokens']['input_tokens'], ai['categories'], ai['merges'], ai['dropped']), (1200, 1, 1, 1))
             self.assertEqual(len(ai['sample']), 1)   # 26-10-2026 es lunes
@@ -155,7 +155,7 @@ class TriageTests(unittest.TestCase):
             conn.execute(run, ('web-teatre-lliure', 'web_teatre_lliure', 'web', '2026-10-26T01:00:00+00:00', '2026-10-26T01:01:00+00:00', 'failed', 'HTTP Error 500: Internal Server Error'))
             conn.execute(run, ('agendas-ia', '', 'ai_agenda', '2026-10-26T02:00:00+00:00', '2026-10-26T02:10:00+00:00', 'partial', '1 de 14 fallan · venue_ia_x: HTTP 403'))
             conn.execute(run, ('agendas-ia', '', 'ai_agenda', '2026-10-26T05:00:00+00:00', '2026-10-26T05:10:00+00:00', 'completed', ''))
-            data = daily_report.collect(conn, today=day, now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'x', matomo=False)
+            data = daily_report.collect(conn, today=day, now=dt.datetime(2026, 10, 26, 7, tzinfo=dt.timezone.utc), first_seen_path=Path(folder) / 'x', matomo=False, catalog_path=Path(folder) / 'sin-catalogo.json')
             self.assertEqual([a['triage']['class'] for a in data['alerts']], ['revisar', 'esperar'])
             self.assertEqual({f['job']: f['triage']['class'] for f in data['failing']}, {'web-teatre-lliure': 'esperar', 'agendas-ia': 'suelto'})
             subject, body, text = daily_report.render(data)
@@ -181,3 +181,26 @@ class FestivalWatchTests(unittest.TestCase):
             items[0]['mh'] = {'2026-10-29': {'time': '17:00'}}; cat.write_text(json.dumps({'items': items}))
             w3 = daily_report._festival_watch(conn, tue, now, cat)
             self.assertEqual(w3['pending'], 0)   # resuelto con la hora puesta a mano
+
+    def test_sin_hora_ni_sesiones_pide_decidir_y_se_puede_descartar(self):
+        """30-10-2026, David: los festivales sin hora ni fichas con sesión llegan al parte para ponerles hora o descartarlos."""
+        items = [{'s': 'generalitat', 'i': '42', 't': 'Festival 42', 'a': '2026-11-04', 'b': '2026-11-08', 'fs': ['f42', 'Festival 42', 1], 'kd': 'program', 'f': 'festival', 'v': ['Fabra i Coats']},
+                 {'s': 'guiabcn', 'i': '1', 't': 'In-Edit', 'a': '2026-10-29', 'b': '2026-11-08', 'fs': ['in-edit', 'In-Edit', 1], 'kd': 'program', 'f': 'festival'},
+                 {'s': 'venue_ia_x', 'i': 's1', 't': 'Sessió Talent', 'a': '2026-10-30', 'b': '2026-10-30', 'o': [['2026-10-30', '17:00']], 'tm': '17:00', 'fs': ['in-edit', 'In-Edit', 0], 'kd': 'single', 'f': 'one_shot'}]
+        with tempfile.TemporaryDirectory() as folder:
+            cat = Path(folder) / 'catalog.json'; cat.write_text(json.dumps({'items': items}))
+            cfg = Path(folder) / 'horarios.json'; cfg.write_text(json.dumps({'horarios': [], 'descartados': []}))
+            conn = _conn(folder); day = dt.date(2026, 11, 2); now = dt.datetime(2026, 11, 2, 7, tzinfo=dt.timezone.utc)
+            w = daily_report._festival_watch(conn, day, now, cat, cfg)
+            self.assertEqual([p['name'] for p in w['manual']], ['Festival 42'])   # In-Edit tiene una ficha con sesión: no se pregunta
+            self.assertEqual(w['manual'][0]['venue'], 'Fabra i Coats')
+            data = daily_report.collect(conn, today=day, now=now, first_seen_path=Path(folder) / 'x', matomo=False, catalog_path=Path(folder) / 'sin-catalogo.json')
+            data['fest_watch'] = None; before = daily_report.render(data)[0]
+            data['fest_watch'] = w
+            subject, body, text = daily_report.render(data)
+            count = lambda subj: int(subj.rsplit('· ', 1)[1].split()[0]) if 'para revisar' in subj else 0
+            self.assertEqual(count(subject), count(before) + 1)   # cuenta como una cosa que pide atención
+            self.assertIn('sin hora ni sesiones', body); self.assertIn('generalitat:42', text)
+            cfg.write_text(json.dumps({'horarios': [], 'descartados': [{'ficha': 'generalitat:42', 'motivo': 'sin programa'}]}))
+            w2 = daily_report._festival_watch(conn, day, now, cat, cfg)
+            self.assertEqual((w2['manual'], w2['manual_total']), ([], 0))

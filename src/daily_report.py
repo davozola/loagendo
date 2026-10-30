@@ -75,18 +75,32 @@ def _coverage(conn, day):
     return {s: (n, t) for s, n, t in conn.execute('SELECT source, acts, timed FROM time_coverage WHERE day=?', (day.isoformat(),))}
 
 
-def _festival_watch(conn, today, now, catalog_path=CATALOG):
+def _festival_discards(path=None):
+    """Festivales que David ha descartado del aviso (30-10-2026): {ficha: motivo}, en config/horarios_festivales.json
+    («descartados»). Descartar solo quita el aviso: la ficha no se borra y sigue al buscar y con el filtro de festivales."""
+    from src.festivals import MANUAL_HOURS
+    try: data = json.loads(Path(path or MANUAL_HOURS).read_text(encoding='utf-8'))
+    except (OSError, ValueError): return {}
+    return {str(r.get('ficha') or '').strip(): str(r.get('motivo') or '') for r in data.get('descartados') or [] if str(r.get('ficha') or '').strip()}
+
+
+def _festival_watch(conn, today, now, catalog_path=CATALOG, discards_path=None):
     """Festivales y fiestas de la web publicada (26-10-2026): los nuevos y los que no tienen hora de ningún día.
     Se lee el catálogo publicado (lo que ve la gente). Cada festival se guarda en ``festival_hour_watch`` desde que se ve
     por primera vez hasta que tiene hora o termina; el parte solo lista los nuevos, los que empiezan esta semana y, los
-    lunes, todos los pendientes."""
+    lunes, todos los pendientes.
+
+    «manual» (30-10-2026, David): los pendientes sin ninguna ficha con sesión. No salen en la Agenda (no hay hora que
+    poner), así que piden trabajo a mano: ponerles hora (horarios) o descartarlos (descartados), en
+    config/horarios_festivales.json. Se listan con la misma regla: nuevos, los que empiezan esta semana y, los lunes, todos."""
     try: items = json.loads(Path(catalog_path).read_text(encoding='utf-8'))['items']
     except (OSError, ValueError, KeyError): return None
     conn.execute("""CREATE TABLE IF NOT EXISTS festival_hour_watch (key TEXT PRIMARY KEY, name TEXT NOT NULL, start TEXT, end TEXT, source TEXT,
       hours TEXT, first_seen TEXT NOT NULL, last_seen TEXT NOT NULL, resolved_at TEXT)""")
     t, horizon = today.isoformat(), (today + dt.timedelta(days=WATCH_AHEAD_DAYS)).isoformat()
     stamp = now.isoformat(timespec='seconds')
-    seen = set(); new = []
+    seen = set(); new = []; info = {}
+    discards = _festival_discards(discards_path)
     # Sesiones con hora de cada festival en la web (28-10-2026, David): dos sesiones sueltas no son el programa (DART). El festival
     # sigue pendiente hasta que su cobertura es completa (src/festival_finder.coverage).
     from src.festival_finder import coverage, _connected_festivals
@@ -104,7 +118,8 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG):
         except ValueError: continue
         if span > SEASON_DAYS: continue
         key = '%s:%s' % (e['s'], e['i'])
-        hours = 'programa' if e.get('pf') else 'a mano' if e.get('mh') else 'por días' if e.get('hb') else 'con sesiones' if any(o[1] for o in e.get('o') or []) else ''
+        info[key] = {'sessions': (kids.get(fs[0]) or {}).get('n', 0) if fs else 0, 'venue': (e.get('v') or [''])[0]}
+        hours = 'descartado' if key in discards else 'programa' if e.get('pf') else 'a mano' if e.get('mh') else 'por días' if e.get('hb') else 'con sesiones' if any(o[1] for o in e.get('o') or []) else ''
         if not hours and fs:
             k = kids.get(fs[0]) or {'n': 0, 'days': set()}
             if coverage(e['a'], e['b'], k['days'], k['n'], fs[0] in connected) == 'completa': hours = '%d sesiones' % k['n']
@@ -122,8 +137,11 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG):
         "SELECT key,name,start,end,source FROM festival_hour_watch WHERE resolved_at IS NULL AND end>=? ORDER BY start", (t,)) if r[0] in seen]
     soon = (today + dt.timedelta(days=SOON_DAYS)).isoformat()
     new_keys = {n['key'] for n in new}
+    for p in pending: p.update(info.get(p['key']) or {'sessions': 0, 'venue': ''})
     listed = [p for p in pending if p['key'] in new_keys or p['start'] <= soon or today.weekday() == 0]
-    return {'new': new, 'pending': len(pending), 'listed': listed, 'full': today.weekday() == 0}
+    manual_all = [p for p in pending if not p['sessions']]
+    return {'new': new, 'pending': len(pending), 'listed': listed, 'full': today.weekday() == 0,
+            'manual': [p for p in listed if not p['sessions']], 'manual_total': len(manual_all)}
 
 
 
@@ -516,7 +534,9 @@ def render(data):
     # Una fuente que ya tiene su alerta (avería suya o rechazo) no se repite como atrasada (28-10-2026: Diputació salía dos veces).
     alert_src = {a['source'] for a in alerts} | {a['source'].replace('api-', '').replace('-', '_') for a in alerts}
     fresh = [f for f in fresh if f['source'] not in alert_src]
-    attention = len(review) + len(fresh) + len(jobs_bad) + (1 if lost else 0) + (1 if dups else 0) + (1 if serious else 0)
+    fw = data.get('fest_watch') or {}
+    manual = fw.get('manual') or []
+    attention = len(review) + len(fresh) + len(jobs_bad) + (1 if lost else 0) + (1 if dups else 0) + (1 if serious else 0) + (1 if manual else 0)
     state = 'rojo' if any(a['kind'] in ('PUBLISH_STALE', 'ACTS_DROP') for a in alerts) or serious else 'ámbar' if attention or waiting else 'verde'
     dot = {'verde': '#12b76a', 'ámbar': '#f79009', 'rojo': '#d92d20'}[state]
     subject = 'Ontoca · parte del %s · %s' % (day.strftime('%d-%m'), ('%d para revisar' % attention) if attention else 'todo en orden')
@@ -545,6 +565,16 @@ def render(data):
     if dups:
         items.append('<b>%d posibles duplicados</b> sin fusionar (mismo día, sitio y título; horas distintas no cuentan):%s' % (len(dups), li(
             '%s · %s <span style="color:#777">(%s)</span> = %s <span style="color:#777">(%s)</span>' % (esc(d['day'][8:10] + '/' + d['day'][5:7]), esc(d['a']['title'][:60]), esc(d['a']['source']), esc(d['b']['title'][:60]), esc(d['b']['source'])) for d in dups[:8])))
+    if manual:
+        # Festivales sin hora ni sesiones (30-10-2026, David): no salen en la Agenda; decidir hora o descartar.
+        more = fw.get('manual_total', len(manual)) - len(manual)
+        items.append('<b>%d festival%s sin hora ni sesiones</b> · no salen en la Agenda: ponerles hora o descartarlos%s:%s'
+                     '<span style="color:#666;font-size:12px">Hora: añadir en <code>config/horarios_festivales.json</code> → «horarios» con la ficha, los días y la fuente. '
+                     'Descartar: → «descartados» con la ficha y el motivo (la ficha no se borra; sigue al buscar).</span>' % (
+            len(manual), 'es' if len(manual) != 1 else '', (' (%d más pendientes; los lunes salen todos)' % more) if more > 0 else '', li(
+            '<a href="https://ontoca.com/e/%s">%s</a> · %s%s · <span style="color:#777">%s</span> · <code>%s</code>' % (
+                esc(p['key'].replace(':', '/', 1)), esc(p['name'][:70]), esc(p['start'][8:10] + '/' + p['start'][5:7]),
+                (' – ' + esc(p['end'][8:10] + '/' + p['end'][5:7])) if p['end'] != p['start'] else '', esc((p.get('venue') or '')[:40]), esc(p['key'])) for p in manual[:15])))
     dates_txt = [d for d in data.get('date_text') or [] if d.get('new', True)]
     if dates_txt:
         items.append('<b>%d textos con día y fecha que no cuadran</b> (de la fuente; no se cambian, revisar o avisar a la fuente):%s' % (len(dates_txt), li(
@@ -586,8 +616,7 @@ def render(data):
     r = data['runs']
     lines.append('Motor 24 h: %d pasadas correctas · %d con problemas%s' % (r.get('completed', 0), sum(v for k, v in r.items() if k not in ('completed', 'skipped', 'running')),
                  (' (%s)' % esc(', '.join('%s: %s' % (f['job'], TRIAGE[f['triage']['class']][0]) for f in data['failing'] if f.get('triage')))) if data['failing'] else ''))
-    fw = data.get('fest_watch')
-    if fw and fw['new']:
+    if fw and fw.get('new'):
         lines.append('Festivales nuevos: %s' % esc(', '.join(n['name'] for n in fw['new'][:5])))
     parts.append(li(lines))
     if ai and ai['sample']:
@@ -596,7 +625,8 @@ def render(data):
     parts.append('<p style="color:#999;font-size:12px;margin-top:20px">Generado por el motor de Ontoca. Las alertas nuevas también llegan al momento, una sola vez.</p></div>')
     text = '\n'.join([subject, '', 'Requiere atención: %d' % attention] + ['- [Revisar] %s %s: %s' % (a['source'], LABELS.get(a['kind'], a['kind']), a['detail'][:160]) for a in review] +
                      ['- %s: %s' % (f['job'], (f['error'] or '')[:160]) for f in jobs_bad] + ['- %s %s' % (f['source'], 'nunca se ha leído bien' if f['hours'] is None else 'sin leer bien desde hace ' + hrs(f['hours'])) for f in fresh] + (['- %d posibles duplicados' % len(dups)] if dups else []) +
-                     (['- %d salas sin nada próximo' % len(lost)] if lost else []) + ['- Error grave: %s · %s' % (a['title'], a['problem']) for a in serious[:5]] +
+                     (['- %d salas sin nada próximo' % len(lost)] if lost else []) +
+                     ['- Festival sin hora ni sesiones (hora o descartar): %s %s–%s · %s' % (p['name'][:70], p['start'], p['end'], p['key']) for p in manual[:15]] + ['- Error grave: %s · %s' % (a['title'], a['problem']) for a in serious[:5]] +
                      ['', 'Fichas publicadas: %s' % ((pub or {}).get('counts', {}).get('events', '?')), 'Actos de las fuentes en 30 días: %s' % tot])
     return subject, ''.join(parts), text
 
