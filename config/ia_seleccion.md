@@ -30,3 +30,8 @@ Solo las citas grandes de verdad del alcance que **no** están entre las elegida
 grandes salas de artistas muy conocidos, musicales y espectáculos de gran producción, grandes partidos. Sin juicio de
 calidad: se marcan como «Popular» para que se vean, sin que digamos que las hemos elegido. Si no hay citas así, no
 pongas ninguna: nunca rellenes. Nunca sesiones de club, jams, impro, salas pequeñas, ferias, mercados ni nada familiar.
+
+## Más para cada tipo (hasta 40)
+
+Para el filtro por tipo del carrusel (Música, Teatro, Cine…): más propuestas que también recomendarías con el mismo
+criterio de las elegidas, hasta 6 por categoría si las hay buenas. Nunca populares ni nada de la lista de «no».

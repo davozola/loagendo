@@ -25,20 +25,23 @@ CANDIDATES = TOP_POOL + INDIE_POOL
 MAX_PER_CAT = 3
 AHEAD_DAYS = 7          # hoy y los siete días siguientes, en los dos alcances: 16 llamadas al día como mucho
 REFERENCE_TIER = 12     # config/venue_prestige.json: equipamientos de referencia
-PROMPT_VERSION = 3          # 3 (30-10-2026): calidad antes que popularidad, sin relleno, «populares» aparte
+PROMPT_VERSION = 4          # 3 (30-10-2026): calidad antes que popularidad, sin relleno, «populares» aparte; 4: «mas» para los tipos del carrusel
+MAX_EXTRA = 40
+PER_TYPE = 6
 MIN_SIZE = 3            # 30-10-2026: con menos de 3 elegidas queda la selección de reglas; con 3 o 4 salen esas (mejor menos y mejores)
 MAX_POPULAR = 8
 SCOPES = ('day', 'week')
 
 SYSTEM = """Eres el editor de Ontoca, agenda cultural de Barcelona. Eliges la «Selección Ontoca» entre los candidatos que recibes (lista JSON con n, título, categoría, canales, fecha, hora, sala, barrio, gratis, tipo, cartel, extracto y si la sala es grande o pequeña).
-Responde con la herramienta seleccionar: entre 5 y 10 elegidas (cada una con su n y un motivo de como máximo 12 palabras) y, aparte, hasta 8 populares (solo su n), según los criterios.
+Responde con la herramienta seleccionar: entre 5 y 10 elegidas (cada una con su n y un motivo de como máximo 12 palabras); aparte, hasta 8 populares (solo su n), según los criterios; y en «mas», hasta 40 n más que también recomendarías con el mismo criterio de las elegidas (para el filtro por tipo del carrusel: hasta 6 por categoría, si las hay buenas; nunca populares ni nada de la lista de «no»).
 Usa solo los datos de cada ficha; no inventes."""
 
 TOOL = {'name': 'seleccionar', 'description': 'La Selección Ontoca (entre 5 y 10) y las grandes citas populares que no se eligen.',
         'input_schema': {'type': 'object', 'required': ['elegidas', 'populares'], 'properties': {
             'elegidas': {'type': 'array', 'items': {'type': 'object', 'required': ['n', 'motivo'],
                                                     'properties': {'n': {'type': 'integer'}, 'motivo': {'type': 'string'}}}},
-            'populares': {'type': 'array', 'items': {'type': 'integer'}}}}}
+            'populares': {'type': 'array', 'items': {'type': 'integer'}},
+            'mas': {'type': 'array', 'items': {'type': 'integer'}}}}}
 
 
 def guide():
@@ -63,6 +66,8 @@ def initialize(conn):
           DROP TABLE ai_selection; ALTER TABLE ai_selection_new RENAME TO ai_selection;""")
     # 30-10-2026: las «populares» que la IA marca aparte (grandes citas que no elige).
     if 'popular_json' not in {r[1] for r in conn.execute('PRAGMA table_info(ai_selection)')}: conn.execute('ALTER TABLE ai_selection ADD COLUMN popular_json TEXT')
+    # 30-10-2026: más elegidas con el mismo criterio, para el filtro por tipo del carrusel (Música, Teatro…).
+    if 'extra_json' not in {r[1] for r in conn.execute('PRAGMA table_info(ai_selection)')}: conn.execute('ALTER TABLE ai_selection ADD COLUMN extra_json TEXT')
 
 
 def _work(e):
@@ -134,17 +139,18 @@ def ensure(conn, key, day=None, scope='week', model=None, requester=None):
     items = candidates(conn, day, scope)
     if len(items) < SIZE: return {'status': 'skipped', 'reason': 'pocos candidatos', 'day': day, 'scope': scope}
     message = (requester or ai_assist._request)('POST', f'{ai_assist.API}/messages', key, request_body(items, day, scope, model), timeout=180)
-    chosen, popular = parse(message, items)
+    chosen, popular, extra = parse(message, items, with_extra=True)
     picks = [{'key': e['key'], 'title': e['title'], 'tipo': kind, 'motivo': why} for e, kind, why in chosen]
     pops = [{'key': e['key'], 'title': e['title']} for e in popular]
+    extras = [{'key': e['key'], 'title': e['title']} for e in extra]
     if len(picks) < MIN_SIZE: return {'status': 'skipped', 'reason': f'la IA eligió {len(picks)} (mínimo {MIN_SIZE})', 'day': day, 'scope': scope, 'usage': message.get('usage') or {}}
     with conn:
-        conn.execute("""INSERT INTO ai_selection(day,scope,created_at,model,prompt_version,candidates_json,picks_json,usage_json,popular_json) VALUES(?,?,?,?,?,?,?,?,?)
+        conn.execute("""INSERT INTO ai_selection(day,scope,created_at,model,prompt_version,candidates_json,picks_json,usage_json,popular_json,extra_json) VALUES(?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(day,scope) DO UPDATE SET created_at=excluded.created_at,model=excluded.model,prompt_version=excluded.prompt_version,
-            candidates_json=excluded.candidates_json,picks_json=excluded.picks_json,usage_json=excluded.usage_json,popular_json=excluded.popular_json""",
+            candidates_json=excluded.candidates_json,picks_json=excluded.picks_json,usage_json=excluded.usage_json,popular_json=excluded.popular_json,extra_json=excluded.extra_json""",
                      (day, scope, dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), model, version(),
                       json.dumps([e['key'] for e in items]), json.dumps(picks, ensure_ascii=False), json.dumps(message.get('usage') or {}),
-                      json.dumps(pops, ensure_ascii=False)))
+                      json.dumps(pops, ensure_ascii=False), json.dumps(extras, ensure_ascii=False)))
     return {'status': 'completed', 'day': day, 'scope': scope, 'picks': [p['title'][:50] for p in picks], 'populares': [p['title'][:50] for p in pops], 'usage': message.get('usage') or {}}
 
 
@@ -152,15 +158,35 @@ def request_body(items, day, scope, model):
     listing = [_payload(n, e) for n, e in enumerate(items)]
     ask = SYSTEM + '\n\n' + guide() + ('\n\nAlcance: solo el día ' + day + '. Reparte las elegidas entre mañana, tarde y noche si hay con qué.' if scope == 'day'
                                          else '\n\nAlcance: del ' + day + ' a los seis días siguientes. Reparte días.')
-    return {'model': model, 'max_tokens': 2000,
+    return {'model': model, 'max_tokens': 3000,
             'system': [{'type': 'text', 'text': ask, 'cache_control': {'type': 'ephemeral'}}],
             'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'seleccionar'},
             'messages': [{'role': 'user', 'content': json.dumps(listing, ensure_ascii=False)}]}
 
 
-def parse(message, items):
-    """(elegidas comprobadas, populares comprobadas) de la respuesta de la IA."""
-    rows, pops = [], []
+def _ints(values):
+    out = []
+    for x in values or []:
+        x = x.get('n') if isinstance(x, dict) else x
+        try: out.append(int(x))
+        except (TypeError, ValueError): continue
+    return out
+
+
+def extras(ns, items, chosen, popular):
+    """Las «mas» de la respuesta: fichas existentes, sin elegidas, populares ni obras repetidas; como mucho PER_TYPE por categoría."""
+    out, works, per_cat = [], {_work(e) for e, _, _ in chosen} | {_work(e) for e in popular}, {}
+    for n in ns:
+        if len(out) >= MAX_EXTRA or not (0 <= n < len(items)): continue
+        e = items[n]; c = e.get('public_category')
+        if _work(e) in works or per_cat.get(c, 0) >= PER_TYPE: continue
+        out.append(e); works.add(_work(e)); per_cat[c] = per_cat.get(c, 0) + 1
+    return out
+
+
+def parse(message, items, with_extra=False):
+    """(elegidas comprobadas, populares comprobadas[, «mas» comprobadas]) de la respuesta de la IA."""
+    rows, pops, mas = [], [], []
     for block in message.get('content') or []:
         if block.get('type') == 'tool_use':
             data = block.get('input') or {}
@@ -168,12 +194,10 @@ def parse(message, items):
                 try: rows.append((int(r['n']), 'seleccion', str(r.get('motivo') or '')[:200]))
                 except (KeyError, TypeError, ValueError): continue
             # A veces llegan como {"n": 3} o "3" en vez de 3 (30-10-2026: cinco días sin populares por eso).
-            for x in data.get('populares') or []:
-                x = x.get('n') if isinstance(x, dict) else x
-                try: pops.append(int(x))
-                except (TypeError, ValueError): continue
+            pops = _ints(data.get('populares')); mas = _ints(data.get('mas'))
     chosen = pick(rows, items)
-    return chosen, populars(pops, items, chosen)
+    popular = populars(pops, items, chosen)
+    return (chosen, popular, extras(mas, items, chosen, popular)) if with_extra else (chosen, popular)
 
 
 def ensure_ahead(conn, key, model=None, requester=None, today=None, ahead=AHEAD_DAYS):
@@ -223,6 +247,13 @@ def picks_for(conn, day, scope='week'):
     try: row = conn.execute('SELECT picks_json FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
     except Exception: row = None
     return pins + [k for k in ([p['key'] for p in json.loads(row[0])] if row else []) if k not in pins]
+
+
+def extras_for(conn, day, scope='week'):
+    """Claves de las «mas» (más elegidas con el mismo criterio, para el filtro por tipo del carrusel) o []."""
+    try: row = conn.execute('SELECT extra_json FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
+    except Exception: return []
+    return [p['key'] for p in json.loads(row[0])] if row and row[0] else []
 
 
 def populars_for(conn, day, scope='week'):

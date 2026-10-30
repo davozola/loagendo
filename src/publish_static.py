@@ -317,7 +317,7 @@ def family_picks(items, images, hidden=frozenset(), size=10):
     return out
 
 
-def picks_by_category(items, images, hidden=frozenset(), pinned=()):
+def picks_by_category(items, images, hidden=frozenset(), pinned=(), min_size=3):
     """{categoría: [fichas]} con los candidatos de la Selección en su orden de puntuación: con imagen o descripción,
     sin promociones, una ficha por obra y como mucho PICKS_PER_CATEGORY por categoría. Solo las categorías con 3 o más.
     Las fijadas a mano (``pinned``, 30-10-2026) van primero en su categoría."""
@@ -329,7 +329,7 @@ def picks_by_category(items, images, hidden=frozenset(), pinned=()):
         work = (cat, (e.get('series') or e.get('title') or '').strip().lower())
         if work in seen or len(out.get(cat, [])) >= PICKS_PER_CATEGORY: continue
         seen.add(work); out.setdefault(cat, []).append(e)
-    return {c: [compact(e, images, hidden=hidden) for e in v] for c, v in out.items() if len(v) >= 3}
+    return {c: [compact(e, images, hidden=hidden) for e in v] for c, v in out.items() if len(v) >= min_size}
 
 
 def compact(event, images, full=True, hidden=frozenset()):
@@ -848,7 +848,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         # Selección elegida por la IA para ese día (src/ai_select.py), en los dos alcances (28-10-2026): va primero, en su orden.
-        from src.ai_select import picks_for, populars_for, pinned_for, pinned_day, MIN_SIZE
+        from src.ai_select import picks_for, populars_for, extras_for, pinned_for, pinned_day, MIN_SIZE
         # Solo lo que eligió la IA, sin completar con las reglas (30-10-2026, David: calidad antes que popularidad). Las fijadas
         # a mano (config/seleccion_manual.json) van delante aunque las reglas no las hayan propuesto como candidatas.
         def with_ai(scope, pool_items, base):
@@ -862,6 +862,16 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
                 pinned = [x for x in first if x.get('selection_pin')]
                 return (pinned + [e for e in base if e['key'] not in set(pins)])[:FEATURED_SIZE], False
             return first[:FEATURED_SIZE], True
+        # Tipos del carrusel (30-10-2026, David): con IA, las elegidas y las «mas» de cada categoría, con el mismo criterio;
+        # sin IA, las reglas como antes. Las fijadas a mano, primero.
+        def ai_types(scope, pool_items):
+            keys = list(dict.fromkeys(picks_for(conn, day, scope) + extras_for(conn, day, scope)))
+            if len([k for k in keys if k not in set(pinned_for(day, scope))]) < MIN_SIZE: return None
+            pool = {e['key']: e for e in pool_items}
+            got = [dict(pool[k]) if k in pool else dict(all_by_key[k], featured_date=pinned_day(k, day, scope)) for k in keys if k in pool or k in all_by_key]
+            pins = set(pinned_for(day, scope))
+            for e in got: e['selection_pin'] = e['key'] in pins
+            return got
         def pinned_items(scope):
             pins = pinned_for(day, scope)
             return [dict(all_by_key[k], featured_date=pinned_day(k, day, scope), selection_pin=True) for k in pins if k in all_by_key]
@@ -892,8 +902,9 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         picks_today, ai_today = with_ai('day', today_only['items'], picks_today)
         # «Selección Ontoca» por tipo (28-10-2026, David): los mejor puntuados de cada categoría, de los mismos candidatos
         # (mismas reglas explicables, sin IA nueva). Fichero aparte, que solo pide la Selección: no pesa en la primera carga.
-        _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(featured['items'], images, hidden, pinned=pinned_items('week')),
-                                                            't': picks_by_category(today_only['items'], images, hidden, pinned=pinned_items('day')),
+        types_w, types_t = ai_types('week', featured['items']), ai_types('day', today_only['items'])
+        _write_json(out / 'data' / 'picks' / f'{day}.json', {'w': picks_by_category(types_w, images, hidden, min_size=2) if types_w else picks_by_category(featured['items'], images, hidden, pinned=pinned_items('week')),
+                                                            't': picks_by_category(types_t, images, hidden, min_size=2) if types_t else picks_by_category(today_only['items'], images, hidden, pinned=pinned_items('day')),
                                                             'x': expo_picks(by_key, ranks_expo, images, hidden),
                                                             'f': family_picks(today_only['items'] + featured['items'], images, hidden)})
         days[day] = {'day': day, 'total': page['total'], 'items': [compact(e, images, hidden=hidden) for e in page['items']],

@@ -698,8 +698,8 @@ async function selection() {
       if (on && row) { const r = on.getBoundingClientRect(), box = row.getBoundingClientRect(); if (r.right > box.right - 24 || r.left < box.left) row.scrollLeft += r.left - box.left - 16 }
     }
     const want = state.pickCat, sel = want ? groups[want] || [] : chosen;
-    // Una ficha fijada a mano (config/seleccion_manual.json) va la primera de su categoría (30-10-2026, David: MIRA en Música).
-    const items = want === 'expos' ? sel : sel.slice().sort((a, b) => (want ? Number(b.pinned) - Number(a.pinned) : 0) || byTime(a, b));
+    // Una ficha fijada a mano (config/seleccion_manual.json) va la primera, en «Todo» y en su tipo (30-10-2026, David: MIRA).
+    const items = want === 'expos' ? sel : sel.slice().sort((a, b) => (Number(b.pinned) - Number(a.pinned)) || byTime(a, b));
     const end = new Date(pickDay + 'T12:00:00'); end.setDate(end.getDate() + 6);
     $('weekRange').textContent = finde ? `${L('Lo mejor del fin de semana', 'El millor del cap de setmana', 'The best of the weekend')} · ${labelDate(win.from)} – ${labelDate(win.to)}` : win ? `${labelDate(pickDay)} – ${labelDate(iso(end))}` : one ? labelDate(pickDay) : `${labelDate(pickDay)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;

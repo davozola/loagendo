@@ -49,6 +49,14 @@ class PickTests(unittest.TestCase):
         self.assertEqual([e['key'] for e, _, _ in out], ['s:0', 's:2', 's:4'])
 
 
+class ExtraTests(unittest.TestCase):
+    def test_mas_without_chosen_popular_or_repeats_and_capped_per_type(self):
+        items = [item(i, 'musica') for i in range(10)] + [item(10, 'cine')]
+        msg = {'content': [{'type': 'tool_use', 'input': {'elegidas': [{'n': 0, 'motivo': 'm'}], 'populares': [1], 'mas': [0, 1, 2, '3', {'n': 4}, 5, 6, 7, 8, 9, 10, 99]}}]}
+        chosen, popular, extra = ai_select.parse(msg, items, with_extra=True)
+        self.assertEqual([e['key'] for e in extra], ['s:2', 's:3', 's:4', 's:5', 's:6', 's:7', 's:10'])   # 6 de música como mucho
+
+
 class PinnedTests(unittest.TestCase):
     def test_pinned_first_in_scope_and_not_popular(self):
         with tempfile.TemporaryDirectory() as folder:
