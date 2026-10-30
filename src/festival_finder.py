@@ -192,7 +192,9 @@ def ai_search(name, start, end, key, requester=None):
               "o {\"url\": \"\"} si no la encuentras.")
     body = {'model': MODEL, 'max_tokens': 400, 'messages': [{'role': 'user', 'content': prompt}],
             'tools': [{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 3}]}
-    message = requester('POST', f'{API}/messages', key, body, timeout=120)
+    from src.ai_assist import usage_label
+    with usage_label('festivales_busqueda_web', name):
+        message = requester('POST', f'{API}/messages', key, body, timeout=120)
     text = ' '.join(b.get('text', '') for b in message.get('content', []) if b.get('type') == 'text')
     m = re.search(r'\{[^{}]*"url"\s*:\s*"([^"]*)"[^{}]*\}', text)
     url = (m.group(1) if m else '').strip()

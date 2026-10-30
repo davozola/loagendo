@@ -16,6 +16,8 @@ petición. Clave: ANTHROPIC_API_KEY en .env (o variable de entorno). Sin clave, 
 """
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import datetime as dt
 import hashlib
 import json
@@ -350,12 +352,42 @@ def duplicate_candidates(conn, events, today):
 
 
 # ---------- API ----------
+# ---------- registro de uso (30-10-2026, David: auditar dónde se gastan los tokens) ----------
+# Cada llamada a la API y cada lote recogido deja una línea en reports/ia_uso.jsonl: cuándo, tarea, detalle (día y alcance,
+# sala, festival…), modelo y uso (tokens de entrada, salida, caché y búsquedas web). Resumen: python3 scripts/uso_ia.py.
+USAGE_LOG = ROOT / 'reports' / 'ia_uso.jsonl'
+_LABEL = contextvars.ContextVar('ia_label', default=('', ''))
+TASK_BY_TOOL = {'seleccionar': 'seleccion', 'actos': 'agendas_ia'}
+
+
+@contextlib.contextmanager
+def usage_label(task, detail=''):
+    """Etiqueta las llamadas que se hagan dentro (tarea y detalle) para el registro de uso."""
+    token = _LABEL.set((task, str(detail)[:120]))
+    try: yield
+    finally: _LABEL.reset(token)
+
+
+def log_usage(task, detail, model, usage, path=None):
+    if not usage: return
+    try:
+        line = {'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'tarea': task, 'detalle': detail, 'modelo': model,
+                **{k: v for k, v in usage.items() if isinstance(v, (int, float, dict))}}
+        with open(path or USAGE_LOG, 'a', encoding='utf-8') as f: f.write(json.dumps(line, ensure_ascii=False) + '\n')
+    except OSError: pass   # el registro nunca para el motor
+
+
 def _request(method, url, key, body=None, timeout=60, raw=False):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method, headers={'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
     with urllib.request.urlopen(req, timeout=timeout, context=tls_context()) as response:  # nosec B310: API oficial
         payload = response.read()
-    return payload.decode('utf-8') if raw else json.loads(payload)
+    out = payload.decode('utf-8') if raw else json.loads(payload)
+    if not raw and method == 'POST' and url.endswith('/messages') and isinstance(out, dict) and out.get('usage'):
+        task, detail = _LABEL.get()
+        tool = ((body or {}).get('tool_choice') or {}).get('name') or ''
+        log_usage(task or TASK_BY_TOOL.get(tool, tool or 'texto'), detail, (body or {}).get('model', ''), out['usage'])
+    return out
 
 
 GUIDE_PATH = ROOT / 'config' / 'ia_instrucciones.md'
@@ -458,6 +490,7 @@ def collect(conn, key, requester=_request):
         for k in usage: usage[k] += batch_usage[k]
         with conn:
             conn.execute("UPDATE ai_batches SET status='ended', ended_at=?, usage_json=? WHERE batch_id=?", (_now(), json.dumps(batch_usage), batch_id))
+            if requester is _request: log_usage(f'lote_{task}', f'{batch_id} · {sum(len(c) for c in chunks)} fichas', model, batch_usage)   # solo llamadas reales, no pruebas
     return stored, usage
 
 

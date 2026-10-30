@@ -33,7 +33,7 @@ from src.ai_extract import fold, times_in
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / 'config' / 'agendas_ia.json'
-PROMPT_VERSION = 2            # 2 (29-10-2026): cabecera de mes vigente en cada trozo; cambia la huella de las páginas, así que todas se releen una vez
+PROMPT_VERSION = 3            # 2 (29-10-2026): cabecera de mes vigente en cada trozo; 3 (30-10-2026): precio general si hay de socio y general. Cambia la huella de las páginas, así que todas se releen una vez
 LABEL = 'Datos de la sala'
 CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
@@ -55,6 +55,22 @@ WEEKDAY_FULL = re.compile(r"\b(dilluns|dimarts|dimecres|dijous|divendres|dissabt
                           r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b")
 CANCELLED_RX = re.compile(r"\b(?:ajornat|ajornada|aplazad[oa]|cancel[.·]?lat|cancel[.·]?lada|cancelad[oa]|anul[.·]?lat|anul[.·]?lada|anulad[oa]|suspes|suspesa|suspendid[oa]|postponed|cancelled|canceled)\b")
 MEMBERS_RX = re.compile(r"exclusiu per a soci|nomes per a soci|exclusivo para soci|solo para soci|members only")
+# Ficha de un acto cuyo lugar es «en línea» (30-10-2026, MNAC: «Lugar: Actividad en línea»): no es en Barcelona.
+ONLINE_RX = re.compile(r"\b(?:lugar|lloc|place|venue)\s*:\s*(?:actividad |activitat |activity )?(?:en linea|en linia|online)\b")
+# Ficha cuyo lugar es otro municipio (30-10-2026, MNAC: «Lugar: Sant Joan Despí»; la IA no lo descartó): los del área
+# metropolitana y las ciudades a las que más salen las visitas. Solo se mira el campo «Lugar/Lloc» de la ficha de un acto.
+OTHER_TOWNS = ("badalona", "badia del valles", "barbera del valles", "begues", "castellbisbal", "castelldefels", "cerdanyola", "cervello",
+               "corbera de llobregat", "cornella", "el papiol", "el prat", "esplugues", "gava", "l'hospitalet", "hospitalet de llobregat",
+               "la palma de cervello", "molins de rei", "montcada", "montgat", "pallejà", "palleja", "ripollet", "sant adria", "sant andreu de la barca",
+               "sant boi", "sant climent de llobregat", "sant cugat", "sant feliu de llobregat", "sant joan despi", "sant just desvern",
+               "sant vicenc dels horts", "santa coloma de cervello", "santa coloma de gramenet", "tiana", "torrelles de llobregat", "viladecans",
+               "sabadell", "terrassa", "mataro", "granollers", "sitges", "vilanova i la geltru", "girona", "tarragona", "lleida", "montserrat",
+               "vic", "manresa", "figueres", "reus", "madrid", "valencia")
+ELSEWHERE_RX = re.compile(r"\b(?:lugar|lloc|place|venue)\s*:\s*(?:" + "|".join(re.escape(x) for x in OTHER_TOWNS) + r")\b")
+# Precio general cuando la ficha da también el de socio (30-10-2026, MNAC: «Precio Amics: 25 € Precio No Amics: 35 €»): la IA tomaba a veces
+# el primero. Se toma con reglas el de «No Amics / no socios», con su cita literal.
+GENERAL_PRICE_RX = re.compile(r"(?:precio|preu|price)\s+(?:no\s+amics|no\s+socios|no\s+socis|general|non[- ]members?)\s*:?\s*(\d+(?:[.,]\d+)?)\s*(?:€|euros?)", re.I)
+RETRY_PAUSE = 5               # segundos antes de reintentar una página que no respondió (HTTP 0)
 FREE_RX = re.compile(r"gratu|gratis|lliure|libre|free|sense cost|sin coste")
 
 SYSTEM = """Lees la página de agenda de una sala o espacio cultural de Barcelona y devuelves los actos que anuncia, para la agenda Brollant.
@@ -67,7 +83,7 @@ Reglas estrictas:
 - sesiones: cada fecha (y hora, si la página la da) del acto. fecha en formato AAAA-MM-DD. Si la página no da el año o el mes junto al día, usa la fecha futura más próxima coherente con la página y con la fecha de hoy que te doy.
 - cita_fecha y cita_hora: copia literal y corta (máx. 120 caracteres) del texto donde se lee el día y la hora; tiene que poder encontrarse tal cual en la página. cita_fecha nunca es solo un número: incluye el mes o el día de la semana que lo acompañan («20 octubre», «Dimarts 27», «21.10.26»). Si no hay hora escrita, hora y cita_hora vacías.
 - Si la página da un periodo («del 15 d'octubre al 22 de novembre»), usa periodo {inicio, fin, cita} en lugar de una sesión por día.
-- precio y cita_precio solo si la página lo escribe para ese acto.
+- precio y cita_precio solo si la página lo escribe para ese acto. Si da varios precios (socios y no socios, Amics y No Amics, reducido y general), usa el general, el del público sin descuento, con su cita.
 - enlace: la marca [Ln] que va justo con ese acto en el texto, si la hay (por ejemplo L12); si no, vacío.
 - No incluyas actos ya pasados respecto a la fecha de hoy.
 - Si la página agrupa los días bajo cabeceras de mes («Novembre 2026»), esa cabecera da el mes y el año de los días que hay debajo hasta la siguiente; la primera línea del texto puede repetir la cabecera vigente.
@@ -262,6 +278,8 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
     # público («Exclusiu per a socis», justo después del título): no se publican (27-10-2026).
     if CANCELLED_RX.search(fold(title)): return None, ['acto anulado o aplazado según la página']
     if any(MEMBERS_RX.search(hay[p:p + len(title) + 300]) for p in tpos): return None, ['acto solo para socios']
+    if whole_page and ONLINE_RX.search(hay): return None, ['acto en línea según su ficha']
+    if whole_page and ELSEWHERE_RX.search(hay): return None, ['acto fuera de Barcelona según su ficha']
     out = {'titulo': title, 'sesiones': [], 'quotes': {}}
     # Sala (agendas de varias salas): una de las configuradas.
     if salas:
@@ -328,6 +346,11 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
         ok = ppos and _near_(tpos, ppos, NEAR_PRICE, NEAR_PRICE) and (all(x in qpr for x in digits) if digits else FREE_RX.search(fold(qpr)))
         if ok: out['precio'] = price; out['quotes']['price'] = qpr
         else: why.append(f"precio sin cita válida: {price!r}")
+    if whole_page:
+        gp = GENERAL_PRICE_RX.search(' '.join(text.split()))
+        if gp and gp.group(1) not in (out.get('precio') or ''):
+            if out.get('precio'): why.append(f"precio de socio cambiado por el general: {out['precio']!r} → {gp.group(1)} €")
+            out['precio'] = f"{gp.group(1)} €"; out['quotes']['price'] = gp.group(0)
     m = re.fullmatch(r"\[?L(\d+)\]?", str(item.get('enlace') or '').strip())
     if m and 1 <= int(m.group(1)) <= len(links):
         url = links[int(m.group(1)) - 1]
@@ -355,7 +378,8 @@ def ask(agenda, text, page_url, today, key, requester=None, model=None, usage=No
                 'system': [{'type': 'text', 'text': SYSTEM, 'cache_control': {'type': 'ephemeral'}}],
                 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'actos'},
                 'messages': [{'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]}
-        message = requester('POST', f'{ai_assist.API}/messages', key, body, timeout=180)
+        with ai_assist.usage_label('agendas_ia', f"{agenda['slug']} · {page_url}"):
+            message = requester('POST', f'{ai_assist.API}/messages', key, body, timeout=180)
         if usage is not None:
             for k, v in (message.get('usage') or {}).items():
                 if isinstance(v, int): usage[k] = usage.get(k, 0) + v
@@ -442,6 +466,15 @@ def _image(conn, url, fetcher, timeout):
     return image, True
 
 
+def _get(fetcher, url, timeout):
+    """Una página; si no responde (HTTP 0: corte o tiempo agotado), un reintento tras RETRY_PAUSE (30-10-2026, MNAC)."""
+    status, final_url, body = fetcher(url, timeout)
+    if status == 0:
+        import time; time.sleep(RETRY_PAUSE)
+        status, final_url, body = fetcher(url, timeout)
+    return status, final_url, body
+
+
 def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, conn=None, force=False, usage=None):
     """Lee las páginas de una agenda: {'pages', 'accepted', 'rejected', 'unchanged'} (sin escribir fichas)."""
     from src.venue_feeds import fetch, robots_allows
@@ -457,7 +490,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         if url in seen: continue
         seen.add(url)
         if fetcher is fetch and not robots_allows(url): result['pages'].append({'url': url, 'error': 'robots.txt no lo permite'}); continue
-        status, final_url, body = fetcher(url, timeout)
+        status, final_url, body = _get(fetcher, url, timeout)
         if status != 200: result['pages'].append({'url': url, 'error': f'HTTP {status}'}); continue
         text, links = clean(body, final_url or url)
         text = text[:MAX_CHARS]; digest = hashlib.sha256(f'{PROMPT_VERSION}\0{text}'.encode()).hexdigest()[:20]
@@ -477,6 +510,9 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
     listing = set(expand_urls(agenda, today))
     for page, text, links, page_url, body in fetched:
         whole = bool(follow.get('ficha')) and page['url'] not in listing
+        # «solo_fichas» (30-10-2026, MNAC): el listado solo sirve para encontrar las fichas; sus fechas, pegadas al acto
+        # vecino, se atribuían mal. Los actos salen únicamente de la ficha de cada uno.
+        if follow.get('solo_fichas') and page['url'] in listing: page['via'] = 'solo enlaces'; continue
         # Reglas antes que IA: si la página publica sus actos en schema.org, se toman de ahí (sin tokens).
         nodes = schema_nodes(body, agenda, today)
         if nodes:
@@ -488,7 +524,10 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
             act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'], whole_page=whole)
-            if act: act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why; result['accepted'].append(act)
+            if act:
+                act['page'] = page_url; act['page_hash'] = page['hash']; act['why_partial'] = why
+                if whole and not act.get('url'): act['url'] = page_url   # la ficha es la página propia del acto (imagen, enlace)
+                result['accepted'].append(act)
             else: result['rejected'].append({'item': item, 'why': why, 'page': page_url})
         page['events'] = len(items)
     # Página propia de los actos que el listado da sin hora (28-10-2026, programas de festival): «seguir_actos»: N lee como
@@ -502,7 +541,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             if not u or any(h for _, h in act['sesiones']) or urlsplit(u).netloc not in hosts or u in seen: continue
             seen.add(u); budget -= 1
             if fetcher is fetch and not robots_allows(u): continue
-            status, final_url, body = fetcher(u, timeout)
+            status, final_url, body = _get(fetcher, u, timeout)
             if status != 200: continue
             text, links = clean(body, final_url or u); text = text[:MAX_CHARS]
             for item in ask(agenda, text, final_url or u, today, key, requester=requester, usage=usage):

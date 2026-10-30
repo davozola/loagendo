@@ -1,5 +1,6 @@
 """Selección con IA: variedad, sin relleno con reglas (30-10-2026), populares aparte y guardado."""
 import json
+from datetime import date as _date
 import tempfile
 import unittest
 from pathlib import Path
@@ -101,9 +102,17 @@ class EnsureTests(unittest.TestCase):
         from unittest import mock
         import datetime as _dt
         seen = []
-        with mock.patch.object(ai_select, 'ensure', lambda conn, key, day=None, scope='week', model=None, requester=None: (seen.append((day, scope)) or {'status': 'completed', 'usage': {'input_tokens': 1}})):
+        with mock.patch.object(ai_select, 'ensure', lambda conn, key, day=None, scope='week', model=None, requester=None, today=None: (seen.append((day, scope)) or {'status': 'completed', 'usage': {'input_tokens': 1}})):
             out = ai_select.ensure_ahead(None, 'k', today=_dt.date(2026, 10, 28))
-        self.assertEqual((out['calls'], len(seen), seen[0], seen[-1]), (16, 16, ('2026-10-28', 'day'), ('2026-11-04', 'week')))
+        # 30-10-2026: hoy y 7 días en los dos alcances (16) y del día 8 al 30 solo «día» (23)
+        self.assertEqual((out['calls'], len(seen), seen[0], seen[15], seen[-1]), (39, 39, ('2026-10-28', 'day'), ('2026-11-04', 'week'), ('2026-11-27', 'day')))
+
+    def test_stale_far_days_and_days_entering_the_week(self):
+        today = _date(2026, 10, 30)
+        self.assertFalse(ai_select.stale('2026-10-29T10:00:00+00:00', '2026-11-20', today))   # lejano, hecho ayer
+        self.assertTrue(ai_select.stale('2026-10-27T10:00:00+00:00', '2026-11-20', today))    # lejano, hace 3 días
+        self.assertTrue(ai_select.stale('2026-10-25T10:00:00+00:00', '2026-11-04', today))    # ya en la semana, elegido desde lejos
+        self.assertFalse(ai_select.stale('2026-10-29T10:00:00+00:00', '2026-11-04', today))
 
 
 if __name__ == '__main__':

@@ -23,7 +23,9 @@ SIZE = 10
 TOP_POOL, INDIE_POOL = 50, 50   # mitad de salas que no son de referencia (30-10-2026)
 CANDIDATES = TOP_POOL + INDIE_POOL
 MAX_PER_CAT = 3
-AHEAD_DAYS = 7          # hoy y los siete días siguientes, en los dos alcances: 16 llamadas al día como mucho
+AHEAD_DAYS = 7          # hoy y los siete días siguientes, en los dos alcances (carrusel «Hoy» y «7 días»)
+FAR_DAYS = 30           # 30-10-2026, David: hasta 30 días vista, solo el alcance «día» (las filas «Selección Ontoca» de cada día)
+FAR_REFRESH_DAYS = 3    # un día lejano se vuelve a elegir cada 3 días (las salas siguen publicando)
 REFERENCE_TIER = 12     # config/venue_prestige.json: equipamientos de referencia
 PROMPT_VERSION = 4          # 3 (30-10-2026): calidad antes que popularidad, sin relleno, «populares» aparte; 4: «mas» para los tipos del carrusel
 MAX_EXTRA = 40
@@ -129,16 +131,27 @@ def populars(ns, items, chosen):
     return out
 
 
-def ensure(conn, key, day=None, scope='week', model=None, requester=None):
-    """Calcula la selección de un día y alcance si no está hecha con los criterios vigentes. Devuelve un resumen."""
+def stale(created_at, day, today):
+    """Una selección hecha hay que repetirla (30-10-2026): si el día está lejos (más de AHEAD_DAYS) y tiene más de
+    FAR_REFRESH_DAYS días, o si el día ya entró en la semana pero se eligió cuando aún estaba lejos."""
+    try: made = dt.datetime.fromisoformat(created_at).date(); d = dt.date.fromisoformat(day)
+    except (TypeError, ValueError): return True
+    if (d - today).days > AHEAD_DAYS: return (today - made).days >= FAR_REFRESH_DAYS
+    return (d - made).days > AHEAD_DAYS
+
+
+def ensure(conn, key, day=None, scope='week', model=None, requester=None, today=None):
+    """Calcula la selección de un día y alcance si no está hecha con los criterios vigentes o se ha quedado vieja."""
     from mvp import catalog
     from src import ai_assist
     initialize(conn); day = day or catalog.today().isoformat(); model = model or ai_assist.MODEL
-    row = conn.execute('SELECT prompt_version FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
-    if row and row[0] == version(): return {'status': 'already_done', 'day': day, 'scope': scope}
+    today = today or catalog.today()
+    row = conn.execute('SELECT prompt_version, created_at FROM ai_selection WHERE day=? AND scope=?', (day, scope)).fetchone()
+    if row and row[0] == version() and not stale(row[1], day, today): return {'status': 'already_done', 'day': day, 'scope': scope}
     items = candidates(conn, day, scope)
     if len(items) < SIZE: return {'status': 'skipped', 'reason': 'pocos candidatos', 'day': day, 'scope': scope}
-    message = (requester or ai_assist._request)('POST', f'{ai_assist.API}/messages', key, request_body(items, day, scope, model), timeout=180)
+    with ai_assist.usage_label('seleccion', f'{day} {scope}'):
+        message = (requester or ai_assist._request)('POST', f'{ai_assist.API}/messages', key, request_body(items, day, scope, model), timeout=180)
     chosen, popular, extra = parse(message, items, with_extra=True)
     picks = [{'key': e['key'], 'title': e['title'], 'tipo': kind, 'motivo': why} for e, kind, why in chosen]
     pops = [{'key': e['key'], 'title': e['title']} for e in popular]
@@ -205,14 +218,14 @@ def ensure_ahead(conn, key, model=None, requester=None, today=None, ahead=AHEAD_
     from mvp import catalog
     today = today or catalog.today()
     out, usage = [], {}
-    for offset in range(ahead + 1):
+    for offset in range(max(ahead, FAR_DAYS) + 1):
         day = (today + dt.timedelta(days=offset)).isoformat()
-        for scope in SCOPES:
-            r = ensure(conn, key, day=day, scope=scope, model=model, requester=requester)
+        for scope in (SCOPES if offset <= ahead else ('day',)):   # más allá de la semana, solo «día»: el carrusel no lo usa
+            r = ensure(conn, key, day=day, scope=scope, model=model, requester=requester, today=today)
             out.append(r)
             for k, v in (r.get('usage') or {}).items():
                 if isinstance(v, int): usage[k] = usage.get(k, 0) + v
-    return {'status': 'completed', 'calls': sum(1 for r in out if r['status'] == 'completed'), 'days': ahead + 1, 'usage': usage,
+    return {'status': 'completed', 'calls': sum(1 for r in out if r['status'] == 'completed'), 'days': max(ahead, FAR_DAYS) + 1, 'usage': usage,
             'skipped': [(r['day'], r['scope'], r.get('reason')) for r in out if r['status'] == 'skipped']}
 
 

@@ -52,3 +52,4 @@ reports/festivales_programas.*
 
 # Restos temporales del sistema de archivos al compartir la carpeta con la máquina virtual
 .fuse_hidden*
+reports/ia_uso.jsonl

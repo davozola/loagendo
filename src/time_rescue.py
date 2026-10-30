@@ -92,7 +92,8 @@ def ask(text, title, day, key, requester=None, model=None):
             'system': [{'type': 'text', 'text': SYSTEM, 'cache_control': {'type': 'ephemeral'}}],
             'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'hora'},
             'messages': [{'role': 'user', 'content': json.dumps({'acto': title, 'dia': day, 'texto': text[:8000]}, ensure_ascii=False)}]}
-    message = requester('POST', f'{ai_assist.API}/messages', key, body, timeout=60)
+    with ai_assist.usage_label('rescate_horas', f'{day} · {title}'):
+        message = requester('POST', f'{ai_assist.API}/messages', key, body, timeout=60)
     for block in message.get('content') or []:
         if block.get('type') == 'tool_use' and block.get('name') == 'hora':
             got = block.get('input') or {}

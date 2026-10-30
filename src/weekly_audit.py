@@ -209,13 +209,16 @@ def run(conn, job=None, today=None, requester=None, send=None, out_dir=OUT_DIR):
     import urllib.error
     call = requester or ai_assist._request
     try:
-        message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
+        with ai_assist.usage_label('auditoria_semanal'):
+            message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
     except urllib.error.HTTPError as error:
         detail = error.read().decode('utf-8', 'replace')[:400] if hasattr(error, 'read') else ''
         if error.code != 400 or 'thinking' not in body: return {'status': 'failed', 'error': f'HTTP {error.code}: {detail}'}
         # El modelo no admite ese modo: razonamiento adaptativo con esfuerzo bajo y margen de sobra para pensar y escribir.
         body.pop('thinking'); body['output_config'] = {'effort': 'low'}; body['max_tokens'] = max(body['max_tokens'], 32000)
-        try: message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
+        try:
+            with ai_assist.usage_label('auditoria_semanal', 'reintento'):
+                message = call('POST', f'{ai_assist.API}/messages', key, body, timeout=600)
         except urllib.error.HTTPError as again:
             return {'status': 'failed', 'error': f'HTTP {again.code}: ' + (again.read().decode('utf-8', 'replace')[:400] if hasattr(again, 'read') else '') + f' (antes: {detail[:200]})'}
     report = ''.join(b.get('text', '') for b in message.get('content') or [] if b.get('type') == 'text')
