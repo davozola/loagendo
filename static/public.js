@@ -640,7 +640,9 @@ async function selection() {
     const now = madridNow();
     // «Lo mejor del fin de semana» (28-10-2026, David): con el periodo Fin de semana, la selección de 7 días del primer día
     // del periodo, solo con lo que cae dentro; sin el conmutador Hoy / 7 días. Con 7 días, 30 días o 6 meses: la de 7 días.
-    const win = rangeWindow(), finde = state.range === 'finde' && win, pickDay = finde ? win.from : state.day;
+    // Fija (30-10-2026, David): la Selección no se mueve con el día que se mira; siempre «Hoy» o los próximos 7 días desde hoy,
+    // que son los que elige la IA con la línea editorial. Más allá, las reglas no siguen esa línea.
+    const win = null, finde = false, pickDay = today;
     const fetchPicks = async one => get('/api/events?' + new URLSearchParams({day: pickDay, featured: '1', page_size: '30', public: '1', ...(one ? {featured_days: '1'} : {})}));
     const when = e => e.featured_date || e.start;
     const past = e => when(e) < now.day || (when(e) === now.day && e.time && (minutesOf(String(e.time).padStart(5, '0')) ?? 1e4) < now.min - GRACE);
@@ -672,7 +674,7 @@ async function selection() {
       if (ok.length >= 3) groups[c] = ok;
     }
     // «Expos» (28-10-2026, David): las del ranking de la pestaña Expos de ese día, en su orden; las mismas que esa lista marca.
-    const expos = ((pf && pf.x) || []).map(expand).filter(e => e.end >= state.day).slice(0, perType);
+    const expos = ((pf && pf.x) || []).map(expand).filter(e => e.end >= pickDay).slice(0, perType);
     if (expos.length >= 3) groups.expos = expos;
     // Tipos de la Selección (28-10-2026, 19:34, David): una fila dentro de la propia Selección que solo la filtra a ella
     // (la Agenda tiene la suya, fija bajo «Filtros»). «Todo», las categorías con 3 o más planes y «Expos».
