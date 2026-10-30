@@ -616,3 +616,10 @@ a.cat-pill,a.period-tab{text-decoration:none}
 .ag-remind i{font-style:normal;color:var(--soft);font-size:18px}
 /* «Popular» (30-10-2026, David): se ve, pero sin el color de la Selección */
 .hl-tag.hl-popular{color:#e8e8e8}
+
+/* Destacados y horario (30-10-2026, David) */
+.marks-group .mk-n{opacity:.6;font-weight:400;margin-left:2px}
+.marks-note{font-size:12px;color:var(--text2,#555);margin:6px 0 0}
+.hl-tag.is-plain{margin:0 0 4px}
+.hour-more{margin-top:8px}.hour-more>summary{cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;list-style:none}
+.hour-more>summary::-webkit-details-marker{display:none}.hour-more[open]>summary{margin-bottom:6px}

@@ -381,15 +381,20 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel>.filters-note{padding-top:14px}
   .desk-top .panel-search{margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));flex:none}
   .desk-top .search-box{min-height:66px;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding-left:var(--bleedL);padding-right:var(--bleedR);background:var(--paper)}
-  .filters-panel>.where-group,.filters-panel>.discover{padding-bottom:0}
+  .filters-panel>.where-group,.filters-panel>.discover,.filters-panel>.marks-group{padding-bottom:0}
   .where-group #deskNear{margin:0 -24px 0 calc(-1 * var(--gutter))}
   .where-group .near-btn,.where-group .near-on{width:100%;min-height:44px;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px}
   .where-group .select{display:block;width:calc(100% + var(--gutter) + 24px);margin:0 -24px 0 calc(-1 * var(--gutter));min-height:44px;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px;background-position:right 24px center}
   #channels{display:block;margin:0 -24px 0 calc(-1 * var(--gutter))}
+  #marks{display:block;margin:0 -24px 0 calc(-1 * var(--gutter))}
   #channels .channel-chip{display:flex;width:100%;min-height:42px;margin:0;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
+  #marks .channel-chip{display:flex;width:100%;min-height:42px;margin:0;border:0;border-top:1px solid var(--line);padding:0 24px 0 var(--gutter);font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
   #channels .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
+  #marks .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
   #channels .channel-chip.active{background:var(--ink);color:var(--paper)}
+  #marks .channel-chip.active{background:var(--ink);color:var(--paper)}
   #channels .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
+  #marks .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
   .filters-panel #ages{padding:10px 0 14px}
 }
 
@@ -454,16 +459,21 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel>.group{border-top:0;border-bottom:1px solid var(--line);padding-top:14px;padding-bottom:14px}
   .filters-panel .group legend{float:left;width:100%;margin-bottom:8px;font-size:18px}
   .filters-panel .group legend+*{clear:both}
-  .filters-panel>.where-group,.filters-panel>.discover{padding-bottom:0}
+  .filters-panel>.where-group,.filters-panel>.discover,.filters-panel>.marks-group{padding-bottom:0}
   .where-group .near-box{display:flex;margin:0}
   .where-group .near-btn,.where-group .near-on{width:100%;min-height:46px;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;justify-content:flex-start}
   .where-group .near-on{justify-content:space-between}
   .where-group .select{display:block;width:calc(100% + 32px);margin:0 -16px;min-height:46px;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;background-position:right 16px center}
   #channels{display:block;margin:0 -16px}
+  #marks{display:block;margin:0 -16px}
   #channels .channel-chip{display:flex;width:100%;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
+  #marks .channel-chip{display:flex;width:100%;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:0 16px;font-size:15px;font-weight:500;justify-content:space-between;align-items:center;background:var(--paper);color:var(--ink)}
   #channels .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
+  #marks .channel-chip:after{content:'';width:16px;height:16px;border:1px solid var(--ink);flex:none}
   #channels .channel-chip.active{background:var(--ink);color:var(--paper)}
+  #marks .channel-chip.active{background:var(--ink);color:var(--paper)}
   #channels .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
+  #marks .channel-chip.active:after{content:'✓';border-color:var(--paper);font-size:12px;line-height:15px;text-align:center}
 }
 
 /* Móvil, opción B (29-10-2026, David): selección en gris carbón (--sel) en la barra de categorías y en
@@ -528,3 +538,10 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 /* «Popular» (30-10-2026, David): se ve, pero sin el color de la Selección */
 .hl-tag.hl-popular{background:transparent;color:var(--ink,#000);border:1px solid var(--ink,#000);padding:3px 7px 2px}
 .ev.ev-hl.ev-hl-popular{background:#F2F0EA}
+
+/* Destacados y horario (30-10-2026, David) */
+.marks-group .mk-n{opacity:.6;font-weight:400;margin-left:6px;margin-right:auto}
+.marks-note{font-size:12px;color:var(--text2,#555);margin:6px 0 0}
+.hl-tag.is-plain{margin:0 0 4px}
+.hour-more{margin-top:8px}.hour-more>summary{cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;list-style:none}
+.hour-more>summary::-webkit-details-marker{display:none}.hour-more[open]>summary{margin-bottom:6px}

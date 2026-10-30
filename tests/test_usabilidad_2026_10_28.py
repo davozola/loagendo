@@ -233,7 +233,9 @@ class CuandoYTitularTests(unittest.TestCase):
         css = (ROOT / 'static' / 'public-v2.css').read_text(encoding='utf-8')
         for text in ('id="deskWhen"', 'id="deskTop"', 'id="deskHead"', 'id="deskNear"', 'id="viewSeg"', 'class="group where-group"'):
             self.assertIn(text, html)
-        self.assertLess(html.index('id="deskWhen"'), html.index('class="group where-group"')); self.assertLess(html.index('class="group where-group"'), html.index('class="group discover"'))
+        # Orden de la columna desde el 30-10-2026 (David): Cuándo, Horario, Destacados, Planes y Dónde al final.
+        order = [html.index(x) for x in ('id="deskWhen"', 'class="group hour-filter"', 'class="group marks-group"', 'class="group discover"', 'class="group where-group"')]
+        self.assertEqual(order, sorted(order))
         for text in ("matchMedia('(min-width: 961px)')", 'function deskLayout()', 'function deskWhen()', 'data-calnav', "['searchForm', 'deskTop'], ['typeMini', 'deskTop']"):
             self.assertIn(text, js)
         self.assertIn('@media(min-width:961px){\n  :root{--page:1920px}', css)
