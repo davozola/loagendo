@@ -20,6 +20,45 @@
         "kind": "tribe_rest"
       },
       "note": "Conectado solo por el buscador de programas (2026-10-28): The Events Calendar (WordPress) · Apagado el 28-10-2026: el calendario de Temporada Alta no da actos del Flaix de tardor en sus fechas (fallaba en cada pasada)."
+    },
+    {
+      "slug": "fest_immensiva_festival",
+      "name": "IMMENSIVA FESTIVAL 2026",
+      "type": "festival",
+      "url": "https://www.espronceda.net/ca/immensiva-festival-2026-collective-cartographies/",
+      "site": "https://www.espronceda.net/ca/immensiva-festival-2026-collective-cartographies/",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-immensiva-festival",
+          "name": "IMMENSIVA FESTIVAL 2026"
+        },
+        "desde": "2026-11-04",
+        "hasta": "2026-11-13",
+        "url": "https://www.espronceda.net/ca/immensiva-festival-2026-collective-cartographies/"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-10-31): JSON-LD"
+    },
+    {
+      "slug": "fest_culturista",
+      "name": "Festival Culturista 2026",
+      "type": "festival",
+      "url": "https://naubostik.com/esdeveniment/festival-culturista-2026/",
+      "site": "https://naubostik.com/esdeveniment/festival-culturista-2026/",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-culturista",
+          "name": "Festival Culturista 2026"
+        },
+        "desde": "2026-11-21",
+        "hasta": "2026-11-22",
+        "url": "https://naubostik.com/wp-json/tribe/events/v1/events",
+        "kind": "tribe_rest"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-10-31): The Events Calendar (WordPress)"
     }
   ]
 }

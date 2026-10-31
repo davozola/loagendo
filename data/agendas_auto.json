@@ -76,6 +76,25 @@
       "activa": true,
       "auto": true,
       "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-28)"
+    },
+    {
+      "slug": "fest_reteena",
+      "name": "9a edició Festival Reteena 2026",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://reteena.com/inici/activitats/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-reteena",
+        "name": "9a edició Festival Reteena 2026"
+      },
+      "hasta": "2026-12-13",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-30)"
     }
   ]
 }

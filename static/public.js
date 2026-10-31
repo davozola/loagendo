@@ -495,7 +495,10 @@ function clearFilter(k) {
   if (k === 'hours') { state.hourFrom = null; state.hourTo = null } if (k === 'district') state.district = '';
   if (k === 'started') state.started = false
   if (k === 'fest') { state.fest = ''; state.festName = ''; state.festFiesta = false }
+  if (k === 'near') { state.near = null; state.nearKm = 0; state.nearWait = false; state.nearMsg = '' }
 }
+// Todo lo que «Limpiar» borra (31-10-2026, David): cualquier botón de limpiar deja la agenda sin ningún filtro, «Cerca de mí» incluido.
+const ALL_FILTERS = ['query', 'cat', 'ch', 'edad', 'idioma', 'format', 'free', 'marca', 'hours', 'district', 'started', 'fest', 'near'];
 function renderActive() {
   const list = activeFilterList(), shown = list.filter(f => f.k !== 'range' && f.k !== 'cat');   // el periodo ya se ve en «Cuándo»; la categoría, en la barra de categorías (29-10-2026)
   $('activeFilters').innerHTML = '';   // 29-10-2026: lo activo se resume en la franja de filtros (alertBand)
@@ -503,6 +506,7 @@ function renderActive() {
   // «Más filtros» cuenta solo lo que se elige dentro: el periodo, la búsqueda y la categoría ya se ven fuera (28-10-2026)
   const n = list.filter(f => !['range', 'query', 'cat'].includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
+  const hint = $('filtersHint'); if (hint) { const own = list.filter(f => !['range', 'query', 'cat'].includes(f.k)); hint.textContent = own.length ? '· ' + own.map(f => f.label).join(' · ') : L('· barrio, gratis, en familia…', '· barri, gratis, en família…', '· area, free, family…') }
 }
 function chips() {
   // La categoría se elige en la barra rápida de encima de la lista (23-10-2026): fuera de la columna de filtros.
@@ -524,7 +528,7 @@ function chips() {
 function hourLabel(h) { return String(h).padStart(2, '0') + ':00' }
 function hours() {
   const from = state.hourFrom ?? 0, to = state.hourTo ?? 23, active = state.hourFrom !== null || state.hourTo !== null;
-  $('hourFrom').value = from; $('hourTo').value = to; $('hourFromLabel').textContent = hourLabel(from); $('hourToLabel').textContent = hourLabel(to); $('hourLabel').textContent = active ? `${hourLabel(from)} — ${hourLabel(to)}` : t('Cualquier hora'); $('clearHours').hidden = !active;
+  $('hourFrom').value = from; $('hourTo').value = to; $('hourFromLabel').textContent = hourLabel(from); $('hourToLabel').textContent = hourLabel(to); $('hourLabel').textContent = active ? `${hourLabel(from)} — ${hourLabel(to)}` : t('Cualquier hora'); if (typeof whenSummary === 'function') whenSummary();
   document.querySelectorAll('#hourPresets [data-hours]').forEach(b => b.setAttribute('aria-pressed', String(active && b.dataset.hours === `${from}-${to}`)));
 }
 function hourMatches(e) {
@@ -534,6 +538,10 @@ function hourMatches(e) {
 }
 function openDrawer(open) {
   const panel = $('filters'); panel.classList.toggle('open', open); $('drawerBackdrop').hidden = !open; $('openFilters').setAttribute('aria-expanded', String(open)); $('whenOpen')?.setAttribute('aria-expanded', String(open && Boolean(state.whenEntry)));
+  // Móvil, dos modos (31-10-2026, David): desde el botón amarillo «Cuándo» el panel enseña solo fechas y horario;
+  // desde «Filtros», todo lo demás sin fechas ni horario. En escritorio el panel es la columna fija y no cambia.
+  panel.classList.toggle('mode-when', open && Boolean(state.whenEntry)); panel.classList.toggle('mode-filters', open && !state.whenEntry);
+  const head = panel.querySelector('.filters-head h2'); if (head) head.textContent = open && state.whenEntry ? t('Cuándo') : t('Filtros');
   document.body.classList.toggle('drawer-open', open);
   if (open) $('closeFilters').focus(); else $('openFilters').focus();
 }
@@ -584,7 +592,7 @@ function periodMenu(open) {
   }
   menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
 }
-document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.target.closest('.when-pop')) periodMenu(false) });
+document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.target.closest('.when-pop')) periodMenu(false); if ($('mobViewMenu') && !$('mobViewMenu').hidden && !e.target.closest('.mob-more')) mobView(false) });
 
 /* ---------- escritorio (29-10-2026, David, variante B1) ----------
    A partir de 961 px: la columna de filtros arranca bajo la Selección con «Cuándo» (periodos y un calendario de cinco
@@ -595,12 +603,17 @@ const DESK = matchMedia('(min-width: 961px)');
 const deskMarks = {};
 function deskLayout() {
   // «Cerca de mí» va siempre en «Dónde» del panel de filtros (29-10-2026, David: en móvil también, opción B1)
-  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView']];
+  // 31-10-2026 (David): en escritorio, «Cuándo» (periodos y calendario) y «Horario» salen de la columna de filtros y van a la
+  // ficha «Cuándo» (#whenSheet), que se abre desde la franja amarilla #whenBar sobre la agenda.
+  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView'], ['deskWhen', 'whenSheetBody'], ['hourFilter', 'whenSheetBody']];
   for (const [id, slot, always] of moves) {
     const el = $(id), to = $(slot); if (!el || !to) continue;
     if (!deskMarks[id]) { deskMarks[id] = document.createComment(id); el.before(deskMarks[id]) }
     if (DESK.matches || always) { if (el.parentElement !== to) to.append(el) } else if (el.previousSibling !== deskMarks[id]) deskMarks[id].after(el);
   }
+  // Móvil (31-10-2026, opción B1): el buscador vive en la franja de la fecha, tras la lupa
+  if (!DESK.matches && $('mobSearch') && $('searchForm').parentElement !== $('mobSearch')) $('mobSearch').prepend($('searchForm'));
+  mobSearch(Boolean(state.query));
   deskWhen();
 }
 function deskWhen() {
@@ -630,6 +643,47 @@ function deskWhen() {
     const d = new Date(state.day + 'T12:00:00'), day = `${weekdaysLong[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
     title.textContent = state.query ? `«${state.query}»` : win ? `${win.label} · ${labelDate(win.from)} – ${labelDate(win.to)}` : state.day === today ? `${t('Hoy')}, ${day}` : day.replace(/^./, c => c.toUpperCase());
   }
+  whenSummary();
+}
+// Franja «Cuándo» del escritorio y cabecera de su ficha (31-10-2026, David): la fecha o el periodo que se ve y el horario.
+function planCount() {
+  return state.tabCounts ? state.tabCounts.agenda + (state.tabCounts.expo || 0) : state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
+}
+function whenSummary() {
+  const bar = $('whenBar'); if (!bar) return;
+  const win = rangeWindow(), d = new Date(state.day + 'T12:00:00');
+  const dateText = win ? `${win.label} · ${labelDate(win.from)} – ${labelDate(win.to)}` : state.day === today ? `${t('Hoy')}, ${weekdaysLong[d.getDay()]} ${d.getDate()} ${L('de', 'de', '')} ${months[d.getMonth()]}`.replace(/\s+/g, ' ') : `${weekdaysLong[d.getDay()]} ${d.getDate()} ${L('de', 'de', '')} ${months[d.getMonth()]}`.replace(/\s+/g, ' ').replace(/^./, c => c.toUpperCase());
+  const hourText = state.hourFrom !== null || state.hourTo !== null ? `${hourLabel(state.hourFrom ?? 0)} — ${hourLabel(state.hourTo ?? 23)}` : t('Cualquier hora');
+  bar.innerHTML = `${esc(dateText)}<span>· ${esc(hourText.toLowerCase())}</span>`;
+  // Móvil (31-10-2026, David, opción B1): la franja amarilla dice la fecha entera (y el horario, si hay); toda ella abre «Cuándo».
+  const wl = $('whenOpenLabel'); if (wl) wl.textContent = dateText + (state.hourFrom !== null || state.hourTo !== null ? ` · ${hourText}` : '');
+  mobView();
+  const n = planCount();
+  if ($('whenSheetTitle')) { $('whenSheetTitle').textContent = dateText; $('whenSheetSub').textContent = `${hourText} · ${n.toLocaleString('es-ES')} ${t('planes')}`; $('whenApply').textContent = `${L('Ver', 'Mostra', 'See')} ${n.toLocaleString('es-ES')} ${t('planes')}` }
+}
+// Móvil, opción B1 (31-10-2026, David): lupa → la franja de fecha pasa a ser el buscador; ✕ vuelve a la fecha (y quita la búsqueda).
+function mobSearch(open) {
+  const box = $('mobSearch'), bar = $('filterBar'); if (!box) return;
+  box.hidden = !open; bar.classList.toggle('searching', open); $('mobSearchOpen').setAttribute('aria-expanded', String(open));
+}
+// Celda «Vista» junto a «Más filtros»: dice la vista actual y abre un menú con Lista / Mapa / Por sitio.
+const VIEW_NAMES = {list: ['Lista', 'Llista', 'List'], map: ['Mapa', 'Mapa', 'Map'], venue: ['Por sitio', 'Per lloc', 'By venue']};
+const VIEW_ICON = {list: '<path d="M4 6h16M4 12h16M4 18h16"></path>', map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"></path><path d="M9 4v14M15 6v14"></path>', venue: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>'};
+const viewIcon = v => `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${VIEW_ICON[v]}</svg>`;
+function mobView(open) {
+  const btn = $('mobView'), menu = $('mobViewMenu'); if (!btn) return;
+  const v = VIEW_NAMES[state.view] ? state.view : 'list';
+  btn.innerHTML = `${viewIcon(v)}<span>${esc(byLang(VIEW_NAMES[v]))}</span> ▾`;
+  btn.setAttribute('aria-label', `${L('Vista', 'Vista', 'View')}: ${byLang(VIEW_NAMES[v])}`);
+  if (open === undefined) return;
+  if (open) menu.innerHTML = Object.keys(VIEW_NAMES).map(k => `<button type="button" data-mobview="${k}" aria-pressed="${k === v}">${viewIcon(k)}${esc(byLang(VIEW_NAMES[k]))}</button>`).join('');
+  menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+}
+function openWhen(open) {
+  const ov = $('whenOverlay'); if (!ov) return;
+  ov.hidden = !open; document.body.style.overflow = open ? 'hidden' : '';
+  $('whenBar').setAttribute('aria-expanded', String(open));
+  if (open) { whenSummary(); $('whenClose').focus() } else $('whenBar').focus();
 }
 DESK.addEventListener('change', () => { deskLayout(); requestAnimationFrame(stick) });
 
@@ -686,9 +740,11 @@ async function selection() {
     if (expos.length >= 3) groups.expos = expos;
     // Tipos de la Selección (28-10-2026, 19:34, David): una fila dentro de la propia Selección que solo la filtra a ella
     // (la Agenda tiene la suya, fija bajo «Filtros»). «Todo», las categorías con 3 o más planes y «Expos».
-    if (state.pickCat && !groups[state.pickCat]) state.pickCat = '';
-    const cats = Object.keys(CATS).filter(c => groups[c]);
-    if (groups.expos) cats.splice(cats.includes('arte') ? cats.indexOf('arte') + 1 : Math.min(cats.length, 4), 0, 'expos');
+    // Sin categorías en el carrusel (31-10-2026, 17:34, David): solo «Todo» y «Expos», en móvil y escritorio. Los ficheros
+    // por tipo se siguen generando (no se borra nada); la Agenda conserva su fila de categorías.
+    // Tampoco «Expos» (31-10-2026, 17:35, David): el carrusel va sin fila de filtro; la fila queda oculta.
+    state.pickCat = '';
+    const cats = [];
     const bar = $('pickCats');
     if (bar) {
       bar.hidden = !cats.length;
@@ -1647,7 +1703,7 @@ function mountFilterUi() {
     foot.innerHTML = `<button id="filtersClear" class="filters-clear" type="button">${L('Limpiar', 'Esborra', 'Clear')}</button><button id="filtersApply" class="filters-apply" type="button"></button>`;
     $('filters').append(foot);
   }
-  const n = state.tabCounts ? state.tabCounts.agenda + (state.tabCounts.expo || 0) : state.model ? (state.model.mode === 'day' ? state.model.sections.fixed.length + state.model.sections.wide.length + state.model.sections.wideNoHours.length + state.model.sections.tbc.length : state.model.counts.fixed + state.model.counts.wide + state.model.counts.tbc) : 0;
+  const n = planCount(); whenSummary();
   $('filtersApply').textContent = `${L('Ver', 'Mostra', 'See')} ${n.toLocaleString('es-ES')} ${L('planes', 'plans', 'plans')}`;
 }
 $('curated')?.addEventListener('scroll', () => requestAnimationFrame(pickNav), {passive: true});
@@ -2034,14 +2090,20 @@ document.addEventListener('click', e => {
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
+  if (button.id === 'whenBar') { track('filtro', 'when_sheet', 'open'); openWhen(true); return }
+  if (button.id === 'mobSearchOpen') { track('filtro', 'search_open', 'lupa'); mobSearch(true); $('searchInput').focus(); return }
+  if (button.id === 'mobSearchClose') { mobSearch(false); if (state.query) { clearFilter('query'); refresh() } return }
+  if (button.id === 'mobView') { mobView($('mobViewMenu').hidden); return }
+  if (button.dataset.mobview) { mobView(false); $('view' + button.dataset.mobview.replace(/^./, c => c.toUpperCase())).click(); return }
+  if (button.id === 'whenClose' || button.id === 'whenApply') { openWhen(false); if (button.id === 'whenApply') scrollToId('agenda'); return }
   if (button.id === 'whenOpen') { state.whenEntry = true; openDrawer(true); $('filters').scrollTop = 0; return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { state.whenEntry = false; openDrawer(true); return }
   if (button.id === 'filtersApply') { openDrawer(false); scrollToId('agenda'); return }
-  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','idioma','format','free','hours','district','started','fest'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'filtersClear') { track('filtro', 'filter_clear', 'todos'); ALL_FILTERS.forEach(clearFilter); refresh(); return }
   if (button.id === 'closeFilters') { openDrawer(false); return }
   if (button.dataset.filtersband === 'open') { if (!DESK.matches) { state.whenEntry = false; openDrawer(true) } return }
   if (button.dataset.alerts === 'open') { openAlerts(); return }
-  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ['query','cat','ch','edad','format','free','hours','district','fest'].forEach(clearFilter); refresh(); return }
+  if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ALL_FILTERS.forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
   if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
@@ -2121,7 +2183,8 @@ document.addEventListener('click', e => {
   if (a.dataset.cal) { track(a.dataset.cal, 'event_calendar', a.dataset.k || state.detail); return }
   track('conversion', ['entradas', 'inscripcion'].includes(a.dataset.lk) ? 'ticket_click' : 'organizer_click', state.detail);
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { periodMenu(false); closeSheet(); if ($('filters').classList.contains('open')) openDrawer(false) } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { periodMenu(false); closeSheet(); if ($('whenOverlay') && !$('whenOverlay').hidden) openWhen(false); if ($('filters').classList.contains('open')) openDrawer(false) } });
+$('whenOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) openWhen(false) });
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet() });
 $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
 $('formatFilter').addEventListener('change', e => { track('filtro', 'filter_format', e.target.value || 'todos', e.target.value ? 1 : 0); state.format = e.target.value; refresh() });
@@ -2144,7 +2207,7 @@ function setHours(changed) {
 }
 $('hourFrom').addEventListener('change', () => setHours('from')); $('hourTo').addEventListener('change', () => setHours('to'));
 $('hourFrom').addEventListener('input', e => { $('hourFromLabel').textContent = hourLabel(e.target.value) }); $('hourTo').addEventListener('input', e => { $('hourToLabel').textContent = hourLabel(e.target.value) });
-$('clearHours').addEventListener('click', () => { state.hourFrom = null; state.hourTo = null; refresh() });
+// «Quitar horario» eliminado (31-10-2026, David): la franja activa se quita tocándola otra vez o desde los filtros activos.
 
 // Hero: the last word is retyped every few seconds (hoy → mañana → este fin de
 // semana → esta semana → este mes), typewriter style. The heading keeps a fixed

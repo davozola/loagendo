@@ -160,3 +160,67 @@ class CabecerasDeMesTests(unittest.TestCase):
         self.assertEqual(ai_agenda._date_from_quote('2026-11-04', 'Dx. 04', today), dt.date(2026, 11, 4))
         self.assertEqual(ai_agenda._date_from_quote('2026-11-26', 'Dj. 26', today), dt.date(2026, 11, 26))
         self.assertEqual(ai_agenda._date_from_quote('2026-11-12', '12 novembre', today), dt.date(2026, 11, 12))  # sin abreviatura, como antes
+
+
+class FichasTests(unittest.TestCase):
+    """30-10-2026, MNAC: «solo_fichas», reintento de HTTP 0 y actos en línea."""
+    LIST = '<html><body><div>31/10/2026 <a href="/es/actividades/taller-a">Taller A</a></div><div>07/11/2026 <a href="/es/actividades/conferencia-b">Conferencia B</a></div></body></html>'
+    FICHA_A = '<html><body><h1>Taller A</h1><p>Sábado 7 de noviembre de 2026, a las 16 h</p><p>Lugar: Sala Oval</p></body></html>'
+    FICHA_B = '<html><body><h1>Conferencia B</h1><p>Lunes 16 de noviembre de 2026, a las 18.30 h</p><p>Lugar: Actividad en línea</p></body></html>'
+    AG = {'slug': 'museu', 'name': 'Museu', 'type': 'culture', 'urls': ['https://m.test/es/actividades'],
+          'seguir': {'patron': r'^https://m\.test/es/actividades/[^/?#]+$', 'max': 5, 'ficha': True, 'solo_fichas': True}}
+
+    def setUp(self):
+        self.calls = []; self.old_pause = ai_agenda.RETRY_PAUSE; ai_agenda.RETRY_PAUSE = 0
+
+    def tearDown(self): ai_agenda.RETRY_PAUSE = self.old_pause
+
+    def fetch(self, url, timeout):
+        self.calls.append(url)
+        if url.endswith('/actividades'):
+            return (0, url, 'timeout') if self.calls.count(url) == 1 else (200, url, self.LIST)   # primer intento sin respuesta
+        return 200, url, self.FICHA_A if url.endswith('taller-a') else self.FICHA_B
+
+    def test_solo_fichas_reintento_y_en_linea(self):
+        seen_pages = []
+        def ask(method, url, key, body=None, timeout=60, raw=False):
+            text = body['messages'][0]['content'] if isinstance(body['messages'][0]['content'], str) else json.dumps(body['messages'][0]['content'])
+            seen_pages.append(text)
+            if 'Taller A' in text and 'Sala Oval' in text:
+                items = [{'titulo': 'Taller A', 'sesiones': [{'fecha': '2026-11-07', 'cita_fecha': 'Sábado 7 de noviembre de 2026', 'hora': '16:00', 'cita_hora': 'a las 16 h'}]}]
+            elif 'Conferencia B' in text and 'en línea' in text:
+                items = [{'titulo': 'Conferencia B', 'sesiones': [{'fecha': '2026-11-16', 'cita_fecha': 'Lunes 16 de noviembre de 2026', 'hora': '18:30', 'cita_hora': 'a las 18.30 h'}]}]
+            else: items = [{'titulo': 'Taller A', 'sesiones': [{'fecha': '2026-10-31', 'cita_fecha': '31/10/2026'}]}]
+            return {'content': [{'type': 'tool_use', 'name': 'actos', 'input': {'actos': items}}], 'usage': {}}
+        res = ai_agenda.read_agenda(self.AG, TODAY, 'k', fetcher=self.fetch, requester=ask)
+        self.assertEqual(self.calls.count('https://m.test/es/actividades'), 2)                 # reintento tras HTTP 0
+        self.assertFalse(any('31/10/2026' in p for p in seen_pages))                            # el listado no va a la IA
+        self.assertEqual([(a['titulo'], a['sesiones'], a['url']) for a in res['accepted']],
+                         [('Taller A', [('2026-11-07', '16:00')], 'https://m.test/es/actividades/taller-a')])
+        self.assertIn('acto en línea según su ficha', [w for r in res['rejected'] for w in r['why']])
+
+
+class FichaReglasTests(unittest.TestCase):
+    def test_otro_municipio_y_precio_general(self):
+        page = '<h1>Jujol en Sant Joan Despí</h1><p>Martes 3 de noviembre de 2026, a las 10.30 h</p><p>Lugar: Sant Joan Despí</p>'
+        text, links = ai_agenda.clean(page, 'https://m.test/a')
+        item = {'titulo': 'Jujol en Sant Joan Despí', 'sesiones': [{'fecha': '2026-11-03', 'cita_fecha': 'Martes 3 de noviembre de 2026'}]}
+        self.assertEqual(ai_agenda.verify(item, text, links, TODAY, whole_page=True), (None, ['acto fuera de Barcelona según su ficha']))
+        page = '<h1>Visita X</h1><p>Martes 3 de noviembre de 2026, a las 10.30 h</p><p>Lugar: Museu Nacional</p><p>Precios: Precio Amics: 25 € Precio No Amics: 35 €</p>'
+        text, links = ai_agenda.clean(page, 'https://m.test/b')
+        item = {'titulo': 'Visita X', 'sesiones': [{'fecha': '2026-11-03', 'cita_fecha': 'Martes 3 de noviembre de 2026'}], 'precio': '25 €', 'cita_precio': 'Precio Amics: 25 €'}
+        act, why = ai_agenda.verify(item, text, links, TODAY, whole_page=True)
+        self.assertEqual((act['precio'], act['quotes']['price']), ('35 €', 'Precio No Amics: 35 €'))
+        self.assertEqual(ai_agenda.verify(item, text, links, TODAY)[0]['precio'], '25 €')   # en un listado no se toca
+
+
+class AjaxLoadMoreTests(unittest.TestCase):
+    def test_hoy_unix_y_json_con_html(self):
+        ag = {'slug': 'p62', 'name': 'Sala', 'urls': ['https://s.test/admin-ajax.php?meta_value={hoy_unix}&x={lunes+1}']}
+        url = ai_agenda.expand_urls(ag, dt.date(2026, 10, 30))[0]
+        self.assertIn('meta_value=1793318400&', url)          # 2026-10-30 00:00 UTC
+        self.assertTrue(url.endswith('x=2026-10-27'))
+        html = '<article class="event"><p>31 octubre 2026 - Dissabte</p><p>17:30 H — <strong>Sala Gran</strong></p><h3>Festival BOCA</h3></article>'
+        self.assertEqual(ai_agenda.unwrap_html(json.dumps({'html': html, 'meta': {'postcount': 1}})), html)
+        self.assertEqual(ai_agenda.unwrap_html('<html>x</html>'), '<html>x</html>')
+        self.assertEqual(ai_agenda.unwrap_html('{"a": 1}'), '{"a": 1}')

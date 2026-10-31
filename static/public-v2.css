@@ -545,3 +545,70 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .hl-tag.is-plain{margin:0 0 4px}
 .hour-more{margin-top:8px}.hour-more>summary{cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px;list-style:none}
 .hour-more>summary::-webkit-details-marker{display:none}.hour-more[open]>summary{margin-bottom:6px}
+
+/* Móvil, panel en dos modos (31-10-2026, David): «Cuándo» solo fechas y horario; «Filtros» todo menos eso. */
+@media(max-width:960px){
+  .filters-panel.mode-when>.group:not(.hour-filter),.filters-panel.mode-when>.filters-note,.filters-panel.mode-when>.filters-foot,.filters-panel.mode-when>.filters-head .linklike{display:none}
+  .filters-panel.mode-filters>.desk-when,.filters-panel.mode-filters>.hour-filter{display:none}
+}
+
+/* Escritorio, «Cuándo» fuera de la columna de filtros (31-10-2026, David): una franja amarilla a sangre sobre la agenda
+   con la fecha (o periodo) y el horario que se ven; toda la franja es un botón que abre la ficha «Cuándo», con el mismo
+   patrón que la ficha de un evento y las tramas a sangre: cabecera amarilla, periodos+calendario | horario, pie. */
+.when-bar-desk{display:none}
+@media(min-width:961px){
+  .when-bar-desk{display:flex;align-items:center;width:100%;min-height:52px;margin:0 0 12px;border:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--sand);color:var(--ink);font:inherit;font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.1;text-align:left;padding:0 24px;cursor:pointer}
+  .when-bar-desk:hover{background:#f3cd63}
+  .when-bar-desk span{font-weight:500;font-size:16px;letter-spacing:0;margin-left:10px}
+  #deskTitle{display:none}
+  .when-sheet{padding:0;max-height:92vh;display:flex;flex-direction:column}
+  .ws-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:22px 32px 20px;background:var(--sand);border-bottom:1px solid var(--ink)}
+  .ws-head small{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .ws-head h2{margin:6px 0 0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.02}
+  .ws-head p{margin:8px 0 0;font-size:16px;font-weight:500}
+  .ws-head .close{flex:none;width:40px;height:40px;border:1px solid var(--ink);background:var(--paper);color:var(--ink)}
+  .ws-body{display:grid;grid-template-columns:1fr 1fr}
+  .ws-body>.desk-when{display:block;margin:0 !important;border:0 !important;border-right:1px solid var(--ink) !important;background:var(--paper);padding:16px 24px 18px 32px !important}
+  .ws-body>.desk-when .dw-title{display:none}
+  .ws-body>.hour-filter{margin:0;padding:16px 32px 18px 24px;border:0}
+  .ws-foot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink);margin-top:auto}
+  .ws-foot .linklike{min-height:60px;padding:0 32px;text-align:left;font-size:15px}
+  .ws-foot #whenApply{min-height:60px;border:0;border-left:1px solid var(--ink);background:var(--ink);color:var(--paper);font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+}
+
+/* Móvil, opción B1 (31-10-2026, David). Regla: las franjas de color abren algo (amarillo = cuándo, petróleo = filtros) y
+   llevan a su lado una celda blanca con una acción propia (lupa, vista); las filas blancas eligen directamente
+   (categorías, Agenda/Expos). Orden: aire tras la Selección · [lupa | fecha] · categorías · [+ Más filtros | Vista] ·
+   aire · Agenda/Expos. Todo a 44 px como mínimo de zona táctil. */
+.mob-lupa,.mob-search,.mob-more{display:none}
+@media(max-width:960px){
+  .panel-wrap{display:none}
+  .filter-bar{margin-top:16px !important}
+  .mob-row{grid-template-columns:52px minmax(0,1fr) !important;border-bottom:1px solid var(--ink)}
+  .mob-lupa{display:flex;align-items:center;justify-content:center;height:48px;border:0;border-right:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+  .mob-when{height:48px !important;border-right:0 !important;flex-direction:row !important;align-items:center !important;justify-content:flex-start !important;padding:0 16px !important}
+  .mob-when span{display:none}
+  .mob-when b{font-size:20px !important;letter-spacing:-.03em}
+  .filter-bar.searching .mob-row{display:none !important}
+  .mob-search:not([hidden]){display:flex;height:48px;border-bottom:1px solid var(--ink)}
+  .mob-search .panel-search{flex:1 1 auto;min-width:0;margin:0}
+  .mob-search .search-box{min-height:48px;height:48px;border:0;border-radius:0;padding:0 16px;background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink)}
+  .mob-search .search-box input{height:46px;font-size:17px}
+  .mob-search-close{flex:none;width:52px;border:0;border-left:1px solid var(--ink);background:var(--sand);color:var(--ink);font:inherit;font-size:18px;cursor:pointer}
+  .filter-bar .type-mini .cat-pill{min-height:44px !important;height:44px !important;font-size:15px}
+  .filter-bar .type-mini:after{height:44px}
+  .mob-more{display:flex;position:relative;border-top:1px solid var(--ink)}
+  .mob-more .filters-toggle{flex:1 1 auto;min-width:0;height:44px !important;min-height:44px !important;gap:8px !important;white-space:nowrap;overflow:hidden}
+  .mob-more .mm-label{flex:none;font-weight:700}
+  .mob-more #filtersHint{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:400;opacity:.9}
+  .mob-more #filterCount{margin-left:auto;flex:none}
+  .mob-view{flex:none;display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border:0;border-left:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .mob-view-menu:not([hidden]){display:flex;flex-direction:column;position:absolute;right:0;top:100%;z-index:20;min-width:170px;background:var(--paper);border:1px solid var(--ink);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  .mob-view-menu button{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:0;border-top:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
+  .mob-view-menu button:first-child{border-top:0}
+  .mob-view-menu button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+  .filters-panel .view-group{display:none}
+  .content .ag-tabs{margin-top:8px;border-top:1px solid var(--ink)}
+  .content .ag-tabs .period-tab{min-height:44px}
+}
+

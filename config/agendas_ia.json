@@ -439,10 +439,10 @@
       "address": "Avinguda del Paral·lel 62, 08001 Barcelona",
       "type": "music",
       "urls": [
-        "https://paral-lel62.cat/"
+        "https://paral-lel62.cat/wp-admin/admin-ajax.php?action=alm_get_posts&post_type=event&posts_per_page=200&lang=ca&meta_key=cmb_event_date&meta_value={hoy_unix}&meta_compare=%3E&orderby=meta_value_num&order=ASC"
       ],
       "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). 30-10-2026: la portada y /programacio/ pintan 5 actos y cargan el resto con «Load More» (plugin Ajax Load More), así que solo se leían 5 de 167. Se lee la misma dirección pública que usa ese botón: JSON con el HTML del listado completo (fecha, hora, Sala Gran / Club P62, título, imagen, enlace), actos a partir de hoy ({hoy_unix}). Sin schema.org; lo lee la IA con citas."
     },
     {
       "slug": "mhc",
@@ -623,10 +623,11 @@
       "address": "Carrer de Bailèn 205, 08037 Barcelona",
       "type": "cinema",
       "urls": [
-        "https://espaitexas.cat/"
+        "https://espaitexas.cat/cartellera-cinema/",
+        "https://espaitexas.cat/teatre/"
       ],
       "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). 31-10-2026 (alerta ACTS_DROP, 12 frente a 28): se leía solo la portada, que enseña las películas de la semana en curso como periodo y sin hora; la semana de la Festa del Cinema trajo menos. Ahora se leen las dos carteleras completas (cine y teatre), que dan cada sesión por día con su hora («Ds31 ELS NENS ESTAN BÉ 16:00»), hasta diciembre."
     },
     {
       "slug": "pangoli",
@@ -764,6 +765,55 @@
       "hasta": "2026-11-08",
       "activa": false,
       "nota": "Piloto In-Edit (28-10-2026, David): las páginas por día de la web oficial listan las películas sin hora; cada ficha de película da las sesiones con día y hora (sin sala). Se leen las fichas enlazadas; la sala es el cine del festival (MOOBY Aribau) salvo que la ficha nombre otro lugar (Blanquerna…). El número de sala solo está en el PDF de horarios y no se lee. Deja de leerse el 9-11. 28-10: «ficha»: las páginas de película son fichas de un acto (la sesión va tras la sinopsis, lejos del título): no se exige cercanía al título, solo citas literales. 28-10 (11:30): desactivada; las sesiones llegan de Codetickets (config/venues.json, in_edit_festival), con sala y sin IA."
+    },
+    {
+      "slug": "mnac",
+      "name": "Museu Nacional d'Art de Catalunya",
+      "address": "Palau Nacional, Parc de Montjuïc, 08038 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.museunacional.cat/es/actividades",
+        "https://www.museunacional.cat/es/actividades?page=1",
+        "https://www.museunacional.cat/es/actividades?page=2",
+        "https://www.museunacional.cat/es/actividades?page=3",
+        "https://www.museunacional.cat/es/actividades?page=4"
+      ],
+      "seguir": {
+        "patron": "^https://www\\.museunacional\\.cat/es/actividades/[^/?#]+$",
+        "max": 15,
+        "ficha": true,
+        "solo_fichas": true
+      },
+      "activa": true,
+      "nota": "Añadida el 30-10-2026 (David): solo llegaban ~18 actos por agregadores (Open Data BCN, GuiaBCN, Generalitat, GRAF) de unos 30 que anuncia el museo. El listado (5 páginas) da solo la fecha; la ficha de cada actividad da día, hora, lugar en el museo, precio/inscripción, og:image y og:description. «seguir» lee esas fichas como ficha de un acto. Sin schema.org. «solo_fichas»: las fechas del listado van pegadas al acto vecino y se atribuían mal (muestra del 30-10); solo cuentan las fichas. Segunda muestra (30-10): 29 actos con hora; activada el 30-10-2026 por David."
+    },
+    {
+      "slug": "teatre_sarria",
+      "name": "Teatre de Sarrià",
+      "address": "Carrer del Pare Miquel de Sarrià 8, 08034 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://teatredesarria.cat/programacio"
+      ],
+      "activa": true,
+      "nota": "Añadida el 31-10-2026 (David): 0 fichas en catálogo. Listado con día y hora («Dimecres 4 de novembre 20:00h»), jazz, clásica, cine, teatro amateur. Sin schema.org; robots permite. Lectura IA del listado."
+    },
+    {
+      "slug": "fundacio_brossa",
+      "name": "Fundació Joan Brossa - Centre de les Arts Lliures",
+      "address": "Carrer dels Flassaders 40, 08003 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://fundaciojoanbrossa.cat/espectacles/",
+        "https://fundaciojoanbrossa.cat/activitats/"
+      ],
+      "seguir": {
+        "patron": "^https://fundaciojoanbrossa\\.cat/arxiu-arts-en-viu/[^/?#]+/?$",
+        "max": 25,
+        "ficha": true
+      },
+      "activa": true,
+      "nota": "Añadida el 31-10-2026 (David): por GuiaBCN/Open Data llegaban 12 de 22 espectáculos de la temporada y casi sin hora. El listado /espectacles/ da el periodo de cada obra; la ficha (arxiu-arts-en-viu) da horarios por día de la semana («De dijous a dissabte, a les 19:30 h. Diumenge, a les 12 h»), precio, duración e imagen. «seguir» lee las fichas; vigilar en la primera muestra que las sesiones por día de la semana se conviertan bien."
     }
   ]
 }

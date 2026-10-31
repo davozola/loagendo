@@ -128,10 +128,24 @@ def agenda_for_source(source):
 
 def expand_urls(agenda, today):
     monday = today - dt.timedelta(days=today.weekday())
+    # {hoy_unix} (30-10-2026, Paral·lel 62): segundos Unix de las 00:00 de hoy, para listados que piden «actos a partir de».
+    midnight = int(dt.datetime.combine(today, dt.time(), tzinfo=dt.timezone.utc).timestamp())
     out = []
     for url in agenda.get('urls') or []:
-        out.append(re.sub(r"\{lunes\+(\d+)\}", lambda m: (monday + dt.timedelta(days=int(m.group(1)))).isoformat(), url))
+        url = re.sub(r"\{lunes\+(\d+)\}", lambda m: (monday + dt.timedelta(days=int(m.group(1)))).isoformat(), url)
+        out.append(url.replace('{hoy_unix}', str(midnight)))
     return out
+
+
+def unwrap_html(body):
+    """Respuesta JSON que trae el HTML dentro (WordPress Ajax Load More: {"html": "...", "meta": {...}}; 30-10-2026,
+    Paral·lel 62, cuya programación pinta 5 actos y carga el resto con un botón). Si no es eso, el cuerpo tal cual."""
+    s = (body or '').lstrip()
+    if not s.startswith('{'): return body
+    try: data = json.loads(s)
+    except ValueError: return body
+    if isinstance(data, dict) and isinstance(data.get('html'), str): return data['html']
+    return body
 
 
 # ---------- limpieza de la página ----------
@@ -491,6 +505,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         seen.add(url)
         if fetcher is fetch and not robots_allows(url): result['pages'].append({'url': url, 'error': 'robots.txt no lo permite'}); continue
         status, final_url, body = _get(fetcher, url, timeout)
+        body = unwrap_html(body)
         if status != 200: result['pages'].append({'url': url, 'error': f'HTTP {status}'}); continue
         text, links = clean(body, final_url or url)
         text = text[:MAX_CHARS]; digest = hashlib.sha256(f'{PROMPT_VERSION}\0{text}'.encode()).hexdigest()[:20]
