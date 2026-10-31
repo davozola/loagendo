@@ -29,7 +29,9 @@
       "urls": [
         "https://marulacafe.com/agenda/"
       ],
-      "activa": true
+      "activa": true,
+      "seguir_actos": 8,
+      "nota_seguir_actos": "1-11-2026 (David): obras y sesiones que el listado da solo como periodo; se lee la página de cada una (como mucho 8 por pasada) para sacar las funciones con su hora."
     },
     {
       "slug": "tradicionarius",
@@ -126,7 +128,9 @@
       "urls": [
         "https://www.teatreneu.com/ca/cartellera.html"
       ],
-      "activa": true
+      "activa": true,
+      "seguir_actos": 8,
+      "nota_seguir_actos": "1-11-2026 (David): obras y sesiones que el listado da solo como periodo; se lee la página de cada una (como mucho 8 por pasada) para sacar las funciones con su hora."
     },
     {
       "slug": "teatre_victoria",
@@ -156,7 +160,9 @@
       "urls": [
         "https://tantarantana.com/programacio/"
       ],
-      "activa": true
+      "activa": true,
+      "seguir_actos": 8,
+      "nota_seguir_actos": "1-11-2026 (David): obras y sesiones que el listado da solo como periodo; se lee la página de cada una (como mucho 8 por pasada) para sacar las funciones con su hora."
     },
     {
       "slug": "akademia",
@@ -200,6 +206,70 @@
         }
       ],
       "descartada": "Su cartelera no dice en qué teatro es cada obra (la IA devolvía «Goya, Romea, Condal o Villarroel»); 20-10-2026"
+    },
+    {
+      "slug": "teatre_goya",
+      "name": "Teatre Goya",
+      "address": "C Joaquín Costa 68, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatregoya.cat/es/programacion/"
+      ],
+      "seguir": {
+        "patron": "teatregoya\\.cat/es/ex/[^/]+/?$",
+        "max": 20,
+        "ficha": true
+      },
+      "activa": false,
+      "nota": "1-11-2026 (David): teatro del Grup Focus por su propia web (la cartelera común no dice en qué teatro es cada obra). El listado da «hasta el 24 de noviembre»; cada obra publica sus funciones («lunes, 02/11/2026 - 19:30»), que se leen siguiendo «Más información». Pendiente de revisar la muestra para activarla."
+    },
+    {
+      "slug": "la_villarroel",
+      "name": "La Villarroel",
+      "address": "C Villarroel 87, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.lavillarroel.cat/es/programacion/"
+      ],
+      "seguir": {
+        "patron": "lavillarroel\\.cat/es/ex/[^/]+/?$",
+        "max": 20,
+        "ficha": true
+      },
+      "activa": false,
+      "nota": "1-11-2026 (David): teatro del Grup Focus por su propia web (la cartelera común no dice en qué teatro es cada obra). El listado da «hasta el 24 de noviembre»; cada obra publica sus funciones («lunes, 02/11/2026 - 19:30»), que se leen siguiendo «Más información». Pendiente de revisar la muestra para activarla."
+    },
+    {
+      "slug": "teatre_romea",
+      "name": "Teatre Romea",
+      "address": "C Hospital 51, 08001 Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatreromea.cat/es/programacion/"
+      ],
+      "seguir": {
+        "patron": "teatreromea\\.cat/es/ex/[^/]+/?$",
+        "max": 20,
+        "ficha": true
+      },
+      "activa": false,
+      "nota": "1-11-2026 (David): teatro del Grup Focus por su propia web (la cartelera común no dice en qué teatro es cada obra). El listado da «hasta el 24 de noviembre»; cada obra publica sus funciones («lunes, 02/11/2026 - 19:30»), que se leen siguiendo «Más información». Pendiente de revisar la muestra para activarla."
+    },
+    {
+      "slug": "teatre_condal",
+      "name": "Teatre Condal",
+      "address": "Av Paral·lel 91, Barcelona",
+      "type": "theatre",
+      "urls": [
+        "https://www.teatrecondal.cat/es/programacion/"
+      ],
+      "seguir": {
+        "patron": "teatrecondal\\.cat/es/ex/[^/]+/?$",
+        "max": 20,
+        "ficha": true
+      },
+      "activa": false,
+      "nota": "1-11-2026 (David): teatro del Grup Focus por su propia web (la cartelera común no dice en qué teatro es cada obra). El listado da «hasta el 24 de noviembre»; cada obra publica sus funciones («lunes, 02/11/2026 - 19:30»), que se leen siguiendo «Más información». Pendiente de revisar la muestra para activarla."
     },
     {
       "slug": "fundacio_miro",
@@ -252,7 +322,9 @@
         "https://www.institutfrancais.es/barcelona/eventos/nuestros-eventos/"
       ],
       "otros_lugares": true,
-      "activa": true
+      "activa": true,
+      "seguir_actos": 8,
+      "nota_seguir_actos": "1-11-2026 (David): obras y sesiones que el listado da solo como periodo; se lee la página de cada una (como mucho 8 por pasada) para sacar las funciones con su hora."
     },
     {
       "slug": "goethe",
@@ -317,7 +389,9 @@
       "urls": [
         "https://elmalda.cat/"
       ],
-      "activa": true
+      "activa": true,
+      "seguir_actos": 8,
+      "nota_seguir_actos": "1-11-2026 (David): obras y sesiones que el listado da solo como periodo; se lee la página de cada una (como mucho 8 por pasada) para sacar las funciones con su hora."
     },
     {
       "slug": "la_bonne",
@@ -462,10 +536,15 @@
       "address": "Carrer de Muntaner 4, 08011 Barcelona",
       "type": "theatre",
       "urls": [
-        "https://cat.teatremuntaner.com/"
+        "https://teatremuntaner.com/ca/"
       ],
       "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA. 1-11-2026: la web pasó de cat.teatremuntaner.com a teatremuntaner.com/ca/ y la portada ya no da fechas (solo «Dissabtes»); cada espectáculo publica sus funciones en schema.org (TheaterEvent), que se leen con reglas siguiendo los enlaces.",
+      "seguir": {
+        "patron": "teatremuntaner\\.com/ca/espectaculos/[^/]+/$",
+        "max": 30,
+        "ficha": true
+      }
     },
     {
       "slug": "teatre_apolo",
@@ -635,11 +714,10 @@
       "address": "Carrer de Bailèn 194-196, 08037 Barcelona",
       "type": "theatre",
       "urls": [
-        "https://www.salapangoli.com/"
+        "https://www.salapangoli.com/horaris/"
       ],
       "activa": false,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA.",
-      "descartada": "La portada no da actos con fecha legibles (0 en la primera lectura); se cubre con la página oficial de cada acto; 21-10-2026"
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA. 1-11-2026: la página «Horaris» es un calendario del mes con cada función y su hora; se lee esa en lugar de la portada. Pendiente de revisar la muestra para activarla."
     },
     {
       "slug": "casino_alianca",
