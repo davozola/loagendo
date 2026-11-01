@@ -176,7 +176,7 @@ function expand(c) {
   return {source: c.s, id: c.i, key: `${c.s}:${c.i}`, title: c.t, source_label: c.sl || '', start: c.a, end: c.b, kind: c.kd, format: c.f, format_label: FORMATS[c.f] || c.f, category: c.c || '', public_category: c.pc,
     district: c.d || null, family_audience: Boolean(c.fa), has_description: Boolean(c.hd), summary: c.su || '', venue_names: c.v || [],
     coordinates: c.g ? {lat: c.g[0], lon: c.g[1]} : null, occurrences: (c.o || []).map(([date, time]) => ({date, time: time || null})), has_candidate: (c.o || []).length > 0,
-    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), venue_tier: c.vt || 0, promo: Boolean(c.pm), price_short: c.pp || null, open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, program_days: c.pn || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || '', pinned: Boolean(c.sp)};
+    is_free: Boolean(c.fr), price_label: c.pl || null, channels: c.ch || [], age_min: c.ag ? c.ag[0] : null, age_max: c.ag ? (c.ag[1] === 99 ? null : c.ag[1]) : null, time: c.tm || null, time_label: c.tl, time_conflicts: c.tc || null, open_days: c.od || null, by_appointment: Boolean(c.oc), schedule_hint: c.tx || '', hours_by_day: c.hb || null, notes_by_day: c.nd || null, lineup: c.lu || [], languages: c.lg || [], featured_date: c.fd || null, series: c.se || '', image: c.mi || '', relevant: Boolean(c.rv), venue_tier: c.vt || 0, promo: Boolean(c.pm), price_short: c.pp || null, open_enrollment: Boolean(c.oe), registration_required: Boolean(c.rr), drop_in: Boolean(c.di), program_titles: c.pg || [], program_first: c.pf || null, program_days: c.pn || null, manual_hours: c.mh || null, sold_out: c.so ? (c.so === 1 ? [] : c.so) : null, confirmations: c.cf || 1, festival: c.fs ? {slug: c.fs[0], name: c.fs[1], umbrella: Boolean(c.fs[2]), fiesta: Boolean(c.fs[3])} : null, milestone: c.ms === 'op' ? {kind: 'opening'} : c.ms === 'cl' ? {kind: 'closing'} : null, media: (c.m || []).map(m => ({url: m.u, alt: m.alt, credit: m.cr, fallback: Boolean(m.fb)})), url: c.u || '', pinned: Boolean(c.sp), covered_days: c.xd || []};
 }
 async function loadCatalog() {
   if (store.catalog) return store.catalog;
@@ -504,13 +504,17 @@ function renderActive() {
   $('activeFilters').innerHTML = '';   // 29-10-2026: lo activo se resume en la franja de filtros (alertBand)
   alertBand();
   // «Más filtros» cuenta solo lo que se elige dentro: el periodo, la búsqueda y la categoría ya se ven fuera (28-10-2026)
-  const n = list.filter(f => !['range', 'query', 'cat'].includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
+  // En móvil (31-10-2026, D2) la categoría se elige dentro de «Filtros»: cuenta y sale en la pista («Filtros · Teatro 1»).
+  const outside = matchMedia('(min-width: 961px)').matches ? ['range', 'query', 'cat'] : ['range', 'query'];
+  const n = list.filter(f => !outside.includes(f.k)).length; const badge = $('filterCount'); badge.hidden = !n; badge.textContent = n;
   $('openFilters').classList.toggle('has-filters', n > 0);
-  const hint = $('filtersHint'); if (hint) { const own = list.filter(f => !['range', 'query', 'cat'].includes(f.k)); hint.textContent = own.length ? '· ' + own.map(f => f.label).join(' · ') : L('· barrio, gratis, en familia…', '· barri, gratis, en família…', '· area, free, family…') }
+  const hint = $('filtersHint'); if (hint) { const own = list.filter(f => !outside.includes(f.k)); hint.textContent = own.length ? '· ' + own.map(f => f.label).join(' · ') : L('· categoría, barrio, gratis…', '· categoria, barri, gratis…', '· category, area, free…') }
 }
 function chips() {
   // La categoría se elige en la barra rápida de encima de la lista (23-10-2026): fuera de la columna de filtros.
-  const catGroup = $('categories')?.closest('fieldset'); if (catGroup) catGroup.hidden = true;
+  // Móvil (31-10-2026, 21:24, David, opción D2): las categorías van dentro de «Filtros» (arriba del panel); en escritorio
+  // siguen en la fila de pestañas sobre la agenda y el CSS oculta este grupo.
+  const catGroup = $('categories')?.closest('fieldset'); if (catGroup) catGroup.hidden = false;
   $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
     .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
   // Franjas de edad: solo con «En familia» activo.
@@ -592,7 +596,7 @@ function periodMenu(open) {
   }
   menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
 }
-document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.target.closest('.when-pop')) periodMenu(false); if ($('mobViewMenu') && !$('mobViewMenu').hidden && !e.target.closest('.mob-more')) mobView(false) });
+document.addEventListener('click', e => { if (!$('periodMenu').hidden && !e.target.closest('.when-pop')) periodMenu(false); });
 
 /* ---------- escritorio (29-10-2026, David, variante B1) ----------
    A partir de 961 px: la columna de filtros arranca bajo la Selección con «Cuándo» (periodos y un calendario de cinco
@@ -670,14 +674,14 @@ function mobSearch(open) {
 const VIEW_NAMES = {list: ['Lista', 'Llista', 'List'], map: ['Mapa', 'Mapa', 'Map'], venue: ['Por sitio', 'Per lloc', 'By venue']};
 const VIEW_ICON = {list: '<path d="M4 6h16M4 12h16M4 18h16"></path>', map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"></path><path d="M9 4v14M15 6v14"></path>', venue: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"></path><circle cx="12" cy="9.5" r="2.5"></circle>'};
 const viewIcon = v => `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${VIEW_ICON[v]}</svg>`;
-function mobView(open) {
-  const btn = $('mobView'), menu = $('mobViewMenu'); if (!btn) return;
-  const v = VIEW_NAMES[state.view] ? state.view : 'list';
-  btn.innerHTML = `${viewIcon(v)}<span>${esc(byLang(VIEW_NAMES[v]))}</span> ▾`;
-  btn.setAttribute('aria-label', `${L('Vista', 'Vista', 'View')}: ${byLang(VIEW_NAMES[v])}`);
-  if (open === undefined) return;
-  if (open) menu.innerHTML = Object.keys(VIEW_NAMES).map(k => `<button type="button" data-mobview="${k}" aria-pressed="${k === v}">${viewIcon(k)}${esc(byLang(VIEW_NAMES[k]))}</button>`).join('');
-  menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+// Móvil (31-10-2026, 21:24, David, D2 con E1): un solo botón que dice a dónde vas; en la lista, «Mapa»; en el mapa, «Lista».
+// Sin «Por sitio» en móvil (sigue en escritorio). Un toque cambia de vista.
+function mobView() {
+  const btn = $('mobView'); if (!btn) return;
+  const to = state.view === 'map' ? 'list' : 'map';
+  btn.dataset.to = to;
+  btn.innerHTML = `${viewIcon(to)}<span>${esc(byLang(VIEW_NAMES[to]))}</span>`;
+  btn.setAttribute('aria-label', to === 'map' ? L('Ver en el mapa', 'Veure al mapa', 'See on the map') : L('Ver en lista', 'Veure en llista', 'See as a list'));
 }
 function openWhen(open) {
   const ov = $('whenOverlay'); if (!ov) return;
@@ -1716,6 +1720,14 @@ function stick() {
   root.setProperty('--stick', hh + 'px'); root.setProperty('--agtop', hh + fb + 'px'); root.setProperty('--daytop', hh + fb + th + 'px');
 }
 window.addEventListener('resize', () => requestAnimationFrame(stick), {passive: true});
+// Móvil (31-10-2026, D2): Agenda/Expos se estrecha (36 px) cuando queda fijada arriba al bajar.
+let stuckTabs = false;
+window.addEventListener('scroll', () => requestAnimationFrame(() => {
+  const tabs = $('agTabs'); if (!tabs || DESK.matches) { if (stuckTabs && tabs) { tabs.classList.remove('stuck'); document.documentElement.classList.remove('compact-top'); stuckTabs = false; stick() } return }
+  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--agtop')) || 0;
+  const now = tabs.getBoundingClientRect().top <= top + 1 && window.scrollY > 0;
+  if (now !== stuckTabs) { stuckTabs = now; tabs.classList.toggle('stuck', now); document.documentElement.classList.toggle('compact-top', now); stick() }   // cabecera fina y una sola franja al bajar (1-11-2026)
+}), {passive: true});
 function stableRender() {
   const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
   const anchor = rowsEls.find(r => r.getBoundingClientRect().bottom > top + 40), k = anchor?.querySelector('[data-open]')?.dataset.open, y = anchor?.getBoundingClientRect().top;
@@ -1736,6 +1748,8 @@ function collectStatic(all, win, p) {
     const active = base.start <= to && base.end >= from;
     const upcomingCourse = !active && isPeriodic(base) && !isOpenFormat(base) && base.start > to && base.start <= ahead && daysBetween(base.start, base.end) > SHORT_DAYS;
     if (!active && !upcomingCourse) continue;
+    // Ese día sale su sesión, a la misma hora y en el mismo sitio (src/publish_static.covered_by_sessions, 1-11-2026).
+    if (!win && (base.covered_days || []).includes(state.day)) continue;
     if (filters.query && !queryMatches(searchText(base), filters.query)) continue;
     if (p.fest && base.festival?.slug !== p.fest) continue;   // etiqueta de festival o fiesta pulsada (28-10-2026)
     if (!catMatch(base, filters.cat) || !chanMatch(base, filters.chans) || !ageMatch(base, filters.ages) || !langMatch(base, filters.langs)) continue;
@@ -2093,8 +2107,7 @@ document.addEventListener('click', e => {
   if (button.id === 'whenBar') { track('filtro', 'when_sheet', 'open'); openWhen(true); return }
   if (button.id === 'mobSearchOpen') { track('filtro', 'search_open', 'lupa'); mobSearch(true); $('searchInput').focus(); return }
   if (button.id === 'mobSearchClose') { mobSearch(false); if (state.query) { clearFilter('query'); refresh() } return }
-  if (button.id === 'mobView') { mobView($('mobViewMenu').hidden); return }
-  if (button.dataset.mobview) { mobView(false); $('view' + button.dataset.mobview.replace(/^./, c => c.toUpperCase())).click(); return }
+  if (button.id === 'mobView') { $(button.dataset.to === 'map' ? 'viewMap' : 'viewList').click(); return }
   if (button.id === 'whenClose' || button.id === 'whenApply') { openWhen(false); if (button.id === 'whenApply') scrollToId('agenda'); return }
   if (button.id === 'whenOpen') { state.whenEntry = true; openDrawer(true); $('filters').scrollTop = 0; return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { state.whenEntry = false; openDrawer(true); return }
@@ -2105,7 +2118,7 @@ document.addEventListener('click', e => {
   if (button.dataset.alerts === 'open') { openAlerts(); return }
   if (button.id === 'clearAll' || button.dataset.clear === 'all') { track('filtro', 'filter_clear', 'todos'); ALL_FILTERS.forEach(clearFilter); refresh(); return }
   if (button.dataset.clear) { track('filtro', 'filter_clear', button.dataset.clear); clearFilter(button.dataset.clear); refresh(); return }
-  if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); syncUrl(); agenda(); return }
+  if (button.id === 'viewList' || button.id === 'viewMap' || button.id === 'viewVenue') { const v = button.id.replace('view', '').toLowerCase(); if (v !== state.view) track('vista', 'view_change', v); state.view = button.id.replace('view', '').toLowerCase(); chips(); mobView(); syncUrl(); agenda(); return }
   if (button.id === 'loadMore') { state.page += 1; button.disabled = true; agenda(true); return }
   if (button.dataset.expand) { state.expanded.add(button.dataset.expand); renderAgenda(); const sec = $('ag-' + button.dataset.expand); if (sec && sec.getBoundingClientRect().top < 0) sec.scrollIntoView({block: 'start'}); return }
   if (button.dataset.collapse) { delete state.limits[button.dataset.collapse]; state.expanded.delete(button.dataset.collapse); renderAgenda(); const sec = $('ag-' + button.dataset.collapse); if (sec) window.scrollTo({top: sec.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0) - 8}); return }

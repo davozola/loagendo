@@ -612,3 +612,40 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .content .ag-tabs .period-tab{min-height:44px}
 }
 
+
+/* Móvil, opción D2 con E1 (31-10-2026, 21:24, David): categorías dentro de «Filtros» (sin fila propia), «Filtros» sin «+»,
+   un solo botón Lista/Mapa, fila de hora de 30 px y Agenda/Expos de 36 px cuando queda fijada arriba. */
+@media(max-width:960px){
+  .filter-bar .type-mini{display:none !important}
+  /* Categorías en el panel: rejilla a sangre de dos columnas con líneas de 1 px, como el resto del panel */
+  .filters-panel .cat-group{padding-bottom:0 !important;border-bottom:0 !important}
+  .filters-panel .cat-group .cat-chips{gap:0;margin:0 calc(-1 * var(--fpad,16px));border-top:1px solid var(--ink)}
+  .filters-panel .cat-group #categories .filter-chip{min-height:48px;border:0;border-bottom:1px solid var(--ink);border-radius:0;justify-content:flex-start;text-align:left;padding:0 16px;background:var(--paper);color:var(--ink);font-weight:500}
+  .filters-panel .cat-group #categories .filter-chip:nth-child(even){border-right:1px solid var(--ink)}
+  .filters-panel .cat-group #categories .filter-chip.active{background:var(--ink);color:var(--paper);font-weight:700}
+  .mob-view{width:96px;justify-content:center;font-size:15px}
+  .content .ag-stick{display:flex;align-items:center;gap:8px;min-height:30px;padding-top:0 !important;padding-bottom:0 !important;font-size:14px;box-sizing:border-box}
+  .content .ag-tabs.stuck .period-tab{min-height:36px !important;font-size:14px}
+}
+
+
+/* Móvil, opción B con ontoca fino (1-11-2026, 08:35, David): al bajar por la Agenda, la cabecera de ontoca se queda en
+   40 px y la fecha, «Filtros» y el mapa van en una sola franja de 40 px; Agenda/Expos 30 px y la hora 26 px. Al volver
+   arriba (las pestañas dejan de estar fijadas) todo recupera su tamaño. Clase .compact-top en <html> (public.js). */
+@media(max-width:960px){
+  html.compact-top .nav-wrap{height:40px}
+  html.compact-top .logo{font-size:20px}
+  html.compact-top .nav-actions .pill-button{min-height:32px;height:32px;padding-top:0;padding-bottom:0;font-size:13px}
+  html.compact-top .nav-actions .icon-button,html.compact-top #saved{min-width:32px;width:32px}
+  html.compact-top .filter-bar:not(.searching){display:flex !important;align-items:stretch;gap:0;border-top:0}
+  html.compact-top .filter-bar:not(.searching) .mob-row{flex:1 1 auto;min-width:0;grid-template-columns:40px minmax(0,1fr) !important;border-bottom:0}
+  html.compact-top .filter-bar:not(.searching) .mob-lupa{height:40px}
+  html.compact-top .filter-bar:not(.searching) .mob-when{height:40px !important;padding:0 12px !important}
+  html.compact-top .filter-bar:not(.searching) .mob-when b{font-size:15px !important;letter-spacing:-.01em}
+  html.compact-top .filter-bar:not(.searching) .mob-more{flex:none;border-top:0;border-left:1px solid var(--ink)}
+  html.compact-top .filter-bar:not(.searching) .mob-more .filters-toggle{height:40px !important;min-height:40px !important;padding:0 12px !important;font-size:14px}
+  html.compact-top .filter-bar:not(.searching) .mob-more #filtersHint{display:none}
+  html.compact-top .filter-bar:not(.searching) .mob-view{width:auto;height:40px;padding:0 10px;font-size:13px;gap:4px}
+  html.compact-top .content .ag-tabs.stuck .period-tab{min-height:30px !important;font-size:13px}
+  html.compact-top .content .ag-stick{min-height:26px;font-size:13px}
+}
