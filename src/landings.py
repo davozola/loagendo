@@ -50,7 +50,7 @@ SLUGS = {'hoy': ('avui', 'today'), 'manana': ('dema', 'tomorrow'), 'fin-de-seman
          'con-ninos': ('amb-nens', 'with-kids'), 'conciertos': ('concerts', 'concerts'), 'teatro': ('teatre', 'theatre'), 'cine': ('cinema', 'cinema'),
          'exposiciones': ('exposicions', 'exhibitions'), 'visitas-guiadas': ('visites-guiades', 'guided-tours'), 'charlas': ('xerrades', 'talks'),
          'talleres': ('tallers', 'workshops'), 'fiestas-y-mercados': ('festes-i-mercats', 'festivals-and-markets'), 'gratis': ('gratis', 'free'),
-         'distrito': ('districte', 'district')}
+         'distrito': ('districte', 'district'), 'sala': ('sala', 'venue')}
 
 # Temas: filtro de la app (cats = public_category, chans = canales, free), periodo por defecto y textos (es, ca, en).
 TOPICS = {
@@ -270,11 +270,13 @@ def pages(today, lang='es'):
             text = text.replace(a, b)
         return text
 
-    def add(path, landing, days, title, desc, h1, lead, per_day=MAX_PER_DAY):
+    def add(path, landing, days, title, desc, h1, lead, per_day=MAX_PER_DAY, canon=None):
         title, desc, h1, lead = single(title), single(desc), single(h1), single(lead)
         local = localize(path, lang)
+        # canon (1-11-2026): /dia/<hoy> es /hoy y /dia/<mañana> es /manana; la canónica y los hreflang, los de esas.
         out.append({'path': local, 'base': path, 'lang': lang, 'landing': {**landing, 'path': local}, 'days': days, 'title': title,
-                    'desc': desc, 'h1': h1, 'lead': lead, 'per_day': per_day, 'alts': {l: localize(path, l) for l in LANGS}})
+                    'desc': desc, 'h1': h1, 'lead': lead, 'per_day': per_day, 'alts': {l: localize(canon or path, l) for l in LANGS},
+                    'canonical': localize(canon, lang) if canon else local})
 
     add('/hoy', {'day': 'today'}, [today], f'{T["hoy_t"]} · Ontoca', f'{T["hoy_t"]}: {T["gen_desc"]}', T['hoy_t'],
         T['plans_for'].format(when=T['today'], date=L(today)))
@@ -285,7 +287,8 @@ def pages(today, lang='es'):
     for n in range(DAY_PAGES):
         d = today + dt.timedelta(days=n)
         add(f'/dia/{d.isoformat()}', {'day': d.isoformat()}, [d], f'{T["day_t"].format(date=L(d))} · Ontoca',
-            T['day_desc'].format(date=L(d), year=d.year), T['day_t'].format(date=L(d)), T['day_lead'].format(date=L(d), year=d.year))
+            T['day_desc'].format(date=L(d), year=d.year), T['day_t'].format(date=L(d)), T['day_lead'].format(date=L(d), year=d.year),
+            canon='/hoy' if n == 0 else '/manana' if n == 1 else None)
     months = []
     for first in month_starts(today):
         a, b = max(first, today), month_end(first); name = MONTHS[lang][first.month - 1]
@@ -317,6 +320,110 @@ def pages(today, lang='es'):
         add(f'/distrito/{slug}/fin-de-semana', {**base, 'range': 'finde'}, span(w0, w1), f'{T["dist_finde_t"].format(d=d)} · Ontoca',
             T['dist_finde_desc'].format(d=d, a=L(w0), b=L(w1)), T['dist_finde_t'].format(d=d), T['dist_finde_lead'].format(d=d, a=L(w0), b=L(w1)))
     return out
+
+
+# Piloto de páginas de sala (1-11-2026, encargo del consultor): 15 recintos variados. Nombre tal como lo publican las fichas
+# (sus salas «Nombre · Sala X» cuentan como el recinto) y web oficial solo si ya está en config/venues.json o agendas_ia.json.
+VENUES = [
+    ('palau-de-la-musica', 'Palau de la Música Catalana', 'https://www.palaumusica.cat/ca/agenda'),
+    ('liceu', 'Gran Teatre del Liceu', 'https://www.liceubarcelona.cat/ca/programacio'),
+    ('auditori', "L'Auditori de Barcelona", ''),
+    ('cccb', 'CCCB', 'https://www.cccb.org/es/calendario'),
+    ('mnac', "Museu Nacional d'Art de Catalunya", 'https://www.museunacional.cat/es/actividades'),
+    ('caixaforum', 'CaixaForum Barcelona', 'https://caixaforum.org/es/barcelona/actividades'),
+    ('filmoteca', 'Filmoteca de Catalunya', 'https://www.filmoteca.cat/web/ca/programacio'),
+    ('zumzeig', 'Zumzeig Cinecooperativa', 'https://zumzeigcine.coop/cinema/sessions/'),
+    ('phenomena', 'Phenomena Experience', 'https://phenomena-experience.com/index?pag=cartelera'),
+    ('sala-apolo', 'Sala Apolo', 'https://www.sala-apolo.com/'),
+    ('jamboree', 'Jamboree Jazz Club', 'https://jamboreejazz.com/'),
+    ('razzmatazz', 'Razzmatazz', 'https://www.salarazzmatazz.com/agenda/'),
+    ('espai-texas', 'Espai Texas', 'https://espaitexas.cat/cartellera-cinema/'),
+    ('casa-orlandai', 'Centre Cívic Casa Orlandai', ''),
+    ('fabra-i-coats', 'Fabra i Coats - Fàbrica de Creació', 'https://ajuntament.barcelona.cat/fabraicoats/'),
+]
+VENUE_MIN = 5   # con menos actos publicados, la página no va al índice
+VTEXT = {'es': {'title': 'Programación de {v} · Ontoca', 'h1': 'Programación de {v}',
+                'desc': 'Próximos actos en {v} ({d}, Barcelona): {n} planes publicados, con fecha, hora y enlace a la fuente oficial.',
+                'mostly': 'Sobre todo {c} ({k} de {n} actos publicados).', 'where': 'Dirección: {a}.', 'web': 'Programación oficial de {v}',
+                'until': 'Hasta el {d}', 'none': 'Ahora mismo no hay actos publicados en esta sala.'},
+         'ca': {'title': 'Programació de {v} · Ontoca', 'h1': 'Programació de {v}',
+                'desc': 'Propers actes a {v} ({d}, Barcelona): {n} plans publicats, amb data, hora i enllaç a la font oficial.',
+                'mostly': 'Sobretot {c} ({k} de {n} actes publicats).', 'where': 'Adreça: {a}.', 'web': 'Programació oficial de {v}',
+                'until': 'Fins al {d}', 'none': 'Ara mateix no hi ha actes publicats en aquesta sala.'},
+         'en': {'title': '{v}: what’s on · Ontoca', 'h1': '{v}: what’s on',
+                'desc': 'Upcoming events at {v} ({d}, Barcelona): {n} listings with date, time and a link to the official source.',
+                'mostly': 'Mostly {c} ({k} of {n} listings).', 'where': 'Address: {a}.', 'web': 'Official programme of {v}',
+                'until': 'Until {d}', 'none': 'There are no events listed at this venue right now.'}}
+
+
+def _at_venue(item, name):
+    v = (item.get('v') or [''])[0] or ''
+    return v == name or v.startswith(name + ' · ') or (name == 'Razzmatazz' and v.startswith('Razzmatazz'))
+
+
+def venue_items(name, catalog_items, today):
+    t = today.isoformat()
+    items = [i for i in catalog_items if (i.get('b') or i.get('a') or '') >= t and _at_venue(i, name)]
+    items.sort(key=lambda i: (max(i.get('a') or t, t), i.get('tm') or '', i.get('t') or ''))
+    return items
+
+
+def _venue_info(items, details_dir):
+    """Dirección, coordenadas y distrito tal como los publica la primera ficha que los trae."""
+    import hashlib
+    from pathlib import Path
+    info = {'district': next((i.get('d') for i in items if i.get('d')), '')}
+    if not details_dir: return info
+    for it in items[:8]:
+        key = f"{it['s']}:{it['i']}"; shard = hashlib.sha1(key.encode('utf-8')).hexdigest()[:2]
+        try: d = json.loads((Path(details_dir) / f'{shard}.json').read_text(encoding='utf-8')).get(key) or {}
+        except (OSError, ValueError): continue
+        ven = (d.get('venues') or [{}])[0] or {}
+        if ven.get('address') and not info.get('address'): info['address'] = ven['address']
+        if ven.get('lat') and ven.get('lon') and not info.get('geo'): info['geo'] = (ven['lat'], ven['lon'])
+        if info.get('address') and info.get('geo'): break
+    return info
+
+
+def venue_pages(today, catalog_items, details_dir=None):
+    out = []
+    for slug, name, web in VENUES:
+        items = venue_items(name, catalog_items or [], today)
+        info = _venue_info(items, details_dir)
+        cats = {}
+        for i in items: cats[i.get('pc')] = cats.get(i.get('pc'), 0) + 1
+        top = max(cats.items(), key=lambda kv: kv[1]) if cats else (None, 0)
+        for lang in LANGS:
+            V = VTEXT[lang]; i = ix(lang); path = f'/sala/{slug}'; local = localize(path, lang)
+            lead = []
+            if top[0] in CATS and items: lead.append(V['mostly'].format(c=CATS[top[0]][i].lower(), k=top[1], n=len(items)))
+            if info.get('address'): lead.append(V['where'].format(a=info['address'] + (f", {info['district']}" if info.get('district') else '')))
+            rows = []
+            for it in items[:80]:
+                one = it.get('a') == it.get('b')
+                d = dt.date.fromisoformat(max(it.get('a') or today.isoformat(), today.isoformat()))
+                when = (_cap(long_date(d, lang)) + (f" · {it['tm']}" if it.get('tm') else '')) if one else V['until'].format(d=long_date(dt.date.fromisoformat(it['b']), lang))
+                cat = CATS.get(it.get('pc') or '', ('', '', ''))[i]
+                rows.append(f'<li><a href="{html.escape(event_path(it, lang))}"><b>{html.escape(when)}</b> {html.escape(it.get("t") or "")}</a>'
+                            + (f' <span>{html.escape(cat)}</span>' if cat else '') + '</li>')
+            body = ('<ul>' + ''.join(rows) + '</ul>') if rows else f'<p>{html.escape(V["none"])}</p>'
+            if web: body += f'<p class="seo-lista-more"><a href="{html.escape(web)}" rel="noopener" target="_blank">{html.escape(V["web"].format(v=name))}</a></p>'
+            place = {'@context': 'https://schema.org', '@type': 'Place', 'name': name,
+                     **({'address': {'@type': 'PostalAddress', 'streetAddress': info['address'], 'addressLocality': 'Barcelona', 'addressCountry': 'ES'}} if info.get('address') else {}),
+                     **({'geo': {'@type': 'GeoCoordinates', 'latitude': info['geo'][0], 'longitude': info['geo'][1]}} if info.get('geo') else {}),
+                     **({'url': web} if web else {})}
+            out.append({'path': local, 'base': path, 'lang': lang, 'landing': {'q': name, 'range': '183', 'path': local}, 'days': [],
+                        'title': V['title'].format(v=name), 'desc': V['desc'].format(v=name, d=info.get('district') or 'Barcelona', n=len(items)),
+                        'h1': V['h1'].format(v=name), 'lead': ' '.join(lead), 'alts': {l: localize(path, l) for l in LANGS}, 'canonical': local,
+                        'rows_html': body, 'count': len(items), 'jsonld': place})
+    return out
+
+
+def indexable_paths(today, days_data, catalog_items=None):
+    """Las páginas de entrada que van al sitemap: las que son su propia canónica y tienen al menos un acto."""
+    data = with_catalog(days_data, catalog_items) if catalog_items else days_data
+    entries = [p['path'] for p in all_pages(today) if p.get('canonical', p['path']) == p['path'] and '<li>' in listing(p, data)]
+    return entries + [p['path'] for p in venue_pages(today, catalog_items or []) if p['count'] >= VENUE_MIN]
 
 
 def all_pages(today):
@@ -394,7 +501,10 @@ def listing(page, days_data):
     for d in page['days']:
         data = days_data.get(d.isoformat())
         if not data: continue
-        items = [i for i in data.get('items', []) if _matches(i, landing)]
+        pool = data.get('items', [])
+        if any(landing.get(k) for k in ('cats', 'chans', 'free', 'district')):   # con filtro: también el resto del día
+            pool = pool + data.get('_extra', [])
+        items = [i for i in pool if _matches(i, landing)]
         # Exposiciones y programas largos solo en las páginas de arte; en el resto, la app los agrupa aparte.
         if not is_art: items = [i for i in items if i.get('a') == i.get('b') or i.get('kd') not in ('exhibition', 'program')]
         items = [i for i in items if (i['s'], i['i']) not in seen]
@@ -407,6 +517,21 @@ def listing(page, days_data):
         if total >= MAX_ROWS: break
     if not parts: parts.append(f'<p>{html.escape(TEXT[lang]["none"])}</p>')
     return ''.join(parts)
+
+
+def with_catalog(days_data, catalog_items):
+    """Añade a cada día, aparte de su primera página (las 50 mejor puntuadas, data/day), los actos del catálogo que son
+    seguro de ese día: los de un solo día y las exposiciones abiertas. Los programas y cursos largos no, porque el
+    catálogo no dice qué días tienen sesión. Solo se usa en las páginas con filtro (_extra)."""
+    single, expos = {}, []
+    for it in catalog_items:
+        if it.get('a') and it.get('a') == it.get('b'): single.setdefault(it['a'], []).append(it)
+        elif it.get('kd') == 'exhibition': expos.append(it)
+    out = {}
+    for day, data in days_data.items():
+        extra = single.get(day, []) + [e for e in expos if (e.get('a') or '') <= day <= (e.get('b') or '')]
+        out[day] = {**data, '_extra': extra}
+    return out
 
 
 def alternates(alts, base):
@@ -442,7 +567,7 @@ def render(index, page, days_data, site_url):
     """El HTML de una página de entrada a partir de la portada ya generada (sin el bloque de la portada)."""
     lang = page.get('lang', 'es')
     base = site_url.rstrip('/') if site_url else ''
-    canonical = f'{base}{page["path"]}'
+    canonical = f'{base}{page.get("canonical") or page["path"]}'
     doc = index
     doc = re.sub(r'<title>.*?</title>', f'<title>{html.escape(page["title"])}</title>', doc, count=1, flags=re.S)
     doc = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{html.escape(page["desc"])}">', doc, count=1)
@@ -455,8 +580,13 @@ def render(index, page, days_data, site_url):
                           + alternates(page.get('alts') or {l: page['path'] for l in LANGS}, base) + '</head>', 1)
     landing = json.dumps(page['landing'], ensure_ascii=False, separators=(',', ':'))
     doc = _lang_attrs(doc, lang, f" data-landing='{html.escape(landing, quote=False).replace(chr(39), '&#39;')}'")
+    rows = page['rows_html'] if 'rows_html' in page else listing(page, days_data)
+    # Sin ningún acto (1-11-2026): fuera del índice, pero se siguen sus enlaces. Una sala, con menos de VENUE_MIN.
+    thin = page.get('count', 99) < VENUE_MIN if 'rows_html' in page else '<li>' not in rows
+    if thin: doc = doc.replace('</head>', '<meta name="robots" content="noindex,follow"></head>', 1)
+    if page.get('jsonld'): doc = doc.replace('</head>', '<script type="application/ld+json">' + json.dumps(page['jsonld'], ensure_ascii=False).replace('<', '\\u003c') + '</script></head>', 1)
     block = (f'<section id="seoLista" class="seo-lista" lang="{lang}"><h1>{html.escape(page["h1"])}</h1><p>{html.escape(page["lead"])}</p>'
-             + listing(page, days_data) + nav_html(skip=page['path'], lang=lang)
+             + rows + nav_html(skip=page['path'], lang=lang)
              + f'<p class="seo-lista-more"><a href="{PREFIX[lang]}/">{html.escape(TEXT[lang]["more"])}</a></p></section>')
     return doc.replace('<main>', '<main>' + block, 1)
 
@@ -477,11 +607,12 @@ def file_for(path):
     return (p + '/index.html') if p in ('ca', 'en') else p + '.html'
 
 
-def write_all(out, index, days_data, site_url, today):
+def write_all(out, index, days_data, site_url, today, catalog_items=None):
     """Escribe las tres portadas (/, /ca/, /en/) con su bloque para buscadores y todas las páginas de entrada.
     La usan la publicación completa y las rápidas. Devuelve las rutas escritas (para el sitemap)."""
     from pathlib import Path
     out = Path(out); paths = []
+    if catalog_items: days_data = with_catalog(days_data, catalog_items)
     for lang in LANGS:
         doc = localize_index(index, lang, site_url)
         doc = doc.replace('</main>', home_block(today, days_data, lang) + '</main>', 1) if '</main>' in doc else doc
@@ -489,6 +620,10 @@ def write_all(out, index, days_data, site_url, today):
         target.write_text(doc, encoding='utf-8')
         if lang != 'es': paths.append(localize('/', lang))
     for page in all_pages(today):
+        target = out / file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(render(index, page, days_data, site_url), encoding='utf-8')
+        paths.append(page['path'])
+    for page in venue_pages(today, catalog_items or [], out / 'data' / 'detail'):   # piloto de salas (1-11-2026)
         target = out / file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(render(index, page, days_data, site_url), encoding='utf-8')
         paths.append(page['path'])

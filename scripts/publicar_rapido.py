@@ -59,7 +59,8 @@ if ps.PUBLIC_SKIN == 'v2': index = ps.v2_index(index, versions['public-v2.css'])
 if alerts.get('enabled') and alerts.get('turnstile_site_key'):
     index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
 days = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in (OUT / 'data' / 'day').glob('*.json')}
-landings.write_all(OUT, index, days, site_url, today)   # las tres portadas y las páginas de entrada (1-11-2026)
+catalog_items = json.loads((OUT / 'data' / 'catalog.json').read_text(encoding='utf-8')).get('items') or []
+landings.write_all(OUT, index, days, site_url, today, catalog_items)   # las tres portadas y las páginas de entrada (1-11-2026)
 print('portada y páginas de entrada al día')
 
 # 3. Subida.

@@ -102,7 +102,7 @@ class StaticExportTests(unittest.TestCase):
         # Páginas de entrada (src/landings.py): ficheros .html, en el sitemap y enlazadas desde el pie.
         for name in ('hoy.html', 'fin-de-semana.html', 'con-ninos/fin-de-semana.html', 'dia/2026-10-12.html'):
             self.assertTrue((dist / name).is_file(), name)
-        self.assertIn('<loc>https://loagendo.example/con-ninos/fin-de-semana</loc>', (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
+        self.assertIn('<loc>https://loagendo.example/conciertos/hoy</loc>', (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
         self.assertIn('data-landing=', (dist / 'hoy.html').read_text(encoding='utf-8'))
         # Avisos por correo: apagados por defecto; /alertas/ y /api/ fuera de los buscadores.
         self.assertNotIn('data-alerts', (dist / 'index.html').read_text(encoding='utf-8'))

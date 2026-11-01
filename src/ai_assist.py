@@ -32,7 +32,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1, 'traduccion_en': 1, 'traduccion_es': 1}
+PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1, 'traduccion_en': 2, 'traduccion_es': 2}   # 2 (1-11-2026): campo «translation»; las copias del original se repiden
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40

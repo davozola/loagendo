@@ -746,7 +746,11 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     # Portada para buscadores (1-11-2026): los planes de hoy y los enlaces a todas las páginas de entrada, en el HTML,
     # en castellano, catalán (/ca/) e inglés (/en/), y las páginas de entrada de los tres idiomas (src/landings.write_all).
     # Las páginas de entrada y las fichas (functions/e) parten de la portada sin ese bloque.
-    landings.write_all(out, index, days, site_url, today)
+    # El catálogo completo (1-11-2026): los ficheros de día solo llevan la primera página (50 fichas) y las páginas con
+    # filtro (exposiciones, gratis, distritos…) se quedaban con muy pocas.
+    try: catalog_items = json.loads((out / 'data' / 'catalog.json').read_text(encoding='utf-8')).get('items') or []
+    except (OSError, ValueError): catalog_items = []
+    landings.write_all(out, index, days, site_url, today, catalog_items)
     return versions
 
 
@@ -1091,7 +1095,8 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     blocked = ''.join(f'User-agent: {bot}\nDisallow: /\n\n' for bot in ROBOTS_BLOCKED)
     (out / 'robots.txt').write_text(blocked + 'User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
     from src import landings
-    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landings.all_pages(today)] + ['/ca/', '/en/'])
+    # Solo las páginas de entrada indexables: con actos y que son su propia canónica (1-11-2026).
+    write_sitemaps(out, site_url, events, cards, today, landings.indexable_paths(today, days, catalogue) + ['/ca/', '/en/'])
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()

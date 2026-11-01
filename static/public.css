@@ -286,6 +286,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .ag-fold .ag-rows{padding:0 16px 8px}
 
 .ev{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+a.ev-main,a.pick-small{text-decoration:none}
 .ev-main{display:grid;grid-template-columns:clamp(96px,10vw,140px) minmax(0,1fr);gap:clamp(12px,2vw,24px);align-items:center;width:100%;min-height:64px;padding:11px 0;border:0;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
 @media(hover:hover){.ev-main:hover .ev-title{color:var(--accentText)}}  /* solo con ratón: en móvil el toque dejaba el título resaltado */
 .ev-main:focus-visible{outline:2px solid var(--accentText);outline-offset:3px;border-radius:10px}

@@ -119,5 +119,68 @@ class Renderizado(unittest.TestCase):
         self.assertLess(fn.index('detail.alias_of && detail.alias_of !== key'), fn.index('if (toPublic(shown) !== shown)'))
 
 
+class ValidacionProduccion(unittest.TestCase):
+    """Lo encontrado al validar en producción (1-11-2026)."""
+    def test_paginas_con_filtro_usan_el_catalogo(self):
+        days = {'2026-11-01': {'items': [item(i='1', pc='musica')]}}
+        cat = [{'s': 'x', 'i': '2', 't': 'Expo larga', 'a': '2026-09-01', 'b': '2027-01-01', 'kd': 'exhibition', 'pc': 'arte'},
+               {'s': 'x', 'i': '3', 't': 'Taller de un día', 'a': '2026-11-01', 'b': '2026-11-01', 'kd': 'single', 'pc': 'talleres'},
+               {'s': 'x', 'i': '4', 't': 'Curso largo', 'a': '2026-10-01', 'b': '2027-06-01', 'kd': 'course', 'pc': 'talleres'}]
+        dd = landings.with_catalog(days, cat)
+        expos = next(p for p in landings.pages(TODAY) if p['base'] == '/exposiciones/hoy')
+        talleres = next(p for p in landings.pages(TODAY) if p['base'] == '/talleres/hoy')
+        hoy = next(p for p in landings.pages(TODAY) if p['base'] == '/hoy')
+        self.assertIn('Expo larga', landings.listing(expos, dd))
+        self.assertIn('Taller de un día', landings.listing(talleres, dd)); self.assertNotIn('Curso largo', landings.listing(talleres, dd))
+        self.assertNotIn('Taller de un día', landings.listing(hoy, dd))   # sin filtro, la primera página del día tal cual
+
+    def test_event_proxima_sesion_y_sin_hreflang_si_ya_paso(self):
+        fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
+        self.assertIn('Programación larga ya empezada', fn); self.assertIn("const alternates = card.x ? '' :", fn)
+
+
+class EnlacesDeLaApp(unittest.TestCase):
+    def test_filas_y_seleccion_son_enlaces(self):
+        js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
+        self.assertIn('<a class="ev-main" href="${esc(eventPath(k))}" data-open=', js)
+        self.assertIn('<a class="pick-small" href="${esc(eventPath(key(e)))}" data-open=', js)
+        self.assertIn("a[data-quickcat],a[data-period],a[data-open]')) { if (e.metaKey", js)
+
+
+class CalidadEntradas(unittest.TestCase):
+    def test_dia_de_hoy_y_manana_apuntan_a_hoy_y_manana(self):
+        ps = {p['base']: p for p in landings.pages(TODAY, 'en')}
+        self.assertEqual(ps['/dia/2026-11-01']['canonical'], '/en/today'); self.assertEqual(ps['/dia/2026-11-02']['canonical'], '/en/tomorrow')
+        self.assertEqual(ps['/dia/2026-11-03']['canonical'], '/en/day/2026-11-03')
+
+    def test_sin_actos_noindex_y_fuera_del_sitemap(self):
+        from tests.test_landings import INDEX
+        page = next(p for p in landings.pages(TODAY) if p['base'] == '/gratis')
+        self.assertIn('noindex,follow', landings.render(INDEX, page, {}, 'https://ontoca.com'))
+        days = {'2026-11-01': {'items': [item(fr=1)]}}
+        paths = landings.indexable_paths(TODAY, days)
+        self.assertIn('/gratis/hoy', paths); self.assertNotIn('/cine/hoy', paths); self.assertNotIn('/dia/2026-11-01', paths)
+
+
+class PilotoSalas(unittest.TestCase):
+    CAT = [{'s': 'x', 'i': str(n), 't': f'Concierto {n}', 'a': f'2026-11-{n + 2:02d}', 'b': f'2026-11-{n + 2:02d}', 'kd': 'single', 'pc': 'musica',
+            'v': ['Sala Apolo' if n % 2 else 'Sala Apolo · La [2]'], 'd': 'Sants-Montjuïc'} for n in range(6)]
+
+    def test_paginas_de_sala_en_tres_idiomas(self):
+        pages = {p['path']: p for p in landings.venue_pages(TODAY, self.CAT)}
+        self.assertEqual(pages['/sala/sala-apolo']['count'], 6)
+        self.assertIn('/en/venue/sala-apolo', pages); self.assertIn('/ca/sala/sala-apolo', pages)
+        self.assertEqual(pages['/sala/sala-apolo']['landing']['q'], 'Sala Apolo')
+        self.assertIn('Sobre todo conciertos y música (6 de 6', pages['/sala/sala-apolo']['lead'])
+        self.assertEqual(pages['/sala/liceu']['count'], 0)
+        idx = landings.indexable_paths(TODAY, {}, self.CAT)
+        self.assertIn('/sala/sala-apolo', idx); self.assertNotIn('/sala/liceu', idx)
+
+    def test_la_ficha_enlaza_con_su_sala(self):
+        fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
+        for slug, name, _ in landings.VENUES: self.assertIn(f"'{slug}'", fn)
+        self.assertIn("venue: v => `Programación de ${v}`", fn)
+
+
 if __name__ == '__main__':
     unittest.main()

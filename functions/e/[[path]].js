@@ -57,7 +57,8 @@ export async function onRequest({request, env, params}) {
   const canonical = `${site}${eventPath(key, lang)}`;
   const ld = eventLd(card, d, canonical, url.origin, description, tr ? tr.t : '');
   const crumbs = breadcrumbs(card, site, canonical, lang);
-  const alternates = LANGS.map(l => `<link rel="alternate" hreflang="${l}" href="${esc(site + eventPath(key, l))}">`).join('')
+  // Ficha ya celebrada (noindex): sin versiones en otros idiomas que anunciar.
+  const alternates = card.x ? '' : LANGS.map(l => `<link rel="alternate" hreflang="${l}" href="${esc(site + eventPath(key, l))}">`).join('')
     + `<link rel="alternate" hreflang="x-default" href="${esc(site + eventPath(key, 'es'))}">`;
   const head = [
     `<meta property="og:type" content="${card.x ? 'website' : 'event'}">`, `<meta property="og:site_name" content="Ontoca">`,
@@ -79,19 +80,19 @@ export async function onRequest({request, env, params}) {
 
 // Textos de la ficha en los tres idiomas (los del acto son los de su fuente).
 const TEXT = {
-  es: {free: 'Gratis', gone: '<strong>Ya se celebró.</strong> Esta ficha se conserva como referencia.', reg: 'Requiere inscripción', open: 'Inscripción abierta',
+  es: {venue: v => `Programación de ${v}`, free: 'Gratis', gone: '<strong>Ya se celebró.</strong> Esta ficha se conserva como referencia.', reg: 'Requiere inscripción', open: 'Inscripción abierta',
        official: 'Web oficial del acto', info: 'Más información', source: s => s ? `Ficha en ${s}` : 'Ficha en la fuente', more: 'Ver la agenda de Barcelona de hoy',
        morePlans: 'Más planes', similar: 'Actos parecidos', soon: v => `Próximamente en ${v}`, org: 'Organiza', machine: 'Traducción automática del texto de la fuente',
        officialTr: 'Texto de la web oficial', crumbs: 'Migas', day: d => `Qué hacer en Barcelona el ${d}`, district: d => `Qué hacer en ${d}`,
        kids: 'Planes con niños en Barcelona', finde: 'Qué hacer este fin de semana en Barcelona', today: 'Qué hacer hoy en Barcelona', next: v => `Próximos actos en ${v}`,
        past1: (d, t) => `Se celebró el ${d}${t ? ` a las ${t}` : ''}`, pastN: (a, b) => `Del ${a} al ${b}`, until: d => `Hasta el ${d}`, span: (a, b) => `Del ${a} al ${b}`},
-  ca: {free: 'Gratis', gone: '<strong>Ja s’ha celebrat.</strong> Aquesta fitxa es conserva com a referència.', reg: 'Cal inscripció', open: 'Inscripció oberta',
+  ca: {venue: v => `Programació de ${v}`, free: 'Gratis', gone: '<strong>Ja s’ha celebrat.</strong> Aquesta fitxa es conserva com a referència.', reg: 'Cal inscripció', open: 'Inscripció oberta',
        official: 'Web oficial de l’acte', info: 'Més informació', source: s => s ? `Fitxa a ${s}` : 'Fitxa a la font', more: 'Veure l’agenda de Barcelona d’avui',
        morePlans: 'Més plans', similar: 'Actes semblants', soon: v => `Properament a ${v}`, org: 'Organitza', machine: 'Traducció automàtica del text de la font',
        officialTr: 'Text del web oficial', crumbs: 'Molles', day: d => `Què fer a Barcelona el ${d}`, district: d => `Què fer a ${d}`,
        kids: 'Plans amb nens a Barcelona', finde: 'Què fer aquest cap de setmana a Barcelona', today: 'Què fer avui a Barcelona', next: v => `Propers actes a ${v}`,
        past1: (d, t) => `Es va celebrar el ${d}${t ? ` a les ${t}` : ''}`, pastN: (a, b) => `Del ${a} al ${b}`, until: d => `Fins al ${d}`, span: (a, b) => `Del ${a} al ${b}`},
-  en: {free: 'Free', gone: '<strong>This has already taken place.</strong> The page is kept for reference.', reg: 'Registration required', open: 'Registration open',
+  en: {venue: v => `${v}: what’s on`, free: 'Free', gone: '<strong>This has already taken place.</strong> The page is kept for reference.', reg: 'Registration required', open: 'Registration open',
        official: 'Official event website', info: 'More information', source: s => s ? `Listing on ${s}` : 'Listing at the source', more: 'See what’s on in Barcelona today',
        morePlans: 'More things to do', similar: 'Similar events', soon: v => `Coming up at ${v}`, org: 'Organiser', machine: 'Machine translation of the source text',
        officialTr: 'Text from the official website', crumbs: 'Breadcrumbs', day: d => `Things to do in Barcelona on ${d}`, district: d => `Things to do in ${d}`,
@@ -183,8 +184,14 @@ function euros(text) {
   return [...new Set(found)].sort((x, y) => x - y);
 }
 function eventLd(card, d, canonical, origin, description, translated = '') {
-  const time = card.tm && /^\d{2}:\d{2}$/.test(card.tm) ? card.tm : '';
-  const start = card.a + (time ? `T${time}:00${madridOffset(card.a, time)}` : '');
+  // Programación larga ya empezada (1-11-2026, «Gran Gala Flamenco» desde 2021): la próxima sesión publicada, con su hora.
+  // Sin sesiones publicadas, la fecha de inicio de la fuente tal cual.
+  const today = todayMadrid();
+  const next = card.a && card.a < today ? (d.occurrences || []).filter(o => o && o.date >= today).sort((x, y) => (x.date + (x.time || '')).localeCompare(y.date + (y.time || '')))[0] : null;
+  const day = next ? next.date : card.a;
+  const rawTime = next ? (next.time || '') : card.tm;
+  const time = rawTime && /^\d{2}:\d{2}$/.test(rawTime) ? rawTime : '';
+  const start = day + (time ? `T${time}:00${madridOffset(day, time)}` : '');
   const venue = (d.venues || [])[0] || {};
   const street = venue.address || card.ad || '';
   const postal = (street.match(/\b(0[89]\d{3})\b/) || [])[1] || '';
@@ -238,6 +245,16 @@ const PATHS = {
   kids: {es: '/con-ninos', ca: '/ca/amb-nens', en: '/en/with-kids'}, finde: {es: '/fin-de-semana', ca: '/ca/cap-de-setmana', en: '/en/weekend'},
   today: {es: '/hoy', ca: '/ca/avui', en: '/en/today'}};
 const DAY_PAGES = 60;   // /dia/<fecha> existe para los próximos 60 días (src/landings.py)
+// Piloto de páginas de sala (src/landings.py VENUES, 1-11-2026): la ficha de un acto en una de ellas enlaza con la suya.
+const VENUES = [['palau-de-la-musica', 'Palau de la Música Catalana'], ['liceu', 'Gran Teatre del Liceu'], ['auditori', "L'Auditori de Barcelona"], ['cccb', 'CCCB'],
+  ['mnac', "Museu Nacional d'Art de Catalunya"], ['caixaforum', 'CaixaForum Barcelona'], ['filmoteca', 'Filmoteca de Catalunya'], ['zumzeig', 'Zumzeig Cinecooperativa'],
+  ['phenomena', 'Phenomena Experience'], ['sala-apolo', 'Sala Apolo'], ['jamboree', 'Jamboree Jazz Club'], ['razzmatazz', 'Razzmatazz'], ['espai-texas', 'Espai Texas'],
+  ['casa-orlandai', 'Centre Cívic Casa Orlandai'], ['fabra-i-coats', 'Fabra i Coats - Fàbrica de Creació']];
+const VENUE_BASE = {es: '/sala/', ca: '/ca/sala/', en: '/en/venue/'};
+function venuePage(v, lang) {
+  const hit = VENUES.find(([, n]) => v === n || String(v || '').startsWith(n + ' · ') || (n === 'Razzmatazz' && String(v || '').startsWith('Razzmatazz')));
+  return hit ? [`${VENUE_BASE[lang]}${hit[0]}`, hit[1]] : null;
+}
 // Migas (BreadcrumbList): Ontoca › categoría › acto. En HTML, encima del título; para Google, en JSON-LD.
 function breadcrumbs(card, site, canonical, lang) {
   const topic = TOPIC[card.c] ? TOPIC[card.c][lang] : null;
@@ -251,6 +268,8 @@ function breadcrumbs(card, site, canonical, lang) {
 // Acto vigente (1-11-2026, SEO): adónde más ir desde la ficha. Su categoría, su día (si tiene página) y su distrito.
 function related(card, d, lang) {
   const T = TEXT[lang], links = [];
+  const vp = venuePage(card.v, lang);
+  if (vp) links.push([vp[0], T.venue(vp[1])]);
   if (TOPIC[card.c]) links.push(TOPIC[card.c][lang].slice(0, 2));
   const today = todayMadrid();
   const last = new Date(`${today}T12:00:00Z`); last.setUTCDate(last.getUTCDate() + DAY_PAGES - 1);
@@ -265,7 +284,9 @@ function similar(card, lang = 'es') {
   const T = TEXT[lang], links = [];
   if ((card.ch || []).includes('familia')) links.push([PATHS.kids[lang], T.kids]);
   if (TOPIC[card.c]) links.push(TOPIC[card.c][lang].slice(0, 2));
-  if (card.v) links.push([`${PREFIX[lang]}/?q=${encodeURIComponent(card.v)}&range=183`, T.next(card.v)]);
+  const vp = venuePage(card.v, lang);
+  if (vp) links.push([vp[0], T.venue(vp[1])]);
+  else if (card.v) links.push([`${PREFIX[lang]}/?q=${encodeURIComponent(card.v)}&range=183`, T.next(card.v)]);
   links.push([PATHS.today[lang], T.today], [PATHS.finde[lang], T.finde]);
   return `<h2>${esc(T.similar)}</h2><ul class="seo-ficha-links">${links.map(([h, l]) => `<li><a href="${esc(h)}">${esc(l)}</a></li>`).join('')}</ul>`;
 }

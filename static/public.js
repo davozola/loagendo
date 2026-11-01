@@ -159,7 +159,7 @@ let state = {
   pickCat: '',         // tipo de la Selección (28-10-2026, 19:34, David): solo filtra la Selección; '' = «Todo»
   day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
   chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || LANDING.district || '',
-  free: params.get('free') === '1' || LANDING.free === true, query: params.get('q') || '',
+  free: params.get('free') === '1' || LANDING.free === true, query: params.get('q') || LANDING.q || '',   // LANDING.q: páginas de sala (1-11-2026)
   marks: [...new Set(params.getAll('marca'))].filter(m => MARKS[m]),   // Destacados (30-10-2026, David)
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
@@ -726,7 +726,7 @@ function pick(e, i) {
   const d = new Date((e.featured_date || e.start) + 'T12:00:00'), free = e.is_free ? `<span class="free">${t('Gratis')}</span>` : '';
   const c = e.public_category || e.category || '', meta = esc(CAT_SHORT[c] ? byLang(CAT_SHORT[c]) : catLabel(e));   // la misma palabra que las fichas de tipo (28-10-2026, David)
   const image = e.media?.[0] ? `<img class="pick-media" src="${esc(e.media[0].url)}" alt="${esc(e.media[0].alt || e.title)}" loading="lazy">` : '<div class="pick-media pick-placeholder" aria-hidden="true"></div>';
-  return `<button class="pick-small" type="button" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${e.kind === 'exhibition' && e.end ? `${L('Hasta el', 'Fins al', 'Until')} ${Number(e.end.slice(8, 10))} ${months[Number(e.end.slice(5, 7)) - 1]}${e.end.slice(0, 4) !== state.day.slice(0, 4) ? ' ' + e.end.slice(0, 4) : ''}` : `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}`}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></button>`;
+  return `<a class="pick-small" href="${esc(eventPath(key(e)))}" data-open="${esc(key(e))}" data-cat="${esc(e.public_category || e.category || '')}">${image}<span class="pick-meta">${meta}</span>${free}<div><div class="pick-date">${e.kind === 'exhibition' && e.end ? `${L('Hasta el', 'Fins al', 'Until')} ${Number(e.end.slice(8, 10))} ${months[Number(e.end.slice(5, 7)) - 1]}${e.end.slice(0, 4) !== state.day.slice(0, 4) ? ' ' + e.end.slice(0, 4) : ''}` : `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}${e.time ? ' · ' + esc(e.time) : ''}`}</div><h3 class="pick-title">${esc(e.title)}</h3><p class="pick-summary">${esc((e.summary || '').slice(0, 190))}</p><p class="place">${esc(venue(e))}</p></div></a>`;
 }
 // «Selección Ontoca» (28-10-2026, David): coherente con el día que se mira. Por defecto, «Hoy» mientras queden al menos
 // tres planes destacados de ese día; si no, los próximos 7 días. Nunca lo que ya ha pasado ni títulos de promoción;
@@ -799,7 +799,7 @@ async function selection() {
 // Carrusel de la Selección (28-10-2026, David): también en escritorio, todas las fichas iguales. Flechas y «1–4 de 7» en
 // escritorio; en móvil se desliza con el dedo. Sin paso automático.
 function pickNav() {
-  const box = $('curated'), cards = box ? [...box.querySelectorAll('button[data-open]')] : [];
+  const box = $('curated'), cards = box ? [...box.querySelectorAll('[data-open]')] : [];
   const nav = document.querySelector('.pick-nav'); if (!nav) return;
   if (!cards.length) { nav.hidden = true; return }
   const step = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : cards[0].offsetWidth;
@@ -810,7 +810,7 @@ function pickNav() {
   $('pickPrev').disabled = first <= 0; $('pickNext').disabled = last >= cards.length;
 }
 function pickScroll(dir) {
-  const box = $('curated'), cards = box.querySelectorAll('button[data-open]');
+  const box = $('curated'), cards = box.querySelectorAll('[data-open]');
   const step = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : box.clientWidth;
   box.scrollBy({left: dir * step, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
 }
@@ -1185,7 +1185,7 @@ const seriesShort = title => String(title || '').replace(/^\s*patis? escolars? o
 function row(e) {
   if (!e._a) Object.assign(e, {_a: availability(e, e.start), _st: {state: 'none'}, _day: e.start});
   const k = key(e), saved = state.saved.includes(k);
-  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl && !e._plain ? ` ev-hl ev-hl-${e._hl}` : ''}" data-cat="${esc(e.public_category || e.category || '')}"><button class="ev-main" type="button" data-open="${esc(k)}">${whenCell(e)}${thumb(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></button><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
+  return `<article class="ev k-${e._a.kind} st-${e._st.state}${e._hl && !e._plain ? ` ev-hl ev-hl-${e._hl}` : ''}" data-cat="${esc(e.public_category || e.category || '')}"><a class="ev-main" href="${esc(eventPath(k))}" data-open="${esc(k)}">${whenCell(e)}${thumb(e)}<span class="ev-body">${hlHead(e)}${msTag(e)}<h3 class="ev-title">${esc(e._inFest ? festShort(e) : e._seriesShort ? seriesShort(e.title) : e.title)}</h3>${festTag(e)}${lineupHit(e) ? `<span class="ev-hit">${t('Con')} ${esc(lineupHit(e))}</span>` : programHit(e) ? `<span class="ev-hit">${esc(L('En el programa', 'Al programa', 'In the programme'))}: ${esc(programHit(e))}</span>` : ''}${noteOfDay(e, e._day) ? `<span class="ev-hit">${esc(labelDay(e._day))}: ${esc(noteOfDay(e, e._day))}</span>` : ''}<span class="ev-cat"><span class="ev-catname">${esc(catLabel(e))}</span>${hasAge(e) ? `<span class="ev-age">${esc(ageText(e))}</span>` : ''}${daysLeft(e)}${e.is_free ? `<span class="ev-free">${t('Gratis')}</span>` : priceShort(e) ? `<span class="ev-price">${esc(priceShort(e))}</span>` : ''}${isPeriodic(e) && e.registration_required && !e.open_enrollment ? `<span class="ev-signup">${L('Inscripción', 'Inscripció', 'Sign-up')}</span>` : ''}${soldOn(e, e._day) ? `<span class="ev-soldout">${L('Agotado', 'Esgotat', 'Sold out')}</span>` : ''}</span><span class="ev-meta">${rowVenue(e)}${state.near && e._km != null ? `<span class="ev-dist">${kmText(e._km)}</span>` : ''}</span></span></a><button class="save ${saved ? 'active' : ''}" type="button" data-save="${esc(k)}" aria-pressed="${saved}" aria-label="${t('Guardar')} ${esc(e.title)}">${saved ? '♥' : '♡'}</button></article>`;
 }
 
 /* ---------- render ---------- */
@@ -2145,8 +2145,9 @@ let searchTimer = null;
 document.addEventListener('click', e => {
   const vq = e.target.closest('.ev-venue[data-venueq]'); if (vq) { e.preventDefault(); goVenue(vq.dataset.venueq); return }
   const fq = e.target.closest('.ev-fest[data-fest]'); if (fq) { e.preventDefault(); e.stopPropagation(); goFest(fq.dataset); return }
-  const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period]'); if (!button) return;
-  if (button.matches('a[data-quickcat],a[data-period]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro
+  const button = e.target.closest('button,a[href^="#"],a[data-quickcat],a[data-period],a[data-open]'); if (!button) return;
+  // Enlaces reales (1-11-2026: filas de la agenda y de la Selección a su ficha): con Cmd/Ctrl/Mayús, otra pestaña; si no, la app.
+  if (button.matches('a[data-quickcat],a[data-period],a[data-open]')) { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault() }   // enlace para buscadores; en la app, filtro o ficha
   if (button.matches('a[href^="#"]') && !button.classList.contains('skip')) { e.preventDefault(); scrollToId(button.getAttribute('href').slice(1)); return }
   if (button.id === 'theme') { const light = document.documentElement.dataset.theme === 'light'; document.documentElement.dataset.theme = light ? 'dark' : 'light'; try { localStorage.setItem('brollant-theme', document.documentElement.dataset.theme) } catch (_) {} return }
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }

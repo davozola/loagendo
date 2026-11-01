@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit", "official_images"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -133,6 +133,9 @@ def execute(conn, job, media_root):
     if kind == "enrich":
         from src.guia_detail import enrich_sources
         return enrich_sources(conn, job.get("limit", 100), timeout=job.get("timeout_seconds", 20))
+    if kind == "official_images":   # imagen de la página del propio acto para las fichas sin foto (1-11-2026)
+        from src.official_images import run as run_official_images
+        return run_official_images(conn, limit=job.get("limit", 120), timeout=job.get("timeout_seconds", 10))
     if kind == "places":
         from src.place_images import fetch_place_images
         return fetch_place_images(conn, media_root, limit=job.get("limit", 60), timeout=job.get("timeout_seconds", 20))

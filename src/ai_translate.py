@@ -155,16 +155,19 @@ The source text is usually Catalan, sometimes Spanish or English. Translate it f
   Titles of works stay in their original language (you may keep quotation marks as in the source).
 - Keep every number, date, time, price, age and URL exactly as in the source (digits stay digits; 24-hour times stay 24-hour).
 - {STYLE[lang]} Keep paragraph breaks.
-- If the text is already in {LANG_NAMES[lang]}, return it unchanged.
+- If the text is already in {LANG_NAMES[lang]}, return it unchanged. Otherwise the translation must be written in {LANG_NAMES[lang]}:
+  never copy the source text back.
 Also return the language of the source text (ca, es, en or other).
-Answer with the tool traducir, one entry per item (n)."""
+Answer with the tool traducir, one entry per item (n), with the {LANG_NAMES[lang]} text in «translation»."""
 
 
 def tool_for(lang):
     return {'name': 'traducir', 'description': f'{LANG_NAMES[lang]} translation of each description.',
             'input_schema': {'type': 'object', 'required': ['items'], 'properties': {'items': {'type': 'array', 'items': {
-                'type': 'object', 'required': ['n', 'source_lang', 'text'],
-                'properties': {'n': {'type': 'integer'}, 'source_lang': {'type': 'string'}, 'text': {'type': 'string'}}}}}}}
+                'type': 'object', 'required': ['n', 'source_lang', 'translation'],
+                'properties': {'n': {'type': 'integer'}, 'source_lang': {'type': 'string'}, 'translation': {'type': 'string'}}}}}}}
+# 1-11-2026: la respuesta se llamaba «text», como la entrada, y el modelo devolvía el original sin traducir en la
+# mayoría de casos (1.291 de 1.500 al inglés). Ahora «translation», y una copia del original no vale.
 
 
 MARKERS = {'ca': {'els', 'amb', 'per', 'aquest', 'aquesta', 'dels', 'i', 'què', 'també', 'però', 'seva', 'seu', 'fins', 'molt', 'una', 'és', 'més', 'pel', 'als', 'on'},
@@ -206,10 +209,13 @@ def check_target(source, target, lang):
 
 def parser_for(lang):
     def parse_target(row, payload):
-        text = str(row.get('text') or '').strip(); src = str(row.get('source_lang') or '').strip().lower()[:5]
+        text = str(row.get('translation') or row.get('text') or '').strip(); src = str(row.get('source_lang') or '').strip().lower()[:5]
         if not text: return None  # vacía: se vuelve a pedir
         if src == lang:  # ya estaba en el idioma de destino: no hay traducción que publicar
             return json.dumps({'text': '', 'source_lang': src, 'ok': False, 'problems': ['ya en el idioma']}, ensure_ascii=False), 0.0, 'ya en el idioma'
+        # Copia del original o respuesta en otro idioma: no es una traducción (queda anotada, no se publica).
+        if ' '.join(text.split()) == ' '.join(str(payload['text']).split()) or guess_lang(text) not in ('', lang):
+            return json.dumps({'text': text, 'source_lang': src, 'ok': False, 'problems': ['sin traducir']}, ensure_ascii=False), 0.0, 'sin traducir'
         ok, problems = check_target(payload['text'], text, lang)
         return json.dumps({'text': text, 'source_lang': src, 'ok': ok, 'problems': problems}, ensure_ascii=False), 1.0 if ok else 0.0, '; '.join(problems)
     return parse_target
