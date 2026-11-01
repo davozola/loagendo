@@ -729,3 +729,19 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .desk-top .search-box{min-height:64px;border:0;padding-left:var(--bleedL);padding-right:var(--bleedR)}
   .desk-top .search-box input{height:64px;font-size:19px}
 }
+
+
+/* Escritorio (2-11-2026, 00:04, David, fila F del lienzo): el título «Agenda» entre una línea negra arriba y otra abajo, de
+   borde a borde y más bajo; la columna de filtros un tercio más estrecha (300 → 200 px, las categorías en una columna) y
+   el buscador más bajo. */
+@media(min-width:961px){
+  #agenda .agenda-head{max-width:none;margin:clamp(32px,4vw,56px) calc(-1 * var(--gutter)) 0;padding:14px var(--gutter) 15px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+  #agenda .agenda-title{gap:16px}
+  #agenda .agenda-title h2{font-size:clamp(30px,2.6vw,38px)}
+  #agenda #agendaCount{font-size:17px}
+  .layout{grid-template-columns:200px minmax(0,1fr)}
+  .filters-panel .cat-group .cat-chips{grid-template-columns:minmax(0,1fr)}
+  .filters-panel .cat-group #categories .filter-chip,.filters-panel .cat-group #categories .filter-chip:nth-child(even){padding-left:48px;border-right:0}
+  .desk-top .search-box{min-height:52px}
+  .desk-top .search-box input{height:52px;font-size:18px}
+}

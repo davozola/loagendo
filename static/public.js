@@ -1740,9 +1740,13 @@ function renderAgenda() {
   if (state.query && !state.savedOnly) { try { window.ontocaAnalytics?.search(state.query, count, state.cats.length === 1 ? state.cats[0] : false) } catch (_) {} }
   // Cabecera con los mismos números que las pestañas (28-10-2026: decía «116 planes» con «Agenda 35» debajo, porque
   // sumaba las exposiciones): planes de la Agenda y, aparte, exposiciones abiertas.
-  const ag = tabCounts ? tabCounts.agenda.toLocaleString('es-ES') : n, ex = tabCounts?.expo ? ` · ${tabCounts.expo.toLocaleString('es-ES')} ${L('exposiciones', 'exposicions', 'exhibitions')}` : '';
-  const lead = model.mode === 'day' && model.live ? `<b>${ag} ${L('planes disponibles hoy', 'plans disponibles avui', 'plans available today')}</b> ${L('desde las', 'des de les', 'from')} ${clock(model.now.min)}${ex}`
-    : model.mode === 'day' ? `<b>${ag} ${L('planes', 'plans', 'plans')}</b> · ${esc(labelDay(state.day))}${ex}` : `<b>${ag} ${L('planes', 'plans', 'plans')}</b> · ${esc(win.label)}${ex}`;
+  // 2-11-2026 (David): «42 planes y 35 exposiciones disponibles hoy desde las 17:00» (sin exposiciones, solo los planes).
+  const agN = tabCounts ? tabCounts.agenda : count, exN = tabCounts?.expo || 0, num = x => x.toLocaleString('es-ES');
+  const plans = `<b>${num(agN)} ${agN === 1 ? L('plan', 'pla', 'plan') : L('planes', 'plans', 'plans')}</b>`;
+  const both = plans + (exN ? ` ${L('y', 'i', 'and')} <b>${num(exN)} ${exN === 1 ? L('exposición', 'exposició', 'exhibition') : L('exposiciones', 'exposicions', 'exhibitions')}</b>` : '');
+  const avail = agN + exN === 1 ? L('disponible', 'disponible', 'available') : L('disponibles', 'disponibles', 'available');
+  const lead = model.mode === 'day' && model.live ? `${both} ${avail} ${L('hoy desde las', 'avui des de les', 'today from')} ${clock(model.now.min)}`
+    : model.mode === 'day' ? `${both} · ${esc(labelDay(state.day))}` : `${both} · ${esc(win.label)}`;
   const extra = [state.cats.map(catName).join(' + '), state.chans.map(chanName).join(' + '), state.ages.map(a => byLang(AGE_LABEL[a])).join(' + '), state.query ? `“${state.query}”` : ''].filter(Boolean).map(esc).join(' · ');
   $('agendaCount').innerHTML = state.savedOnly ? `<b>${items.length}</b> ${t('guardados')}` : lead + (extra ? ` · ${extra}` : '');
   stick(); mountFilterUi();
