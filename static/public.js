@@ -516,7 +516,7 @@ function chips() {
   // siguen en la fila de pestañas sobre la agenda y el CSS oculta este grupo.
   const catGroup = $('categories')?.closest('fieldset'); if (catGroup) catGroup.hidden = false;
   $('categories').innerHTML = [`<button class="filter-chip ${state.cats.length ? '' : 'active'}" type="button" data-category="" aria-pressed="${!state.cats.length}">${t('Todo')}</button>`]
-    .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}">${esc(catName(c))}</button>`)).join('');
+    .concat(Object.keys(CATS).map(c => `<button class="filter-chip ${state.cats.includes(c) ? 'active' : ''}" type="button" data-category="${esc(c)}" aria-pressed="${state.cats.includes(c)}" title="${esc(catName(c))}">${esc(wideScreen() ? byLang(CAT_SHORT[c]) : catName(c))}</button>`)).join('');   // escritorio: nombre corto en la rejilla de la columna (1-11-2026)
   // Franjas de edad: solo con «En familia» activo.
   const fam = state.chans.includes('familia'); if (!fam) state.ages = [];
   $('ages').hidden = !fam;
@@ -609,7 +609,7 @@ function deskLayout() {
   // «Cerca de mí» va siempre en «Dónde» del panel de filtros (29-10-2026, David: en móvil también, opción B1)
   // 31-10-2026 (David): en escritorio, «Cuándo» (periodos y calendario) y «Horario» salen de la columna de filtros y van a la
   // ficha «Cuándo» (#whenSheet), que se abre desde la franja amarilla #whenBar sobre la agenda.
-  const moves = [['searchForm', 'deskTop'], ['typeMini', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView'], ['deskWhen', 'whenSheetBody'], ['hourFilter', 'whenSheetBody']];
+  const moves = [['searchForm', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView'], ['deskWhen', 'whenSheetBody'], ['hourFilter', 'whenSheetBody']];
   for (const [id, slot, always] of moves) {
     const el = $(id), to = $(slot); if (!el || !to) continue;
     if (!deskMarks[id]) { deskMarks[id] = document.createComment(id); el.before(deskMarks[id]) }
@@ -676,12 +676,16 @@ const VIEW_ICON = {list: '<path d="M4 6h16M4 12h16M4 18h16"></path>', map: '<pat
 const viewIcon = v => `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${VIEW_ICON[v]}</svg>`;
 // Móvil (31-10-2026, 21:24, David, D2 con E1): un solo botón que dice a dónde vas; en la lista, «Mapa»; en el mapa, «Lista».
 // Sin «Por sitio» en móvil (sigue en escritorio). Un toque cambia de vista.
+function wideScreen() { return matchMedia('(min-width: 961px)').matches }
 function mobView() {
-  const btn = $('mobView'); if (!btn) return;
+  // Un solo botón Lista/Mapa: en el móvil, en la franja de filtros; en escritorio (1-11-2026, David), a la derecha de la fecha.
   const to = state.view === 'map' ? 'list' : 'map';
-  btn.dataset.to = to;
-  btn.innerHTML = `${viewIcon(to)}<span>${esc(byLang(VIEW_NAMES[to]))}</span>`;
-  btn.setAttribute('aria-label', to === 'map' ? L('Ver en el mapa', 'Veure al mapa', 'See on the map') : L('Ver en lista', 'Veure en llista', 'See as a list'));
+  for (const btn of [$('mobView'), $('deskViewBtn')]) {
+    if (!btn) continue;
+    btn.dataset.to = to;
+    btn.innerHTML = `${viewIcon(to)}<span>${esc(byLang(VIEW_NAMES[to]))}</span>`;
+    btn.setAttribute('aria-label', to === 'map' ? L('Ver en el mapa', 'Veure al mapa', 'See on the map') : L('Ver en lista', 'Veure en llista', 'See as a list'));
+  }
 }
 function openWhen(open) {
   const ov = $('whenOverlay'); if (!ov) return;
@@ -1721,12 +1725,18 @@ function stick() {
 }
 window.addEventListener('resize', () => requestAnimationFrame(stick), {passive: true});
 // Móvil (31-10-2026, D2): Agenda/Expos se estrecha (36 px) cuando queda fijada arriba al bajar.
-let stuckTabs = false;
+let stuckTabs = false, stuckAt = 0, stuckGap = 40;
 window.addEventListener('scroll', () => requestAnimationFrame(() => {
   const tabs = $('agTabs'); if (!tabs || DESK.matches) { if (stuckTabs && tabs) { tabs.classList.remove('stuck'); document.documentElement.classList.remove('compact-top'); stuckTabs = false; stick() } return }
-  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--agtop')) || 0;
-  const now = tabs.getBoundingClientRect().top <= top + 1 && window.scrollY > 0;
-  if (now !== stuckTabs) { stuckTabs = now; tabs.classList.toggle('stuck', now); document.documentElement.classList.toggle('compact-top', now); stick() }   // cabecera fina y una sola franja al bajar (1-11-2026)
+  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--agtop')) || 0, y = window.scrollY;
+  // Con margen (1-11-2026, David: «salta entre una y otra»): al estrecharse la cabecera, todo lo de debajo sube y el
+  // navegador puede recolocar el scroll; sin margen, la cabecera se encogía y se agrandaba sin parar en la frontera.
+  // Se estrecha al fijarse las pestañas y solo vuelve a su tamaño al subir más allá de lo que se ha encogido (+40 px).
+  const now = stuckTabs ? y > 0 && y >= stuckAt - stuckGap : tabs.getBoundingClientRect().top <= top + 1 && y > 0;
+  if (now !== stuckTabs) {
+    stuckTabs = now; tabs.classList.toggle('stuck', now); document.documentElement.classList.toggle('compact-top', now); stick()
+    if (now) { stuckAt = y; stuckGap = Math.max(0, top - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--agtop')) || 0)) + 40 }
+  }
 }), {passive: true});
 function stableRender() {
   const rowsEls = [...document.querySelectorAll('#agendaList .ev')], top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick')) || 0;
@@ -2107,7 +2117,7 @@ document.addEventListener('click', e => {
   if (button.id === 'whenBar') { track('filtro', 'when_sheet', 'open'); openWhen(true); return }
   if (button.id === 'mobSearchOpen') { track('filtro', 'search_open', 'lupa'); mobSearch(true); $('searchInput').focus(); return }
   if (button.id === 'mobSearchClose') { mobSearch(false); if (state.query) { clearFilter('query'); refresh() } return }
-  if (button.id === 'mobView') { $(button.dataset.to === 'map' ? 'viewMap' : 'viewList').click(); return }
+  if (button.id === 'mobView' || button.id === 'deskViewBtn') { $(button.dataset.to === 'map' ? 'viewMap' : 'viewList').click(); return }
   if (button.id === 'whenClose' || button.id === 'whenApply') { openWhen(false); if (button.id === 'whenApply') scrollToId('agenda'); return }
   if (button.id === 'whenOpen') { state.whenEntry = true; openDrawer(true); $('filters').scrollTop = 0; return }
   if (button.id === 'openFilters' || button.id === 'fabFilters') { state.whenEntry = false; openDrawer(true); return }

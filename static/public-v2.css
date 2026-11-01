@@ -633,6 +633,7 @@ footer a{color:var(--footer-ink);text-decoration:underline}
    40 px y la fecha, «Filtros» y el mapa van en una sola franja de 40 px; Agenda/Expos 30 px y la hora 26 px. Al volver
    arriba (las pestañas dejan de estar fijadas) todo recupera su tamaño. Clase .compact-top en <html> (public.js). */
 @media(max-width:960px){
+  html{overflow-anchor:none}   /* sin recolocar el scroll al cambiar de tamaño la cabecera */
   html.compact-top .nav-wrap{height:40px}
   html.compact-top .logo{font-size:20px}
   html.compact-top .nav-actions .pill-button{min-height:32px;height:32px;padding-top:0;padding-bottom:0;font-size:13px}
@@ -648,4 +649,37 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   html.compact-top .filter-bar:not(.searching) .mob-view{width:auto;height:40px;padding:0 10px;font-size:13px;gap:4px}
   html.compact-top .content .ag-tabs.stuck .period-tab{min-height:30px !important;font-size:13px}
   html.compact-top .content .ag-stick{min-height:26px;font-size:13px}
+}
+
+
+/* Escritorio (1-11-2026, 09:27, David): las categorías en la columna de filtros (primer bloque, rejilla de dos columnas
+   como en el móvil); la franja de la fecha a sangre; un solo botón Lista/Mapa a su derecha y fuera «Por sitio»
+   (su código se queda). Las filas suben unos 100 px. */
+.when-row{display:none}
+@media(min-width:961px){
+  .filters-panel .cat-group{display:block !important;padding-bottom:0 !important;border-bottom:0 !important}
+  .filters-panel .cat-group .cat-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0 -24px 0 -48px;border-top:1px solid var(--ink)}
+  .filters-panel .cat-group #categories .filter-chip{min-height:44px;margin:0;border:0;border-bottom:1px solid var(--ink);border-radius:0;justify-content:flex-start;text-align:left;padding:0 12px 0 16px;background:var(--paper);color:var(--ink);font-size:15px;font-weight:500;white-space:nowrap}
+  .filters-panel .cat-group #categories .filter-chip:nth-child(odd){padding-left:48px}
+  .filters-panel .cat-group #categories .filter-chip:nth-child(odd){border-right:1px solid var(--ink)}
+  .filters-panel .cat-group #categories .filter-chip.active{background:var(--sel);color:var(--paper);font-weight:700}
+  .when-row{display:flex;align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--sand)}
+  .when-row .when-bar-desk{flex:1 1 auto;min-width:0;margin:0;border:0;padding-left:var(--bleedL)}
+  .desk-view-btn{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;width:120px;border:0;border-left:1px solid var(--ink);background:var(--paper);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+  .desk-view-btn:hover{background:var(--shade)}
+  #deskHead{display:none !important}
+  .content .ag-tabs{margin-top:0;box-shadow:none}
+}
+
+
+/* Escritorio, ficha «Cuándo» en pantallas bajas (1-11-2026, David: «se queda cortada y no puedo hacer scroll»): la cabecera
+   amarilla y el pie («Volver a hoy» / «Ver N planes») quedan siempre a la vista; lo de en medio se desplaza. */
+@media(min-width:961px){
+  .when-sheet{overflow:hidden;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px)}
+  .when-sheet .ws-head,.when-sheet .ws-foot{flex:none}
+  .when-sheet .ws-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+}
+@media(min-width:961px) and (max-height:640px){
+  .ws-head{padding:14px 32px 12px}.ws-head h2{font-size:30px}.ws-head p{margin-top:4px}
+  .ws-foot .linklike,.ws-foot #whenApply{min-height:48px}
 }
