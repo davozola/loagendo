@@ -19,7 +19,10 @@ from urllib.parse import quote
 
 URI_SAFE = "!'()*"
 LANGS = ('es', 'ca', 'en')
-PREFIX = {'es': '', 'ca': '/ca', 'en': '/en'}
+# 1-11-2026, 21:25 (David): el catalán en la raíz (ontoca.com/), el castellano en /es/ y el inglés en /en/. Las rutas
+# internas siguen siendo las castellanas sin prefijo ('/hoy', '/conciertos'); localize() las convierte en cada idioma.
+DEFAULT_LANG = 'ca'
+PREFIX = {'es': '/es', 'ca': '', 'en': '/en'}
 DAYS = {'es': ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'],
         'ca': ['dilluns', 'dimarts', 'dimecres', 'dijous', 'divendres', 'dissabte', 'diumenge'],
         'en': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
@@ -206,13 +209,14 @@ def ix(lang):
 
 
 def localize(path, lang):
-    """/conciertos/fin-de-semana → /ca/concerts/cap-de-setmana; /noviembre-2026 → /en/november-2026; / → /ca/."""
-    if lang == 'es': return path
+    """/conciertos/fin-de-semana → /concerts/cap-de-setmana (catalán, en la raíz); /hoy → /es/hoy; /noviembre-2026 →
+    /en/november-2026; / → / (catalán), /es/, /en/."""
     out = []
     for seg in path.strip('/').split('/'):
         if not seg: continue
         m = re.fullmatch(r'([a-z]+)-(\d{4})', seg)
-        if seg in SLUGS: out.append(SLUGS[seg][ix(lang) - 1])
+        if lang == 'es': out.append(seg)
+        elif seg in SLUGS: out.append(SLUGS[seg][ix(lang) - 1])
         elif m and m.group(1) in MONTH_SLUGS['es']: out.append(f"{MONTH_SLUGS[lang][MONTH_SLUGS['es'].index(m.group(1))]}-{m.group(2)}")
         else: out.append(seg)
     return PREFIX[lang] + ('/' + '/'.join(out) if out else '/')
@@ -535,17 +539,83 @@ def with_catalog(days_data, catalog_items):
 
 
 def alternates(alts, base):
-    """<link rel="alternate" hreflang> a las tres versiones; x-default, la castellana."""
+    """<link rel="alternate" hreflang> a las tres versiones; x-default, la catalana (la de la raíz)."""
     if not base: return ''
     links = ''.join(f'<link rel="alternate" hreflang="{l}" href="{html.escape(base + alts[l])}">' for l in LANGS)
-    return links + f'<link rel="alternate" hreflang="x-default" href="{html.escape(base + alts["es"])}">'
+    return links + f'<link rel="alternate" hreflang="x-default" href="{html.escape(base + alts[DEFAULT_LANG])}">'
+
+
+# Textos de la interfaz ya traducidos en el HTML (1-11-2026, 21:43, David: «la página debe ser catalana en alma»): los
+# elementos con data-i18n y data-i18n-attr de index.html salen en el idioma de la página, no solo cuando los traduce la
+# app. Los diccionarios son los de static/public.js (CA y EN, con el castellano como clave): una sola fuente.
+_JS_STR = r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\""
+_UI = {}
+
+
+def _js_unquote(tok):
+    body = tok[1:-1]
+    return re.sub(r'\\(.)', lambda m: {'n': '\n', 't': '\t'}.get(m.group(1), m.group(1)), body)
+
+
+def ui_dict(lang):
+    """{texto castellano: traducción} de la interfaz, sacado de static/public.js."""
+    if lang == 'es': return {}
+    if lang not in _UI:
+        from pathlib import Path
+        js = (Path(__file__).resolve().parents[1] / 'static' / 'public.js').read_text(encoding='utf-8')
+        m = re.search(r'^const %s = \{(.*?)^\};?$' % ('CA' if lang == 'ca' else 'EN'), js, re.S | re.M) or re.search(r'^const %s = \{(.*?)\};\s*$' % ('CA' if lang == 'ca' else 'EN'), js, re.S | re.M)
+        pairs = re.findall(rf'({_JS_STR})\s*:\s*({_JS_STR})', m.group(1)) if m else []
+        out = {_js_unquote(k): _js_unquote(v) for k, v in pairs}
+        # y los textos que la app traduce con L('castellano', 'català', 'English')
+        for es, ca, en in re.findall(rf'\bL\(\s*({_JS_STR})\s*,\s*({_JS_STR})\s*,\s*({_JS_STR})\s*\)', js):
+            out.setdefault(_js_unquote(es), _js_unquote(ca if lang == 'ca' else en))
+        _UI[lang] = out
+    return _UI[lang]
+
+
+def translate_shell(doc, lang):
+    """Traduce los textos marcados con data-i18n y los atributos de data-i18n-attr. Al texto le deja su clave en
+    data-i18n="…" para que la app pueda volver a traducirlo si cambia de idioma."""
+    D = ui_dict(lang)
+    if not D: return doc
+    def text(m):
+        tag, key_attr, body = m.group(1), m.group(2), m.group(3)
+        key = html.unescape(key_attr) if key_attr else html.unescape(body.strip())
+        if key not in D: return m.group(0)
+        if key_attr is None: tag = re.sub(r'\sdata-i18n(?=[\s>])', f' data-i18n="{html.escape(key)}"', tag, count=1)
+        return tag + body.replace(body.strip(), html.escape(D[key], quote=False)) if body.strip() else tag + body
+    doc = re.sub(r'(<[a-zA-Z][a-zA-Z0-9]*\b[^>]*?\sdata-i18n(?:="([^"]*)")?(?=[\s>])[^>]*>)([^<]*)', text, doc)
+    def attrs(m):
+        tag = m.group(0)
+        names = re.search(r'data-i18n-attr="([^"]*)"', tag).group(1).split(',')
+        for a in names:
+            tag = re.sub(rf'(\s{re.escape(a.strip())}=")([^"]*)(")', lambda x: x.group(1) + (html.escape(D[html.unescape(x.group(2))]) if html.unescape(x.group(2)) in D else x.group(2)) + x.group(3), tag, count=1)
+        return tag
+    doc = re.sub(r'<[a-zA-Z][^>]*\sdata-i18n-attr="[^"]*"[^>]*>', attrs, doc)
+    # Además, cualquier texto o etiqueta accesible de la interfaz que sea exactamente un texto conocido (fuera de scripts).
+    def bare_attr(m):
+        v = html.unescape(m.group(2))
+        return m.group(1) + html.escape(D[v]) + '"' if v in D else m.group(0)
+    def bare_text(m):
+        v = html.unescape(m.group(1).strip())
+        return '>' + m.group(1).replace(m.group(1).strip(), html.escape(D[v], quote=False)) + '<' if v in D else m.group(0)
+    parts = re.split(r'(<script\b.*?</script>|<style\b.*?</style>)', doc, flags=re.S)
+    for n in range(0, len(parts), 2):
+        parts[n] = re.sub(r'(\s(?:aria-label|placeholder|title)=")([^"]*)"', bare_attr, parts[n])
+        parts[n] = re.sub(r'>([^<>]*[^\s<>][^<>]*)<', bare_text, parts[n])
+    return ''.join(parts)
 
 
 def _lang_attrs(doc, lang, extra=''):
-    attrs = extra + (f' data-lang="{lang}" data-base="{PREFIX[lang]}"' if lang != 'es' else '')
+    # Todas las páginas llevan su idioma y su prefijo (1-11-2026: el catalán en la raíz, data-base="").
+    attrs = extra + f' data-lang="{lang}" data-base="{PREFIX[lang]}"'
     doc = doc.replace('<html lang="es"', f'<html lang="{lang}"{attrs}', 1)
-    if lang != 'es': doc = doc.replace('class="logo" href="/"', f'class="logo" href="{PREFIX[lang]}/"', 1)
-    return doc
+    doc = doc.replace('class="logo" href="/"', f'class="logo" href="{PREFIX[lang]}/"', 1)
+    doc = doc.replace('href="/hoy" data-period="today"', f'href="{localize("/hoy", lang)}" data-period="today"', 1)
+    from src import legal_pages   # el pie lleva a las páginas legales en el idioma de la página
+    for slug in legal_pages.PAGES:
+        doc = doc.replace(f'href="{legal_pages.PAGE_PATHS[slug]["es"]}" data-legal="{slug}"', f'href="{legal_pages.PAGE_PATHS[slug][lang]}" data-legal="{slug}"', 1)
+    return translate_shell(doc, lang)
 
 
 def localize_index(index, lang, site_url):
@@ -601,10 +671,10 @@ def home_block(today, days_data, lang='es'):
 
 
 def file_for(path):
-    """/hoy → hoy.html, /con-ninos/hoy → con-ninos/hoy.html, /ca/ → ca/index.html (Pages las sirve sin .html)."""
+    """/avui → avui.html, /es/hoy → es/hoy.html, /es/ → es/index.html (Pages las sirve sin .html)."""
     p = path.strip('/')
     if not p: return 'index.html'
-    return (p + '/index.html') if p in ('ca', 'en') else p + '.html'
+    return (p + '/index.html') if p in ('es', 'en') else p + '.html'
 
 
 def write_all(out, index, days_data, site_url, today, catalog_items=None):
@@ -618,7 +688,7 @@ def write_all(out, index, days_data, site_url, today, catalog_items=None):
         doc = doc.replace('</main>', home_block(today, days_data, lang) + '</main>', 1) if '</main>' in doc else doc
         target = out / file_for(localize('/', lang)); target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(doc, encoding='utf-8')
-        if lang != 'es': paths.append(localize('/', lang))
+        if lang != DEFAULT_LANG: paths.append(localize('/', lang))
     for page in all_pages(today):
         target = out / file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(render(index, page, days_data, site_url), encoding='utf-8')
@@ -628,18 +698,64 @@ def write_all(out, index, days_data, site_url, today, catalog_items=None):
         target.write_text(render(index, page, days_data, site_url), encoding='utf-8')
         paths.append(page['path'])
     (out / '404.html').write_text(not_found(index, today), encoding='utf-8')
+    written = {file_for(p) for p in paths} | {'index.html', 'es/index.html', 'en/index.html'}
+    for name in legacy_files(today):   # páginas de antes del cambio de raíz: si se quedaran, Pages las serviría
+        f = out / name
+        if name not in written and f.is_file(): f.unlink()
+    if (out / 'ca').is_dir():
+        import shutil; shutil.rmtree(out / 'ca')
+    (out / '_redirects').write_text(redirects(today), encoding='utf-8')
     return paths
+
+
+def _old_path(path, lang):
+    """Dirección que tenía una página antes del 1-11-2026 (castellano en la raíz, catalán en /ca/)."""
+    new = localize(path, lang)
+    if lang == 'es': return new[len('/es'):] or '/'
+    if lang == 'ca': return '/ca' + new if new != '/' else '/ca/'
+    return new
+
+
+def redirects(today):
+    """_redirects de Cloudflare Pages (1-11-2026, catalán en la raíz): las direcciones castellanas de antes
+    (/hoy, /conciertos…) van a /es/…; las catalanas (/ca/…) a la raíz. Cuando la dirección antigua castellana es hoy
+    una página catalana (/gratis, /dia/…, /sala/…), no se redirige: es la versión catalana, enlazada con hreflang.
+    Las fichas /ca/e/… las redirige su función (functions/ca/e), porque Pages no aplica _redirects a las funciones."""
+    current = {p['path'] for p in all_pages(today)} | {localize(f'/sala/{slug}', l) for slug, _, _ in VENUES for l in LANGS}
+    from src import legal_pages
+    lines = ['/v2 / 301', '/v2/ / 301', '/ca / 301', '/ca/ / 301'] + [f'{old} {new} 301' for old, new in legal_pages.OLD_PATHS.items()]
+    seen = set()
+    for page in all_pages(today) + [{'path': localize(f'/sala/{slug}', 'es'), 'lang': 'es', 'key': f'/sala/{slug}'} for slug, _, _ in VENUES]:
+        if page.get('lang') != 'es': continue
+        old = page['path'][len('/es'):] or '/'
+        if old == '/' or old in current or old in seen: continue
+        seen.add(old); lines.append(f'{old} {page["path"]} 301')
+    lines.append('/ca/* /:splat 301')
+    return '\n'.join(lines) + '\n'
+
+
+def legacy_files(today):
+    """Ficheros de las páginas castellanas de antes del cambio (hoy.html, conciertos/hoy.html…) que ya no corresponden a
+    ninguna página: se borran de dist/ al publicar para que Pages aplique la redirección."""
+    current = {p['path'] for p in all_pages(today)}
+    out = []
+    for page in all_pages(today) + [{'path': localize(f'/sala/{slug}', 'es'), 'lang': 'es'} for slug, _, _ in VENUES]:
+        if page.get('lang') != 'es': continue
+        old = page['path'][len('/es'):] or '/'
+        if old != '/' and old not in current: out.append(file_for(old))
+    return out
 
 
 def not_found(index, today):
     """404.html (1-11-2026, SEO): sin ella, Cloudflare Pages servía la portada con 200 en cualquier dirección que no
     existe (días ya pasados, páginas retiradas): «404 falsos» para Google. Con ella, responde 404, fuera del índice,
-    con la app (la agenda de hoy) y los enlaces a las páginas de entrada."""
-    doc = re.sub(r'<title>.*?</title>', '<title>Página no encontrada · Ontoca</title>', index, count=1, flags=re.S)
+    con la app (la agenda de hoy) y los enlaces a las páginas de entrada. En catalán, el idioma de la raíz (21:43)."""
+    doc = re.sub(r'<title>.*?</title>', '<title>Pàgina no trobada · Ontoca</title>', index, count=1, flags=re.S)
     doc = re.sub(r'<link rel="canonical" href="[^"]*">', '', doc)
     doc = re.sub(r'<link rel="alternate" hreflang="[^"]*" href="[^"]*">', '', doc)
     doc = doc.replace('</head>', '<meta name="robots" content="noindex"></head>', 1)
-    block = ('<section id="seoLista" class="seo-lista" lang="es"><h1>Esta página ya no existe</h1>'
-             '<p>Puede que fuera la agenda de un día que ya pasó o un acto que ya no está publicado. Aquí tienes los planes de ahora.</p>'
-             + nav_html(lang='es', today=today) + '<p class="seo-lista-more"><a href="/">Ver toda la agenda de Barcelona</a></p></section>')
+    doc = _lang_attrs(doc, 'ca')
+    block = ('<section id="seoLista" class="seo-lista" lang="ca"><h1>Aquesta pàgina ja no existeix</h1>'
+             '<p>Potser era l’agenda d’un dia que ja ha passat o un acte que ja no està publicat. Aquí tens els plans d’ara.</p>'
+             + nav_html(lang='ca', today=today) + '<p class="seo-lista-more"><a href="/">Mostra tota l’agenda de Barcelona</a></p></section>')
     return doc.replace('<main>', '<main>' + block, 1)

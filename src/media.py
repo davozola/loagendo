@@ -3,10 +3,22 @@ from __future__ import annotations
 import hashlib
 import datetime as dt
 import json
+import re
 import urllib.request
 from urllib.parse import urlsplit
 from pathlib import Path
 from src.network import tls_context
+
+
+# Imagen por defecto de la web, la misma para todos sus actos (1-11-2026): el avatar de cultura.gencat.cat que lleva la
+# Filmoteca, «thumbnail.png» de Sala Vol, «imatge-rrss» de Espai Texas, «og.jpg» del Muntaner, «sm.jpg» de Zumzeig.
+# No es la imagen del acto: la ficha sale con la foto de la sala y el trabajo imagenes-del-acto busca la buena.
+_SITE_DEFAULT = re.compile(r'^(?:avatar|thumbnail|og|og[-_]?image|sm|share|social|default|placeholder|no[-_]?image)\.[a-z0-9]+$|imatge-rrss|/fwk/comuns/img/', re.I)
+
+
+def is_site_default(url):
+    path=urlsplit(url or '').path
+    return bool(_SITE_DEFAULT.search(path.rsplit('/',1)[-1]) or _SITE_DEFAULT.search(path))
 
 
 def is_event_image(url, alt=' ', content_type=''):
@@ -25,7 +37,7 @@ def is_event_image(url, alt=' ', content_type=''):
     path=(url or '').lower().split('?',1)[0]
     filename=path.rsplit('/',1)[-1]
     is_logo=filename.startswith('logo') or (alt or '').strip().lower().startswith('logo')
-    return not is_logo and not any(mark in candidate for mark in page_chrome) and not (
+    return not is_logo and not is_site_default(url) and not any(mark in candidate for mark in page_chrome) and not (
         path.endswith('.svg') or content_type == 'image/svg+xml'
     )
 

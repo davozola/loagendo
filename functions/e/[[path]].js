@@ -10,7 +10,9 @@
 // duplicada de otra fuente (alias_of) redirige con 301 a la buena; «Próximamente en esta sala» con lo que ya
 // publica la ficha (venue_upcoming). functions/ca/e y functions/en/e reexportan este mismo onRequest.
 const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
-const PREFIX = {es: '', ca: '/ca', en: '/en'};
+// 1-11-2026, 21:25 (David): el catalán en la raíz (/e/…), el castellano en /es/e/… y el inglés en /en/e/…;
+// /ca/e/… (de antes) redirige con 301 a /e/… (functions/ca/e).
+const PREFIX = {es: '/es', ca: '', en: '/en'};
 const LANGS = ['es', 'ca', 'en'];
 
 async function shardOf(key) {
@@ -23,7 +25,7 @@ const eventPath = (key, lang) => { const [source, ...rest] = key.split(':'); ret
 
 export async function onRequest({request, env, params}) {
   const url = new URL(request.url);
-  const lang = url.pathname.startsWith('/ca/') ? 'ca' : url.pathname.startsWith('/en/') ? 'en' : 'es';
+  const lang = url.pathname.startsWith('/es/') ? 'es' : url.pathname.startsWith('/en/') ? 'en' : 'ca';
   const page = await env.ASSETS.fetch(new URL(`${PREFIX[lang]}/`, url.origin));   // la app (index.html del idioma)
   const parts = Array.isArray(params.path) ? params.path : String(params.path || '').split('/');
   if (parts.length < 2) return page;
@@ -59,7 +61,7 @@ export async function onRequest({request, env, params}) {
   const crumbs = breadcrumbs(card, site, canonical, lang);
   // Ficha ya celebrada (noindex): sin versiones en otros idiomas que anunciar.
   const alternates = card.x ? '' : LANGS.map(l => `<link rel="alternate" hreflang="${l}" href="${esc(site + eventPath(key, l))}">`).join('')
-    + `<link rel="alternate" hreflang="x-default" href="${esc(site + eventPath(key, 'es'))}">`;
+    + `<link rel="alternate" hreflang="x-default" href="${esc(site + eventPath(key, 'ca'))}">`;
   const head = [
     `<meta property="og:type" content="${card.x ? 'website' : 'event'}">`, `<meta property="og:site_name" content="Ontoca">`,
     `<meta property="og:locale" content="${{es: 'es_ES', ca: 'ca_ES', en: 'en_GB'}[lang]}">`,
@@ -229,28 +231,28 @@ function pastWhen(card, lang = 'es') {
 }
 // Página de cada categoría y de cada distrito en cada idioma (src/landings.py CAT_PAGE, SLUGS y DISTRICTS, 1-11-2026).
 const TOPIC = {
-  musica: {es: ['/conciertos', 'Conciertos en Barcelona', 'Conciertos'], ca: ['/ca/concerts', 'Concerts a Barcelona', 'Concerts'], en: ['/en/concerts', 'Concerts in Barcelona', 'Concerts']},
-  escena: {es: ['/teatro', 'Teatro, danza y circo en Barcelona', 'Teatro, danza y circo'], ca: ['/ca/teatre', 'Teatre, dansa i circ a Barcelona', 'Teatre, dansa i circ'], en: ['/en/theatre', 'Theatre, dance and circus in Barcelona', 'Theatre, dance and circus']},
-  arte: {es: ['/exposiciones', 'Exposiciones en Barcelona', 'Exposiciones'], ca: ['/ca/exposicions', 'Exposicions a Barcelona', 'Exposicions'], en: ['/en/exhibitions', 'Exhibitions in Barcelona', 'Exhibitions']},
-  visitas: {es: ['/visitas-guiadas', 'Visitas guiadas y rutas en Barcelona', 'Visitas guiadas'], ca: ['/ca/visites-guiades', 'Visites guiades i rutes a Barcelona', 'Visites guiades'], en: ['/en/guided-tours', 'Guided tours and walks in Barcelona', 'Guided tours']},
-  cine: {es: ['/cine', 'Cine en Barcelona', 'Cine'], ca: ['/ca/cinema', 'Cinema a Barcelona', 'Cinema'], en: ['/en/cinema', 'Cinema in Barcelona', 'Cinema']},
-  charlas: {es: ['/charlas', 'Charlas, conferencias y libros en Barcelona', 'Charlas y libros'], ca: ['/ca/xerrades', 'Xerrades, conferències i llibres a Barcelona', 'Xerrades i llibres'], en: ['/en/talks', 'Talks, lectures and books in Barcelona', 'Talks and books']},
-  talleres: {es: ['/talleres', 'Talleres y cursos en Barcelona', 'Talleres y cursos'], ca: ['/ca/tallers', 'Tallers i cursos a Barcelona', 'Tallers i cursos'], en: ['/en/workshops', 'Workshops and courses in Barcelona', 'Workshops']},
-  fiestas: {es: ['/fiestas-y-mercados', 'Fiestas, ferias y mercados en Barcelona', 'Fiestas y mercados'], ca: ['/ca/festes-i-mercats', 'Festes, fires i mercats a Barcelona', 'Festes i mercats'], en: ['/en/festivals-and-markets', 'Festivals, fairs and markets in Barcelona', 'Festivals and markets']},
+  musica: {es: ['/es/conciertos', 'Conciertos en Barcelona', 'Conciertos'], ca: ['/concerts', 'Concerts a Barcelona', 'Concerts'], en: ['/en/concerts', 'Concerts in Barcelona', 'Concerts']},
+  escena: {es: ['/es/teatro', 'Teatro, danza y circo en Barcelona', 'Teatro, danza y circo'], ca: ['/teatre', 'Teatre, dansa i circ a Barcelona', 'Teatre, dansa i circ'], en: ['/en/theatre', 'Theatre, dance and circus in Barcelona', 'Theatre, dance and circus']},
+  arte: {es: ['/es/exposiciones', 'Exposiciones en Barcelona', 'Exposiciones'], ca: ['/exposicions', 'Exposicions a Barcelona', 'Exposicions'], en: ['/en/exhibitions', 'Exhibitions in Barcelona', 'Exhibitions']},
+  visitas: {es: ['/es/visitas-guiadas', 'Visitas guiadas y rutas en Barcelona', 'Visitas guiadas'], ca: ['/visites-guiades', 'Visites guiades i rutes a Barcelona', 'Visites guiades'], en: ['/en/guided-tours', 'Guided tours and walks in Barcelona', 'Guided tours']},
+  cine: {es: ['/es/cine', 'Cine en Barcelona', 'Cine'], ca: ['/cinema', 'Cinema a Barcelona', 'Cinema'], en: ['/en/cinema', 'Cinema in Barcelona', 'Cinema']},
+  charlas: {es: ['/es/charlas', 'Charlas, conferencias y libros en Barcelona', 'Charlas y libros'], ca: ['/xerrades', 'Xerrades, conferències i llibres a Barcelona', 'Xerrades i llibres'], en: ['/en/talks', 'Talks, lectures and books in Barcelona', 'Talks and books']},
+  talleres: {es: ['/es/talleres', 'Talleres y cursos en Barcelona', 'Talleres y cursos'], ca: ['/tallers', 'Tallers i cursos a Barcelona', 'Tallers i cursos'], en: ['/en/workshops', 'Workshops and courses in Barcelona', 'Workshops']},
+  fiestas: {es: ['/es/fiestas-y-mercados', 'Fiestas, ferias y mercados en Barcelona', 'Fiestas y mercados'], ca: ['/festes-i-mercats', 'Festes, fires i mercats a Barcelona', 'Festes i mercats'], en: ['/en/festivals-and-markets', 'Festivals, fairs and markets in Barcelona', 'Festivals and markets']},
 };
 const DISTRICT = {'Ciutat Vella': 'ciutat-vella', 'Eixample': 'eixample', 'Sants-Montjuïc': 'sants-montjuic', 'Les Corts': 'les-corts', 'Sarrià-Sant Gervasi': 'sarria-sant-gervasi',
   'Gràcia': 'gracia', 'Horta-Guinardó': 'horta-guinardo', 'Nou Barris': 'nou-barris', 'Sant Andreu': 'sant-andreu', 'Sant Martí': 'sant-marti'};
 const PATHS = {
-  day: {es: '/dia/', ca: '/ca/dia/', en: '/en/day/'}, district: {es: '/distrito/', ca: '/ca/districte/', en: '/en/district/'},
-  kids: {es: '/con-ninos', ca: '/ca/amb-nens', en: '/en/with-kids'}, finde: {es: '/fin-de-semana', ca: '/ca/cap-de-setmana', en: '/en/weekend'},
-  today: {es: '/hoy', ca: '/ca/avui', en: '/en/today'}};
+  day: {es: '/es/dia/', ca: '/dia/', en: '/en/day/'}, district: {es: '/es/distrito/', ca: '/districte/', en: '/en/district/'},
+  kids: {es: '/es/con-ninos', ca: '/amb-nens', en: '/en/with-kids'}, finde: {es: '/es/fin-de-semana', ca: '/cap-de-setmana', en: '/en/weekend'},
+  today: {es: '/es/hoy', ca: '/avui', en: '/en/today'}};
 const DAY_PAGES = 60;   // /dia/<fecha> existe para los próximos 60 días (src/landings.py)
 // Piloto de páginas de sala (src/landings.py VENUES, 1-11-2026): la ficha de un acto en una de ellas enlaza con la suya.
 const VENUES = [['palau-de-la-musica', 'Palau de la Música Catalana'], ['liceu', 'Gran Teatre del Liceu'], ['auditori', "L'Auditori de Barcelona"], ['cccb', 'CCCB'],
   ['mnac', "Museu Nacional d'Art de Catalunya"], ['caixaforum', 'CaixaForum Barcelona'], ['filmoteca', 'Filmoteca de Catalunya'], ['zumzeig', 'Zumzeig Cinecooperativa'],
   ['phenomena', 'Phenomena Experience'], ['sala-apolo', 'Sala Apolo'], ['jamboree', 'Jamboree Jazz Club'], ['razzmatazz', 'Razzmatazz'], ['espai-texas', 'Espai Texas'],
   ['casa-orlandai', 'Centre Cívic Casa Orlandai'], ['fabra-i-coats', 'Fabra i Coats - Fàbrica de Creació']];
-const VENUE_BASE = {es: '/sala/', ca: '/ca/sala/', en: '/en/venue/'};
+const VENUE_BASE = {es: '/es/sala/', ca: '/sala/', en: '/en/venue/'};
 function venuePage(v, lang) {
   const hit = VENUES.find(([, n]) => v === n || String(v || '').startsWith(n + ' · ') || (n === 'Razzmatazz' && String(v || '').startsWith('Razzmatazz')));
   return hit ? [`${VENUE_BASE[lang]}${hit[0]}`, hit[1]] : null;

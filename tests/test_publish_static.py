@@ -81,10 +81,12 @@ class StaticExportTests(unittest.TestCase):
             self.assertNotIn(hidden, detail)
         index = (dist / 'index.html').read_text(encoding='utf-8')
         self.assertIn('data-static="1"', index); self.assertIn('rel="canonical" href="https://loagendo.example/"', index)
-        credits = (dist / 'creditos.html').read_text(encoding='utf-8')
+        credits = (dist / 'fonts-de-dades.html').read_text(encoding='utf-8')   # en catalán, en la raíz (1-11-2026)
         self.assertIn('Ajuntament de Barcelona', credits); self.assertIn('CC BY 4.0', credits); self.assertNotIn('decisión editorial de prueba', credits)
-        privacy = (dist / 'privacidad.html').read_text(encoding='utf-8'); legal = (dist / 'aviso-legal.html').read_text(encoding='utf-8')
-        self.assertIn('Numhaus', privacy); self.assertIn('Brevo', privacy); self.assertIn('lang="en"', privacy); self.assertIn('Numhaus', legal)
+        privacy = (dist / 'privacitat.html').read_text(encoding='utf-8'); legal = (dist / 'avis-legal.html').read_text(encoding='utf-8')
+        self.assertIn('Numhaus', privacy); self.assertIn('Brevo', privacy); self.assertIn('<html lang="ca"', privacy); self.assertIn('Numhaus', legal)
+        self.assertIn('<html lang="es"', (dist / 'es' / 'privacidad.html').read_text(encoding='utf-8')); self.assertTrue((dist / 'en' / 'privacy.html').exists())
+        self.assertIn('hreflang="es" href="https://loagendo.example/es/privacidad"', privacy)
         self.assertTrue((dist / 'legal.js').exists()); self.assertNotIn('seo-nav', index)
         self.assertRegex(index, r'href="/public\.css\?v=[0-9a-f]{10}"'); self.assertRegex(index, r'src="/public\.js\?v=[0-9a-f]{10}"')
         headers = (dist / '_headers').read_text(encoding='utf-8')
@@ -100,16 +102,16 @@ class StaticExportTests(unittest.TestCase):
         self.assertNotIn('?day=', fichas + (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
         self.assertNotIn('<loc>/', fichas)
         # Páginas de entrada (src/landings.py): ficheros .html, en el sitemap y enlazadas desde el pie.
-        for name in ('hoy.html', 'fin-de-semana.html', 'con-ninos/fin-de-semana.html', 'dia/2026-10-12.html'):
+        for name in ('avui.html', 'es/hoy.html', 'es/fin-de-semana.html', 'es/con-ninos/fin-de-semana.html', 'dia/2026-10-12.html', 'es/dia/2026-10-12.html', 'es/index.html'):
             self.assertTrue((dist / name).is_file(), name)
-        self.assertIn('<loc>https://loagendo.example/conciertos/hoy</loc>', (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
-        self.assertIn('data-landing=', (dist / 'hoy.html').read_text(encoding='utf-8'))
+        self.assertIn('<loc>https://loagendo.example/es/conciertos/hoy</loc>', (dist / 'sitemap-paginas.xml').read_text(encoding='utf-8'))
+        self.assertIn('data-landing=', (dist / 'es/hoy.html').read_text(encoding='utf-8'))
         # Avisos por correo: apagados por defecto; /alertas/ y /api/ fuera de los buscadores.
         self.assertNotIn('data-alerts', (dist / 'index.html').read_text(encoding='utf-8'))
         self.assertIn('Disallow: /alertas/', (dist / 'robots.txt').read_text(encoding='utf-8'))
         self.assertTrue((dist / 'data' / 'alertas' / 'nuevos.json').is_file())
         self.export(site_url='https://loagendo.example', alerts={'enabled': True, 'turnstile_site_key': '0xPUBLICA'})
-        self.assertIn('data-alerts="1" data-turnstile="0xPUBLICA"', (dist / 'con-ninos.html').read_text(encoding='utf-8'))
+        self.assertIn('data-alerts="1" data-turnstile="0xPUBLICA"', (dist / 'es' / 'con-ninos.html').read_text(encoding='utf-8'))
         state = json.loads((self.root / 'data' / 'sitemap_lastmod.json').read_text(encoding='utf-8'))
         self.assertEqual(state['opendatabcn_agenda:1'][1], TODAY.isoformat())
         meta = json.loads((dist / 'data' / 'meta.json').read_text(encoding='utf-8'))
@@ -175,7 +177,7 @@ class StaticExportTests(unittest.TestCase):
         # 25-10-2026: Fuentes con lo mínimo que piden las licencias; no se publica el registro de fuentes.
         page = credits_html({'x': {'owner': 'Ticketera secreta', 'attribution': 'A & B'}})
         self.assertNotIn('Ticketera secreta', page); self.assertIn('Open Data BCN', page); self.assertIn('OpenStreetMap', page)
-        for lang in ('es', 'ca', 'en'): self.assertIn(f'<section lang="{lang}">', page)
+        self.assertIn('<section lang="ca">', page); self.assertIn('Fonts', page)   # una página por idioma (1-11-2026)
 
 
 if __name__ == '__main__':

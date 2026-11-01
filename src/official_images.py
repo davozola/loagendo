@@ -54,8 +54,10 @@ def candidates(detail):
 
 
 def needs_image(detail):
+    from src.media import is_site_default
     media = detail.get('media') or []
-    return 'title' in detail and not (media and not media[0].get('fallback'))
+    own = media and not media[0].get('fallback') and not is_site_default((media[0].get('credit') or {}).get('original_url', ''))
+    return 'title' in detail and not own
 
 
 def _generic(conn, image):
@@ -76,10 +78,11 @@ def pending(out_dir, today):
             soon = max(str(d.get('start') or ''), today)
             rows.append((soon, key, d, urls))
     # Una dirección que comparten varias fichas es un listado o la web de la sala: su imagen no es la de cada acto.
+    # Varias sesiones del mismo acto (misma película en dos días) sí comparten página: se cuentan títulos distintos.
     shared = {}
-    for _, _, _, urls in rows:
-        for u in urls: shared[u] = shared.get(u, 0) + 1
-    rows = [(soon, key, d, [u for u in urls if shared[u] == 1]) for soon, key, d, urls in rows]
+    for _, _, d, urls in rows:
+        for u in urls: shared.setdefault(u, set()).add(' '.join(str(d.get('title') or '').lower().split()))
+    rows = [(soon, key, d, [u for u in urls if len(shared[u]) == 1]) for soon, key, d, urls in rows]
     rows = [r for r in rows if r[3]]
     rows.sort(key=lambda r: (r[0], r[1]))
     return rows

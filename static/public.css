@@ -121,7 +121,7 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
    tres en tableta; en móvil, 76 % (más abajo). Sin paso automático. */
 .curated{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .curated::-webkit-scrollbar{display:none}
-.curated>button{flex:0 0 calc((100% - 48px) / 4.3);scroll-snap-align:start}.curated>.empty{flex:1}
+.curated>:is(button,a){flex:0 0 calc((100% - 48px) / 4.3);scroll-snap-align:start}.curated>.empty{flex:1}
 .curated .pick-media{height:200px}
 .pick-bar{display:flex;align-items:center;gap:16px;margin:0 0 14px}
 .pick-cats{flex:1 1 auto;min-width:0}.pick-cats[hidden]{display:none}.pick-cats .cat-bar{margin:0}
@@ -129,8 +129,8 @@ html:not([data-theme=light]) .hero-bg:after{background:linear-gradient(180deg,rg
 #pickCount{font-size:14px;font-weight:600;margin-right:6px;white-space:nowrap}
 .pick-arrow{width:44px;height:44px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);font:inherit;font-size:22px;line-height:1;cursor:pointer}
 .pick-arrow:disabled{opacity:.35;cursor:default}
-.curated button{border:1px solid var(--line);text-align:left;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-.curated button:hover{transform:translateY(-2px);border-color:var(--accentText);box-shadow:0 12px 28px rgba(0,0,0,.14)}
+.curated>:is(button,a){border:1px solid var(--line);text-align:left;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.curated>:is(button,a):hover{transform:translateY(-2px);border-color:var(--accentText);box-shadow:0 12px 28px rgba(0,0,0,.14)}
 .pick-large,.pick-small{border-radius:18px;padding:10px;background:var(--surface);color:var(--fg);display:flex;flex-direction:column}
 .pick-media{width:100%;height:124px;object-fit:cover;border-radius:11px;margin:0 0 10px;background:var(--surface2)}.pick-large .pick-media{height:280px}
 .pick-placeholder{background:linear-gradient(135deg,var(--accentSoft),var(--surface2))}
@@ -212,7 +212,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;dis
 .cal-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 
 /* responsive */
-@media(max-width:1100px){.curated>button{flex-basis:calc((100% - 32px) / 3.3)}}
+@media(max-width:1100px){.curated>:is(button,a){flex-basis:calc((100% - 32px) / 3.3)}}
 @media(max-width:960px){
 .layout{grid-template-columns:1fr;gap:0}
 .filters-toggle{display:inline-flex}
@@ -590,7 +590,7 @@ a.cat-pill,a.period-tab{text-decoration:none}
 #seleccion .section-head{margin-bottom:10px}
 .curated{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin-right:calc(-1 * var(--gutter,16px));padding-right:var(--gutter,16px);scrollbar-width:none}
 .curated::-webkit-scrollbar{display:none}
-.curated>button{flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
+.curated>:is(button,a){flex:0 0 76%;scroll-snap-align:start}.curated>.empty{flex:1}
 .pick-nav{display:none}.pick-bar{margin-bottom:6px}.curated .pick-media{height:120px}.curated .pick-title{-webkit-line-clamp:2;font-size:15px}
 /* Móvil (28-10-2026): la Selección más compacta; los tipos de la Selección, una fila que se desliza. */
 .hero{padding:14px 0 16px;margin-bottom:0}

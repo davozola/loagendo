@@ -4,8 +4,9 @@ Decisiones de David: pie mínimo (ontoca.com · Hecho en Barcelona, hola@ontoca.
 páginas); responsable «Numhaus»; fuentes, lo mínimo que piden las licencias (no se nombran
 ticketeras, agregadores ni agendas de sala); correo de las alertas con Brevo.
 
-Cada página lleva los tres idiomas; /legal.js enseña el que corresponde (?lang= o el guardado por
-la app, brollant-lang). Sin JavaScript se ve el castellano.
+1-11-2026, 21:51 (David): una página por idioma, cada una con su dirección, como el resto de la web: el catalán en
+la raíz (/avis-legal, /privacitat, /fonts-de-dades), el castellano en /es/ y el inglés en /en/, con hreflang entre ellas.
+Las direcciones de antes (/aviso-legal, /privacidad, /creditos) redirigen a las castellanas (src/landings.redirects).
 """
 import html
 
@@ -85,35 +86,70 @@ FUENTES = {
 <p>Map: © {_LIC[2]} contributors.</p>'''),
 }
 
-DESCRIPTIONS = {'aviso-legal': 'Quién gestiona Ontoca y cómo pedir una corrección o retirada.',
-                'privacidad': 'Qué datos trata Ontoca, para qué y cómo ejercer tus derechos.',
-                'creditos': 'De dónde salen los datos de Ontoca y con qué licencia.'}
+DESCRIPTIONS = {
+    'aviso-legal': {'es': 'Quién gestiona Ontoca y cómo pedir una corrección o retirada.',
+                    'ca': 'Qui gestiona Ontoca i com demanar una correcció o una retirada.',
+                    'en': 'Who runs Ontoca and how to ask for a correction or removal.'},
+    'privacidad': {'es': 'Qué datos trata Ontoca, para qué y cómo ejercer tus derechos.',
+                   'ca': 'Quines dades tracta Ontoca, per a què i com exercir els teus drets.',
+                   'en': 'What data Ontoca processes, why, and how to exercise your rights.'},
+    'creditos': {'es': 'De dónde salen los datos de Ontoca y con qué licencia.',
+                 'ca': 'D’on surten les dades d’Ontoca i amb quina llicència.',
+                 'en': 'Where Ontoca’s data comes from and under which licence.'}}
 PAGES = {'aviso-legal': AVISO, 'privacidad': PRIVACIDAD, 'creditos': FUENTES}
-
-_HIDE = ''.join(f'[data-l="{l}"] [lang]:not([lang="{l}"])' + (',' if i < 2 else '') for i, l in enumerate(LANGS))
-
-
-def _multi(texts, tag='span'):
-    """El mismo texto en los tres idiomas; el CSS enseña solo el activo."""
-    return ''.join(f'<{tag} lang="{l}">{texts[l]}</{tag}>' for l in LANGS)
-
-
-def footer_html():
-    """El pie de las páginas legales (el de la app está en static/index.html y se traduce con public.js)."""
-    links = ' · '.join(f'<a href="{p}">' + _multi({l: FOOTER_LINKS[l][i + 1] for l in LANGS}) + '</a>' for i, p in enumerate(PATHS))
-    return (f'<footer><span>ontoca.com · ' + _multi({l: FOOTER_LINKS[l][0] for l in LANGS}) + '</span>'
-            f'<span class="footer-links">{MAIL} · {links}</span></footer>')
+PAGE_PATHS = {'aviso-legal': {'ca': '/avis-legal', 'es': '/es/aviso-legal', 'en': '/en/legal-notice'},
+              'privacidad': {'ca': '/privacitat', 'es': '/es/privacidad', 'en': '/en/privacy'},
+              'creditos': {'ca': '/fonts-de-dades', 'es': '/es/creditos', 'en': '/en/sources'}}
+OLD_PATHS = {'/aviso-legal': '/es/aviso-legal', '/privacidad': '/es/privacidad', '/creditos': '/es/creditos'}
+HOME = {'ca': '/', 'es': '/es/', 'en': '/en/'}
+LANG_NAMES = {'ca': 'Català', 'es': 'Castellano', 'en': 'English'}
 
 
-def page_html(slug, skin_css=''):
-    texts = PAGES[slug]
+def path_for(slug, lang):
+    return PAGE_PATHS[slug][lang]
+
+
+def file_for(path):
+    return path.strip('/') + '.html'
+
+
+def footer_html(lang='ca'):
+    """El pie de las páginas legales, en su idioma (el de la app está en static/index.html)."""
+    links = ' · '.join(f'<a href="{PAGE_PATHS[slug][lang]}">{FOOTER_LINKS[lang][i + 1]}</a>' for i, slug in enumerate(('aviso-legal', 'privacidad', 'creditos')))
+    return f'<footer><span>ontoca.com · {FOOTER_LINKS[lang][0]}</span><span class="footer-links">{MAIL} · {links}</span></footer>'
+
+
+def page_html(slug, skin_css='', lang='ca', site_url=''):
+    """Una página legal en un idioma, con canonical y hreflang a las otras dos (x-default, la catalana)."""
+    title, body = PAGES[slug][lang]
     theme, extra = ('light', f'<link rel="stylesheet" href="{html.escape(skin_css)}">') if skin_css else ('dark', '')
-    titles = ' '.join(f'data-t{l}="{html.escape(texts[l][0])} · Ontoca"' for l in LANGS)
-    sections = ''.join(f'<section lang="{l}"><a class="back" href="/">{BACK[l]}</a><h1>{texts[l][0]}</h1>{texts[l][1]}</section>' for l in LANGS)
-    langs = ' · '.join(f'<a href="?lang={l}">{l.upper()}</a>' for l in LANGS)
-    return (f'<!DOCTYPE html><html lang="es" data-l="es" data-theme="{theme}" {titles}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>{html.escape(texts["es"][0])} · Ontoca</title><meta name="description" content="{html.escape(DESCRIPTIONS[slug])}">'
-            f'<link rel="stylesheet" href="/public.css">{extra}<style>{_HIDE}{{display:none}}.legal-langs{{font-size:14px}}</style>'
-            '<script src="/legal.js"></script><script defer src="/analytics.js"></script></head>'
-            '<body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="/">ontoca<span>.</span></a></div></header>'
-            f'<main class="credits"><p class="legal-langs">{langs}</p>{sections}</main>{footer_html()}</body></html>')
+    base = site_url.rstrip('/') if site_url else ''
+    seo = ''
+    if base:
+        seo = (f'<link rel="canonical" href="{html.escape(base + PAGE_PATHS[slug][lang])}">'
+               + ''.join(f'<link rel="alternate" hreflang="{l}" href="{html.escape(base + PAGE_PATHS[slug][l])}">' for l in LANGS)
+               + f'<link rel="alternate" hreflang="x-default" href="{html.escape(base + PAGE_PATHS[slug]["ca"])}">')
+    others = ' · '.join(f'<a href="{PAGE_PATHS[slug][l]}" hreflang="{l}" lang="{l}">{LANG_NAMES[l]}</a>' for l in ('ca', 'es', 'en') if l != lang)
+    return (f'<!DOCTYPE html><html lang="{lang}" data-theme="{theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+            f'<title>{html.escape(title)} · Ontoca</title><meta name="description" content="{html.escape(DESCRIPTIONS[slug][lang])}">{seo}'
+            f'<link rel="stylesheet" href="/public.css">{extra}<style>.legal-langs{{font-size:14px}}</style>'
+            '<script defer src="/analytics.js"></script></head>'
+            f'<body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="{HOME[lang]}">ontoca<span>.</span></a></div></header>'
+            f'<main class="credits"><p class="legal-langs">{others}</p><section lang="{lang}"><a class="back" href="{HOME[lang]}">{BACK[lang]}</a>'
+            f'<h1>{title}</h1>{body}</section></main>{footer_html(lang)}</body></html>')
+
+
+def write_all(out, skin_css='', site_url=''):
+    """Las nueve páginas (tres por idioma). Devuelve sus direcciones (para el sitemap)."""
+    from pathlib import Path
+    out = Path(out); paths = []
+    for slug in PAGES:
+        for lang in LANGS:
+            path = PAGE_PATHS[slug][lang]; target = out / file_for(path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(page_html(slug, skin_css, lang, site_url), encoding='utf-8')
+            paths.append(path)
+    for old in OLD_PATHS:   # las de antes (una sola página con los tres idiomas): redirigen
+        f = out / file_for(old)
+        if f.is_file(): f.unlink()
+    return paths

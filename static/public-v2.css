@@ -72,8 +72,8 @@ nav a{border-radius:0;color:var(--ink);font-size:15px;font-weight:600}nav a:hove
 .pick-bar{max-width:calc(var(--page) - 2 * var(--gutter));margin:0 auto 14px}
 .ag-fests{border-color:var(--ink)}.ag-festrow{border-top-color:var(--line)}
 .near-btn,.near-on{border-radius:0;border-color:var(--ink);background:var(--paper)}.near-km{border-radius:0}.near-km.on{background:var(--ink);color:var(--paper)}.pick-arrow{border-radius:0;border-color:var(--ink);background:var(--paper);color:var(--ink)}#pickCount{color:var(--on-color)}
-.curated button{border:1px solid var(--on-color);border-radius:0}
-.curated button:hover{transform:none;box-shadow:none;border-color:var(--on-color)}
+.curated>:is(button,a){border:1px solid var(--on-color);border-radius:0}
+.curated>:is(button,a):hover{transform:none;box-shadow:none;border-color:var(--on-color)}
 .pick-large,.pick-small{border-radius:0;padding:0;background:var(--paper);color:var(--ink)}
 .pick-media{border-radius:0;margin:0 0 12px}
 .pick-meta,.pick-date,.pick-title,.place,.pick-summary{padding:0 14px}
@@ -713,3 +713,19 @@ footer a{color:var(--footer-ink);text-decoration:underline}
    ancho completo encima de la rejilla de dos columnas (sin celda huérfana), en el móvil y en escritorio. */
 [data-cat=visitas],[data-category=visitas],[data-category-color=visitas]{--cat:var(--petrol)}
 .filters-panel .cat-group #categories .filter-chip:first-child{grid-column:1/-1;border-right:0 !important}
+
+
+/* Escritorio (1-11-2026, 20:58, David, opción A del lienzo): la Selección y la Agenda ya no van pegadas. Tras la banda
+   turquesa, un espacio en blanco y el título «Agenda» con el recuento; el buscador vuelve a ser un campo a sangre encima de
+   la franja de la fecha (sin la lupa). En el móvil no cambia nada. */
+@media(min-width:961px){
+  #agenda .agenda-head{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;display:flex;align-items:baseline;
+    max-width:calc(var(--page) - 2 * var(--gutter));margin:clamp(40px,4.5vw,64px) auto 0;padding:0 0 22px}
+  #agenda .agenda-title{display:flex;align-items:baseline;gap:18px}
+  #agenda .agenda-title h2{display:block;margin:0;font-size:clamp(36px,3.4vw,48px);font-weight:700;letter-spacing:-.04em}
+  #agenda #agendaCount{font-size:18px;color:var(--text2)}
+  .desk-search-btn{display:none}
+  .desk-top .panel-search{margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL))}
+  .desk-top .search-box{min-height:64px;border:0;padding-left:var(--bleedL);padding-right:var(--bleedR)}
+  .desk-top .search-box input{height:64px;font-size:19px}
+}

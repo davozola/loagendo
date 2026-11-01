@@ -37,8 +37,8 @@ class ImagenesDelActo(unittest.TestCase):
     def test_imagen_generica_del_sitio_no(self):
         from src import ai_agenda
         ai_agenda.initialize(self.conn)
-        for n in range(3): self.conn.execute('INSERT INTO ai_agenda_images VALUES (?,?,?)', (f'https://silvia.test/p{n}', 'https://silvia.test/og.jpg', '2026-11-01T17:00:00+00:00'))
-        pages = {'https://silvia.test/concert': '<meta property="og:image" content="https://silvia.test/og.jpg">'}
+        for n in range(3): self.conn.execute('INSERT INTO ai_agenda_images VALUES (?,?,?)', (f'https://silvia.test/p{n}', 'https://silvia.test/img/casa.jpg', '2026-11-01T17:00:00+00:00'))
+        pages = {'https://silvia.test/concert': '<meta property="og:image" content="https://silvia.test/img/casa.jpg">'}
         out = official_images.run(self.conn, out_dir=self.out, fetcher=lambda u, t: (200, u, pages.get(u, '')), today=dt.date(2026, 11, 1))
         self.assertEqual(out['imagenes'], 0); self.assertGreaterEqual(out['genericas'], 1)
 

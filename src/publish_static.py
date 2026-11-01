@@ -685,7 +685,7 @@ def credits_html(registry=None, generated_at='', counts=None, skin_css=''):
     """La página pública de Fuentes (25-10-2026): lo mínimo que piden las licencias, en tres idiomas.
     El detalle por fuente sigue en docs/source_registry.json; ya no se publica (decisión de David)."""
     from src import legal_pages
-    return legal_pages.page_html('creditos', skin_css)
+    return legal_pages.page_html('creditos', skin_css, 'ca')
 
 
 # Estilo de la web pública. 'v2' (por defecto desde el 23-10-2026): public-v2.css encima de
@@ -751,6 +751,8 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     try: catalog_items = json.loads((out / 'data' / 'catalog.json').read_text(encoding='utf-8')).get('items') or []
     except (OSError, ValueError): catalog_items = []
     landings.write_all(out, index, days, site_url, today, catalog_items)
+    from src import legal_pages   # Aviso legal, Privacidad y Fuentes en catalán (raíz), castellano (/es/) e inglés (/en/)
+    legal_pages.write_all(out, f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else '', site_url)
     return versions
 
 
@@ -786,7 +788,7 @@ def _content_hash(out):
     h = hashlib.sha256()
     for path in sorted(p for p in out.rglob('*') if p.is_file()):
         rel = path.relative_to(out).as_posix()
-        if rel in ('data/meta.json', 'creditos.html'): continue  # carry the generation timestamp, not content
+        if rel == 'data/meta.json': continue  # carry the generation timestamp, not content
         if rel.startswith('img/'): h.update(f'{rel}:{path.stat().st_size}\n'.encode())
         else: h.update(rel.encode()); h.update(hashlib.sha256(path.read_bytes()).digest())
     return h.hexdigest()
@@ -906,7 +908,8 @@ def write_sitemaps(out, site_url, events, cards, today, landing_paths=()):
     def urlset(rows):
         return ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                 + ''.join(f'<url><loc>{html.escape(u)}</loc>' + (f'<lastmod>{m}</lastmod>' if m else '') + '</url>' for u, m in rows) + '</urlset>')
-    files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat()), (f'{base}/creditos', ''), (f'{base}/aviso-legal', ''), (f'{base}/privacidad', '')] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
+    from src import legal_pages
+    files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat())] + [(f'{base}{legal_pages.path_for(s, l)}', '') for s in legal_pages.PAGES for l in legal_pages.LANGS] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
     def event_url(e):   # igual que eventPath() en public.js (encodeURIComponent)
         from src.landings import public_source   # nombre público de la fuente (1-11-2026)
         return f"{base}/e/{quote(public_source(e['source']), safe=URI_SAFE)}/{quote(str(e['id']), safe=URI_SAFE)}"
@@ -1079,24 +1082,21 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     _write_json(out / 'data' / 'meta.json', {'generated_at': generated_at, 'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'counts': counts, 'sources': sources, 'site_url': site_url.rstrip('/') if site_url else ''})
     versions = write_shell(static_dir, out, site_url, alerts, today, days)
     skin = f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else ''
-    (out / 'creditos.html').write_text(credits_html(registry, generated_at, counts, skin_css=skin), encoding='utf-8')
-    from src import legal_pages   # Aviso legal y Privacidad (25-10-2026); /privacidad la piden las alertas
-    for slug in ('aviso-legal', 'privacidad'):
-        (out / f'{slug}.html').write_text(legal_pages.page_html(slug, skin), encoding='utf-8')
+    # Aviso legal, Privacidad y Fuentes: las escribe write_shell (1-11-2026, una página por idioma).
     (out / '_headers').write_text(headers_file(), encoding='utf-8')
     # Every record has its own address (/e/<source>/<id>); the static host serves the app for it.
     # /e/* lo sirve la función functions/e/[[path]].js: la app con la vista previa para compartir
     # (título, foto, cuándo y dónde). Una regla de _redirects aquí le quitaría la ruta.
     # /v2/ fue la dirección de prueba de la versión 2: los enlaces antiguos van a la portada
     # (/v2/e/* lo redirige su función, functions/v2/e/[[path]].js).
-    (out / '_redirects').write_text('/v2 / 301\n/v2/ / 301\n', encoding='utf-8')
+    # _redirects: lo escribe landings.write_all (1-11-2026, catalán en la raíz), también en las publicaciones rápidas.
     # 1-11-2026: fuera los rastreadores que copian para entrenar modelos o revender datos (no son buscadores; Google y
     # Bing siguen igual, y también los que enlazan desde un chat a la ficha: OAI-SearchBot, ChatGPT-User).
     blocked = ''.join(f'User-agent: {bot}\nDisallow: /\n\n' for bot in ROBOTS_BLOCKED)
     (out / 'robots.txt').write_text(blocked + 'User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
     from src import landings
     # Solo las páginas de entrada indexables: con actos y que son su propia canónica (1-11-2026).
-    write_sitemaps(out, site_url, events, cards, today, landings.indexable_paths(today, days, catalogue) + ['/ca/', '/en/'])
+    write_sitemaps(out, site_url, events, cards, today, landings.indexable_paths(today, days, catalogue) + ['/es/', '/en/'])
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()

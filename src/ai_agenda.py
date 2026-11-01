@@ -539,17 +539,34 @@ def content_image(page, title, listing=False):
     return ''
 
 
+# Cabecera de la página del acto (1-11-2026, Filmoteca): la foto de la película va en la cabecera con el título
+# internacional como texto alternativo («24 eyes» para «Nijushi no hitomi»), así que no coincide con el título.
+# Solo en la página propia del acto y solo si la imagen usa un estilo de cabecera de Drupal/WordPress.
+_HEADER_STYLE = re.compile(r'/styles/[^/]*(?:capcalera|cabecera|header|hero)[^/]*/', re.I)
+
+
+def header_image(page):
+    for m in _IMG_TAG.finditer(page or ''):
+        attrs = {k.lower(): (x if x is not None else y) for k, x, y in _ATTR.findall(m.group(0))}
+        src = attrs.get('src') or attrs.get('data-src') or ''
+        if src and _HEADER_STYLE.search(src) and not _NOT_CONTENT.search(src): return html.unescape(src)
+    return ''
+
+
 def _image(conn, url, fetcher, timeout, title=''):
     row = conn.execute('SELECT image, fetched_at FROM ai_agenda_images WHERE url=?', (url,)).fetchone()
     if row:
-        stale = not row[0] and (row[1] < IMAGE_RULES_SINCE or row[1] < (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=IMAGE_RETRY_DAYS)).isoformat(timespec='seconds'))
+        from src.media import is_site_default
+        stale = (row[0] and is_site_default(row[0])) or not row[0] and (row[1] < IMAGE_RULES_SINCE or row[1] < (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=IMAGE_RETRY_DAYS)).isoformat(timespec='seconds'))
         if not stale: return row[0], False
     from src.venue_feeds import og_meta, meta_tags
     status, final_url, page = fetcher(url, timeout)
     if status != 200: return (row[0] if row else ''), True   # sin respuesta: no se guarda, se vuelve a intentar
     tags = meta_tags(page)
+    from src.media import is_site_default
     image = og_meta(page).get('og:image') or tags.get('twitter:image') or tags.get('twitter:image:src') or ''
-    if not image: image = content_image(page, title)
+    if image and is_site_default(image): image = ''   # la imagen por defecto de la web, no la del acto
+    if not image: image = content_image(page, title) or header_image(page)
     if image: image = urljoin(final_url or url, image)
     with conn: conn.execute('INSERT OR REPLACE INTO ai_agenda_images(url,image,fetched_at) VALUES(?,?,?)', (url, image, dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')))
     return image, True

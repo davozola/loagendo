@@ -17,8 +17,8 @@ def item(**kw):
 class Paginas(unittest.TestCase):
     def test_todas_las_categorias_tienen_pagina(self):
         paths = {p['path'] for p in landings.pages(TODAY)}
-        for path in landings.CAT_PAGE.values(): self.assertIn(path, paths)
-        for path in ('/gratis', '/gratis/fin-de-semana', '/distrito/gracia', '/distrito/sant-marti/fin-de-semana'): self.assertIn(path, paths)
+        for path in landings.CAT_PAGE.values(): self.assertIn('/es' + path, paths)
+        for path in ('/es/gratis', '/es/gratis/fin-de-semana', '/es/distrito/gracia', '/es/distrito/sant-marti/fin-de-semana'): self.assertIn(path, paths)
 
     def test_filtros_gratis_y_distrito(self):
         self.assertTrue(landings._matches(item(fr=1), {'free': True}))
@@ -29,37 +29,37 @@ class Paginas(unittest.TestCase):
     def test_portada_con_planes_de_hoy_y_menu(self):
         block = landings.home_block(TODAY, {'2026-11-01': {'items': [item(t='Concierto de prueba', pc='musica')]}})
         self.assertIn('id="seoLista"', block); self.assertIn('Concierto de prueba', block); self.assertNotIn('<h1', block)
-        for path in ('/cine', '/gratis', '/distrito/eixample', '/conciertos/fin-de-semana'): self.assertIn(f'href="{path}"', block)
+        for path in ('/es/cine', '/es/gratis', '/es/distrito/eixample', '/es/conciertos/fin-de-semana'): self.assertIn(f'href="{path}"', block)
 
     def test_la_app_conoce_las_paginas_nuevas(self):
         js = (ROOT / 'static' / 'public.js').read_text(encoding='utf-8')
         self.assertIn("LANDING.district", js); self.assertIn("LANDING.free === true", js)
-        for path in landings.CAT_PAGE.values(): self.assertIn(f"'{path}'", js)
+        for path in landings.CAT_PAGE.values(): self.assertIn(f"'/es{path}'", js)
 
     def test_la_ficha_enlaza_y_quita_la_lista_de_la_portada(self):
         fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
         self.assertIn("BreadcrumbList", fn); self.assertIn("'#seoLista'", fn); self.assertIn("/distrito/", fn); self.assertIn("og:type\" content=\"${card.x ? 'website' : 'event'}", fn)
-        for path in landings.CAT_PAGE.values(): self.assertIn(f"'{path}'", fn)
+        for path in landings.CAT_PAGE.values(): self.assertIn(f"'/es{path}'", fn)
         for slug in landings.DISTRICTS: self.assertIn(f"'{slug}'", fn)
 
 
 class Idiomas(unittest.TestCase):
     def test_tres_versiones_con_direcciones_propias(self):
         es = {p['base']: p for p in landings.pages(TODAY, 'es')}; ca = {p['base']: p for p in landings.pages(TODAY, 'ca')}; en = {p['base']: p for p in landings.pages(TODAY, 'en')}
-        self.assertEqual(ca['/conciertos/fin-de-semana']['path'], '/ca/concerts/cap-de-setmana')
+        self.assertEqual(ca['/conciertos/fin-de-semana']['path'], '/concerts/cap-de-setmana')   # el catalán en la raíz (1-11-2026)
         self.assertEqual(en['/con-ninos/noviembre-2026']['path'], '/en/with-kids/november-2026')
         self.assertEqual(ca['/hoy']['title'], 'Què fer avui a Barcelona · Ontoca')
-        self.assertEqual(es['/gratis']['alts'], {'es': '/gratis', 'ca': '/ca/gratis', 'en': '/en/free'})
+        self.assertEqual(es['/gratis']['alts'], {'es': '/es/gratis', 'ca': '/gratis', 'en': '/en/free'})
         paths = [p['path'] for p in landings.all_pages(TODAY)]
         self.assertEqual(len(paths), len(set(paths)))
-        self.assertEqual(landings.file_for('/'), 'index.html'); self.assertEqual(landings.file_for('/ca/'), 'ca/index.html')
+        self.assertEqual(landings.file_for('/'), 'index.html'); self.assertEqual(landings.file_for('/es/'), 'es/index.html')
 
     def test_render_con_hreflang_e_idioma(self):
         from tests.test_landings import INDEX
         page = next(p for p in landings.pages(TODAY, 'en') if p['base'] == '/gratis')
         doc = landings.render(INDEX, page, {}, 'https://ontoca.com')
         self.assertIn('<html lang="en"', doc); self.assertIn('data-lang="en" data-base="/en"', doc)
-        for l, u in (('es', '/gratis'), ('ca', '/ca/gratis'), ('en', '/en/free'), ('x-default', '/gratis')):
+        for l, u in (('es', '/es/gratis'), ('ca', '/gratis'), ('en', '/en/free'), ('x-default', '/gratis')):
             self.assertIn(f'hreflang="{l}" href="https://ontoca.com{u}"', doc)
         self.assertIn('href="/en/e/', landings.home_block(TODAY, {'2026-11-01': {'items': [item()]}}, 'en'))
 
@@ -75,8 +75,9 @@ class Idiomas(unittest.TestCase):
         self.assertIn('dataset.lang', js); self.assertIn('dataset.base', js); self.assertIn('hreflang="${next}"', js)
         fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
         self.assertIn('alias_of', fn); self.assertIn('301', fn); self.assertIn('venue_upcoming', fn); self.assertIn('hreflang="x-default"', fn)
-        for l in ('ca', 'en'):
+        for l in ('es', 'en'):
             self.assertIn("from '../../e/[[path]].js'", (ROOT / 'functions' / l / 'e' / '[[path]].js').read_text(encoding='utf-8'))
+        self.assertIn('301', (ROOT / 'functions' / 'ca' / 'e' / '[[path]].js').read_text(encoding='utf-8'))   # /ca/e/… → /e/…
 
 
 class SinRastro(unittest.TestCase):
@@ -112,7 +113,7 @@ class Renderizado(unittest.TestCase):
         from tests.test_landings import INDEX
         doc = landings.not_found(INDEX, TODAY)
         self.assertIn('<meta name="robots" content="noindex">', doc); self.assertNotIn('rel="canonical"', doc)
-        self.assertIn('href="/hoy"', doc)
+        self.assertIn('href="/avui"', doc); self.assertIn('<html lang="ca"', doc)   # en catalán (1-11-2026, 21:43)
 
     def test_un_solo_salto_en_duplicados(self):
         fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
@@ -159,7 +160,7 @@ class CalidadEntradas(unittest.TestCase):
         self.assertIn('noindex,follow', landings.render(INDEX, page, {}, 'https://ontoca.com'))
         days = {'2026-11-01': {'items': [item(fr=1)]}}
         paths = landings.indexable_paths(TODAY, days)
-        self.assertIn('/gratis/hoy', paths); self.assertNotIn('/cine/hoy', paths); self.assertNotIn('/dia/2026-11-01', paths)
+        self.assertIn('/es/gratis/hoy', paths); self.assertIn('/gratis/avui', paths); self.assertNotIn('/es/cine/hoy', paths); self.assertNotIn('/es/dia/2026-11-01', paths)
 
 
 class PilotoSalas(unittest.TestCase):
@@ -168,13 +169,13 @@ class PilotoSalas(unittest.TestCase):
 
     def test_paginas_de_sala_en_tres_idiomas(self):
         pages = {p['path']: p for p in landings.venue_pages(TODAY, self.CAT)}
-        self.assertEqual(pages['/sala/sala-apolo']['count'], 6)
-        self.assertIn('/en/venue/sala-apolo', pages); self.assertIn('/ca/sala/sala-apolo', pages)
-        self.assertEqual(pages['/sala/sala-apolo']['landing']['q'], 'Sala Apolo')
-        self.assertIn('Sobre todo conciertos y música (6 de 6', pages['/sala/sala-apolo']['lead'])
-        self.assertEqual(pages['/sala/liceu']['count'], 0)
+        self.assertEqual(pages['/es/sala/sala-apolo']['count'], 6)
+        self.assertIn('/en/venue/sala-apolo', pages); self.assertIn('/sala/sala-apolo', pages)   # catalán en la raíz
+        self.assertEqual(pages['/es/sala/sala-apolo']['landing']['q'], 'Sala Apolo')
+        self.assertIn('Sobre todo conciertos y música (6 de 6', pages['/es/sala/sala-apolo']['lead'])
+        self.assertEqual(pages['/es/sala/liceu']['count'], 0)
         idx = landings.indexable_paths(TODAY, {}, self.CAT)
-        self.assertIn('/sala/sala-apolo', idx); self.assertNotIn('/sala/liceu', idx)
+        self.assertIn('/es/sala/sala-apolo', idx); self.assertNotIn('/es/sala/liceu', idx)
 
     def test_la_ficha_enlaza_con_su_sala(self):
         fn = (ROOT / 'functions' / 'e' / '[[path]].js').read_text(encoding='utf-8')
