@@ -756,7 +756,22 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 @media(min-width:961px){
   .filters-panel>.group{border:0;border-top:1px solid var(--ink) !important;padding-top:0 !important;padding-bottom:12px !important;margin:0}
   .filters-panel>.group.cat-group{border-top:0 !important;padding-bottom:0 !important}
-  .filters-panel>.group>legend{float:left;box-sizing:border-box;width:calc(100% + 72px);margin:0 -24px 10px -48px;padding:9px 24px 9px 48px;background:#F4F4F1;border-bottom:1px solid #CFCFCF;font-size:16px;line-height:1.3}
+  .filters-panel>.group>legend{float:left;box-sizing:border-box;width:calc(100% + 72px);margin:0 -24px 0 -48px;padding:9px 24px 9px 48px;background:#F4F4F1;border-bottom:1px solid #CFCFCF;font-size:16px;line-height:1.3}
   .filters-panel>.group>legend~*{clear:both}
-  .filters-panel .cat-group .cat-chips{border-top:0;margin-top:-10px}
+  .filters-panel .cat-group .cat-chips{border-top:0;margin-top:0}
+  /* 00:29: sin hueco entre el título del apartado y su primera opción; y sin barra de scroll visible en la columna (Mac con
+     «mostrar barras siempre», Windows): se sigue bajando con la rueda, el trackpad o el teclado. */
+  .filters-panel>.group>legend+*{margin-top:0;padding-top:0}
+  .filters-panel{scrollbar-width:none;-ms-overflow-style:none}
+  .filters-panel::-webkit-scrollbar{display:none;width:0;height:0}
+}
+
+
+/* Escritorio (2-11-2026, 00:31, David, propuesta 1): lo elegido dentro de los filtros ya no va en negro, que pesaba más que
+   los títulos en gris claro. Fondo petróleo muy claro, texto negro en negrita y una barra petróleo de 4 px a la izquierda
+   (enlaza con la cabecera «Filtros»); la marca ✓ de los planes, en petróleo. Contraste del texto: negro sobre #E3F0F1. */
+@media(min-width:961px){
+  .filters-panel .filter-chip.active,.filters-panel .channel-chip.active,.filters-panel .filter-chip.active:hover,.filters-panel .channel-chip.active:hover{background:#E3F0F1 !important;color:var(--ink) !important;font-weight:700;box-shadow:inset 4px 0 0 var(--petrol)}
+  .filters-panel .filter-chip.active:before{border-color:var(--ink) !important}
+  .filters-panel .channel-chip.active:after{color:#fff !important;background:var(--petrol) !important;border-color:var(--petrol) !important}
 }
