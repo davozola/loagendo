@@ -41,20 +41,59 @@ AGE_PATTERNS = [  # (regex, constructor, solo en el título)
 ]
 
 
+# Una edad en el texto no siempre es la del público (1-11-2026, auditoría del 6-11): en las tarifas es una franja de
+# precio («reduïda: persones de 16 a 29 anys», «junior (4 a 12 anys)», «majors de 65 anys») y en una biografía, la de
+# los artistas («tienen entre 19 y 21 años cuando dan su primer concierto», Múltipla). Esas no se toman como edad
+# recomendada; si no queda otra, la ficha va sin edad (mejor ninguna que una falsa).
+AGE_TARIFF = re.compile(r"(?:\bentrada|reduid|reducid|\btarifa|\bpreu|\bprecio|\bdescompte|\bdescuento|\bgratuit|\bgratuita|\bgratis\b|"
+                        r"\beur\b|€|\bsenior|\bjunior|\bestudiants|\bestudiantes|\bcarnet|\bjubilat|\bjubilad|\bpensionist|\baturat|"
+                        r"\bparad[oa]s\b|discapacitat|discapacidad|\bacreditar|\bbonificad|\bbonificac|\bnen \(|\bnens? \(|\bmenors\b|\bmenores\b)")
+AGE_TARIFF_HEADER = re.compile(r"(?:reduid|reducid|\btarifa|\bpreu|\bprecio|\bdescompte|\bdescuento|entrada general|\bbonificad)")
+AGE_TARIFF_AFTER = re.compile(r"^[\s)]*(?::|\+ ?concert|\(?\d+(?:[.,]\d+)? ?(?:€|eur))")
+AGE_AUDIENCE = re.compile(r"(?:\bper a (?:infants|nens|nenes|joves|families|public)|\bper (?:infants|nens|nenes|joves)|\bpara (?:ninos|ninas|jovenes|familias|publico)|"
+                          r"\bdirigid[ao]s? a|\bdirigit a|\badrecad[ao]s? a|\badrecat a|\bdestinad[ao]s? a|\brecomanad?[ao]?|\brecomendad[ao]|\bedat\b|\bedad\b|"
+                          r"\bnenes i nens|\bnens i nenes|\bninos y ninas|\bpublic\b|\bpublico\b|\bage\b|\bages\b)")
+AGE_PERFORMERS_BEFORE = re.compile(r"\b(?:tienen|tenen|tenien|tenian|tenia|tiene|te|cumplen|compleixen)\s*$")
+AGE_SEGMENT = re.compile(r"(?:\.\s|\s\.\s|\s-\s|;|\|\||\n)")
+AGE_TARIFF_WINDOW = 70
+
+
+def _audience_age(text, m, lo):
+    """¿La edad encontrada en el texto es la del público? (1-11-2026, auditoría del 6-11)
+    · No si habla de los artistas («tienen entre 19 y 21 años cuando…», Múltipla).
+    · Sí si la frase la presenta como público («activitat dirigida a joves de 16 a 35 anys», «per a infants de 0 a 14»,
+      «edat recomanada»), aunque la actividad sea gratuita.
+    · No si es una tarifa: en la misma frase hay precio o descuento («Entrada menors de 4 a 10 anys + concert: 8 €»,
+      «junior (4 a 12 anys)»), o va en la lista de un precio reducido («Reduïda: - persones de 16 a 29 anys»), o la
+      sigue un precio o dos puntos. Un «a partir de N anys» suelto tras los precios sí es el público («a partir de 3 anys»).
+    · No si es de 60 años o más: en un texto es siempre una tarifa de mayores."""
+    if lo >= 60: return False
+    window = text[max(0, m.start() - AGE_TARIFF_WINDOW):m.start()]
+    segment = AGE_SEGMENT.split(window)[-1]
+    if AGE_PERFORMERS_BEFORE.search(segment): return False
+    if AGE_AUDIENCE.search(segment): return True
+    after = text[m.end():m.end() + 30]
+    if AGE_TARIFF.search(segment) or AGE_TARIFF_AFTER.search(after): return False
+    open_ended = bool(re.match(r"(?:a partir de|des de|desde)\b", m.group(0)))
+    if AGE_TARIFF_HEADER.search(window) and not open_ended: return False
+    return True
+
+
 def ages_by_rule(title, text=''):
     """(edad mínima, edad máxima o None, cita) si el título o el texto la dicen; si no, None.
     Las fórmulas sueltas («més de 30 anys», «+18») solo valen en el título: en un texto suelen
-    hablar de otra cosa («més de 30 anys d'història»)."""
+    hablar de otra cosa («més de 30 anys d'història»). En el texto, una edad de una tarifa o de los
+    artistas no cuenta (_audience_age)."""
     for source, is_title in ((title or '', True), (text or '', False)):
         t = fold(source)
         for rx, build, title_only in AGE_PATTERNS:
             if title_only and not is_title: continue
-            m = rx.search(t)
-            if not m: continue
-            try: lo, hi = build(*m.groups())
-            except (TypeError, ValueError, IndexError): continue
-            if hi is not None and (hi < lo or hi > 99) or lo > 99: continue
-            return lo, hi, m.group(0).strip('( ')
+            for m in rx.finditer(t):
+                try: lo, hi = build(*m.groups())
+                except (TypeError, ValueError, IndexError): continue
+                if hi is not None and (hi < lo or hi > 99) or lo > 99: continue
+                if not is_title and not _audience_age(t, m, lo): continue
+                return lo, hi, m.group(0).strip('( ')
     return None
 
 

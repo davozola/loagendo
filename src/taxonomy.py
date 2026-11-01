@@ -439,6 +439,11 @@ STABLE_GROUP = re.compile(r"^\W*(?:espai(?! d'aprenentatge| sensorial)\b|sala d'
                           r"\bsala d'informatica\b|\bbretxa digital\b|\btargeta cuidadora\b|\bcasal (?:de )?persones grans\b|\blas kellys\b|\braconet\b")
 # Lo que sí es un plan aunque lo haga un grupo estable: su función, su concierto, su ruta o su exposición.
 GROUP_SHOW = re.compile(r"\b(?:teatre|teatro|concert|concierto|jam|ruta|rutes|rutas|visita|visites|espectacle|exposicio|exposicion|mostra|cinema|projeccio|festa|fira|mercat|ball|presentacio)\b")
+STABLE_TITLE = re.compile(r"^\W*club de (?:costura|cosir|punt|labors|ganxet|manualitats|patchwork|escacs|petanca|conversa)\b")
+STABLE_TEXT = re.compile(r"\b(?:grup obert(?: i autogestionat)?|grupo abierto|grup estable|espai setmanal|espacio semanal|trobada setmanal|"
+                         r"es reuneixen (?:cada|per)|se reunen (?:cada|para))\b")
+REHEARSAL = re.compile(r"\b(?:per assajar|para ensayar)\b")
+BASIC_SKILLS = re.compile(r"\b(?:lectoescriptura|lectoescritura|alfabetitzacio|alfabetizacion|classes? de catala|curs de catala|catala per a nouvinguts|castellano para extranjeros|bretxa digital)\b")
 SESSION_PRICE = re.compile(r"\b(?:1 classe|una classe|per classe|per sessio|sessio solta|per sesion|por sesion|clase suelta|entrada per sessio)\b")
 STANDING_OFFER = re.compile(r"^\W*podcast\b(?!.*\b(?:en directe|en directo|en vivo|live)\b)|\bruta gourmet\b|\bel barri proposa\b.*\bgrup\b|\bgrup obert de (?:gimnastica|ioga|caminar|ball|petanca|escacs)\b")
 VR_ATTRACTION = re.compile(r"\b(?:realitat virtual|realidad virtual|virtual reality)\b")
@@ -456,6 +461,14 @@ def participation_exclusion(ev, category):
         return {'method': 'grupo_o_servicio_estable', 'evidence': f'Oferta permanente ({ev.get("start")} → {ev.get("end")}): podcast, ruta comercial o grupo abierto de cada semana, no un plan con fecha (decisión 27-10-2026)'}
     if STABLE_GROUP.search(t) and not GROUP_SHOW.search(t) and not re.match(r"\W*(?:taller|tallers|curs|cicle|xerrada|conferencia)\b", t):
         return {'method': 'grupo_o_servicio_estable', 'evidence': f'Grupo, espacio o servicio estable ({ev.get("start")} → {ev.get("end")}), no un plan con fecha (decisión 27-10-2026)'}
+    # Grupos de barrio que se reúnen cada semana y formación básica (1-11-2026, David, auditoría del 6-11): «Trobada 'Teatre
+    # Il·lusió'» (grupo abierto de vecinos que ensaya), «Club de costura creativa», «Converses amb consciència» (espacio
+    # semanal) y «Taller 'Lectoescriptura en català'» (aprender a leer y escribir). Lo dice el título o el texto de la fuente.
+    text = norm(' '.join(str(ev.get(f) or '') for f in ('summary', 'description')))[:600]
+    if BASIC_SKILLS.search(t):
+        return {'method': 'formacion_basica', 'evidence': f'Formación básica ({ev.get("start")} → {ev.get("end")}): un servicio, no un plan cultural (decisión 1-11-2026)'}
+    if STABLE_TITLE.search(t) or (STABLE_TEXT.search(text) and (not GROUP_SHOW.search(t) or REHEARSAL.search(text))):
+        return {'method': 'grupo_o_servicio_estable', 'evidence': f'Grupo de barrio que se reúne cada semana ({ev.get("start")} → {ev.get("end")}), no un plan con fecha (decisión 1-11-2026)'}
     formative = ev.get('kind') == 'course' or ev.get('format') in ('workshop', 'course')
     if not formative or ev.get('open_enrollment') or ev.get('drop_in'): return None
     price = ' '.join(str(x) for x in (ev.get('price_label'), ev.get('price_note')) if x).replace('€', ' eur ')

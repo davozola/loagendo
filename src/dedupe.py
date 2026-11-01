@@ -268,6 +268,36 @@ def _distinct_sessions(conn, a, b):
     return kids_a != kids_b
 
 
+# Motivos de exclusión que hablan del acto, no de la ficha (1-11-2026): un acto suspendido, aplazado, en línea o fuera
+# de Barcelona tampoco se publica desde otra fuente, así que su ficha excluida puede seguir mandando en el grupo.
+ACT_EXCLUSION_FLAGS = re.compile(r"^(?:EVENT_STATUS_|OUTSIDE_BARCELONA|ONLINE_EVENT|PLACEHOLDER_DATE|FESTIVAL_PASS)")
+
+
+def retired_records(conn, excluded):
+    """De las fichas excluidas de un grupo, las que su fuente retiró sin que el acto cambie (1-11-2026, auditoría del 6-11).
+
+    Una agenda con IA desactivada porque llega otra fuente mejor (In-Edit: Codetickets), un acto que ya no está en la
+    página leída o un identificador migrado quedan excluidos, pero no dicen nada del acto. Si una de ellas era la
+    canónica, el grupo entero dejaba de publicarse: 113 fichas futuras ocultas el 1-11-2026 (64 sesiones de In-Edit,
+    conciertos de Upload, Moog, City Hall…). Esas fichas no pueden ser la canónica. Las excluidas por un motivo del
+    acto (suspendido, aplazado, en línea, fuera de Barcelona) sí, y su grupo sigue sin salir."""
+    excluded = set(excluded)
+    if not excluded: return set()
+    acts = set()
+    try:
+        keys = sorted(excluded)
+        for i in range(0, len(keys), 500):
+            chunk = keys[i:i + 500]
+            for src, rid, issue in conn.execute(f"SELECT source,id,issue FROM review_flags WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
+                if ACT_EXCLUSION_FLAGS.match(str(issue or "")): acts.add(f"{src}:{rid}")
+            # El título dice que el acto se cancela o se aplaza («CANCELADO: Geordie Greep»): también es del acto.
+            from src.event_status import TITLE_MARK, title_lead
+            for src, rid, title in conn.execute(f"SELECT source,id,title FROM source_records WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
+                if TITLE_MARK.search(title or "") or title_lead(title or ""): acts.add(f"{src}:{rid}")
+    except sqlite3.DatabaseError: return set()
+    return excluded - acts
+
+
 def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     """Map every collapsed record key to its canonical twin's key.
 
@@ -278,6 +308,11 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
     """
     if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='match_candidates'").fetchone():
         return {}
+    if _PLACES["places"] is None:
+        try:
+            from src.venue_places import cached_places
+            _PLACES["places"] = cached_places(conn)
+        except Exception: _PLACES["places"] = {}
     parent: dict[str, str] = {}
     def find(x):
         while parent.get(x, x) != x:
@@ -311,22 +346,25 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
         groups.setdefault(find(key), []).append(key)
     # Misma fuente con dos fichas del mismo acto: manda la que cubre más días (no se pierde ninguna fecha).
     spans = {}; dates = {}   # dates: (inicio, días, fin normalizado) — el fin sin la medianoche de las ticketeras
+    retired = set()   # fichas retiradas por su fuente sin que el acto cambie (ver retired_records)
     try:
         members = [k for k in parent]
         for i in range(0, len(members), 500):
             chunk = members[i:i + 500]
-            for src, rid, a, b in conn.execute(f"SELECT source,id,start_date,end_date FROM source_records WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
+            for src, rid, a, b, elig in conn.execute(f"SELECT source,id,start_date,end_date,eligibility FROM source_records WHERE source||':'||id IN ({','.join('?' * len(chunk))})", chunk):
+                if elig == "exclude": retired.add(f"{src}:{rid}")
                 try:
                     d0, d1 = dt.date.fromisoformat(str(a)[:10]), dt.date.fromisoformat(_end_of(src, str(a)[:10], str(b)[:10]))
                     spans[f"{src}:{rid}"] = (dt.date.fromisoformat(str(b)[:10]) - d0).days
                     dates[f"{src}:{rid}"] = (d0, (d1 - d0).days, d1)
                 except ValueError: pass
     except sqlite3.DatabaseError: pass
+    retired = retired_records(conn, retired)
     # Manda la fuente original: si el propio centro publica el acto, su ficha es la canónica (fechas,
     # horas, sala) y las demás solo rellenan lo que le falte (texto, imagen, distrito…; borrow_from_twins).
     def rank(key):
         src = key.split(":", 1)[0]
-        return (0 if first_party(src) else 1, source_rank(src), -spans.get(key, 0), key)
+        return (1 if key in retired else 0, 0 if first_party(src) else 1, source_rank(src), -spans.get(key, 0), key)
     out = {}
     for members in groups.values():
         canonical = min(members, key=rank)
@@ -336,7 +374,8 @@ def canonical_groups(conn: sqlite3.Connection) -> dict[str, str]:
         # salen de las funciones (catalog.row_to_event).
         if canonical in dates and dates[canonical][1] <= 6:
             # Las ticketeras no cuentan: alargan las fechas por la medianoche («MIRA» en DICE del 6 al 8).
-            pool = [m for m in members if m in dates and m.split(":", 1)[0] not in SINGLE_ACT_SOURCES] or [m for m in members if m in dates]
+            live = [m for m in members if m not in retired] or members
+            pool = [m for m in live if m in dates and m.split(":", 1)[0] not in SINGLE_ACT_SOURCES] or [m for m in live if m in dates]
             known = [dates[m] for m in pool]
             lo, hi = min(d[0] for d in known), max(d[2] for d in known)
             if dates[canonical][0] > lo or dates[canonical][2] < hi:
@@ -357,7 +396,10 @@ NEAR_KM = 1.5
 
 def _clean(text):
     import unicodedata
-    text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode().lower()
+    # El apóstrofo recto y el tipográfico, igual (1-11-2026): «Enjoia't» y «Enjoia’t» → «enjoia t» (antes el tipográfico
+    # pegaba las palabras: «enjoiat»), como «d'Abián Díaz» → «d abian diaz».
+    text = re.sub(r"['’‘´`]", " ", str(text or ""))
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
 
 
@@ -507,13 +549,28 @@ TITLE_PREFIX = re.compile(r"^(?:concert|concierto|espectacle|espectaculo|teatre|
 # «Espectacle "Manual para follarse a un macho con vagina", de i amb Pablo Alamá». La sala lo publica solo como
 # «ALEJANDRA», «Viejóvenes»… La clave es la obra; lo que va detrás (créditos) no cuenta.
 QUOTED_WORK = re.compile(r'^\s*(?:(?:concert|concierto|espectacle|espectáculo|espectaculo|teatre|teatro|musical|obra de teatre|obra de teatro|recital|'
-                         r'dansa|danza|circ|circo|opera|òpera|monòleg|monologo|monólogo|comèdia|comedia|humor|màgia|magia)(?:\s+(?:familiar|infantil))?\s+)*'
-                         r'["«“]([^"»”]{3,})["»”]\s*(?:$|[,.;]|-\s|–\s|\s(?:amb|con|de|a c[aà]rrec|per|por|dirigit|dirigida|dirigido)\b)', re.I)
+                         r'dansa|danza|circ|circo|opera|òpera|monòleg|monologo|monólogo|comèdia|comedia|humor|màgia|magia|'
+                         r'exposició|exposicio|exposición|exposicion)(?:\s+(?:familiar|infantil|immersiva|inmersiva))?\s*)*'
+                         r'(?:["«“]([^"»”]{3,})["»”]|[\'‘]([^\'‘’]{3,})[\'’])\s*(?:$|[,.;]|-\s|–\s|\s(?:amb|con|de|del|a c[aà]rrec|per|por|dirigit|dirigida|dirigido)\b)', re.I)
+
+
+# Artículos al comparar títulos (1-11-2026, auditoría del 6-11): «L’Atlàntida de Falla» (Open Data) y «La Atlántida de
+# Falla» (L'Auditori) son la misma obra; _clean pegaba el artículo elidido («latlantida») y el artículo del principio
+# impedía ver un título dentro del otro. Solo para comparar; las fechas y el sitio se siguen exigiendo.
+ELIDED_ARTICLE = re.compile(r"(?<![\w])[lL]['’‘´`](?=\w)")
+LEADING_ARTICLE = re.compile(r"^(?:la|el|els|les|los|las|lo|the|l)\s+")
+
+
+def _work_key(text):
+    """La obra entre comillas, sin artículo delante («L’Atlàntida» → «atlantida»)."""
+    t = " ".join(w for w in _clean(ELIDED_ARTICLE.sub("", str(text or ""))).split() if w not in ("d", "l"))
+    return LEADING_ARTICLE.sub("", t)
 
 
 def _title_key(title):
-    t = _clean(title)
-    for _ in range(2): t = TITLE_PREFIX.sub("", t)
+    t = _clean(ELIDED_ARTICLE.sub("", str(title or "")))
+    t = " ".join(w for w in t.split() if w not in ("d", "l"))   # «d’Any Nou» → «any nou»: la preposición elidida no cuenta
+    for _ in range(2): t = LEADING_ARTICLE.sub("", TITLE_PREFIX.sub("", t))
     return t
 
 
@@ -543,17 +600,17 @@ def _title_keys_typed(title):
     («Concierto para bebés» = «Concert per a nadons»)."""
     out = [(_title_key(title), "full")]
     m = QUOTED_WORK.match(str(title or ''))
-    if m: out.append((_clean(m.group(1)), "quoted"))
+    if m: out.append((_work_key(m.group(1) or m.group(2)), "quoted"))
     # La obra entre comillas tras el nombre del ciclo o festival (26-10-2026): GuiaBCN titula «Flaix de Tardor: Teatre
     # "Navegar por el Neva", a partir de…» y el Lliure «Navegar por el Neva»; «Cicle Simfònics al Palau: Concert "Requiem
     # de Mozart"» y el Palau «Requiem de Mozart». Misma regla que sin ciclo; las fechas y el sitio se siguen exigiendo.
     elif ':' in str(title or ''):
         m = QUOTED_WORK.match(str(title).split(':', 1)[1])
-        if m: out.append((_clean(m.group(1)), "quoted"))
+        if m: out.append((_work_key(m.group(1) or m.group(2)), "quoted"))
     # «Palms Trax all night long / POGO: …» junta dos actos: la parte tras «:» no es el título de la ficha entera.
     if ':' in str(title or '') and not str(title).lstrip().startswith(('"', '«', '“', "'")) and '/' not in str(title).split(':', 1)[0]:
-        after = _clean(str(title).split(':', 1)[1])
-        for _ in range(2): after = TITLE_PREFIX.sub("", after)
+        after = " ".join(w for w in _clean(ELIDED_ARTICLE.sub("", str(title).split(':', 1)[1])).split() if w not in ("d", "l"))
+        for _ in range(2): after = LEADING_ARTICLE.sub("", TITLE_PREFIX.sub("", after))
         if len(after) >= 8 and len(after.split()) >= 2 and after not in CONTAINED_GENERIC: out.append((after, "sub"))
     out += [(_lex(k), t) for k, t in out]
     seen, res = set(), []
@@ -615,7 +672,8 @@ def title_pairs(conn):
         quoted = QUOTED_WORK.match(str(title or ''))
         for key, kind in _title_keys_typed(title):
             # Títulos cortos («Bien», «RITA»): solo si una de las dos fichas lo pone entre comillas tras «Monòleg», «Espectacle»…
-            short_ok = len(key) >= 3 and (bool(quoted) and key in (_clean(quoted.group(1)), _lex(_clean(quoted.group(1)))) or key == _clean(title))
+            qk = _work_key(quoted.group(1) or quoted.group(2)) if quoted else ''
+            short_ok = len(key) >= 3 and (bool(quoted) and key in (qk, _lex(qk)) or key == _clean(title))
             if len(key) < 6 and not short_ok: continue
             groups.setdefault((start, _end_of(source, start, end), key), []).append({"key": f"{source}:{rid}", "source": source, "id": rid, "venue": venue or "", "lat": lat, "lon": lon,
                                                              "address": address or "", "route": bool(ROUTE.match(_clean(title))), "short": len(key) < 6,
@@ -907,13 +965,17 @@ def exhibition_pairs(conn):
         a, b = day(start), day(end)
         if not a or not b: continue
         if EXHIBITION_ACTIVITY.match(_clean(title)): continue
-        it = {"key": f"{source}:{rid}", "source": source, "title_key": key, "start": a, "end": b, "venue": venue or "", "lat": lat, "lon": lon}
+        # También la obra entre comillas (1-11-2026, auditoría del 6-11): «Exposició 'Aigua freda', del Col·lectiu Pelussa»
+        # (Open Data) es «Aigua freda. Col·lectiu Pelussa (…)» (GRAF); «Exposició "CROSS CROSS CROSS", de Joana Capella…».
+        keys = [key] + [k for k, t in _title_keys_typed(title) if t == "quoted" and k != key]
+        it = {"key": f"{source}:{rid}", "source": source, "title_key": key, "keys": keys, "start": a, "end": b, "venue": venue or "", "lat": lat, "lon": lon}
         items.append(it)
         for w in set(key.split()):
             if len(w) >= 5: by_word.setdefault(w, []).append(it)
     pairs = []
     for a in items:
-        ka = a["title_key"]; words = [w for w in ka.split() if w not in CORE_STOP]
+      for ka in a["keys"]:
+        words = [w for w in ka.split() if w not in CORE_STOP]
         if len(words) < 2 or len(ka) < 10 or EXHIBITION_GENERIC.match(ka) or _generic_site(a): continue
         if any(w in ka.split() for w in FESTIVAL_WORDS): continue
         found = []
@@ -923,16 +985,37 @@ def exhibition_pairs(conn):
             # Mismas fechas exactas y un título dentro del otro (27-10-2026): basta aunque una de las dos no tenga
             # coordenadas o su lugar sea genérico («World Press Photo 2026», CCCB sin coordenadas; «Unfunny Paintings»,
             # Poblenou Urban District «Diversos espais»).
-            exact = a["start"] == b["start"] and a["end"] == b["end"] and (a["lat"] is None or b["lat"] is None or _generic_site(b))
+            # O el mismo nombre de sitio aunque las coordenadas difieran un poco («CC Guinardó» de GRAF a 150 m del de Open Data,
+            # «CROSS CROSS CROSS», 1-11-2026).
+            exact = a["start"] == b["start"] and a["end"] == b["end"] and (a["lat"] is None or b["lat"] is None or _generic_site(b) or (_named_site_match(a, b) and _km((a["lat"], a["lon"]), (b["lat"], b["lon"])) <= 0.5))
             if not exact and not _same_site(a, b, km=0.12): continue
             if abs((a["start"] - b["start"]).days) > 31 or a["end"] < b["start"] or b["end"] < a["start"]: continue
             found.append(b)
         # «Aurèlia Muñoz» dentro de dos títulos distintos: ambiguo, no se junta con ninguno.
         if len({b["title_key"] for b in found if b["title_key"] != ka}) > 1: continue
         pairs += [(a["key"], b["key"]) for b in found]
+    # La misma exposición con dos subtítulos o con una sola palabra (1-11-2026, auditoría del 6-11): «Pau Casals, música per
+    # la pau» y «Pau Casals, un músic al servei de la pau», Palau Robert, las dos del 21-10 al 10-1; «Emancipacions» y
+    # «Emancipacions. Col·lecció Foto Colectania» en Foto Colectania. Mismo sitio (a menos de 120 m) y, o bien las mismas
+    # fechas y dos palabras propias en común, o bien un título de una palabra larga (8 letras o más) que el otro empieza.
+    proper = lambda key: [w for w in key.split() if len(w) >= 3 and w not in CORE_STOP and w not in EXHIBITION_WORDS and not w.isdigit()]
+    for i, a in enumerate(items):
+        if _generic_site(a): continue
+        wa = proper(a["title_key"])
+        for b in items[i + 1:]:
+            if b["source"] == a["source"] or _generic_site(b) or (a["key"], b["key"]) in pairs or (b["key"], a["key"]) in pairs: continue
+            if a["end"] < b["start"] or b["end"] < a["start"] or not _same_site(a, b, km=0.12): continue
+            wb = proper(b["title_key"])
+            same_dates = a["start"] == b["start"] and a["end"] == b["end"]
+            lead = lambda x, y: len(x) == 1 and len(x[0]) >= 8 and y[:1] == x and abs((a["start"] - b["start"]).days) <= 45
+            if (same_dates and len(set(wa) & set(wb)) >= 2 and set(wa[:2]) == set(wb[:2])) or lead(wa, wb) or lead(wb, wa):
+                pairs.append((a["key"], b["key"]))
     return list(dict.fromkeys(pairs))
 
 
+# Palabras de formato que no identifican una exposición (para exhibition_pairs, 1-11-2026).
+EXHIBITION_WORDS = {"per", "amb", "con", "sobre", "col", "lectiva", "collectiva", "colectiva", "exposicio", "exposicion", "mostra", "obres", "obra",
+                    "fotografia", "fotografies", "pintura", "pintures", "escultura", "escultures", "art", "arte", "artistes", "dibuixos", "festival"}
 CONTAINED_GENERIC = {"concert", "concierto", "taller", "visita guiada", "jam session", "club de lectura", "hora del conte", "contacontes", "espectacle familiar", "dj session"}
 
 
@@ -951,9 +1034,26 @@ SITE_GENERIC = {"centre", "centro", "civic", "cultural", "casal", "barri", "comu
                 "barcelona", "bcn", "de", "del", "la", "el", "les", "els", "i", "d", "l"}
 
 
+# Lugares conocidos (src/venue_places.known_places: lo que nuestras fuentes publican con coordenadas y los alias
+# comprobados a mano de config/places.json). Lo carga canonical_groups; sin él, todo funciona como antes.
+_PLACES = {"places": None}
+
+
+def _place_of(item):
+    """(dirección, lat, lon, n) del lugar de la ficha por su nombre, o None (1-11-2026, auditoría del 6-11): «Teatreneu» sin
+    coordenadas es el Teatreneu de la calle Terol que otras fuentes publican con ellas; «Sauvage Club» es el Club Sauvage,
+    la antigua Sidecar (config/places.json)."""
+    places = _PLACES["places"]
+    if not places or not item.get("venue"): return None
+    from src.venue_places import lookup
+    try: return lookup(places, item["venue"])
+    except Exception: return None
+
+
 def _same_site(a, b, km=0.4):
     """Mismo lugar para dos fichas con el mismo título: con coordenadas, a menos de 400 m; sin ellas,
-    un nombre que comparte algo propio («Elizalde», «Razzmatazz»), no «Centre Cívic» ni «Casal de Barri»."""
+    un nombre que comparte algo propio («Elizalde», «Razzmatazz»), no «Centre Cívic» ni «Casal de Barri».
+    Dos nombres del mismo lugar conocido (alias de config/places.json) cuentan como el mismo nombre (_named_site_match)."""
     d = _km((a["lat"], a["lon"]), (b["lat"], b["lon"]))
     if d is not None: return d <= km
     va, vb = set(_clean(a["venue"]).split()) - SITE_GENERIC, set(_clean(b["venue"]).split()) - SITE_GENERIC
@@ -1119,6 +1219,9 @@ def _named_site_match(a, b):
     va, vb = set(ta) - SITE_GENERIC, set(tb) - SITE_GENERIC
     va, vb = {w for w in va if len(w) >= 4 and not w.isdigit()}, {w for w in vb if len(w) >= 4 and not w.isdigit()}
     if va & vb: return True
+    # El mismo lugar con dos nombres (1-11-2026): los dos nombres llevan al mismo lugar conocido (alias de config/places.json).
+    pa, pb = _place_of(a), _place_of(b)
+    if pa and pb and pa == pb: return True
     # Siglas (28-10-2026): «CCCB» y «Centre de Cultura Contemporània de Barcelona»; «MNAC» y «Museu Nacional d'Art de Catalunya».
     small = {"de", "del", "la", "el", "i", "y", "d", "l", "les", "els", "the", "of"}
     initials = lambda toks: "".join(w[0] for w in toks if w not in small)
@@ -1160,6 +1263,18 @@ def _title_format(title):
     return next(iter(hits)) if len(hits) == 1 else None
 
 
+DOORS_GAP_MIN = 45
+
+
+def _min_gap(ta, tb):
+    """Minutos entre las horas más cercanas de dos fichas."""
+    def mins(t):
+        try: h, m = str(t).split(':')[:2]; return int(h) * 60 + int(m)
+        except ValueError: return None
+    xs = [m for m in map(mins, ta) if m is not None]; ys = [m for m in map(mins, tb) if m is not None]
+    return min((abs(x - y) for x in xs for y in ys), default=10 ** 6)
+
+
 def same_day_match(a, b):
     """¿Mismo acto? Mismo día ya dado, fuentes distintas, mismo sitio con nombre propio en común y horas compatibles (la misma o
     una de las dos sin hora). Basta una de: las palabras propias del título más corto en el otro (o dos o más en común); el mismo
@@ -1168,7 +1283,12 @@ def same_day_match(a, b):
     Sedeta»), la misma fiesta a menos de 50 m."""
     if a['source'] == b['source']: return False
     if {a['source'], b['source']} == {'guiabcn', 'opendatabcn_agenda'} and a['key'].split(':')[1] == b['key'].split(':')[1]: return False  # gemelas
-    if a['times'] and b['times'] and not (a['times'] & b['times']): return False   # otra hora: otra sesión
+    # Otra hora, otra sesión; salvo apertura de puertas e inicio (1-11-2026, auditoría del 6-11: Tay Oskee, 20:30 en la
+    # sala y 21:00 en conciertos.club): a 45 minutos o menos, y solo si el título más corto está entero en el otro.
+    doors = False
+    if a['times'] and b['times'] and not (a['times'] & b['times']):
+        if _min_gap(a['times'], b['times']) > DOORS_GAP_MIN: return False
+        doors = True
     if not _named_site_match(a, b): return False
     # Mismo ponente, formatos distintos (28-10-2026: «Seminario con Bonnie Honig» y la conferencia «Bonnie Honig» del CCCB el
     # mismo día): un seminario o taller y una conferencia o debate no son el mismo acto.
@@ -1182,6 +1302,9 @@ def same_day_match(a, b):
     for wa, ga, la in a['sets']:
         for wb, gb, lb in b['sets']:
             common, least = {x for x in wa if any(same(x, y) for y in wb)}, min(len(wa), len(wb))
+            if doors:
+                if wa and wb and common and len(common) == least and _same_site(a, b, km=0.15): return True
+                continue
             if wa and wb and (len(common) >= 2 or (common and len(common) == least)) and len(common) >= 0.6 * least and _same_site(a, b, km=0.15): return True
             if la and la == lb and a['times'] & b['times'] and _same_site(a, b, km=0.15): return True
             if not wa and not wb and ga & gb and _same_site(a, b, km=0.05): return True

@@ -332,6 +332,99 @@ def picks_by_category(items, images, hidden=frozenset(), pinned=(), min_size=3):
     return {c: [compact(e, images, hidden=hidden) for e in v] for c, v in out.items() if len(v) >= min_size}
 
 
+# Precio corto de la fila (1-11-2026, auditoría del 6-11): el de la entrada general, no el de un descuento. Antes se tomaba
+# el importe más bajo de todo el texto y «Entrada general: 19 € · Entrada reduïda: 16 €» salía «Desde 16 €»; «Amics del
+# Museu: 2,90 €», «Menors de 4 a 10 anys: 8 €» o un abono tampoco son el precio de la entrada.
+PRICE_DISCOUNT = re.compile(r"reduïd|reduid|reducid|descompte|descuento|amics|amigues|amigos|socis|socios|abonament|abono|abonad|carnet|"
+                            r"menors|menores|infant|nens|niños|ninos|junior|j[uú]nior|senior|sènior|jubilat|jubilad|pensionist|aturat|parad|"
+                            r"estudiant|estudiante|grups?\b|grupos?\b|escoles|escuelas|famíli|famili|discapacit|diversitat|club d|anticipad|"
+                            r"divendres jove|joves|jóvenes|jovenes|menys de|menos de|residents|residentes|socio", re.I)
+PRICE_NUM = re.compile(r'(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur\b)', re.I)
+
+
+def short_price(label):
+    """[importe, 1 si «desde»] para la fila, o None. La parte de la entrada general si la hay; si no, las partes que no son
+    descuentos. «Desde» cuando esa parte da más de un importe («de 25 a 45 €») o lo dice («Desde 22,49 €»); con descuentos
+    aparte, el de la general a secas («19 €»), que es lo que paga cualquiera."""
+    parts = [p for p in re.split(r'\s+·\s+|\s*\|\s*', str(label or '')) if PRICE_NUM.search(p)]
+    if not parts: return None
+    general = [p for p in parts if re.search(r'\bgeneral\b', p, re.I)]
+    pool = general[:1] or [p for p in parts if not PRICE_DISCOUNT.search(p)]
+    if not pool: return None
+    nums = [float(x.replace(',', '.')) for p in pool for x in PRICE_NUM.findall(p) + re.findall(r'(\d+(?:[.,]\d{1,2})?)\s*(?:a|-|–)\s*\d+(?:[.,]\d{1,2})?\s*(?:€|eur\b)', p, re.I)]
+    nums = [n for n in nums if 0 < n < 1000]
+    if not nums: return None
+    lo = min(nums)
+    since = any(n != lo for n in nums) or bool(re.search(r'\b(?:desde|des de|a partir de|from)\b', ' '.join(pool), re.I))
+    return [lo, 1 if since else 0]
+
+
+# Ficha general y su sesión el mismo día (1-11-2026, decisión de David tras la auditoría del 6-11): «InScena» (festival,
+# 4 → 8-11) y «Festival … In Scena: Espectacle "Toska"» (6-11), las dos a las 19:00 en el Golem's; el ciclo «Diverdivendres:
+# Petit Pantalla» y «Cicle 'Petit Pantalla': Projecció "Peixet…"», 17:00 en Vil·la Urània; «Friday Blues» (ciclo de los
+# viernes) y «Concierto de Blues», 18:00 en el MEAM. Ese día solo sale la sesión, que dice qué hay; la general sigue los
+# demás días y en la búsqueda. Hace falta todo: la general dura más de un día, la sesión es de un día; el mismo sitio; la
+# misma hora ese día; y una palabra propia en común (o el nombre de la general, sin espacios, dentro del de la sesión).
+SESSION_GENERIC = {"festival", "cicle", "ciclo", "concert", "concerts", "concierto", "conciertos", "espectacle", "espectaculo", "teatre",
+                   "teatro", "activitats", "actividades", "familia", "families", "barcelona", "districte", "cultural", "projeccio",
+                   "proyeccion", "sessio", "sesion", "taller", "visita", "exposicio", "exposicion", "edicio", "edicion", "temporada"}
+
+
+def _session_words(title):
+    from src.dedupe import _clean
+    return {w for w in _clean(title).split() if len(w) >= 4 and w not in SESSION_GENERIC and not w.isdigit()}
+
+
+def _clock_on(event, day):
+    times = sorted({o['time'] for o in event.get('occurrences') or [] if o.get('date') == day and o.get('time')})
+    if times: return set(times)
+    hb = str((event.get('hours_by_day') or {}).get(day) or '')
+    if re.fullmatch(r'\d{2}:\d{2}(?: · \d{2}:\d{2})*', hb): return set(hb.split(' · '))
+    t = str(event.get('time') or '')
+    return {t} if re.fullmatch(r'\d{2}:\d{2}', t) and not (event.get('occurrences') or event.get('hours_by_day')) else set()
+
+
+def _same_place(a, b):
+    from src.dedupe import _named_site_match, _km
+    ca, cb = a.get('coordinates') or {}, b.get('coordinates') or {}
+    d = _km((ca.get('lat'), ca.get('lon')), (cb.get('lat'), cb.get('lon')))
+    if d is not None and d > 0.15: return False
+    va, vb = (a.get('venue_names') or [''])[0], (b.get('venue_names') or [''])[0]
+    return bool(va and vb) and (_named_site_match({'venue': va}, {'venue': vb}) or (d is not None and d <= 0.05))
+
+
+def covered_by_sessions(events):
+    """{clave de la general: [días en que su sesión la sustituye]}."""
+    from src.dedupe import _clean
+    import datetime as _dt
+    def span(e):
+        try: return (_dt.date.fromisoformat(str(e.get('end'))[:10]) - _dt.date.fromisoformat(str(e.get('start'))[:10])).days
+        except ValueError: return 0
+    # Sesión de un día: una ficha de un solo día o un pase con hora ese día de una serie más corta (los conciertos de los
+    # viernes de conciertos.club, cada uno con su fecha y hora).
+    singles = {}
+    for e in events:
+        days = {str(e['start'])[:10]} if span(e) == 0 else {o['date'] for o in e.get('occurrences') or [] if o.get('time')}
+        for day in days: singles.setdefault(day, []).append(e)
+    out = {}
+    for g in events:
+        a, b = str(g.get('start'))[:10], str(g.get('end'))[:10]
+        if a >= b: continue
+        gw = _session_words(g.get('title')); gc = _clean(g.get('title')).replace(' ', '')
+        for day, sessions in singles.items():
+            if not (a <= day <= b): continue
+            gt = None
+            for s in sessions:
+                if s['key'] == g['key'] or span(s) >= span(g): continue
+                sc = _clean(s.get('title')).replace(' ', '')
+                if not ((gw & _session_words(s.get('title'))) or (len(gc) >= 6 and gc in sc)): continue
+                if not _same_place(g, s): continue
+                if gt is None: gt = _clock_on(g, day)
+                if gt and gt & _clock_on(s, day):
+                    out.setdefault(g['key'], []).append(day); break
+    return {k: sorted(set(v)) for k, v in out.items()}
+
+
 def compact(event, images, full=True, hidden=frozenset()):
     """The listing record the browser needs, with short keys to keep files small.
 
@@ -370,6 +463,7 @@ def compact(event, images, full=True, hidden=frozenset()):
         days = {}
         for p in event['program']: days[p['date']] = days.get(p['date'], 0) + 1
         out['pn'] = days  # actuaciones por día del programa oficial: la fila del festival de abono dice cuántas hay (28-10-2026)
+    if event.get('covered_days'): out['xd'] = event['covered_days']  # días en que su sesión, a la misma hora y sitio, la sustituye
     if event.get('manual_hours'): out['mh'] = event['manual_hours']  # hora puesta a mano por David, con su fuente
     if event.get('drop_in'): out['di'] = 1  # la fuente dice que las sesiones son sueltas (mvp.catalog.drop_in)
     if event.get('open_enrollment'): out['oe'] = 1  # la fuente dice que te puedes apuntar en cualquier momento
@@ -383,9 +477,8 @@ def compact(event, images, full=True, hidden=frozenset()):
     if vt: out['vt'] = vt
     # Precio corto para la fila (28-10-2026): el importe más bajo en euros que da la fuente y si hay más de uno («desde»).
     if not event['is_free']:
-        nums = [float(x.replace(',', '.')) for x in re.findall(r'(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur\b)', str(event.get('price_label') or ''), re.I)]
-        nums = [n for n in nums if 0 < n < 1000]
-        if nums: out['pp'] = [min(nums), 1 if any(n != min(nums) for n in nums) else 0]
+        pp = short_price(event.get('price_label'))
+        if pp: out['pp'] = pp
     if event.get('is_promo'): out['pm'] = 1  # título con reclamo de venta: no se destaca ni encabeza una hora
     if relevant_venue(event): out['rv'] = 1  # sala de referencia (config/salas_relevantes.json): puede destacarse
     if (event.get('confirmations') or 1) >= 3: out['cf'] = event['confirmations']  # lo anuncian tres fuentes o más
@@ -832,6 +925,11 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         if k in details: details[k]['opening'] = v
     hidden, link_report = check_links(conn, list(details.values()), link_fetcher)
     phase('enlaces')
+    # La ficha general no se repite el día que su sesión está a la misma hora y en la misma sala (1-11-2026, David).
+    for k, days_ in covered_by_sessions(events).items():
+        for e in events:
+            if e['key'] == k: e['covered_days'] = days_
+        if k in details: details[k]['covered_days'] = days_
     catalogue = [compact(e, images, full=False) for e in events]
     _write_json(out / 'data' / 'taxonomy.json', taxonomy.public_labels(events))
     _write_json(out / 'data' / 'catalog.json', {'today': today.isoformat(), 'horizon_days': HORIZON_DAYS, 'items': catalogue})

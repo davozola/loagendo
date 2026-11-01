@@ -559,6 +559,7 @@ GALLERY_AGENDAS={'venue_poblenou_urban_district'}
 EXHIBIT_TITLE=re.compile(r'\b(?:exposici[oó]n?s?|exposicions?|exhibitions?|mostra d.art)\b',re.I)
 
 
+MULTI_SITE=re.compile(r"^(?:activitats a |actividades en )?(?:diferents|diversos|diverses|varis|varies|varios|varias|diferentes)\b|^barcelona$|^tota la ciutat\b|^arreu\b|^la ciutat$")
 OFFICIAL_URL=re.compile(r'https?://[^\s"\'<>\\]+')
 
 
@@ -1378,7 +1379,12 @@ def borrow_from_twins(conn, event):
             if not event.get(field) and twin.get(field):
                 event[field]=twin[field]; borrowed[field]=member
                 if field=='description': event['description_credit']=twin['source_label']
-        if not event.get('media') and twin.get('media'): event['media']=[dict(m,borrowed_from=member) for m in twin['media']]; borrowed['media']=member
+        # La foto del recinto no es una imagen del acto (1-11-2026, auditoría del 6-11): si la gemela trae la suya (GRAF, la
+        # Generalitat), manda esa, como ya hace el listado (Prefetch: propia, luego gemelas, y solo al final el recinto).
+        own_only_venue=bool(event.get('media')) and all(m.get('fallback') for m in event['media'])
+        twin_own=[m for m in twin.get('media') or [] if not m.get('fallback')]
+        if (not event.get('media') or own_only_venue) and (twin_own or (not event.get('media') and twin.get('media'))):
+            event['media']=[dict(m,borrowed_from=member) for m in (twin_own or twin['media'])]; borrowed['media']=member
         if not event.get('organizers') and twin.get('organizers'): event['organizers']=twin['organizers']; borrowed['organizers']=member
         seen={l['url'] for l in event.get('links',[])}
         for link in twin.get('links',[]):
@@ -1466,6 +1472,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         from src.dedupe import _end_of
         if _end_of(source,str(start)[:10],str(end)[:10])==str(start)[:10]: end=start
     event_format=format_of(kind,title,start,end)
+    kind_reason=None   # por qué el tipo no es el de la fuente (1-11-2026: «programa_de_ciudad»)
     source_format=None   # el formato antes de juntar series o exposiciones duplicadas: con él pregunta la IA (27-10-2026)
     if prefetch is not None:
         occurrences=[dict(o) for o in prefetch.occurrences.get((source,id),[])]
@@ -1584,6 +1591,16 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         span=(parse_date(end)-parse_date(start)).days if parse_date(start) and parse_date(end) else 0
         if span>=7 and any(_record_kind(conn,m,prefetch)=='exhibition' for m in collapsed_members):
             source_format=source_format or event_format; kind='exhibition'; event_format='exhibition'
+    # Una «exposición» en «diferents equipaments de la ciutat», «Barcelona» o «Diversos espais» sin decir que es una
+    # exposición es un programa o una conmemoración de ciudad (1-11-2026, auditoría del 6-11: «Any Gaudí», «425 Aniversari
+    # dels Gegants del Pi», «Barcelona Capital Europea del Comerç Local», «Setmana de la Ciència»; «Sala Beckett: GOLA» es
+    # una obra de teatre). Pasa a programa: sale de Expos y se sigue encontrando. Reversible; nada se borra.
+    # Las de la agenda de galerías del Poblenou («Disseny Hub: André Ricard – Disseny en ús») siguen siendo exposiciones
+    # si lo de delante de «:» es un espacio de arte; «TNC: …» o «Sala Beckett: …» son obras de teatro.
+    from src.venue_prestige import art_space as _art_space
+    if kind=='exhibition' and place and all(MULTI_SITE.match(clean(v[0] or '')) for v in place) and not EXHIBIT_TITLE.search(title or '') \
+            and not (':' in str(title or '') and _art_space([str(title).split(':',1)[0]])):
+        source_format=source_format or event_format; kind='program'; event_format=format_of(kind,title,start,end); kind_reason='programa_de_ciudad'
     # Manda la web oficial: fechas leídas en la página del propio centro (src/official_dates.py), de esta
     # ficha o de cualquiera de sus gemelas. Las de la fuente se conservan en 'official_dates'.
     official_dates=None
@@ -1789,10 +1806,16 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                         continue
                     time_conflicts[date]=sorted(times)
             _seen=set(); occurrences[:]=[o for o in occurrences if not ((o['date'],o['time']) in _seen or _seen.add((o['date'],o['time'])))]
+    # Una exposición no tiene una función diaria (1-11-2026, auditoría del 6-11: «Gaudim pintant», Open Data con «19:00»
+    # cada día durante 13 meses, salía en la Agenda a las 19:00 todos los días). Una hora suelta repetida más de dos
+    # semanas en una exposición es la de la inauguración o un dato de la fuente, no un pase: se aparta (queda guardada).
+    hours_dropped=None
+    if kind=='exhibition' and isinstance(hours_by_day,dict) and len(hours_by_day)>14 and all(re.fullmatch(r'\d{2}:\d{2}',str(v or '')) for v in hours_by_day.values()):
+        hours_dropped=hours_by_day; hours_by_day={}
     events={
-        'source':source,'id':id,'key':source+':'+id, 'title':title,
+        'source':source,'id':id,'key':source+':'+id, 'title':title,'hours_dropped':hours_dropped,
         'source_label':SOURCES.get(source) or projection.get('source_label') or source,'start':start,'end':end,
-        'kind':kind,'kind_label':KINDS.get(kind,kind),'format':event_format,'source_format':source_format,'format_label':FORMATS[event_format],'eligibility':eligibility,
+        'kind':kind,'kind_label':KINDS.get(kind,kind),'kind_reason':kind_reason,'format':event_format,'source_format':source_format,'format_label':FORMATS[event_format],'eligibility':eligibility,
         'category':projection['category'],'district':projection['district'],
         'family_audience':projection['family_audience'],'has_description':has_description,'summary':summary,
         'status':status or 'pending','review_note':note or '', 'review_updated_at':updated,
@@ -1975,6 +1998,12 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     detail_price=str(facts.get('price_text') or '')
     if not events.get('is_free') and detail_price and is_free(detail_price,'') and not re.search(r'\d\s*(?:€|eur)',detail_price,re.I):
         events['is_free']=True
+    # El precio de la ficha de detalle de la propia fuente (1-11-2026, auditoría del 6-11: 62 de 99 fichas de la Agenda sin
+    # precio lo tenían aquí, sobre todo GuiaBCN: «Entrada general: 19 € · Entrada reduïda: 16 €»). Tal cual lo publica la
+    # fuente, sin las condiciones de acceso (split_price) y solo si da un importe (reliable_price); nada se calcula.
+    if not events.get('price_label') and not events.get('is_free') and detail_price and PRICE_AMOUNT.search(detail_price):
+        label=reliable_price(split_price(detail_price)[0])
+        if label: events['price_label']=label; events['price_source']=events.get('price_source') or 'ficha_fuente'
     # How many independent sources carry this record (twins collapsed into it).
     events['confirmations']=1+len(events['also_in'])
     if source=='web_teatre_lliure' and events.get('organizers'):
@@ -2333,6 +2362,32 @@ def apply_venue_link_policy(event, detail=False, source_url=''):
 ONLINE_VENUE=re.compile(r'^\s*(?:on[- ]?line|en l[ií]nia|en l[ií]nea|virtual|internet|streaming)\s*$',re.I)
 
 
+# Fuera de Barcelona (1-11-2026, auditoría del 6-11: «LA OBC en Madrid», de L'Auditori, en el «Auditorio Nacional de Música
+# de Madrid»; Songkick en «Cafè del Teatre de l'Escorxador de Lleida»): el lugar nombra otra ciudad al final o sus
+# coordenadas caen lejos de la ciudad. Las coordenadas absurdas (cerca de 0,0) no cuentan. Nada se borra.
+OTHER_CITY=re.compile(r"\b(?:madrid|lleida|girona|tarragona|valencia|sevilla|bilbao|zaragoza|saragossa|reus|sabadell|terrassa|badalona|"
+                      r"hospitalet(?: de llobregat)?|granollers|mataro|vic|manresa|figueres|sitges|vilanova i la geltru|cornella(?: de llobregat)?|"
+                      r"sant cugat(?: del valles)?|paris|london|londres|lisboa|porto|palma|andorra)\s*$")
+
+
+STREETISH=re.compile(r"\b(?:carrer|carrers|calle|placa|plaza|avinguda|avenida|passeig|paseo|superilla|cruilla|rambla|travessera|ronda)\b")
+
+
+def outside_city(event):
+    """Las coordenadas mandan: dentro de la ciudad, es Barcelona («Cinemes Girona», «Casa Figueres»). Sin coordenadas, el
+    lugar es una ciudad («Granollers») o termina en «de <ciudad>» («Auditori de Girona»), y no es una calle («… de Saragossa»)."""
+    c=event.get('coordinates') or {}
+    try: lat,lon=float(c.get('lat')),float(c.get('lon'))
+    except (TypeError,ValueError): lat=lon=None
+    if lat is not None and 40.0<lat<43.5 and -1.0<lon<3.5: return not (41.30<lat<41.48 and 2.04<lon<2.25)
+    for v in event.get('venue_names') or []:
+        name=clean(v or '')
+        if STREETISH.search(name): continue
+        m=OTHER_CITY.search(name)
+        if m and (m.start()==0 or name[:m.start()].endswith('de ')): return True
+    return False
+
+
 def is_public(event):
     """What the public site may show: not excluded by the source or the editors,
     not collapsed into a canonical twin, and not from a retired source."""
@@ -2341,7 +2396,7 @@ def is_public(event):
     # Sin categoría fiable (taxonomía de 8) el registro espera revisión editorial; los excluidos por
     # regla editorial (servicios, ocio social) tampoco salen. Ninguno se borra.
     pending=event.get('public_category') in ('pendiente','excluida')  # pendiente de revisión o fuera de la agenda
-    return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES)
+    return not (event['eligibility']=='exclude' or event['status']=='excluded' or event.get('superseded_by') or event.get('moved_to') or online or pending or event['source'] in HIDDEN_PUBLIC_SOURCES or outside_city(event))
 
 
 MAX_PAGE_SIZE=500   # 28-10-2026: la publicación pide hasta 400 candidatos de la Selección de una vez (antes, cuatro páginas de 100: cuatro veces el trabajo)

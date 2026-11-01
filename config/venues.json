@@ -196,6 +196,8 @@
       "slug": "la_nau_bostik",
       "name": "Nau Bostik",
       "type": "music",
+      "category": null,
+      "note_categoria": "1-11-2026 (auditoría del 6-11): espacio polivalente; «My Coffee Adwards» o «HealthTech2030» salían como Música por el tipo de la sala. Sin categoría de sala: sale de cada acto (schema.org, título) o de la revisión de siempre.",
       "url": "https://naubostik.com/",
       "enabled": true,
       "aliases": [
