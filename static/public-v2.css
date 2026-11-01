@@ -744,4 +744,19 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel .cat-group #categories .filter-chip,.filters-panel .cat-group #categories .filter-chip:nth-child(even){padding-left:48px;border-right:0}
   .desk-top .search-box{min-height:52px}
   .desk-top .search-box input{height:52px;font-size:18px}
+  /* 00:18: la cabecera «Filtres · Esborra» algo más baja, a la altura del buscador que tiene al lado */
+  .filters-panel>.filters-head{min-height:53px;padding-top:6px !important;padding-bottom:6px !important}
+  .filters-panel>.filters-head h2{font-size:24px}
+}
+
+
+/* Escritorio (2-11-2026, 00:24, David, G4 del lienzo): apartados de los filtros bien separados. Cada apartado empieza con
+   una línea negra de 1 px; su título va en una banda gris clara de lado a lado de la columna, con una línea gris debajo
+   que lo separa de sus opciones. Categoría, pegada a la cabecera «Filtros», sin línea negra encima. */
+@media(min-width:961px){
+  .filters-panel>.group{border:0;border-top:1px solid var(--ink) !important;padding-top:0 !important;padding-bottom:12px !important;margin:0}
+  .filters-panel>.group.cat-group{border-top:0 !important;padding-bottom:0 !important}
+  .filters-panel>.group>legend{float:left;box-sizing:border-box;width:calc(100% + 72px);margin:0 -24px 10px -48px;padding:9px 24px 9px 48px;background:#F4F4F1;border-bottom:1px solid #CFCFCF;font-size:16px;line-height:1.3}
+  .filters-panel>.group>legend~*{clear:both}
+  .filters-panel .cat-group .cat-chips{border-top:0;margin-top:-10px}
 }
