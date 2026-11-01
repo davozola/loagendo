@@ -50,7 +50,7 @@ STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js', 'leg
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'ai_quotes', 'ai_summary', 'family_ai', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
                         'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out', 'description_scope')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
@@ -500,6 +500,7 @@ def compact(event, images, full=True, hidden=frozenset()):
 
 def public_detail(detail, images, hidden=frozenset()):
     out = {k: detail.get(k) for k in PUBLIC_DETAIL_FIELDS}
+    out['ai_summary'], out['family_ai'] = detail.get('ai_summary'), detail.get('family_ai')
     out['hours_by_day'] = packed_hours(detail)
     out['notes_by_day'] = packed_hours(detail, 'notes_by_day')
     media = []
@@ -516,6 +517,12 @@ def public_detail(detail, images, hidden=frozenset()):
     if not public_enabled(): out['ai_summary'] = None
     from src import ai_family
     if not ai_family.public_enabled() or 'familia' not in (out.get('channels') or []): out['family_ai'] = None
+    # Nombres y valores neutros en lo publicado (1-11-2026): nada en /data dice cómo se obtuvo cada dato.
+    out['quotes'] = detail.get('ai_quotes') or {}
+    out['brief'] = out.pop('ai_summary', None)
+    out['family_text'] = out.pop('family_ai', None)
+    for k in ('price_source', 'time_source', 'age_source'):
+        if str(out.get(k) or '').startswith('ia'): out[k] = 'texto'
     return out
 
 
@@ -686,6 +693,32 @@ def credits_html(registry=None, generated_at='', counts=None, skin_css=''):
 PUBLIC_SKIN = 'v2'
 
 
+ROBOTS_BLOCKED = ('GPTBot', 'CCBot', 'ClaudeBot', 'anthropic-ai', 'Google-Extended', 'Applebot-Extended', 'Bytespider', 'Meta-ExternalAgent',
+                  'meta-externalagent', 'FacebookBot', 'cohere-ai', 'cohere-training-data-crawler', 'Diffbot', 'Omgilibot', 'ImagesiftBot', 'Amazonbot',
+                  'PerplexityBot', 'Timpibot', 'AI2Bot', 'img2dataset', 'DataForSeoBot', 'PetalBot')
+MINIFY = ('public.js', 'legal.js', 'analytics.js', 'public.css', 'public-v2.css')
+ESBUILD = ['npx', '--yes', 'esbuild@0.24.2']
+
+
+def minify_assets(out):
+    """JS y CSS publicados sin comentarios ni espacios (1-11-2026): las notas internas del código no salen a la web
+    y copiarla cuesta más. Con esbuild (npx); si no está disponible o falla, se queda el fichero tal cual."""
+    import subprocess
+    done = {}
+    for name in MINIFY:
+        path = Path(out) / name
+        if not path.exists(): continue
+        try:
+            res = subprocess.run([*ESBUILD, str(path), '--minify', '--legal-comments=none'],
+                                 capture_output=True, timeout=120)
+            if res.returncode == 0 and res.stdout.strip():
+                path.write_bytes(res.stdout); done[name] = 'minificado'
+            else: done[name] = 'sin minificar: ' + res.stderr.decode('utf-8', 'replace')[-200:]
+        except Exception as error:
+            done[name] = f'sin minificar: {error}'[:200]
+    return done
+
+
 def write_shell(static_dir, out, site_url, alerts, today, days):
     """La app (index.html) y las páginas de entrada (/hoy, /fin-de-semana…), con los ficheros de static/ copiados y versionados.
     La usan la publicación completa y la rápida (29-10-2026: la rápida solo copiaba CSS y JS y dejaba el index.html anterior,
@@ -699,6 +732,7 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     # Browsers keep /public.js and /public.css across deploys unless their address
     # changes: the shell references them by content version, so a new app is seen
     # on the next load, while the shell itself is always revalidated (_headers).
+    minify_assets(out)
     versions = {name: hashlib.sha256((out / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
     for name in ('public.css', 'public.js'):
         index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
@@ -709,12 +743,10 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     if alerts.get('enabled') and alerts.get('turnstile_site_key'):
         index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
     from src import landings   # las páginas de entrada ya no se enlazan en el pie (25-10-2026); siguen en el sitemap
-    (out / 'index.html').write_text(index, encoding='utf-8')
-    # Páginas de entrada (/hoy, /fin-de-semana, /con-ninos…): la app con su filtro y la lista en el HTML.
-    landing_pages = landings.pages(today)
-    for page in landing_pages:
-        target = out / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
+    # Portada para buscadores (1-11-2026): los planes de hoy y los enlaces a todas las páginas de entrada, en el HTML,
+    # en castellano, catalán (/ca/) e inglés (/en/), y las páginas de entrada de los tres idiomas (src/landings.write_all).
+    # Las páginas de entrada y las fichas (functions/e) parten de la portada sin ese bloque.
+    landings.write_all(out, index, days, site_url, today)
     return versions
 
 
@@ -872,7 +904,8 @@ def write_sitemaps(out, site_url, events, cards, today, landing_paths=()):
                 + ''.join(f'<url><loc>{html.escape(u)}</loc>' + (f'<lastmod>{m}</lastmod>' if m else '') + '</url>' for u, m in rows) + '</urlset>')
     files = {'sitemap-paginas.xml': [(f'{base}/', today.isoformat()), (f'{base}/creditos', ''), (f'{base}/aviso-legal', ''), (f'{base}/privacidad', '')] + [(f'{base}{p}', today.isoformat()) for p in landing_paths]}
     def event_url(e):   # igual que eventPath() en public.js (encodeURIComponent)
-        return f"{base}/e/{quote(e['source'], safe=URI_SAFE)}/{quote(str(e['id']), safe=URI_SAFE)}"
+        from src.landings import public_source   # nombre público de la fuente (1-11-2026)
+        return f"{base}/e/{quote(public_source(e['source']), safe=URI_SAFE)}/{quote(str(e['id']), safe=URI_SAFE)}"
     rows = [(event_url(e), seen.get(e['key'], '')) for e in sorted(events, key=lambda e: (e['start'], e['key']))]
     for n in range(0, len(rows), SITEMAP_CHUNK): files[f'sitemap-fichas-{n // SITEMAP_CHUNK + 1}.xml'] = rows[n:n + SITEMAP_CHUNK]
     for name, part in files.items(): (out / name).write_text(urlset(part), encoding='utf-8')
@@ -1053,9 +1086,12 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     # /v2/ fue la dirección de prueba de la versión 2: los enlaces antiguos van a la portada
     # (/v2/e/* lo redirige su función, functions/v2/e/[[path]].js).
     (out / '_redirects').write_text('/v2 / 301\n/v2/ / 301\n', encoding='utf-8')
-    (out / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
+    # 1-11-2026: fuera los rastreadores que copian para entrenar modelos o revender datos (no son buscadores; Google y
+    # Bing siguen igual, y también los que enlazan desde un chat a la ficha: OAI-SearchBot, ChatGPT-User).
+    blocked = ''.join(f'User-agent: {bot}\nDisallow: /\n\n' for bot in ROBOTS_BLOCKED)
+    (out / 'robots.txt').write_text(blocked + 'User-agent: *\nAllow: /\nDisallow: /data/\nDisallow: /cal/\nDisallow: /alertas/\nDisallow: /api/\n' + (f'Sitemap: {site_url.rstrip("/")}/sitemap.xml\n' if site_url else ''), encoding='utf-8')
     from src import landings
-    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landings.pages(today)])
+    write_sitemaps(out, site_url, events, cards, today, [pg['path'] for pg in landings.all_pages(today)] + ['/ca/', '/en/'])
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()

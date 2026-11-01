@@ -51,17 +51,15 @@ index = (STATIC / 'index.html').read_text(encoding='utf-8').replace('<html lang=
 if site_url: index = index.replace('</head>', f'<link rel="canonical" href="{html.escape(site_url.rstrip("/"))}/"></head>', 1)
 for name in ps.STATIC_FILES:
     (OUT / name).parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(STATIC / name, OUT / name)
+ps.minify_assets(OUT)   # sin comentarios (1-11-2026)
 versions = {name: hashlib.sha256((OUT / name).read_bytes()).hexdigest()[:10] for name in ('public.css', 'public.js', 'public-v2.css')}
 for name in ('public.css', 'public.js'):
     index = index.replace(f'"/{name}"', f'"/{name}?v={versions[name]}"')
 if ps.PUBLIC_SKIN == 'v2': index = ps.v2_index(index, versions['public-v2.css'])
 if alerts.get('enabled') and alerts.get('turnstile_site_key'):
     index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
-(OUT / 'index.html').write_text(index, encoding='utf-8')
 days = {p.stem: json.loads(p.read_text(encoding='utf-8')) for p in (OUT / 'data' / 'day').glob('*.json')}
-for page in landings.pages(today):
-    target = OUT / landings.file_for(page['path']); target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(landings.render(index, page, days, site_url), encoding='utf-8')
+landings.write_all(OUT, index, days, site_url, today)   # las tres portadas y las páginas de entrada (1-11-2026)
 print('portada y páginas de entrada al día')
 
 # 3. Subida.

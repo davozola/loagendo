@@ -6,13 +6,13 @@ const safeurl = s => { try { const u = new URL(s); return ['http:','https:'].inc
 // según su naturaleza— y 5 canales de descubrimiento —colecciones transversales; una ficha puede
 // estar en varios—. Se combinan: categorías marcadas (se suman) × canales marcados (se suman).
 // Sin tercer nivel: los subtipos y el «Con niños» antiguos pasan a ser el canal «En familia».
-const CATS = {musica: ['Música y conciertos', 'Música i concerts', 'Music and concerts'], escena: ['Teatro y danza', 'Teatre i dansa', 'Theatre and dance'], cine: ['Cine', 'Cinema', 'Cinema'],
-  arte: ['Arte y exposiciones', 'Art i exposicions', 'Art and exhibitions'], charlas: ['Charlas y visitas', 'Xerrades i visites', 'Talks and visits'], talleres: ['Talleres y experiencias', 'Tallers i experiències', 'Workshops and experiences'],
-  fiestas: ['Fiestas y mercados', 'Festes i mercats', 'Festivities and markets'], deporte: ['Deporte', 'Esport', 'Sport']};
+const CATS = {musica: ['Conciertos y música', 'Concerts i música', 'Concerts and music'], escena: ['Teatro, danza y circo', 'Teatre, dansa i circ', 'Theatre, dance and circus'], cine: ['Cine', 'Cinema', 'Cinema'],
+  arte: ['Exposiciones y arte', 'Exposicions i art', 'Exhibitions and art'], visitas: ['Visitas y rutas', 'Visites i rutes', 'Tours and walks'], charlas: ['Charlas y libros', 'Xerrades i llibres', 'Talks and books'],
+  talleres: ['Talleres y cursos', 'Tallers i cursos', 'Workshops and courses'], fiestas: ['Fiestas, ferias y mercados', 'Festes, fires i mercats', 'Festivities, fairs and markets']};   // 1-11-2026: categorías B (estudio de categorías)
 const CHANS = {familia: ['En familia', 'En família', 'With family'], barrio: ['Vida de barrio', 'Vida de barri', 'Neighbourhood life'], aire: ['Al aire libre', "A l'aire lliure", 'Outdoors'],
   galerias: ['Arte y galerías', 'Art i galeries', 'Art and galleries'], festivales: ['Festivales y fiestas', 'Festivals i festes', 'Festivals']};
 // Enlaces antiguos (?cat=Conciertos, ?kids=1) siguen funcionando.
-const LEGACY_CAT = {Conciertos: 'musica', 'Música': 'musica', Teatro: 'escena', Cine: 'cine', Exposiciones: 'arte', Talleres: 'talleres', Deporte: 'deporte'};
+const LEGACY_CAT = {Conciertos: 'musica', 'Música': 'musica', Teatro: 'escena', Cine: 'cine', Exposiciones: 'arte', Talleres: 'talleres', Deporte: 'fiestas', deporte: 'fiestas', Visitas: 'visitas'};
 const LEGACY_CHAN = {Familia: 'familia', Barrio: 'barrio'};
 const byLang = pair => pair[LANG === 'ca' ? 1 : LANG === 'en' ? 2 : 0] ?? pair[0];
 const catName = c => CATS[c] ? byLang(CATS[c]) : CATS[LEGACY_CAT[c]] ? byLang(CATS[LEGACY_CAT[c]]) : t(c || '');
@@ -39,7 +39,10 @@ const params = new URLSearchParams(location.search);
    fuente, nunca se traduce automáticamente. */
 // Preferencias del navegador: nombre nuevo (brollant-*) y, si no existe, el de Loagendo, para no perder eventos guardados.
 function pref(key) { try { return localStorage.getItem('brollant-' + key) ?? localStorage.getItem('loagendo-' + key) } catch (_) { return null } }
-const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca','en'].includes(q) ? q : ['es','ca','en'].includes(saved) ? saved : 'es' })();
+// 1-11-2026 (SEO): las páginas /ca/… y /en/… dicen su idioma (data-lang) y mandan sobre la preferencia guardada;
+// en las castellanas (sin data-lang) sigue valiendo la preferencia, como antes.
+const DOC_LANG = document.documentElement.dataset.lang || '';
+const LANG = (() => { const q = params.get('lang'); let saved = ''; try { saved = pref('lang') || '' } catch (_) {} return ['es','ca','en'].includes(q) ? q : ['ca','en'].includes(DOC_LANG) ? DOC_LANG : ['es','ca','en'].includes(saved) ? saved : 'es' })();
 const CA = {'Fin de semana': 'Cap de setmana', 'Vista de la agenda': 'Vista de l’agenda', 'Hecho en Barcelona': 'Fet a Barcelona', 'Aviso legal': 'Avís legal', 'Privacidad': 'Privacitat', 'Fuentes': 'Fonts', 'Este fin de semana': 'Aquest cap de setmana', 
   'Conciertos':'Concerts','Música':'Música','Teatro':'Teatre','Exposiciones':'Exposicions','Cine':'Cinema','Familia':'Família','Talleres':'Tallers','Deporte':'Esport','Barrio':'Barri','Teatro y danza':'Teatre i dansa','Charlas, visitas y barrio':'Xerrades, visites i barri','Talleres y cursos':'Tallers i cursos','Con niños':'Amb canalla','Cartel':'Cartell','Con':'Amb','Público y precio':'Públic i preu','Solo planes para ir con niños':'Només plans per anar amb canalla','Baile':'Ball','Teatro y circo':'Teatre i circ','Temporadas y ciclos':'Temporades i cicles',
   'Actos y funciones':'Actes i funcions','Cursos':'Cursos','Ciclos y programas':'Cicles i programes','Festivales':'Festivals','Actividades continuadas':'Activitats continuades',
@@ -122,6 +125,11 @@ const today = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Madrid'}).form
 const MAX_DAYS = 183;
 const addDays = (v, n) => { const d = new Date(v + 'T12:00:00'); d.setDate(d.getDate() + n); return iso(d) };
 const RANGE_LABELS = {finde: t('Este fin de semana'), '7': t('Próximos 7 días'), '30': t('Próximos 30 días'), '90': t('Próximos 3 meses'), '183': t('Próximos 6 meses'), all: t('Todos los días')};
+function rangeLabel(r) {
+  const mon = /^m(\d{4})-(\d{2})$/.exec(r || '');
+  if (mon) { const name = new Date(Number(mon[1]), Number(mon[2]) - 1, 15).toLocaleDateString(LANG === 'en' ? 'en-GB' : LANG === 'ca' ? 'ca-ES' : 'es-ES', {month: 'long', year: 'numeric'}); return name[0].toUpperCase() + name.slice(1) }
+  return RANGE_LABELS[r] || r;
+}
 function rangeWindow() {
   // Returns {from,to,label} for the active period, or null in single-day mode.
   // A search without a chosen period looks across the whole public horizon.
@@ -131,6 +139,10 @@ function rangeWindow() {
     const wd = (new Date(today + 'T12:00:00').getDay() + 6) % 7;
     return {from: wd < 4 ? addDays(today, 4 - wd) : today, to: addDays(today, 6 - wd), label: RANGE_LABELS.finde};
   }
+  // Un mes (1-11-2026, páginas /noviembre-2026…): de hoy, o del día 1 si aún no ha empezado, al último día del mes.
+  const mon = /^m(\d{4})-(\d{2})$/.exec(r);
+  if (mon) { const first = `${mon[1]}-${mon[2]}-01`, last = iso(new Date(Number(mon[1]), Number(mon[2]), 0, 12));
+    return {from: first > today ? first : today, to: last < addDays(today, MAX_DAYS) ? last : addDays(today, MAX_DAYS), label: rangeLabel(r)} }
   const n = r === 'all' ? MAX_DAYS : Math.min(Number(r) || 7, MAX_DAYS);
   return {from: today, to: addDays(today, n), label: RANGE_LABELS[r] || `${t('Próximos')} ${n} ${t('días')}`};
 }
@@ -146,8 +158,8 @@ let state = {
   pickRange: 'auto',   // «Selección Ontoca»: 'auto' (hoy si quedan planes; si no, 7 días), 'today' o 'week'
   pickCat: '',         // tipo de la Selección (28-10-2026, 19:34, David): solo filtra la Selección; '' = «Todo»
   day: params.get('day') || landingDay() || today, cats: [...new Set([...params.getAll('cat'), ...(LANDING.cats || [])].map(c => LEGACY_CAT[c] || c).filter(c => CATS[c]))],
-  chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || '',
-  free: params.get('free') === '1', query: params.get('q') || '',
+  chans: [...new Set([...params.getAll('ch'), ...(LANDING.chans || []), ...params.getAll('cat').map(c => LEGACY_CHAN[c]), params.get('kids') === '1' ? 'familia' : ''].filter(c => CHANS[c]))], ages: params.getAll('edad').filter(a => a in AGE_BANDS), format: '', district: params.get('district') || LANDING.district || '',
+  free: params.get('free') === '1' || LANDING.free === true, query: params.get('q') || '',
   marks: [...new Set(params.getAll('marca'))].filter(m => MARKS[m]),   // Destacados (30-10-2026, David)
   hourFrom: params.has('from') ? Number(params.get('from')) : null, hourTo: params.has('to') ? Number(params.get('to')) : null,
   view: ['list','map','venue'].includes(params.get('view')) ? params.get('view') : 'list',
@@ -316,9 +328,11 @@ const key = e => `${e.source}:${e.id}`;
 // Analítica (static/analytics.js, Matomo): si no está cargada, bloqueada o desactivada, no hace nada.
 const track = (...args) => { try { window.ontocaAnalytics?.event(...args) } catch (_) {} };
 // Versión 2 del estilo (22-10-2026): la misma app en /v2/ con otra hoja de estilo; las direcciones llevan /v2 delante.
-const SKIN = document.documentElement.dataset.skin || '', BASE = '';   // la v2 se sirve en la portada (antes en /v2/)
-const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(source)}/${encodeURIComponent(rest.join(':'))}` };
-const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
+const SKIN = document.documentElement.dataset.skin || '', BASE = document.documentElement.dataset.base || '';   // '' (castellano), '/ca' o '/en' (1-11-2026)
+// Nombre público de la fuente en las direcciones (src/landings.py public_source): «sala_<slug>» por la agenda de sala.
+const toPublic = s => s.startsWith('venue_ia_') ? 'sala_' + s.slice(9) : s, toInternal = s => s.startsWith('sala_') ? 'venue_ia_' + s.slice(5) : s;
+const eventPath = k => { const [source, ...rest] = k.split(':'); return `${BASE}/e/${encodeURIComponent(toPublic(source))}/${encodeURIComponent(rest.join(':'))}` };
+const eventFromPath = () => { const m = location.pathname.match(/^(?:\/v2|\/ca|\/en)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${toInternal(decodeURIComponent(m[1]))}:${decodeURIComponent(m[2])}` : (params.get('evento') || '') };
 function labelDate(v) { const d = new Date(v + 'T12:00:00'); return `${d.getDate()} ${months[d.getMonth()]}` }
 function labelDay(v) { if (v === today) return t('Hoy'); const d = new Date(v + 'T12:00:00'); return `${weekdays[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}` }
 function timeLabel(e) { return t(e.time_label) || e.time || (e.start !== e.end ? t('Varios días') : t('Hora no indicada')) }
@@ -362,13 +376,17 @@ function stateQuery() {
   if (state.fest) { p.set('fest', state.fest); if (state.festName) p.set('festname', state.festName) }
   return p.toString();
 }
+// Llegada por la dirección de una ficha (/e/…): la dirección no se toca hasta que la ficha se ha abierto (1-11-2026, SEO:
+// si los datos no cargan, como le pasa a Google con /data/ bloqueado, la página sigue siendo la de la ficha, no «/»).
+let fichaPending = false;
 function syncUrl(push) {
+  if (fichaPending) return;
   const q = stateQuery();
   const onLanding = !state.detail && LANDING_Q !== null && q === LANDING_Q;
   const path = state.detail ? eventPath(state.detail) : onLanding ? LANDING.path : BASE + '/', url = onLanding ? path : path + (q ? '?' + q : '');
   if (push) history.pushState({sheet: state.detail, depth: (history.state?.depth || 0) + 1}, '', url); else history.replaceState(history.state, '', url);
 }
-const detailFromLocation = () => { const m = location.pathname.match(/^(?:\/v2)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${decodeURIComponent(m[1])}:${decodeURIComponent(m[2])}` : '' };
+const detailFromLocation = () => { const m = location.pathname.match(/^(?:\/v2|\/ca|\/en)?\/e\/([^/]+)\/([^/]+)\/?$/); return m ? `${toInternal(decodeURIComponent(m[1]))}:${decodeURIComponent(m[2])}` : '' };
 function scrollToId(id) { const el = $(id); if (el) window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth'}) }
 function saveState() { try { localStorage.setItem('brollant-saved', JSON.stringify(state.saved)) } catch (_) {} const c = $('saved').querySelector('.count'); c.textContent = state.saved.length; c.hidden = !state.saved.length }
 
@@ -484,7 +502,7 @@ function activeFilterList() {
   if (state.hourFrom !== null || state.hourTo !== null) out.push({k: 'hours', label: `${hourLabel(state.hourFrom ?? 0)}–${hourLabel(state.hourTo ?? 23)}`});
   if (state.district) out.push({k: 'district', label: t(state.district)});
   if (state.started) out.push({k: 'started', label: t('Con cursos ya empezados')});
-  if (state.range) out.push({k: 'range', label: RANGE_LABELS[state.range] || state.range});
+  if (state.range) out.push({k: 'range', label: rangeLabel(state.range)});
   if (state.fest) out.push({k: 'fest', label: `${festKind({festival: {fiesta: state.festFiesta}})} · ${state.festName || state.fest}`});
   return out;
 }
@@ -776,7 +794,7 @@ async function selection() {
     $('weekRange').textContent = finde ? `${L('Lo mejor del fin de semana', 'El millor del cap de setmana', 'The best of the weekend')} · ${labelDate(win.from)} – ${labelDate(win.to)}` : win ? `${labelDate(pickDay)} – ${labelDate(iso(end))}` : one ? labelDate(pickDay) : `${labelDate(pickDay)} – ${labelDate(iso(end))}`;
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
     $('curated').scrollLeft = 0; pickNav();
-  } catch (_) { $('curated').innerHTML = `<div class="empty">${t('No se pudo cargar la selección.')}</div>`; pickNav() }
+  } catch (_) { $('curated').innerHTML = document.getElementById('seoLista') || document.getElementById('seoFicha') ? '' : `<div class="empty">${t('No se pudo cargar la selección.')}</div>`; pickNav() }
 }
 // Carrusel de la Selección (28-10-2026, David): también en escritorio, todas las fichas iguales. Flechas y «1–4 de 7» en
 // escritorio; en móvil se desliza con el dedo. Sin paso automático.
@@ -846,7 +864,7 @@ const isCourse = e => e.kind === 'course' || e.format === 'workshop' || e.format
 const isExhibit = e => e.kind === 'exhibition' || e.format === 'exhibition';
 const isOpenFormat = e => e.kind === 'exhibition' || e.format === 'exhibition' || e.format === 'ongoing';
 // Programas de barrio, talleres o deporte que duran semanas: actividad periódica (como un taller), no una obra en cartel.
-const PERIODIC_CATS = new Set(['charlas', 'talleres', 'deporte']);
+const PERIODIC_CATS = new Set(['charlas', 'visitas', 'talleres']);
 const isPeriodic = e => isCourse(e) || (e.format === 'program' && PERIODIC_CATS.has(e.public_category));
 // Curso o taller al que hay que apuntarse desde el principio (mvp/catalog.needs_signup): lo único que
 // «ya empezados» aparta. Programas, temporadas, inscripción abierta y sesiones sueltas salen sus días (25-10-2026).
@@ -997,9 +1015,15 @@ channelView();
 state.expanded = new Set(); state.limits = {}; state.openDays = new Set(); state.shown = DAY_CHUNK;
 // Barra rápida de categorías (23-10-2026, propuesta A + B): un toque elige una categoría (o «Todo»);
 // los cuatro bloques de tipo de horario desaparecen y la lista se ordena por su naturaleza.
-const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Arte', 'Art', 'Art'],
-  charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities'], deporte: ['Deporte', 'Esport', 'Sport']};
-const CAT_LANDING = {'': '/', musica: '/conciertos', escena: '/teatro', arte: '/exposiciones'};
+const CAT_SHORT = {musica: ['Música', 'Música', 'Music'], escena: ['Teatro', 'Teatre', 'Theatre'], cine: ['Cine', 'Cinema', 'Cinema'], arte: ['Exposiciones', 'Exposicions', 'Exhibitions'],
+  visitas: ['Visitas', 'Visites', 'Tours'], charlas: ['Charlas', 'Xerrades', 'Talks'], talleres: ['Talleres', 'Tallers', 'Workshops'], fiestas: ['Fiestas', 'Festes', 'Festivities']};
+// Página de cada categoría en cada idioma (src/landings.py, CAT_PAGE y SLUGS; 1-11-2026: todas con página).
+const CAT_LANDING = ({es: {'': '/', musica: '/conciertos', escena: '/teatro', arte: '/exposiciones', cine: '/cine', visitas: '/visitas-guiadas',
+                           charlas: '/charlas', talleres: '/talleres', fiestas: '/fiestas-y-mercados'},
+                      ca: {'': '/ca/', musica: '/ca/concerts', escena: '/ca/teatre', arte: '/ca/exposicions', cine: '/ca/cinema', visitas: '/ca/visites-guiades',
+                           charlas: '/ca/xerrades', talleres: '/ca/tallers', fiestas: '/ca/festes-i-mercats'},
+                      en: {'': '/en/', musica: '/en/concerts', escena: '/en/theatre', arte: '/en/exhibitions', cine: '/en/cinema', visitas: '/en/guided-tours',
+                           charlas: '/en/talks', talleres: '/en/workshops', fiestas: '/en/festivals-and-markets'}})[BASE === '/ca' ? 'ca' : BASE === '/en' ? 'en' : 'es'];
 // «Cerca de mí» (25-10-2026): la ubicación se pide solo al tocar y se queda en el navegador (ni URL, ni Matomo,
 // ni servidor). Ordena por cercanía dentro de cada hora o día, muestra la distancia y permite «a menos de 1 km».
 const NEAR_PIN = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>';
@@ -1823,7 +1847,10 @@ async function agenda(append = false) {
       state.total = state.items.length;
     }
     renderAgenda();
-  } catch (_) { host.innerHTML = `<div class="empty">${t('No se pudo cargar la agenda.')} <button id="retry" class="linklike" type="button">${t('Reintentar')}</button></div>` }
+  } catch (_) {
+    // Con la lista o la ficha ya en el HTML (páginas de entrada, fichas /e/), se queda esa, sin aviso de error (1-11-2026, SEO).
+    host.innerHTML = document.getElementById('seoLista') || document.getElementById('seoFicha') ? ''
+      : `<div class="empty">${t('No se pudo cargar la agenda.')} <button id="retry" class="linklike" type="button">${t('Reintentar')}</button></div>` }
   finally { host.removeAttribute('aria-busy') }
 }
 
@@ -1936,6 +1963,7 @@ async function openDetail(k, focus, opts = {}) {
     // acto, 24-10-2026): se abre esa, no la de otro día.
     const sameDay = !opts.sibling && state.day && e.other_days && e.other_days[state.day];
     if (sameDay && sameDay !== k && !(e.start <= state.day && state.day <= e.end)) return openDetail(sameDay, focus, {...opts, sibling: true});
+    if (fichaPending) { fichaPending = false; syncUrl() }   // primero la agenda en el historial; luego la ficha (Atrás enseña la agenda)
     returnFocus = focus || document.activeElement; state.detail = k; syncUrl(opts.push !== false);
     // Página vista de la ficha (navegación sin recarga): solo al abrirla de verdad; analytics.js no repite la misma ruta.
     if (opts.push !== false) { try { window.ontocaAnalytics?.pageview(location.href, `${e.title} · Ontoca`) } catch (_) {} }
@@ -2089,7 +2117,7 @@ function mountSheetMap(e) {
 function calendarMenu(k, e) {
   if (!STATIC) return '';
   const day = e.occurrence_date || (e.start === e.end ? e.start : state.day);
-  const base = eventPath(k).replace(/^(?:\/v2)?\/e\//, '/cal/') + '?d=' + encodeURIComponent(day);
+  const base = eventPath(k).replace(/^(?:\/v2|\/ca|\/en)?\/e\//, '/cal/') + '?d=' + encodeURIComponent(day);
   const apple = `<a class="sheet-link" data-cal="ics" data-k="${esc(k)}" href="${esc(base)}">iPhone</a>`, gcal = `<a class="sheet-link" data-cal="google" data-k="${esc(k)}" target="_blank" rel="noopener noreferrer" href="${esc(base + '&g=1')}">Google Calendar ↗</a>`;
   const ios = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
   return `<details class="cal-menu"><summary class="save-link">▦ ${t('Añadir al calendario')}</summary><div class="cal-options">${ios ? apple + gcal : gcal + apple}</div></details>`;
@@ -2221,7 +2249,19 @@ $('whenOverlay')?.addEventListener('click', e => { if (e.target === e.currentTar
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet() });
 $('drawerBackdrop').addEventListener('click', () => openDrawer(false));
 $('formatFilter').addEventListener('change', e => { track('filtro', 'filter_format', e.target.value || 'todos', e.target.value ? 1 : 0); state.format = e.target.value; refresh() });
-$('lang')?.addEventListener('change', ev => { const next = ev.target.value; try { localStorage.setItem('brollant-lang', next) } catch (_) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href) });
+// Cambiar de idioma (1-11-2026): a la misma página en ese idioma (hreflang de la página, o la ficha / la portada con
+// el mismo filtro). Sin versión propia, como antes: se guarda la preferencia y se recarga.
+$('lang')?.addEventListener('change', ev => {
+  const next = ev.target.value; try { localStorage.setItem('brollant-lang', next) } catch (_) {}
+  const pre = {es: '', ca: '/ca', en: '/en'}[next] ?? '';
+  const u = new URL(location.href); u.searchParams.delete('lang');
+  const alt = document.querySelector(`link[rel="alternate"][hreflang="${next}"]`);
+  let target = '';
+  if (state.detail) target = pre + eventPath(state.detail).slice(BASE.length);
+  else if (u.search && (BASE || alt)) target = pre + '/' + u.search;
+  else if (alt) { const a = new URL(alt.href); target = a.pathname; }
+  if (target && target !== location.pathname + location.search) location.assign(target); else location.replace(u.href);
+});
 $('districtFilter').addEventListener('change', e => { track('filtro', 'filter_district', e.target.value || 'todos', e.target.value ? 1 : 0); state.district = e.target.value; refresh() });
 $('freeOnly').addEventListener('change', e => { track('filtro', 'filter_free', 'gratis', e.target.checked ? 1 : 0); state.free = e.target.checked; refresh() });
 // El campo de fecha va invisible encima del botón «Fecha»: en Chrome y Safari de escritorio un clic
@@ -2278,7 +2318,8 @@ function typeHero() {
   if (SKIN === 'v2') theme = 'light';  // v2 solo en claro (23-10-2026: el oscuro no convenció; los colores siguen con nombre por si se retoma)
   document.documentElement.dataset.theme = theme; translatePage(); typeHero(); deskLayout();
   const initial = eventFromPath();  // read before the first syncUrl rewrites the address
+  fichaPending = Boolean(initial);
   saveState(); await refresh();
-  if (initial) { state.detail = null; syncUrl(); openDetail(initial, null, {origin: 'enlace'}) }  // list entry first, then the sheet: Back shows the agenda
+  if (initial) { state.detail = null; openDetail(initial, null, {origin: 'enlace'}) }  // list entry first, then the sheet: Back shows the agenda
   if (STATIC) { const warm = () => loadCatalog().catch(() => {}); 'requestIdleCallback' in window ? requestIdleCallback(warm) : setTimeout(warm, 800) }
 })();

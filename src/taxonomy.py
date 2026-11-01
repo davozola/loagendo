@@ -21,16 +21,23 @@ import re
 import sqlite3
 import unicodedata
 
+# Primer nivel público (1-11-2026, David, estudio de categorías: propuesta B con los nombres de A). Ocho categorías:
+# nueva «Visitas y rutas» (salía de «Charlas»); «Deporte» deja de ser categoría: el deporte popular (cursas, caminadas,
+# torneos de festa major) va a «Fiestas, ferias y mercados» y los partidos profesionales salen de la agenda. Las claves
+# (musica, escena…) no cambian: enlaces, correcciones editoriales y sugerencias de IA siguen valiendo.
 CATEGORIES = {
-    'musica': ('Música y conciertos', 'Música i concerts'),
-    'escena': ('Teatro y danza', 'Teatre i dansa'),
+    'musica': ('Conciertos y música', 'Concerts i música'),
+    'escena': ('Teatro, danza y circo', 'Teatre, dansa i circ'),
     'cine': ('Cine', 'Cinema'),
-    'arte': ('Arte y exposiciones', 'Art i exposicions'),
-    'charlas': ('Charlas y visitas', 'Xerrades i visites'),
-    'talleres': ('Talleres y experiencias', 'Tallers i experiències'),
-    'fiestas': ('Fiestas y mercados', 'Festes i mercats'),
-    'deporte': ('Deporte', 'Esport'),
+    'arte': ('Exposiciones y arte', 'Exposicions i art'),
+    'visitas': ('Visitas y rutas', 'Visites i rutes'),
+    'charlas': ('Charlas y libros', 'Xerrades i llibres'),
+    'talleres': ('Talleres y cursos', 'Tallers i cursos'),
+    'fiestas': ('Fiestas, ferias y mercados', 'Festes, fires i mercats'),
 }
+# Categorías de trabajo de las reglas y de la IA (las de antes del 1-11-2026): 'deporte' sigue siendo una señal que
+# luego se reparte (public_category); las visitas salen de 'charlas' al final. Así no cambian ni las reglas ni el prompt.
+RULE_CATEGORIES = {**CATEGORIES, 'deporte': ('Deporte', 'Esport')}
 CHANNELS = {
     'familia': ('En familia', 'En família'),
     'barrio': ('Vida de barrio', 'Vida de barri'),
@@ -44,7 +51,7 @@ PENDING = 'pendiente'
 EXCLUDED = 'excluida'
 # Enlaces y parámetros antiguos (cat=Conciertos, kids=1…) siguen funcionando.
 LEGACY_CATEGORY = {'Conciertos': 'musica', 'Música': 'musica', 'Teatro': 'escena', 'Cine': 'cine', 'Exposiciones': 'arte',
-                   'Talleres': 'talleres', 'Deporte': 'deporte'}
+                   'Talleres': 'talleres', 'Deporte': 'fiestas', 'deporte': 'fiestas', 'Visitas': 'visitas'}
 LEGACY_CHANNEL = {'Familia': 'familia', 'Barrio': 'barrio'}
 
 
@@ -213,7 +220,7 @@ def inner_categories(title):
     return sorted({cat for cat, rx in INNER_RE.items() if rx.search(t)})
 
 
-def classify(ev, override=None, ai=None):
+def _classify_work(ev, override=None, ai=None):
     """Reglas + (si la hay) la sugerencia de IA vigente. La IA solo decide cuando las reglas no son
     seguras (pendiente, ambigua o solo «probable») y su confianza es alta; nunca contra una
     corrección editorial ni contra una regla fuerte sin conflicto. Devuelve también el veredicto
@@ -223,7 +230,7 @@ def classify(ev, override=None, ai=None):
     if not ai or rules['status'] == 'editorial': return out
     from src.ai_assist import APPLY_CATEGORY
     answer = ai.get('answer')
-    if ai.get('confidence', 0) < APPLY_CATEGORY or answer == PENDING or (answer not in CATEGORIES and answer != EXCLUDED): return out
+    if ai.get('confidence', 0) < APPLY_CATEGORY or answer == PENDING or (answer not in RULE_CATEGORIES and answer != EXCLUDED): return out
     # Medido el 20-10-2026 (scripts/evaluar_ia.py, 310 fichas): reglas 98,7 %, IA 92,6 %; en los casos
     # dudosos, reglas 95 % e IA 84 %. La IA solo decide donde las reglas no dan categoría (pendientes);
     # en el resto, si discrepa con confianza alta, se señala para revisión y manda la regla.
@@ -231,7 +238,7 @@ def classify(ev, override=None, ai=None):
     # propio acto: otra señal de las reglas (título, tipo de sala, cartel, subtítulo de la página) o el género que nombra
     # el principio de su descripción. Validado contra la muestra etiquetada: la IA sola con confianza ≥ 0,85 acierta el
     # 94 %, y falla justo donde no hay nada más («Mañana musical para embarazadas» → taller). Nunca excluye por esta vía.
-    if rules['method'] == 'categoria_recinto' and answer in CATEGORIES and answer != rules['category']:
+    if rules['method'] == 'categoria_recinto' and answer in RULE_CATEGORIES and answer != rules['category']:
         # …o el título con que otra fuente publica el mismo acto empieza por ese género (27-10-2026: la ficha de Balañá
         # «Victor Küppers Mentes Expertas» es la «Conferència "Mentes expertas"» de GuiaBCN y Open Data).
         backed = answer in rules.get('other_categories', []) or answer in inner_categories(str(ev.get('description') or ev.get('source_text') or '')[:400]) \
@@ -248,6 +255,40 @@ def classify(ev, override=None, ai=None):
             'evidence': f"IA ({ai.get('model', '')}, confianza {ai.get('confidence', 0):.2f}): {ai.get('reason', '')}. Reglas: {rules['evidence']}",
             'ambiguous': False}
 
+
+
+# ---------- de las categorías de trabajo a las públicas (1-11-2026, David, propuesta B) ----------
+# Visitas y rutas: el género con que empieza el título o una de sus partes («Caps de setmana singulars: Visita guiada…»).
+VISIT_LEAD = re.compile(r"^(?:visita|visites|visitas|visita guiada|visites guiades|itinerari|itineraris|itinerario|ruta|rutes|rutas|passejada|passejades|paseo|paseos|recorregut|recorrido|sortida|sortides|excursio|excursion|walking tour|free tour|tour)\b")
+# Partidos de competición: «Bàsquet "F.C. Barcelona - Rio Breogán" Partit de la Lliga Endesa», «Futbol 'CE Europa - Atlético
+# Madrileño' Partit de Lliga Primera RFEF». Los de una festa major («FC Martinenc vs CF Vilanova») son deporte popular.
+PRO_SPORT = re.compile(r"\b(?:lliga|liga|rfef|endesa|euroliga|euroleague|champions|laliga|acb|copa del re[iy]|copa de la reina|supercopa)\b|^(?:futbol|bàsquet|basquet|handbol|balonmano|hoquei|hockey|waterpolo|voleibol|futbol sala) .*\b(?:partit|partido|vs|contra)\b|^(?:futbol|basquet|handbol|balonmano|hoquei|hockey|waterpolo|voleibol) ['\"]")
+
+
+def is_visit(title):
+    return any(VISIT_LEAD.match(p) for p in segments(title))
+
+
+def public_category(work, title):
+    """(categoría pública, motivo) para una categoría de trabajo. 'excluida' para los partidos profesionales."""
+    if work == 'deporte':
+        t = norm(title)
+        if PRO_SPORT.search(t) and not re.search(r"festa major|fiesta mayor|festes de", t): return EXCLUDED, 'partido_profesional'
+        return 'fiestas', 'deporte_popular'
+    if work == 'charlas' and is_visit(title): return 'visitas', 'visita_o_ruta'
+    return work, ''
+
+
+def classify(ev, override=None, ai=None):
+    """Clasificación con las categorías públicas (ver _classify_work para las reglas y la IA)."""
+    out = _classify_work(ev, override, ai)
+    cat = out.get('category')
+    if out.get('status') == 'editorial' and cat != 'deporte': return out   # lo que decide el editor manda tal cual
+    pub, why = public_category(cat, ev.get('title'))
+    if pub == cat: return out
+    out = {**out, 'work_category': cat, 'category': pub, 'evidence': f"{out.get('evidence', '')}. Categoría pública: {why} (1-11-2026)"}
+    if pub == EXCLUDED: out.update(status='excluida', method='partido_profesional', evidence='Partido de competición profesional: fuera de la agenda cultural (decisión 1-11-2026). ' + out['evidence'])
+    return out
 
 def page_subtitle_category(ev):
     """(categoría, palabra, línea) del género con que empieza una de las tres líneas cortas que siguen al
@@ -282,7 +323,7 @@ def _base_rules(ev, override=None):
     if override and override.get('category') == EXCLUDED:
         return {'category': EXCLUDED, 'status': 'excluida', 'method': 'correccion_editorial',
                 'evidence': override.get('note') or 'Excluida por corrección editorial', 'ambiguous': False}
-    if override and override.get('category') in CATEGORIES:
+    if override and override.get('category') in RULE_CATEGORIES:
         return {'category': override['category'], 'status': 'editorial', 'method': 'correccion_editorial',
                 'evidence': override.get('note') or 'Corrección editorial', 'ambiguous': False}
     # …salvo cuando la propia sala dice que es teatro (27-10-2026: Espai Texas también tiene escenario; «compra les
@@ -410,7 +451,7 @@ def _base_rules(ev, override=None):
     # Exposición + taller en el mismo registro, o género del título contra categoría de la fuente.
     ambiguous = len(strong) > 1 or (first[1] == 'genero_titulo' and source_cat and source_cat != first[0]
                                     and {first[0], source_cat} not in ({'charlas', 'talleres'}, {'escena', 'talleres'}))
-    others = '; '.join(f'{CATEGORIES[c][0]} ({m})' for c, m, _ in signals[1:] if c != first[0])
+    others = '; '.join(f'{RULE_CATEGORIES[c][0]} ({m})' for c, m, _ in signals[1:] if c != first[0])
     method, evidence = first[1], first[2]
     if method == 'categoria_fuente' and recinto_source(ev.get('source')):
         method, evidence = 'categoria_recinto', f'Categoría del recinto (la fuente la pone a todos sus actos): {ev.get("category")}'
@@ -623,7 +664,7 @@ def channels(ev, category, override=None):
     art_workshop = category == 'talleres' and ART_PRACTICE.search(title)
     if art_workshop:
         out['galerias'] = 'Taller o curso de práctica artística'
-    elif is_art or ART_TITLE.search(title) and (category in ('arte', 'charlas') or ART_VENUE.search(venue)):
+    elif is_art or ART_TITLE.search(title) and (category in ('arte', 'charlas', 'visitas') or ART_VENUE.search(venue)):
         out['galerias'] = 'Arte: ' + ('lugar de arte' if ART_VENUE.search(venue) else 'disciplina artística según la fuente' if any(ART_PATH.search(p) for p in paths) else 'inauguración, performance o visita de exposición')
     if ev.get('source') == 'web_graf':
         out['galerias'] = 'Agenda GRAF de espacios de creación contemporánea'
@@ -685,7 +726,7 @@ def set_override(conn, source, record_id, category=None, channels_add=(), channe
     """Corrección editorial: sobrevive a cualquier sincronización (tabla aparte del registro importado)."""
     import json, datetime as dt
     initialize(conn)
-    if category is not None and category not in CATEGORIES and category != EXCLUDED: raise ValueError('Categoría no válida')
+    if category is not None and category not in RULE_CATEGORIES and category != EXCLUDED: raise ValueError('Categoría no válida')
     if any(ch not in CHANNELS for ch in list(channels_add) + list(channels_remove)): raise ValueError('Canal no válido')
     now = now or dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
     old = conn.execute("SELECT category,channels_add,channels_remove,note FROM classification_overrides WHERE source=? AND id=?", (source, record_id)).fetchone()

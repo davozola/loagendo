@@ -29,7 +29,8 @@ JOB_FAILURES = 3
 PUBLISH_STALE_HOURS = 12
 EMAIL_MAX_AGE_DAYS = 2  # una alerta más vieja sin avisar (p. ej. antes de poner la clave) no se manda
 LABELS = {'ACTS_DROP': 'trae muchos menos actos', 'TIME_COVERAGE_DROP': 'ha dejado de dar horas',
-          'JOB_FAILING': 'falla en cada pasada', 'PUBLISH_STALE': 'la web no se publica'}
+          'JOB_FAILING': 'falla en cada pasada', 'PUBLISH_STALE': 'la web no se publica',
+          'RETIRE_HELD': 'deja de mostrar muchos actos (retirada frenada)'}
 
 
 def initialize(conn):
@@ -109,6 +110,12 @@ def _check_agendas(conn, now, opened, resolved):
             _raise(conn, source, 'JOB_FAILING', 'Últimas %d lecturas de la agenda fallidas. %s' % (JOB_FAILURES, (rows[0][1] or '')[:240]), now, opened)
         elif rows and rows[0][0] == 'completed':
             _clear(conn, source, 'JOB_FAILING', now, resolved)
+        # Retirada frenada (1-11-2026): la última lectura con actos dejaría de publicar más de la mitad de lo vigente.
+        try: last = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", (source,)).fetchone()
+        except Exception: continue   # tabla de lecturas sin avisos (bases antiguas o de prueba)
+        held = next((w for w in json.loads((last or ['[]'])[0] or '[]') if str(w).startswith('retirada frenada')), None) if last else None
+        if held: _raise(conn, source, 'RETIRE_HELD', '%s. Si la sala ha quitado esos actos, a la tercera lectura se retiran solos; si no, revisar la página.' % held, now, opened)
+        else: _clear(conn, source, 'RETIRE_HELD', now, resolved)
 
 
 def check_jobs(conn, config, now_dt, opened, resolved):

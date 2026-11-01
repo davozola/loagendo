@@ -84,8 +84,9 @@ export async function onRequest({request, env, params}) {
   const parts = Array.isArray(params.path) ? params.path : String(params.path || '').split('/');
   if (parts.length < 2) return Response.redirect(new URL('/', url.origin).href, 302);
   const dec = s => { try { return decodeURIComponent(s) } catch (_) { return s } };
-  const source = dec(parts[0]), id = dec(parts.slice(1).join('/')), key = `${source}:${id}`;
-  const ficha = `${url.origin}/e/${encodeURIComponent(source)}/${encodeURIComponent(id)}`;   // como eventPath en public.js
+  // «sala_<slug>» en la dirección = la agenda de sala (src/landings.py public_source, 1-11-2026).
+  const shown = dec(parts[0]), source = shown.startsWith('sala_') ? 'venue_ia_' + shown.slice(5) : shown, id = dec(parts.slice(1).join('/')), key = `${source}:${id}`;
+  const ficha = `${url.origin}/e/${encodeURIComponent(shown.startsWith('venue_ia_') ? 'sala_' + shown.slice(9) : shown)}/${encodeURIComponent(id)}`;   // como eventPath en public.js
   let card = null;
   try {
     const res = await env.ASSETS.fetch(new URL(`/data/share/${await shardOf(key)}.json`, url.origin));

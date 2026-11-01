@@ -514,6 +514,7 @@ html[data-theme=light]{--fixed:#5b45c9;--fixedSoft:rgba(91,69,201,.08);--fixedLi
 .seo-lista ul{list-style:none;padding:0;margin:0}.seo-lista li{padding:.35em 0;border-bottom:1px solid rgba(127,127,127,.25)}
 .seo-lista li span{display:block;font-size:.85rem;opacity:.75}
 .seo-nav{display:block;width:100%;margin-top:8px;font-size:.85rem}.seo-nav span{font-weight:600}
+.seo-nav p{margin:.35em 0}.seo-nav a{margin-right:.6em}.seo-ficha-crumbs{font-size:.85rem;margin:0 0 8px;opacity:.8}
 .seo-ficha-gone{padding:10px 12px;border:1px solid currentColor;margin:0 0 16px}
 /* Avisos por correo (alertas/): botón junto a los filtros activos y formulario. */
 .alert-cta{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer;border-radius:999px}

@@ -39,7 +39,7 @@ class LandingsTest(unittest.TestCase):
         landing = json.loads(re.search(r"data-landing='([^']*)'", doc).group(1).replace('&#39;', "'"))
         self.assertEqual(landing, {'chans': ['familia'], 'range': 'finde', 'path': '/con-ninos/fin-de-semana'})
         self.assertIn('<a href="/e/diba_bibliotecas/7"><b>11:00</b> Hora del conte</a>', doc)
-        self.assertIn('Teatro y danza · Biblioteca Sant Antoni · Gratis', doc)
+        self.assertIn('Teatro, danza y circo · Biblioteca Sant Antoni · Gratis', doc)
         self.assertNotIn('Concierto adulto', doc)   # no es para familias
         self.assertNotIn('Expo larga', doc)         # las exposiciones largas solo en las páginas de arte
         self.assertIn('<h2>Sábado 17 de octubre</h2>', doc)

@@ -24,8 +24,8 @@ class ClassifyTests(unittest.TestCase):
     def test_genre_at_title_start_decides_and_is_confirmed(self):
         for title, want in (("Concert de jazz 'Trio X'", 'musica'), ('Espectacle de dansa "Assembly Hall"', 'escena'),
                             ('Projecció "Miss Carbón"', 'cine'), ("Taller 'Ceràmica'", 'talleres'), ("Xerrada 'Dones i ciutat'", 'charlas'),
-                            ('Itinerari de ciutat "Les tradicions de Nadal"', 'charlas'), ('Festa Major de Sants', 'fiestas'),
-                            ('Mercat de Nadal', 'fiestas'), ('Cursa popular de Nou Barris', 'deporte')):
+                            ('Itinerari de ciutat "Les tradicions de Nadal"', 'visitas'), ('Festa Major de Sants', 'fiestas'),
+                            ('Mercat de Nadal', 'fiestas'), ('Cursa popular de Nou Barris', 'fiestas')):   # 1-11-2026: categorías B
             out = self.cat(title)
             self.assertEqual((title, out['category'], out['status']), (title, want, 'confirmada'))
             self.assertTrue(out['evidence'])
@@ -78,13 +78,13 @@ class ClassifyTests(unittest.TestCase):
         out = self.cat("Taller 'Galetes de Nadal'", category='Fiestas y tradiciones')
         self.assertEqual(out['category'], 'talleres')
         out = self.cat('Visita dinamitzada "Fàbriques en joc"', kind='exhibition', format='exhibition')
-        self.assertEqual((out['category'], out['ambiguous']), ('charlas', True))  # la visita es la actividad
+        self.assertEqual((out['category'], out['ambiguous']), ('visitas', True))  # la visita es la actividad (Visitas y rutas desde el 1-11-2026)
 
     def test_precision_fixes_of_20_october(self):
-        for title, kind, want in (("“Festes de Tardor de la Sagrada Família”: Visites a la tomba d’Antoni Gaudí", 'program', 'charlas'),
+        for title, kind, want in (("“Festes de Tardor de la Sagrada Família”: Visites a la tomba d’Antoni Gaudí", 'program', 'visitas'),
                                   ('Festa Major de Gràcia: Concert de la Cobla', 'single', 'musica'), ('Festa Major de Sants', 'program', 'fiestas'),
                                   ('Lletra petita - Sac de rondalles: Marató de contes infantils', 'single', 'escena'),
-                                  ('Zurich Marató de Barcelona', 'single', 'deporte'), ('Cicle Coll Fantasy: Torneig de magic', 'single', 'talleres'),
+                                  ('Zurich Marató de Barcelona', 'single', 'fiestas'), ('Cicle Coll Fantasy: Torneig de magic', 'single', 'talleres'),
                                   ('La Rauxa - Presentació de LP', 'single', 'musica'), ('Dissabtes familiars: Sessió de contes', 'single', 'escena'),
                                   ('Upgrade MEET&GREET Synthony', 'single', 'excluida')):
             self.assertEqual(self.cat(title, kind=kind)['category'], want, title)
@@ -206,6 +206,28 @@ class PublicUiTests(unittest.TestCase):
             self.assertRegex(js, re.escape(f"{key}: ['{es}', '{ca}'") + '|' + re.escape(f'{key}: [\'{es}\', "{ca}"'))
         self.assertNotIn('kidsOnly', html); self.assertNotIn('id="subtypes"', html); self.assertIn('id="channels"', html)
         self.assertNotIn('Otros', js)
+
+
+
+class CategoriasB(unittest.TestCase):
+    """1-11-2026 (David, estudio de categorías, propuesta B con los nombres de A)."""
+    def test_eight_public_categories(self):
+        self.assertEqual(list(taxonomy.CATEGORIES), ['musica', 'escena', 'cine', 'arte', 'visitas', 'charlas', 'talleres', 'fiestas'])
+        self.assertEqual(taxonomy.CATEGORIES['talleres'][0], 'Talleres y cursos')
+
+    def test_visits_leave_talks(self):
+        self.assertEqual(taxonomy.public_category('charlas', 'Caps de setmana singulars: Visita guiada al Palau Baró de Quadras'), ('visitas', 'visita_o_ruta'))
+        self.assertEqual(taxonomy.public_category('charlas', "Xerrada 'Dones i ciutat'"), ('charlas', ''))
+
+    def test_sport(self):
+        self.assertEqual(taxonomy.public_category('deporte', 'Bàsquet "F.C. Barcelona - Monbus Obradoiro" Partit de la Lliga Endesa 2026-2027')[0], 'excluida')
+        self.assertEqual(taxonomy.public_category('deporte', "Futbol 'CE Europa - Atlético Madrileño' Partit de Lliga Primera RFEF")[0], 'excluida')
+        self.assertEqual(taxonomy.public_category('deporte', '"Festa Major del Clot - Camp de l\'Arpa": Partit \'FC Martinenc vs CF Vilanova\'')[0], 'fiestas')
+        self.assertEqual(taxonomy.public_category('deporte', 'Cursa solidària "Corre contra el càncer"')[0], 'fiestas')
+
+    def test_old_links_still_work(self):
+        self.assertEqual(taxonomy.legacy_filter('deporte'), ('fiestas', ''))
+        self.assertEqual(taxonomy.legacy_filter('Deporte'), ('fiestas', ''))
 
 
 if __name__ == '__main__':

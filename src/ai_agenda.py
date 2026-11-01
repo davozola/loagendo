@@ -38,6 +38,15 @@ LABEL = 'Datos de la sala'
 CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
 EMPTY_PAGE_MIN_ACTIVE = 3    # con menos actos vigentes, una página vacía puede ser simplemente que no hay programación
+# Freno a las retiradas masivas (1-11-2026, Fundació Miró: su página de actividades dio 3 actos en vez de 25 y se
+# retiraron 19 vigentes). Si una lectura dejaría de publicar más de la mitad de lo vigente (y al menos 5), no se retira
+# nada: se avisa y la siguiente pasada vuelve a leer aunque la página no cambie. A la tercera lectura seguida igual, sí.
+RETIRE_HOLD_MIN, RETIRE_HOLD_RATIO, RETIRE_HOLD_RUNS = 5, 0.5, 3
+RETIRE_HELD_MARK = 'retirada frenada'
+# Y acto a acto (1-11-2026, Espai Texas: la IA da 53, 5, 29, 31, 17, 47 y 40 actos en lecturas seguidas y cada una retiraba
+# lo que esa vez no vio, «RITA» con funciones hasta diciembre entre ellos): un acto deja de publicarse cuando falta en
+# RETIRE_MISSES lecturas seguidas; si vuelve a salir, la cuenta se pone a cero.
+RETIRE_MISSES = 2
 IMAGE_BUDGET = 40            # páginas de acto leídas por agenda y pasada para su imagen
 NEAR_TIME, NEAR_PRICE, NEAR_DATE_AFTER, NEAR_DATE_BEFORE = 500, 900, 700, 5000
 
@@ -467,15 +476,81 @@ def initialize(conn):
     CREATE TABLE IF NOT EXISTS ai_agenda_pages (slug TEXT NOT NULL, url TEXT NOT NULL, text_hash TEXT NOT NULL, checked_at TEXT NOT NULL,
       changed_at TEXT, events INTEGER, PRIMARY KEY(slug, url));
     CREATE TABLE IF NOT EXISTS ai_agenda_images (url TEXT PRIMARY KEY, image TEXT NOT NULL DEFAULT '', fetched_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS source_record_retirements (source TEXT NOT NULL, id TEXT NOT NULL, run_id INTEGER, retired_at TEXT NOT NULL,
+      previous_eligibility TEXT, reason TEXT, restored_at TEXT);
+    CREATE TABLE IF NOT EXISTS ai_agenda_misses (source TEXT NOT NULL, id TEXT NOT NULL, misses INTEGER NOT NULL, first_missing_at TEXT NOT NULL,
+      last_run_id INTEGER, PRIMARY KEY(source, id));
     """)
 
 
-def _image(conn, url, fetcher, timeout):
-    row = conn.execute('SELECT image FROM ai_agenda_images WHERE url=?', (url,)).fetchone()
-    if row: return row[0], False
-    from src.venue_feeds import og_meta
-    status, _, page = fetcher(url, timeout)
-    image = og_meta(page).get('og:image', '') if status == 200 else ''
+# Imagen de la página propia del acto: la que la web ofrece para compartir (og:image); si no la ofrece (1-11-2026,
+# Filmoteca: sus fichas de película no tienen og:image y la foto es la cabecera, con el título como texto alternativo),
+# la primera imagen de contenido cuyo texto alternativo comparte palabras con el título del acto. Logos e iconos, nunca.
+IMAGE_RULES_SINCE = '2026-11-01T16:00:00+00:00'   # lo que se buscó antes sin encontrar imagen se vuelve a mirar una vez
+IMAGE_RETRY_DAYS = 7                              # y después, cada semana
+_IMG_TAG = re.compile(r'<img\b[^>]*>', re.I | re.S)
+_ATTR = re.compile(r'([a-zA-Z_:-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\')', re.S)
+_NOT_CONTENT = re.compile(r'logo|icon|sprite|favicon|avatar|placeholder|blank|pixel|banner-app|app_|badge|social|twitter|facebook|instagram|spotify|vimeo|youtube|ivoox', re.I)
+_STOP = {'de', 'del', 'la', 'el', 'els', 'les', 'los', 'las', 'en', 'i', 'y', 'a', 'the', 'and', 'of', 'un', 'una', 'amb', 'con', 'per', 'por',
+         # palabras de cartel que no distinguen un acto de otro
+         'proyeccion', 'projeccio', 'vose', 'vos', 'dolby', 'atmos', 'sesion', 'sessio', 'concert', 'concierto', 'taller', 'tallers', 'visita',
+         'visites', 'exposicio', 'exposicion', 'cinema', 'cine', 'teatre', 'teatro', 'festival', 'preestreno', 'estreno', 'estrena', 'banner',
+         'banners', 'home', 'cartell', 'cartel', 'poster', 'header', 'imatge', 'imagen', 'foto', 'programa', 'agenda', 'jpg', 'jpeg', 'png', 'webp'}
+_NEXT_TAG = re.compile(r'<(?:script|style)\b.*?</(?:script|style)>|<!--.*?-->|<[^>]+>', re.S | re.I)
+
+
+def _words(text, digits=False):
+    pattern = r'[^\W_]{3,}' if digits else r'[^\W\d_]{3,}'
+    return {w for w in re.findall(pattern, fold(html.unescape(text or '')).lower()) if w not in _STOP and (not w.isdigit() or len(w) == 4)}
+
+
+def _file_words(src):
+    from urllib.parse import unquote, urlsplit as _split
+    name = unquote(_split(src).path.rsplit('/', 1)[-1])
+    return _words(re.sub(r'[_\-.()$+]+', ' ', name))
+
+
+def _close(want, have):
+    """Palabras del título que están en have, también recortadas («GODZILL» por «godzilla»)."""
+    return {w for w in want if w in have or any(len(h) >= 5 and (w.startswith(h) or h.startswith(w)) for h in have)}
+
+
+def content_image(page, title, listing=False):
+    """Imagen del acto dentro de una página, sin og:image. En su propia página: la primera <img> de contenido cuyo alt o
+    nombre de fichero comparte palabras con el título (dos, o la única si el título tiene una de 5 letras o más). En un
+    listado (listing=True, el acto no tiene página propia: Phenomena): además, la imagen seguida de su título, es decir,
+    con todas las palabras del título (año incluido) en el texto entre esa imagen y la siguiente. Logos e iconos, nunca."""
+    want = _words(title, digits=listing)
+    if not want or (len(want) == 1 and len(next(iter(want))) < 5): return ''
+    need = min(2, len(want))
+    tags = [(m.start(), m.end(), m.group(0)) for m in _IMG_TAG.finditer(page or '')]
+    content = []
+    for a, b, tag in tags:
+        attrs = {k.lower(): (x if x is not None else y) for k, x, y in _ATTR.findall(tag)}
+        src = attrs.get('src') or attrs.get('data-src') or ''
+        if src and not src.startswith('data:') and not _NOT_CONTENT.search(src): content.append((a, b, src, attrs))
+    for n, (a, b, src, attrs) in enumerate(content):
+        named = _words(attrs.get('alt') or attrs.get('title') or '') | _file_words(src)
+        if len(_close(want, named)) >= need: return html.unescape(src)
+        if listing:
+            stop = content[n + 1][0] if n + 1 < len(content) else len(page)
+            block = _words(_NEXT_TAG.sub(' ', page[b:min(stop, b + 3000)]), digits=True)
+            if _close(want, block) == want: return html.unescape(src)
+    return ''
+
+
+def _image(conn, url, fetcher, timeout, title=''):
+    row = conn.execute('SELECT image, fetched_at FROM ai_agenda_images WHERE url=?', (url,)).fetchone()
+    if row:
+        stale = not row[0] and (row[1] < IMAGE_RULES_SINCE or row[1] < (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=IMAGE_RETRY_DAYS)).isoformat(timespec='seconds'))
+        if not stale: return row[0], False
+    from src.venue_feeds import og_meta, meta_tags
+    status, final_url, page = fetcher(url, timeout)
+    if status != 200: return (row[0] if row else ''), True   # sin respuesta: no se guarda, se vuelve a intentar
+    tags = meta_tags(page)
+    image = og_meta(page).get('og:image') or tags.get('twitter:image') or tags.get('twitter:image:src') or ''
+    if not image: image = content_image(page, title)
+    if image: image = urljoin(final_url or url, image)
     with conn: conn.execute('INSERT OR REPLACE INTO ai_agenda_images(url,image,fetched_at) VALUES(?,?,?)', (url, image, dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')))
     return image, True
 
@@ -510,12 +585,13 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         text, links = clean(body, final_url or url)
         text = text[:MAX_CHARS]; digest = hashlib.sha256(f'{PROMPT_VERSION}\0{text}'.encode()).hexdigest()[:20]
         result['text_chars'] += len(text)
-        page = {'url': url, 'hash': digest, 'chars': len(text)}
+        page = {'url': url, 'hash': digest, 'chars': len(text), 'muestra': ' '.join(text.split())[:160]}
         if conn is not None and not force:
             row = conn.execute('SELECT text_hash FROM ai_agenda_pages WHERE slug=? AND url=?', (agenda['slug'], url)).fetchone()
             if not (row and row[0] == digest): result['unchanged'] = False
         else: result['unchanged'] = False
         fetched.append((page, text, links, final_url or url, body)); result['pages'].append(page)
+        result.setdefault('bodies', {})[url] = body; result['bodies'][final_url or url] = body   # imágenes de los listados
         if follow.get('patron') and url in expand_urls(agenda, today):
             extra = [l for l in dict.fromkeys(links) if re.search(follow['patron'], l) and l not in seen][:int(follow.get('max', 8))]
             queue.extend(extra)
@@ -631,6 +707,9 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
     with conn:
         run_id = conn.execute('INSERT INTO sync_runs(source,started_at,status,cursor) VALUES(?,?,?,?)', (source, now_utc(), 'running', '0')).lastrowid
     try:
+        # Retirada frenada en la última lectura: se vuelve a leer aunque la página no cambie, para confirmarla o deshacerla.
+        last = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", (source,)).fetchone()
+        if last and RETIRE_HELD_MARK in (last[0] or ''): force = True
         res = read_agenda(agenda, today, key, fetcher=fetcher, requester=requester, timeout=timeout, conn=conn, usage=usage, force=force)
         errors = [p['error'] for p in res['pages'] if p.get('error')]
         if errors and len(errors) == len(res['pages']): raise RuntimeError('; '.join(errors))
@@ -643,11 +722,17 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                              (now, len(res['pages']), json.dumps(['página sin cambios: no se llama a la IA']), run_id))
             return {'source': source, 'status': 'completed', 'unchanged': True, 'rows_received': 0, 'rows_mutated': 0, 'usage': usage}
         images = 0
+        bodies = res.get('bodies') or {}
         for act in res['accepted']:
             url = act.get('url') or ''
+            # Sin página propia (el enlace es el listado, o no hay): la imagen del listado seguida de su título.
+            where = act.get('page') or ''
+            if where in bodies and (not url or url in bodies):
+                found = content_image(bodies[where], act.get('titulo') or '', listing=True)
+                if found: act['image'] = urljoin(where, found); continue
             if url and urlsplit(url).netloc and images < IMAGE_BUDGET:
                 try:
-                    image, fetched = _image(conn, url, fetcher, timeout); images += fetched
+                    image, fetched = _image(conn, url, fetcher, timeout, act.get('titulo') or ''); images += fetched
                     if image: act['image'] = urljoin(url, image)
                 except Exception: pass
         # Página cambiada que ya no trae ningún acto cuando la sala tenía programación (Filmoteca en mantenimiento,
@@ -656,7 +741,9 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
         if not res['accepted'] and not res.get('rules_nodes'):
             active = conn.execute("SELECT COUNT(*) FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'", (source, today.isoformat())).fetchone()[0]
             if active >= EMPTY_PAGE_MIN_ACTIVE:
-                raise RuntimeError('la página ha cambiado y no trae ningún acto (tenía %d vigentes): web caída, rediseñada o sin programación publicada' % active)
+                # Qué trae la página (1-11-2026, Laut): tamaño y primeras palabras, para ver si es mantenimiento, cookies o rediseño.
+                seen_pages = '; '.join('%s: %d caracteres, «%s»' % (p['url'], p.get('chars', 0), p.get('muestra', '')) for p in res['pages'] if p.get('hash'))
+                raise RuntimeError('la página ha cambiado y no trae ningún acto (tenía %d vigentes): web caída, rediseñada o sin programación publicada · %s' % (active, seen_pages))
         model = ai_assist.MODEL
         page_hash = ','.join(sorted({p.get('hash', '') for p in res['pages'] if p.get('hash')}))
         records = []
@@ -670,23 +757,49 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                 image = record['raw'].get('image') or ''
                 if image.startswith(('https://', 'http://')):
                     register(conn, source, record['id'], image, alt=record['title'], credit=record['venues'][0]['name'])
-            # Lo que ya no está en la página (y aún no ha pasado) deja de publicarse; no se borra.
+            # Lo que ya no está en la página (y aún no ha pasado) deja de publicarse; no se borra y queda anotado.
+            held = None
             if records and not errors:
-                for (rid,) in conn.execute("SELECT id FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'", (source, today.isoformat())).fetchall():
-                    if rid not in seen: conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source=? AND id=?", (source, rid))
+                current = conn.execute("SELECT id, eligibility FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'", (source, today.isoformat())).fetchall()
+                missing = [(rid, el) for rid, el in current if rid not in seen]
+                if len(missing) >= RETIRE_HOLD_MIN and len(missing) > len(current) * RETIRE_HOLD_RATIO:
+                    prev = [w for (w,) in conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND id<? AND status='completed' AND rows_received>0 "
+                                                       "ORDER BY id DESC LIMIT ?", (source, run_id, RETIRE_HOLD_RUNS - 1))]
+                    streak = 1
+                    for w in prev:
+                        if RETIRE_HELD_MARK not in (w or ''): break
+                        streak += 1
+                    if streak < RETIRE_HOLD_RUNS:
+                        held = '%s: %d de %d actos vigentes ya no salen en la página; siguen publicados (lectura %d de %d)' % (
+                            RETIRE_HELD_MARK, len(missing), len(current), streak, RETIRE_HOLD_RUNS)
+                conn.execute('DELETE FROM ai_agenda_misses WHERE source=? AND id IN (%s)' % ','.join('?' * len(seen)), (source, *seen)) if seen else None
+                for rid, el in missing:
+                    conn.execute('INSERT INTO ai_agenda_misses(source,id,misses,first_missing_at,last_run_id) VALUES(?,?,1,?,?) '
+                                 'ON CONFLICT(source,id) DO UPDATE SET misses=misses+1,last_run_id=excluded.last_run_id', (source, rid, now, run_id))
+                if not held:
+                    mass = len(missing) >= RETIRE_HOLD_MIN and len(missing) > len(current) * RETIRE_HOLD_RATIO
+                    reason = 'no sale en la página en %d lecturas seguidas' % (RETIRE_HOLD_RUNS if mass else RETIRE_MISSES)
+                    for rid, el in missing:
+                        misses = conn.execute('SELECT misses FROM ai_agenda_misses WHERE source=? AND id=?', (source, rid)).fetchone()[0]
+                        if misses < RETIRE_MISSES: continue
+                        conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source=? AND id=?", (source, rid))
+                        conn.execute('DELETE FROM ai_agenda_misses WHERE source=? AND id=?', (source, rid))
+                        conn.execute('INSERT INTO source_record_retirements(source,id,run_id,retired_at,previous_eligibility,reason) VALUES(?,?,?,?,?,?)',
+                                     (source, rid, run_id, now, el, reason))
             for p in res['pages']:
                 if p.get('hash'):
                     conn.execute('INSERT INTO ai_agenda_pages(slug,url,text_hash,checked_at,changed_at,events) VALUES(?,?,?,?,?,?) '
                                  'ON CONFLICT(slug,url) DO UPDATE SET text_hash=excluded.text_hash,checked_at=excluded.checked_at,changed_at=excluded.changed_at,events=excluded.events',
                                  (agenda['slug'], p['url'], p['hash'], now, now, p.get('events', 0)))
-            warn = [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
+            warn = [held] if held else []
+            warn += [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
             # Motivos de cada descarte (28-10-2026): para revisar una agenda nueva sin volver a gastar IA.
             warn += [f"descartado · {str((r.get('item') or {}).get('titulo') or '')[:80]} · {'; '.join(r.get('why') or [])[:240]} · {r.get('page', '')}" for r in res['rejected'][:200]]
             warn += [f"parcial · {a['titulo'][:80]} · {'; '.join(a.get('why_partial') or [])[:240]} · {a.get('page', '')}" for a in res['accepted'] if a.get('why_partial')][:200]
             conn.execute("UPDATE sync_runs SET finished_at=?,status='completed',http_status=200,pages=?,rows_received=?,rows_mutated=?,warning_json=? WHERE id=?",
                          (now, len(res['pages']) + images, len(records), mutated, json.dumps(warn), run_id))
         return {'source': source, 'status': 'completed', 'via': sorted({p.get('via') for p in res['pages'] if p.get('via')}), 'rows_received': len(records), 'rows_mutated': mutated,
-                'rejected': len(res['rejected']), 'images_fetched': images, 'usage': usage}
+                'rejected': len(res['rejected']), 'images_fetched': images, 'usage': usage, **({'held': held} if held else {})}
     except Exception as error:
         with conn: conn.execute("UPDATE sync_runs SET finished_at=?,status='failed',warning_json=?,error=? WHERE id=?", (now_utc(), json.dumps([str(error)]), str(error)[:500], run_id))
         return {'source': source, 'status': 'failed', 'rows_received': 0, 'rows_mutated': 0, 'error': str(error), 'usage': usage}

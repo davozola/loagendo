@@ -29,7 +29,8 @@ MATOMO_SITE = 2
 NOTABLE = 0.25   # cambio de volumen por fuente frente a hace 7 días que merece una línea
 TOP_SOURCES = 12
 LABELS = {'ACTS_DROP': 'trae muchos menos actos', 'TIME_COVERAGE_DROP': 'ha dejado de dar horas',
-          'JOB_FAILING': 'falla en cada pasada', 'PUBLISH_STALE': 'la web no se publica'}
+          'JOB_FAILING': 'falla en cada pasada', 'PUBLISH_STALE': 'la web no se publica',
+          'RETIRE_HELD': 'deja de mostrar muchos actos (retirada frenada)'}
 WAIT_DAYS = 3   # un error del servidor de la fuente se espera hasta 3 días antes de pedir revisión
 # Clasificación de cada alerta y fallo (26-10-2026): qué se arregla solo y qué hay que mirar.
 SERVER_ERROR = re.compile(r'HTTP (Error )?5\d\d|HTTP 0\b|timed? ?out|Connection (reset|refused|aborted)|URLError|tras reintentos|Temporary failure', re.I)

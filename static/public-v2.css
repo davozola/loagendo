@@ -660,8 +660,8 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel .cat-group{display:block !important;padding-bottom:0 !important;border-bottom:0 !important}
   .filters-panel .cat-group .cat-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0 -24px 0 -48px;border-top:1px solid var(--ink)}
   .filters-panel .cat-group #categories .filter-chip{min-height:44px;margin:0;border:0;border-bottom:1px solid var(--ink);border-radius:0;justify-content:flex-start;text-align:left;padding:0 12px 0 16px;background:var(--paper);color:var(--ink);font-size:15px;font-weight:500;white-space:nowrap}
-  .filters-panel .cat-group #categories .filter-chip:nth-child(odd){padding-left:48px}
-  .filters-panel .cat-group #categories .filter-chip:nth-child(odd){border-right:1px solid var(--ink)}
+  .filters-panel .cat-group #categories .filter-chip:nth-child(even),.filters-panel .cat-group #categories .filter-chip:first-child{padding-left:48px}
+  .filters-panel .cat-group #categories .filter-chip:nth-child(even){border-right:1px solid var(--ink)}
   .filters-panel .cat-group #categories .filter-chip.active{background:var(--sel);color:var(--paper);font-weight:700}
   .when-row{display:flex;align-items:stretch;margin:0 calc(-1 * var(--bleedR)) 0 calc(-1 * var(--bleedL));border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--sand)}
   .when-row .when-bar-desk{flex:1 1 auto;min-width:0;margin:0;border:0;padding-left:var(--bleedL)}
@@ -707,3 +707,9 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 @media(min-width:961px){
   .when-row{position:sticky;top:var(--stick,0px);z-index:9}
 }
+
+
+/* Categorías B (1-11-2026, David): ocho categorías con «Visitas y rutas» (color petróleo, el que tenía Deporte) y «Todo» a
+   ancho completo encima de la rejilla de dos columnas (sin celda huérfana), en el móvil y en escritorio. */
+[data-cat=visitas],[data-category=visitas],[data-category-color=visitas]{--cat:var(--petrol)}
+.filters-panel .cat-group #categories .filter-chip:first-child{grid-column:1/-1;border-right:0 !important}

@@ -264,6 +264,16 @@ def run_due(conn, config, media_root, *, force=False, now=None):
         conn.execute("""UPDATE automation_runs SET status='interrupted',finished_at=?,
           error='Proceso interrumpido antes de finalizar' WHERE status='running'""", (now_utc(),))
     outcomes = []
+    # Encargo de una sola vez (1-11-2026): volver a publicar actos retirados por lecturas a medias. Se prepara con
+    # scripts/restaurar_retirados.py --encargar y se aplica aquí, con el candado puesto (no hay otra escritura a la vez).
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("restaurar_retirados", Path(__file__).resolve().parents[1] / "scripts" / "restaurar_retirados.py")
+        restore = importlib.util.module_from_spec(spec); spec.loader.exec_module(restore)
+        done = restore.run_pending(conn)
+        if done: outcomes.append({"name": "restaurar-retirados", "status": "completed", "result": done})
+    except Exception as error:
+        outcomes.append({"name": "restaurar-retirados", "status": "failed", "error": str(error)[:300]})
     try:
         for job in config["jobs"]:
             if not job.get("enabled", True):

@@ -87,9 +87,9 @@ class DescribeTests(unittest.TestCase):
         from unittest import mock
         detail = {'ai_summary': {'es': 'x', 'ca': 'y', 'model': 'm'}, 'media': [], 'links': [], 'hours_by_day': {}, 'notes_by_day': {}}
         with mock.patch.object(ai_describe, 'public_enabled', return_value=False):
-            self.assertIsNone(publish_static.public_detail(detail, None)['ai_summary'])
+            self.assertIsNone(publish_static.public_detail(detail, None)['brief'])
         with mock.patch.object(ai_describe, 'public_enabled', return_value=True):
-            self.assertEqual(publish_static.public_detail(detail, None)['ai_summary']['es'], 'x')
+            self.assertEqual(publish_static.public_detail(detail, None)['brief']['es'], 'x')
 
 
 class NeedsTests(unittest.TestCase):
