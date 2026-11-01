@@ -1727,7 +1727,8 @@ window.addEventListener('resize', () => requestAnimationFrame(pickNav));
 // --stick: cabecera; --agtop: cabecera + barra de filtros fija (móvil), donde se pegan las pestañas; --daytop: debajo de las pestañas.
 function stick() {
   const root = document.documentElement.style, h = document.querySelector('.site-header'), hh = h ? h.getBoundingClientRect().height : 0;
-  const bar = $('filterBar'), fb = bar && getComputedStyle(bar).position === 'sticky' ? bar.getBoundingClientRect().height : 0;
+  // La barra fija bajo la cabecera: la de filtros en el móvil; en escritorio, la franja de la fecha (1-11-2026, David).
+  const bar = [$('filterBar'), document.querySelector('.when-row')].find(b => b && getComputedStyle(b).position === 'sticky' && b.offsetHeight), fb = bar ? bar.getBoundingClientRect().height : 0;
   const tabs = $('agTabs'), th = tabs && !tabs.hidden ? tabs.getBoundingClientRect().height : 0;
   root.setProperty('--stick', hh + 'px'); root.setProperty('--agtop', hh + fb + 'px'); root.setProperty('--daytop', hh + fb + th + 'px');
 }

@@ -700,3 +700,10 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .desk-search .search-box{flex:1;min-height:52px;border:0;border-radius:0;padding:0 16px 0 var(--bleedL);background:transparent}
   .desk-search .search-box input{height:52px;font-size:18px}
 }
+
+
+/* Escritorio (1-11-2026, 10:07, David): la franja de la fecha (con la lupa y Lista/Mapa) se queda fija bajo la cabecera al
+   bajar; debajo, Agenda/Expos y la hora (--agtop y --daytop los calcula stick() en public.js). */
+@media(min-width:961px){
+  .when-row{position:sticky;top:var(--stick,0px);z-index:9}
+}
