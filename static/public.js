@@ -609,7 +609,8 @@ function deskLayout() {
   // «Cerca de mí» va siempre en «Dónde» del panel de filtros (29-10-2026, David: en móvil también, opción B1)
   // 31-10-2026 (David): en escritorio, «Cuándo» (periodos y calendario) y «Horario» salen de la columna de filtros y van a la
   // ficha «Cuándo» (#whenSheet), que se abre desde la franja amarilla #whenBar sobre la agenda.
-  const moves = [['searchForm', 'deskTop'], ['nearBox', 'deskNear', true], ['viewSeg', 'deskView'], ['deskWhen', 'whenSheetBody'], ['hourFilter', 'whenSheetBody']];
+  const moves = [['searchForm', 'deskSearch'], ['nearBox', 'deskNear', true],   // 1-11-2026: el buscador, tras la lupa de la franja de la fecha
+                 ['viewSeg', 'deskView'], ['deskWhen', 'whenSheetBody'], ['hourFilter', 'whenSheetBody']];
   for (const [id, slot, always] of moves) {
     const el = $(id), to = $(slot); if (!el || !to) continue;
     if (!deskMarks[id]) { deskMarks[id] = document.createComment(id); el.before(deskMarks[id]) }
@@ -617,7 +618,7 @@ function deskLayout() {
   }
   // Móvil (31-10-2026, opción B1): el buscador vive en la franja de la fecha, tras la lupa
   if (!DESK.matches && $('mobSearch') && $('searchForm').parentElement !== $('mobSearch')) $('mobSearch').prepend($('searchForm'));
-  mobSearch(Boolean(state.query));
+  mobSearch(Boolean(state.query)); deskSearch(Boolean(state.query));
   deskWhen();
 }
 function deskWhen() {
@@ -666,6 +667,13 @@ function whenSummary() {
   if ($('whenSheetTitle')) { $('whenSheetTitle').textContent = dateText; $('whenSheetSub').textContent = `${hourText} · ${n.toLocaleString('es-ES')} ${t('planes')}`; $('whenApply').textContent = `${L('Ver', 'Mostra', 'See')} ${n.toLocaleString('es-ES')} ${t('planes')}` }
 }
 // Móvil, opción B1 (31-10-2026, David): lupa → la franja de fecha pasa a ser el buscador; ✕ vuelve a la fecha (y quita la búsqueda).
+// Escritorio (1-11-2026, David): el buscador es una lupa a la derecha de la fecha; al pulsarla, la franja se vuelve el buscador.
+function deskSearch(open) {
+  const box = $('deskSearch'), row = box?.closest('.when-row'), btn = $('deskSearchOpen'); if (!box || !btn) return;
+  box.hidden = !open; row.classList.toggle('searching', open); btn.setAttribute('aria-expanded', String(open));
+  btn.innerHTML = open ? '<span aria-hidden="true">✕</span>' : '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>';
+  btn.setAttribute('aria-label', open ? L('Cerrar búsqueda', 'Tancar la cerca', 'Close search') : L('Buscar en la agenda', "Cercar a l'agenda", 'Search the agenda'));
+}
 function mobSearch(open) {
   const box = $('mobSearch'), bar = $('filterBar'); if (!box) return;
   box.hidden = !open; bar.classList.toggle('searching', open); $('mobSearchOpen').setAttribute('aria-expanded', String(open));
@@ -2115,6 +2123,7 @@ document.addEventListener('click', e => {
   if (button.id === 'saved') { state.savedOnly = !state.savedOnly; button.classList.toggle('active', state.savedOnly); button.setAttribute('aria-pressed', String(state.savedOnly)); channelView(); scrollToId('agenda'); agenda(); return }
   if (button.dataset.hours) { const [f, t] = button.dataset.hours.split('-').map(Number); const same = state.hourFrom === f && state.hourTo === t; track('filtro', 'filter_hours', button.dataset.hours, same ? 0 : 1); state.hourFrom = same ? null : f; state.hourTo = same ? null : t; refresh(); return }
   if (button.id === 'whenBar') { track('filtro', 'when_sheet', 'open'); openWhen(true); return }
+  if (button.id === 'deskSearchOpen') { const open = $('deskSearch').hidden; deskSearch(open); if (open) { track('filtro', 'search_open', 'lupa_escritorio'); $('searchInput').focus() } else if (state.query) { clearFilter('query'); refresh() } return }
   if (button.id === 'mobSearchOpen') { track('filtro', 'search_open', 'lupa'); mobSearch(true); $('searchInput').focus(); return }
   if (button.id === 'mobSearchClose') { mobSearch(false); if (state.query) { clearFilter('query'); refresh() } return }
   if (button.id === 'mobView' || button.id === 'deskViewBtn') { $(button.dataset.to === 'map' ? 'viewMap' : 'viewList').click(); return }

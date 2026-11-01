@@ -238,7 +238,7 @@ class CuandoYTitularTests(unittest.TestCase):
         # Orden de la columna desde el 30-10-2026 (David): Cuándo, Horario, Destacados, Planes y Dónde al final.
         order = [html.index(x) for x in ('id="deskWhen"', 'class="group hour-filter"', 'class="group marks-group"', 'class="group discover"', 'class="group where-group"')]
         self.assertEqual(order, sorted(order))
-        for text in ("matchMedia('(min-width: 961px)')", 'function deskLayout()', 'function deskWhen()', 'data-calnav', "['searchForm', 'deskTop'], ['nearBox'"):   # 1-11-2026: las categorías van en la columna
+        for text in ("matchMedia('(min-width: 961px)')", 'function deskLayout()', 'function deskWhen()', 'data-calnav', "['searchForm', 'deskSearch'], ['nearBox'"):   # 1-11-2026: las categorías van en la columna
             self.assertIn(text, js)
         self.assertIn('@media(min-width:961px){\n  :root{--page:1920px}', css)
         # 1-11-2026 (David): un solo botón Lista/Mapa a la derecha de la fecha, a sangre; «Por sitio» no se ve.
