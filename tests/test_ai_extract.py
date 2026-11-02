@@ -103,3 +103,11 @@ class NeedsTests(unittest.TestCase):
         expo = {'start': '2026-10-01', 'end': '2027-01-10', 'source_text': text, 'is_free': True}
         self.assertFalse(needs(expo))                                                           # exposición gratis: nada que pedir
         self.assertFalse(needs({**one_day, 'source_text': 'corto'}))
+
+
+class AmPmTests(unittest.TestCase):
+    def test_hora_sin_minutos_con_am_pm(self):
+        """2-11-2026 (LOOP: «miércoles 18 noviembre 2026, 8 pm»): la hora sin minutos vale si lleva am/pm pegado."""
+        self.assertEqual(ai_extract.times_in('miércoles 18 noviembre 2026, 8 pm'), {'20:00'})
+        self.assertEqual(ai_extract.times_in('12 am'), {'00:00'}); self.assertEqual(ai_extract.times_in('a las 12 pm'), {'12:00'})
+        self.assertEqual(ai_extract.times_in('Sala 8 per a 20 persones'), set())   # un número suelto no es una hora

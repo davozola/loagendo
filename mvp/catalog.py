@@ -1308,6 +1308,7 @@ def project_raw(source, id, title, start, end, kind, url, raw):
             # Texto de la fuente para la extracción con IA (src/ai_extract.py): descripción, horario y precio tal cual.
             'ai_text':'\n\n'.join(x for x in (description.strip()[:2500],('Horari: '+str(source_time(raw,source)).strip()) if str(source_time(raw,source) or '').strip() else '',('Preu: '+str(price).strip()) if str(price or '').strip() else '') if x),
             'source_label':(raw.get('loagendo') or {}).get('source_label') if source.startswith('venue_') else None,
+            'part_of':((raw or {}).get('ia_estructura') or {}).get('parent') if isinstance(raw,dict) else None,   # sesión de una ficha larga (src/ai_structure.py)
             'classification_paths':classification_paths(raw,source),
             'place_id':(lambda place:place[0] if place else None)(__import__('src.place_images',fromlist=['place_of']).place_of(raw,source))}
 
@@ -1946,6 +1947,34 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         d0,d1=parse_date(str(start)[:10]),parse_date(str(end)[:10])
         if d0 and d1 and (d1-d0).days<=31:
             events['occurrences']=[{'date':(d0+dt.timedelta(days=n)).isoformat(),'time':events['time'] if n==0 else None,'evidence_field':'inicio_de_la_fuente','verified':False} for n in range((d1-d0).days+1)]
+    # Fichas largas leídas con IA (src/ai_structure.py, 2-11-2026): formato y categoría de la ficha en su conjunto, solo
+    # con sus reglas de aplicación (confianza alta, el título que nombra la actividad manda, la exposición con su cita);
+    # lo demás queda como sugerencia para revisar. La corrección editorial manda siempre. Las sesiones con día y hora
+    # son actos aparte (fuente venue_ia_sesiones), enlazados a esta ficha por part_of.
+    from src import ai_structure
+    events['part_of']=projection.get('part_of')
+    events['structure_basis']={'format':events.get('format'),'category':verdict['category']}
+    events['structure_suggestion']=None
+    st=ai_assist.structure_for(conn,source+':'+id,events) if ai_structure.needs(events) else None
+    if st:
+        try: answer=json.loads(st['answer'])
+        except ValueError: answer={}
+        editorial=verdict['status']=='editorial' or bool(override and override.get('category'))
+        decision=ai_structure.decide(answer,events,verdict.get('rule_status') or verdict['status'],editorial)
+        if decision['format']:
+            events['format'],events['format_label']=decision['format'],FORMATS[decision['format']]; events['format_evidence']=answer.get('format_quote') or ''
+            # Una exposición lo es también en su tipo (filas, pestaña «Exposiciones», etiqueta de la hora).
+            if decision['format']=='exhibition':
+                events['kind'],events['kind_label']='exhibition',KINDS.get('exhibition','exhibition')
+                if events.get('time_label') in ('Varios días','Hora no indicada'): events['time_label']='Exposición'
+            elif events.get('kind')=='exhibition': events['kind'],events['kind_label']='program',KINDS.get('program','program')
+        if decision['category']:
+            verdict={**verdict,'category':decision['category'],'status':'ia','method':'ia_estructura','ambiguous':False,
+                     'evidence':f"IA ({st['model']}, estructura, confianza {answer.get('confidence')}): {answer.get('reason','')} Cita: «{answer.get('format_quote','')}». Antes: {verdict['evidence']}"}
+        if decision['suggested']:
+            events['structure_suggestion']={**decision['suggested'],'confidence':answer.get('confidence'),'reason':answer.get('reason','')}
+            if decision['suggested'].get('category') and not verdict.get('ai_disagrees'):
+                verdict={**verdict,'ai_disagrees':f"{decision['suggested']['category']} (estructura, {answer.get('confidence')}): {answer.get('reason','')}"}
     events['legacy_category']=events.get('public_category')
     events.update({'public_category':verdict['category'],'category_status':verdict['status'],'category_method':verdict['method'],
                    'category_evidence':verdict['evidence'],'category_ambiguous':verdict['ambiguous'],
@@ -2324,6 +2353,7 @@ VENUE_LINK_LABEL='Programación de salas'
 
 
 def presentation_of(source):
+    if source=='venue_ia_sesiones': return None   # sesión sacada del texto de su ficha madre (fuente pública): se presenta como ella
     if source in PUBLIC_PRESENTATION: return PUBLIC_PRESENTATION[source]
     if source.startswith('venue_'):
         from src.venue_directory import venue_type
@@ -2495,7 +2525,8 @@ def query_events(conn, *, query='', date='', day='', date_from='', date_to='', c
             featured=True
     if featured:
         baseline=(parse_date(date) or today()).isoformat()
-        match=[e for e in match if e['end']>=baseline and e['start']<=week_end and e['eligibility']!='exclude']
+        from src.selection_rules import excluded as _never_selected   # 2-11-2026, David: City Hall nunca es Selección
+        match=[e for e in match if e['end']>=baseline and e['start']<=week_end and e['eligibility']!='exclude' and not _never_selected(e)]
         for event in match:
             set_featured_date(event,baseline,week_end)
             event['featured_score'],event['featured_reasons']=featured_score(event,baseline)

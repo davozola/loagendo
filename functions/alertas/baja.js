@@ -8,9 +8,9 @@ const valid = t => /^[0-9a-f]{48}$/.test(t || '');
 export async function onRequestGet({request, env}) {
   const t = new URL(request.url).searchParams.get('t');
   if (!valid(t)) return page(env, 'Enlace no válido', '<p>Este enlace de baja no es válido.</p>', 404);
-  return page(env, 'Darse de baja', `<p>¿Quieres dejar de recibir todos los avisos de Ontoca?</p>
-<form method="post"><input type="hidden" name="t" value="${t}"><button type="submit" style="padding:12px 18px;font-weight:700">Darme de baja</button></form>
-<p><a href="/alertas/gestionar?t=${t}">Prefiero cambiar mis búsquedas o la frecuencia</a></p>`);
+  return page(env, 'Darse de baja', `<p class="al-lead">¿Quieres dejar de recibir todos los avisos de Ontoca? Borraremos tu correo y tus búsquedas.</p>
+<div class="al-actions"><form method="post"><input type="hidden" name="t" value="${t}"><button class="al-btn" type="submit">Darme de baja</button></form>
+<a class="al-btn al-ghost" href="/alertas/gestionar?t=${t}">Prefiero cambiar mis búsquedas o los días</a></div>`);
 }
 
 export async function onRequestPost({request, env}) {
@@ -20,5 +20,5 @@ export async function onRequestPost({request, env}) {
     const d = await db(env), sub = await d.prepare('SELECT id FROM subscribers WHERE token=?').bind(t).first();
     if (sub) await d.batch([d.prepare('DELETE FROM searches WHERE subscriber_id=?').bind(sub.id), d.prepare('DELETE FROM subscribers WHERE id=?').bind(sub.id)]);
   }
-  return page(env, 'Te has dado de baja', '<p>Hemos borrado tu correo y tus búsquedas. No recibirás más avisos.</p>');
+  return page(env, 'Te has dado de baja', '<p class="al-lead">Hemos borrado tu correo y tus búsquedas. No recibirás más avisos.</p><p><a class="al-btn al-ghost" href="/">Volver a la agenda</a></p>');
 }

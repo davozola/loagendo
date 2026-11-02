@@ -760,7 +760,11 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
             if active >= EMPTY_PAGE_MIN_ACTIVE:
                 # Qué trae la página (1-11-2026, Laut): tamaño y primeras palabras, para ver si es mantenimiento, cookies o rediseño.
                 seen_pages = '; '.join('%s: %d caracteres, «%s»' % (p['url'], p.get('chars', 0), p.get('muestra', '')) for p in res['pages'] if p.get('hash'))
-                raise RuntimeError('la página ha cambiado y no trae ningún acto (tenía %d vigentes): web caída, rediseñada o sin programación publicada · %s' % (active, seen_pages))
+                # Qué propuso la IA y por qué se descartó (2-11-2026, Laut): sin esto el parte no decía si la página venía vacía
+                # o si la comprobación tiraba los actos.
+                why = '; '.join(f"{str((r.get('item') or {}).get('titulo') or '')[:40]}: {', '.join(r.get('why') or [])[:80]}" for r in res['rejected'][:3])
+                proposed = 'la IA no propuso ningún acto' if not res.get('raw_items') else f"la IA propuso {res['raw_items']} y se descartaron todos ({why})"
+                raise RuntimeError('la página ha cambiado y no trae ningún acto (tenía %d vigentes): web caída, rediseñada o sin programación publicada · %s · %s' % (active, proposed, seen_pages))
         model = ai_assist.MODEL
         page_hash = ','.join(sorted({p.get('hash', '') for p in res['pages'] if p.get('hash')}))
         records = []

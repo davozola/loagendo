@@ -84,7 +84,8 @@ def candidates(conn, day, scope='week'):
     from mvp import catalog
     kw = {'featured_days': 1} if scope == 'day' else {}
     items = catalog.query_events(conn, day=day, featured=True, public=True, page_size=400, **kw)['items']
-    usable = [e for e in items if (e.get('media') or e.get('has_description')) and not e.get('is_promo')]
+    from src.selection_rules import excluded   # salas que nunca son Selección (2-11-2026: City Hall)
+    usable = [e for e in items if (e.get('media') or e.get('has_description')) and not e.get('is_promo') and not excluded(e)]
     top = usable[:TOP_POOL]
     seen = {e['key'] for e in top}
     indie = [e for e in usable if e['key'] not in seen and (e.get('venue_tier') or 0) < REFERENCE_TIER and e.get('media') and e.get('has_description')][:INDIE_POOL]

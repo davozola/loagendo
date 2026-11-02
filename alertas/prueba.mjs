@@ -103,5 +103,20 @@ assert.equal(await DB.prepare("SELECT id FROM subscribers WHERE email='nunca@eje
 // --- horario: lastSlot en verano e invierno
 assert.equal(lib.eightInMadrid('2026-07-02').toISOString(), '2026-07-02T06:00:00.000Z');
 assert.equal(lib.eightInMadrid('2026-12-03').toISOString(), '2026-12-03T07:00:00.000Z');
+// --- orden por fecha y hora, y enlace a los planes nuevos del aviso (2-11-2026)
+{
+  const items = [{k: 'a:3', t: 'C', a: '2026-11-05', b: '2026-11-05', tm: '19:00'}, {k: 'a:2', t: 'B', a: '2026-11-04', b: '2026-11-04', tm: ''},
+    {k: 'a:1', t: 'A', a: '2026-11-04', b: '2026-11-04', tm: '10:30'}, {k: 'a:4', t: 'D', a: '2026-10-20', b: '2026-12-01', tm: ''}];
+  assert.deepEqual(lib.byDate(items, '2026-11-02').map(i => i.t), ['D', 'A', 'B', 'C']);   // lo ya empezado cuenta como de hoy; sin hora, al final del día
+  const many = Array.from({length: 12}, (_, n) => ({k: `a:${n}`, t: `Plan${n}x`, a: `2026-11-${String(20 - n).padStart(2, '0')}`, b: `2026-11-${String(20 - n).padStart(2, '0')}`, tm: '18:00', pc: 'musica'}));
+  const news = lib.searchUrl(env, lib.cleanFilters({cats: ['musica']}), {from: '2026-10-29T07:00:00Z', to: '2026-11-02T07:05:00Z'});
+  assert.match(news, /[?&]nuevos=[0-9a-z]+-[0-9a-z]+/); assert.doesNotMatch(news, /range=/); assert.match(news, /cat=musica/);
+  const mail = lib.digestMail(env, {groups: [{label: 'Música', url: 'https://ontoca.com/?cat=musica&range=30', newsUrl: news, items: many, since: '2026-10-29T07:00:00Z'}],
+    manageUrl: 'M', unsubscribeUrl: 'X', now: new Date('2026-11-02T07:05:00Z')});
+  assert.match(mail.html, /Ver los 12 planes nuevos en Ontoca/); assert.match(mail.html, /o toda la búsqueda/);
+  assert.ok(mail.html.indexOf('Plan11x') < mail.html.indexOf('Plan10x') && mail.html.indexOf('Plan10x') < mail.html.indexOf('Plan2x'));   // del 9 al 18 de noviembre, en orden
+  assert.doesNotMatch(mail.html, /Plan0x|Plan1x</);   // los dos más lejanos quedan para la web
+  assert.match(mail.text, /Ver los 12 planes nuevos: https:\/\/ontoca\.com\/\?cat=musica&nuevos=/);
+}
 console.log('TODO OK');
 await mf.dispose();

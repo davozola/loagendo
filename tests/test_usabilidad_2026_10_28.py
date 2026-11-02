@@ -72,10 +72,13 @@ class FestivalGeneralTests(unittest.TestCase):
         conn = sqlite3.connect(':memory:'); dedupe.initialize(conn)
         conn.execute("CREATE TABLE source_records(source TEXT,id TEXT,title TEXT,start_date TEXT,end_date TEXT,kind TEXT,eligibility TEXT,evidence_level TEXT,source_url TEXT,raw_sha256 TEXT,raw_json TEXT,PRIMARY KEY(source,id))")
         conn.execute("CREATE TABLE IF NOT EXISTS source_venues (source TEXT, id TEXT, seq INTEGER, venue TEXT, address TEXT, lat REAL, lon REAL)")
-        rows = [('generalitat', 'g1', 'Asian Film Festival Barcelona', '2026-10-22', '2026-11-01', 'Cinemes Girona'),
-                ('guiabcn', 'b1', '14è Asian Film Festival Barcelona', '2026-10-22', '2026-11-01', 'Fundació Institut Confuci'),
-                ('generalitat', 'g2', '4t Lens Dans Festival', '2026-11-04', '2026-11-14', 'Zumzeig'),
-                ('venue_x', 'x1', 'Lens Dans #3 Festival', '2025-11-13', '2026-11-13', 'Nau Bostik')]
+        # Fechas relativas a hoy (2-11-2026): umbrella_pairs solo mira lo que no ha terminado y con fechas fijas la prueba caducó.
+        import datetime as dt
+        d = lambda n: (dt.date.today() + dt.timedelta(days=n)).isoformat()
+        rows = [('generalitat', 'g1', 'Asian Film Festival Barcelona', d(-10), d(1), 'Cinemes Girona'),
+                ('guiabcn', 'b1', '14è Asian Film Festival Barcelona', d(-10), d(1), 'Fundació Institut Confuci'),
+                ('generalitat', 'g2', '4t Lens Dans Festival', d(2), d(12), 'Zumzeig'),
+                ('venue_x', 'x1', 'Lens Dans #3 Festival', d(-354), d(11), 'Nau Bostik')]
         for source, rid, title, start, end, venue in rows:
             conn.execute("INSERT INTO source_records (source, id, title, start_date, end_date, kind, eligibility, evidence_level, source_url, raw_sha256, raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                          (source, rid, title, start, end, 'program', 'review', 'x', '', '', '{}'))

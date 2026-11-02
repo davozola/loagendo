@@ -1,0 +1,628 @@
+{
+ "at": "2026-11-02T08:29:39",
+ "model": "claude-haiku-5-5",
+ "prompt_version": 2,
+ "picked": [
+  [
+   "opendatabcn_agenda:99400762348",
+   "A+B"
+  ],
+  [
+   "generalitat:2026092900037",
+   "A"
+  ],
+  [
+   "guiabcn:99400720975",
+   "A"
+  ],
+  [
+   "guiabcn:99400764357",
+   "A"
+  ],
+  [
+   "guiabcn:99400781007",
+   "A"
+  ],
+  [
+   "guiabcn:99400784725",
+   "A"
+  ],
+  [
+   "guiabcn:99400787686",
+   "A"
+  ],
+  [
+   "guiabcn:99400788190",
+   "A"
+  ],
+  [
+   "guiabcn:99400789236",
+   "A"
+  ],
+  [
+   "guiabcn:99400789820",
+   "A"
+  ],
+  [
+   "opendatabcn_agenda:99400747668",
+   "A"
+  ],
+  [
+   "opendatabcn_agenda:99400764898",
+   "A"
+  ],
+  [
+   "opendatabcn_agenda:99400770056",
+   "A"
+  ],
+  [
+   "opendatabcn_agenda:99400776395",
+   "A"
+  ],
+  [
+   "venue_ia_disseny_hub:6b929d7a2c544961da9dd699",
+   "A"
+  ],
+  [
+   "opendatabcn_agenda:99400681322",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400722456",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400729472",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400738749",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400743240",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400756628",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400760828",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400765820",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400766052",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400770214",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400775376",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400785192",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400785637",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400785706",
+   "B"
+  ],
+  [
+   "opendatabcn_agenda:99400786065",
+   "B"
+  ]
+ ],
+ "answers": {
+  "opendatabcn_agenda:99400762348": {
+   "n": 0,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Instal·lació: Del 22 d'octubre al 10 de novembre al vestíbul del Centre Cívic"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "El texto indica una instal·lació visitable durante un periodo, lo que la hace exposición; la performance y el taller son actos sueltos dentro de ella.",
+   "sesiones": [
+    {
+     "tipo": "performance",
+     "titulo": "Performance",
+     "fecha": "2026-10-22",
+     "inicio": "20:30",
+     "fin": "",
+     "cita": "Performance: Dijous 22 d'octubre a les 20.30 h"
+    },
+    {
+     "tipo": "taller",
+     "titulo": "Taller-conversa amb Heidi Ramírez",
+     "fecha": "2026-11-04",
+     "inicio": "18:00",
+     "fin": "",
+     "cita": "Taller-conversa amb Heidi Ramírez: Dimecres 4 de novembre a les 18 h"
+    }
+   ]
+  },
+  "generalitat:2026092900037": {
+   "n": 1,
+   "formato": {
+    "valor": "program",
+    "cita": "La presentació de la publicació comptarà amb una xerrada entre Aldo Urbano i Rubén Ramos Nogueira (equip comissarial de La Capella) i inclou un format expositiu que es podrà visitar a l’Espai Vestíbul de La Capella."
+   },
+   "categoria": "charlas",
+   "confianza": "baja",
+   "motivo": "Es una presentación de libro/cómic con una xerrada y un formato expositivo; el título nombra una presentación, por lo que se mantiene el formato actual pero no hay fecha concreta de los actos.",
+   "sesiones": []
+  },
+  "guiabcn:99400720975": {
+   "n": 2,
+   "formato": {
+    "valor": "program",
+    "cita": "Voleu conèixer la història del Lliure i l'edifici de Montjuïc? Les visites guiades us portaran"
+   },
+   "categoria": "visitas",
+   "confianza": "media",
+   "motivo": "Es una visita guiada que se repite entre las fechas indicadas; el formato actual era one_shot pero el texto describe visitas recurrentes.",
+   "sesiones": []
+  },
+  "guiabcn:99400764357": {
+   "n": 3,
+   "formato": {
+    "valor": "program",
+    "cita": "Visites guiades a l'exposició \"L'horitzó abstracte\" de Romà Vallès"
+   },
+   "categoria": "visitas",
+   "confianza": "alta",
+   "motivo": "El título nombra visitas guiadas, por lo que la ficha es esa actividad aunque se haga dentro de una exposición.",
+   "sesiones": []
+  },
+  "guiabcn:99400781007": {
+   "n": 4,
+   "formato": {
+    "valor": "festival",
+    "cita": "Les companyies de teatre amateur que assagen regularment a la Lleialtat uneixen forces per presentar nos la quarta Mostra de teatre amateur de la Lleialtat."
+   },
+   "categoria": "escena",
+   "confianza": "media",
+   "motivo": "Es una muestra con varias compañías de teatro amateur; el formato actual era one_shot, pero el texto habla de una muestra colectiva.",
+   "sesiones": []
+  },
+  "guiabcn:99400784725": {
+   "n": 5,
+   "formato": {
+    "valor": "festival",
+    "cita": "Festival elPetit: Espectacle familiar \"Allà\""
+   },
+   "categoria": "escena",
+   "confianza": "alta",
+   "motivo": "Se enmarca en el Festival elPetit, muestra con varios artistas; la obra en sí es un espectáculo dentro del festival.",
+   "sesiones": []
+  },
+  "guiabcn:99400787686": {
+   "n": 6,
+   "formato": {
+    "valor": "program",
+    "cita": "Activitat familiar recomanada a partir de 4 anys."
+   },
+   "categoria": "visitas",
+   "confianza": "media",
+   "motivo": "Visita familiar guiada por un educador, actividad que se repite dentro de la exposición de Taurons; se mantiene el formato actual.",
+   "sesiones": []
+  },
+  "guiabcn:99400788190": {
+   "n": 7,
+   "formato": {
+    "valor": "program",
+    "cita": "Cicle \"Afins: Nasty Women\""
+   },
+   "categoria": "cine",
+   "confianza": "alta",
+   "motivo": "El título nombra un ciclo de sesiones de cine, por lo que es un program.",
+   "sesiones": []
+  },
+  "guiabcn:99400789236": {
+   "n": 0,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "L'exposició Trames. Obres tradicionals i creacions contemporànies americanes articula un diàleg"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Título nombra visitas guiadas (REGLA 1 aplica a program), pero el texto describe una exposición temporal; la ficha es la visita guiada a la exposición, por lo que se mantiene el formato actual program.",
+   "sesiones": []
+  },
+  "guiabcn:99400789820": {
+   "n": 1,
+   "formato": {
+    "valor": "one_shot",
+    "cita": "Dins del cicle de visites guiades per comissaris i comissàries d'exposicions, Xavier Theros explicarà l'exposició"
+   },
+   "categoria": "visitas",
+   "confianza": "alta",
+   "motivo": "Una visita guiada concreta con un ponente, es un acto suelto; se mantiene one_shot.",
+   "sesiones": []
+  },
+  "opendatabcn_agenda:99400747668": {
+   "n": 2,
+   "formato": {
+    "valor": "course",
+    "cita": "Es realitzaran coreografies de KPOP"
+   },
+   "categoria": "talleres",
+   "confianza": "baja",
+   "motivo": "Taller trimestral con mostra final; no hay fechas de sesiones concretas en el texto. Formato actual workshop se mantiene si se duda.",
+   "sesiones": []
+  },
+  "opendatabcn_agenda:99400764898": {
+   "n": 3,
+   "formato": {
+    "valor": "program",
+    "cita": "Visita dinamitzada a l'exposició del museu per a famílies amb nens i nenes a partir de 6 anys."
+   },
+   "categoria": "visitas",
+   "confianza": "media",
+   "motivo": "Visita que se repite entre las fechas de la ficha; se mantiene program.",
+   "sesiones": []
+  },
+  "opendatabcn_agenda:99400770056": {
+   "n": 4,
+   "formato": {
+    "valor": "workshop",
+    "cita": "Et convidem a participar en un taller creatiu de 'fotobrodat'"
+   },
+   "categoria": "talleres",
+   "confianza": "alta",
+   "motivo": "Taller creativo con inscripción previa; se mantiene workshop.",
+   "sesiones": []
+  },
+  "opendatabcn_agenda:99400776395": {
+   "n": 5,
+   "formato": {
+    "valor": "course",
+    "cita": "aquesta lectura interpretativa i progressiva de la Divina comèdia —que farem per grups de cants, en sessions mensuals al llarg de dos anys"
+   },
+   "categoria": "talleres",
+   "confianza": "alta",
+   "motivo": "Curso de varias sesiones mensuales a lo largo de dos años; las sesiones están anunciadas con fecha.",
+   "sesiones": [
+    {
+     "tipo": "otro",
+     "titulo": "Cants I–IV",
+     "fecha": "2026-04-13",
+     "cita": "13 d'abril de 2026. Cants I–IV"
+    },
+    {
+     "tipo": "otro",
+     "titulo": "Cants V–IX",
+     "fecha": "2026-05-18",
+     "cita": "18 de maig de 2026. Cants V–IX"
+    },
+    {
+     "tipo": "otro",
+     "titulo": "Cants X–XVII",
+     "fecha": "2026-06-22",
+     "cita": "22 de juny de 2026. Cants X–XVII"
+    },
+    {
+     "tipo": "otro",
+     "titulo": "Cants XVIII–XXII",
+     "fecha": "2026-10-05",
+     "cita": "5 d'octubre de 2026. Cants XVIII–XXII"
+    },
+    {
+     "tipo": "otro",
+     "titulo": "Cants XXIII–XXIX",
+     "fecha": "2026-11-09",
+     "cita": "9 de novembre de 2026. Cants XXIII–XXIX"
+    }
+   ]
+  },
+  "venue_ia_disseny_hub:6b929d7a2c544961da9dd699": {
+   "n": 6,
+   "formato": {
+    "valor": "program",
+    "cita": "Taller amb sessions en dates concretes: dijous 22"
+   },
+   "categoria": "talleres",
+   "confianza": "baja",
+   "motivo": "El texto está cortado y no permite leer las fechas ni horas completas de las sesiones; se mantiene program.",
+   "sesiones": []
+  },
+  "opendatabcn_agenda:99400681322": {
+   "n": 7,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Exposició 'Pintores i puntaires'"
+   },
+   "categoria": "arte",
+   "confianza": "media",
+   "motivo": "Título nombra exposición; las actividades complementarias son actos sueltos con fecha. Se mantiene exhibition como formato actual.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració i visita guiada",
+     "fecha": "2026-12-17",
+     "inicio": "19:00",
+     "fin": "",
+     "cita": "Inauguració i visita guiada: dijous 17 de desembre, a les 19 h"
+    },
+    {
+     "tipo": "visita",
+     "titulo": "Acció d'art. Visita a l'arxiu del MNAC",
+     "fecha": "2026-12-18",
+     "inicio": "11:00",
+     "fin": "",
+     "cita": "Acció d'art. Visita a l'arxiu del MNAC: divendres 18 de desembre, a les 11 h"
+    },
+    {
+     "tipo": "visita",
+     "titulo": "Itinerari: 'Un passeig de dones al Cementiri de Sarrià'",
+     "fecha": "2026-12-21",
+     "inicio": "11:00",
+     "fin": "",
+     "cita": "Itinerari: 'Un passeig de dones al Cementiri de Sarrià': dilluns 21 de desembre, a les 11 h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400722456": {
+   "n": 0,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "L'exposició explora diverses formes d'en tendre l'arquitectura a través del collage contemporani."
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposició visitable con actividades puntuales; el título es una exposición y el texto la describe como tal.",
+   "sesiones": [
+    {
+     "tipo": "taller",
+     "titulo": "Vermouth Jam i Batalla de Collage",
+     "fecha": "2026-11-07",
+     "inicio": "11:00",
+     "fin": "13:30",
+     "cita": "Dissabte 7 de novembre d'11 a 13.30h. \"Vermouth Jam i Batalla de Collage\" amb la Societat Barcelonina de Collage."
+    },
+    {
+     "tipo": "taller",
+     "titulo": "Càpsula laboratori \"L'Exposició Ballada: Solo Collage. Arquitectures\"",
+     "fecha": "2026-10-31",
+     "inicio": "10:30",
+     "fin": "13:30",
+     "cita": "Dissabte 31 d'octubre de 10.30 a 13.30h. Càpsula laboratori \"L'Ex posició Ballada: Solo Collage. Arquitectures\". A càrrec d'Adrián R. Paredes."
+    },
+    {
+     "tipo": "visita",
+     "titulo": "\"L'Exposició Ballada: Solo Collage. Arquitectures\"",
+     "fecha": "2026-11-02",
+     "inicio": "19:30",
+     "fin": "20:30",
+     "cita": "Dilluns 2 de novembre de 19.30 a 20.30h. \"L'Exposició Ballada: Solo Collage. Arquitectures\" amb el laboratori d'Adrián R. Paredes. Visita guiada amb les/els artistes oberta a tothom."
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400729472": {
+   "n": 1,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Sala Golfes"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposició en sala con inauguración; se mantiene el formato actual.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració",
+     "fecha": "2026-11-05",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "Inauguració: 05 de novembre a les 19h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400738749": {
+   "n": 2,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Exposició per descobrir i recordar a un grup de dones artistes i pensadores increïbles"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición con inauguración y un recital; se mantiene como exposición.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració",
+     "fecha": "2026-11-04",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "Inauguració el dimecres 4 a les 19 h"
+    },
+    {
+     "tipo": "recital",
+     "titulo": "recital",
+     "fecha": "2026-11-20",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "i recital el divendres 20 a les 19 h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400743240": {
+   "n": 3,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Proposta cultural que posa en comunicació fotografies i poemes a través d'exposicions i recitals en diferents formats."
+   },
+   "categoria": "arte",
+   "confianza": "media",
+   "motivo": "Exposición con inauguración; el texto también menciona recitales, por lo que el formato podría ser dudoso, pero se deja el actual.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "inauguració",
+     "fecha": "2026-11-06",
+     "inicio": "18:30",
+     "fin": null,
+     "cita": "els i les artistes faran una inauguració el 6 de novembre, a les 18.30 h."
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400756628": {
+   "n": 4,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Inauguració: 30 d'octubre, 19 h"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición visitable en sala durante un periodo.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració",
+     "fecha": "2026-10-30",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "Inauguració: 30 d'octubre, 19 h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400760828": {
+   "n": 5,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Una exposició que recull tots els cartells i decorats de les diferents edicions del cicle pel seu 20è aniversari."
+   },
+   "categoria": "arte",
+   "confianza": "media",
+   "motivo": "Exposición visitable; el título la nombra como exposición. Se incluye la presentación del día 11.",
+   "sesiones": [
+    {
+     "tipo": "presentacion",
+     "titulo": "presentació de l'exposició",
+     "fecha": "2026-12-11",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "El dia 11 de desembre, coincidint amb l'espectacle de Paraula de Dona, es farà una presentació de l'exposició a les 19.00 h.."
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400765820": {
+   "n": 6,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Change of Scenary és un procés d'observació i anàlisi pròpia"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición fotográfica con inauguración; se mantiene el formato actual.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració",
+     "fecha": "2026-10-15",
+     "inicio": "18:00",
+     "fin": null,
+     "cita": "Inauguració: dijous 15 d'octubre, a les 18 h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400766052": {
+   "n": 7,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "L'exposició, que aplega artistes que treballen en aquests espais, explora com la memòria visual persisteix"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición visitable con inauguración; se mantiene el formato actual.",
+   "sesiones": [
+    {
+     "tipo": "inauguracion",
+     "titulo": "Inauguració",
+     "fecha": "2026-10-22",
+     "inicio": "19:00",
+     "fin": null,
+     "cita": "Inauguració: Dijous 22 d'octubre a les 19h"
+    }
+   ]
+  },
+  "opendatabcn_agenda:99400770214": {
+   "n": 0,
+   "formato": {
+    "valor": "program",
+    "cita": "Visita guiada a l'exposició. Un espai on es compartiran els processos creatius"
+   },
+   "categoria": "arte",
+   "confianza": "media",
+   "motivo": "Hay una exposición visitable del 19-11 al 29-12, pero el título nombra una exposición con visitas y taller; la regla 1 aplica a visitas y talleres dentro de la ficha, y la ficha es la exposición con actos sueltos. Se mantiene el formato actual por duda."
+  },
+  "opendatabcn_agenda:99400775376": {
+   "n": 1,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "L'exposició de Gregorio Londoño ALUNA reuneix una sèrie de collages"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición de collages con periodo de fechas y sin actos sueltos con día concreto salvo la inauguración."
+  },
+  "opendatabcn_agenda:99400785192": {
+   "n": 2,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Inauguració el divendres 6 de novembre a les 18.30 h"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición con inauguración y periodo de fechas en espacio expositivo."
+  },
+  "opendatabcn_agenda:99400785637": {
+   "n": 3,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Inauguració: 05 de novembre a les 19h"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición con inauguración; forma parte de una programación de jornadas pero el título es una exposición."
+  },
+  "opendatabcn_agenda:99400785706": {
+   "n": 4,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Poquita sangre explica «històries de dones que viuen o han viscut la seva maternitat després dels 40 anys»"
+   },
+   "categoria": "arte",
+   "confianza": "alta",
+   "motivo": "Exposición de fotografías con periodo de fechas y varios actos sueltos con día concreto."
+  },
+  "opendatabcn_agenda:99400786065": {
+   "n": 5,
+   "formato": {
+    "valor": "exhibition",
+    "cita": "Projecte pictòric de l'artista Macarena Asensio que explora els espais intermedis del temps i de la consciència."
+   },
+   "categoria": "arte",
+   "confianza": "media",
+   "motivo": "Proyecto pictórico expuesto entre dos fechas, aunque el texto no nombra explícitamente el periodo de visita como instalación."
+  }
+ },
+ "usage": {
+  "input_tokens": 15072,
+  "cache_creation_input_tokens": 1756,
+  "cache_read_input_tokens": 5268,
+  "output_tokens": 6057
+ }
+}

@@ -48,7 +48,9 @@ export async function run(env, now = new Date()) {
       // añadida más tarde no arrastra lo aparecido entre el último aviso y su alta.
       const from = Math.max(since, Date.parse(s.confirmed_at || s.created_at || 0) || 0);
       const items = fresh.filter(i => Date.parse(i.fs) > from && !seen.has(i.k) && matches(i, f)); items.forEach(i => seen.add(i.k));   // cada acto, una vez por correo
-      return {label: s.label, url: searchUrl(env, f), items, since: new Date(from || Date.parse(sub.confirmed_at) || now).toISOString()};
+      const watched = new Date(from || Date.parse(sub.confirmed_at) || now).toISOString();
+      // newsUrl: la web con exactamente los planes nuevos de esta búsqueda desde el aviso anterior (o el alta) hasta este envío.
+      return {label: s.label, url: searchUrl(env, f), newsUrl: searchUrl(env, f, {from: new Date(from || 0).toISOString(), to: at}), items, since: watched};
     }).filter(g => g.items.length);
     if (groups.length) {
       const manageUrl = `${site(env)}/alertas/gestionar?t=${sub.token}`, unsubscribeUrl = `${site(env)}/alertas/baja?t=${sub.token}`;

@@ -51,7 +51,7 @@ PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
                         'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
-                        'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out', 'description_scope')
+                        'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out', 'description_scope', 'part_of', 'activities')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
 
@@ -425,6 +425,9 @@ def covered_by_sessions(events):
     return {k: sorted(set(v)) for k, v in out.items()}
 
 
+_PART_OF = {}   # {clave de la sesión: [clave, título] de su ficha madre}; lo rellena export
+
+
 def compact(event, images, full=True, hidden=frozenset()):
     """The listing record the browser needs, with short keys to keep files small.
 
@@ -463,6 +466,8 @@ def compact(event, images, full=True, hidden=frozenset()):
         days = {}
         for p in event['program']: days[p['date']] = days.get(p['date'], 0) + 1
         out['pn'] = days  # actuaciones por día del programa oficial: la fila del festival de abono dice cuántas hay (28-10-2026)
+    po = _PART_OF.get(event.get('key') or f"{event['source']}:{event['id']}")
+    if po: out['po'] = po  # sesión de una ficha larga: [clave, título] de la ficha madre (src/ai_structure.py)
     if event.get('covered_days'): out['xd'] = event['covered_days']  # días en que su sesión, a la misma hora y sitio, la sustituye
     if event.get('manual_hours'): out['mh'] = event['manual_hours']  # hora puesta a mano por David, con su fuente
     if event.get('drop_in'): out['di'] = 1  # la fuente dice que las sesiones son sueltas (mvp.catalog.drop_in)
@@ -963,6 +968,17 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         if k in details: details[k]['milestone_link'] = v
     for k, v in to_act.items():
         if k in details: details[k]['opening'] = v
+    # Sesiones de una ficha larga (src/ai_structure.py, 2-11-2026): cada una dice de qué ficha es y la ficha lista
+    # sus actividades. Solo entre fichas que se publican.
+    for k, d in details.items():
+        parent = d.get('part_of')
+        if parent and parent in details:
+            d['part_of'] = {'key': parent, 'title': details[parent]['title']}
+            details[parent].setdefault('activities', []).append({'key': k, 'title': d['title'], 'date': d['start'], 'time': d.get('time') or ''})
+        elif parent: d['part_of'] = None
+    for d in details.values():
+        if d.get('activities'): d['activities'].sort(key=lambda a: (a['date'], a['time']))
+    _PART_OF.clear(); _PART_OF.update({k: [d['part_of']['key'], d['part_of']['title']] for k, d in details.items() if isinstance(d.get('part_of'), dict)})
     hidden, link_report = check_links(conn, list(details.values()), link_fetcher)
     phase('enlaces')
     # La ficha general no se repite el día que su sesión está a la misma hora y en la misma sala (1-11-2026, David).
@@ -986,7 +1002,11 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
         # Una semana desde ese día: con imagen o descripción, los mejor puntuados.
         picks = [e for e in featured['items'] if e.get('media') or e.get('has_description')][:FEATURED_SIZE]
         # Selección elegida por la IA para ese día (src/ai_select.py), en los dos alcances (28-10-2026): va primero, en su orden.
-        from src.ai_select import picks_for, populars_for, extras_for, pinned_for, pinned_day, MIN_SIZE
+        from src.ai_select import picks_for as _picks_for, populars_for, extras_for as _extras_for, pinned_for, pinned_day, MIN_SIZE
+        # Salas que nunca son Selección (2-11-2026, David: City Hall), también en elecciones de la IA ya guardadas.
+        from src.selection_rules import excluded as _never_selected
+        def picks_for(c, d, s='week'): return [k for k in _picks_for(c, d, s) if not _never_selected(all_by_key.get(k))]
+        def extras_for(c, d, s='week'): return [k for k in _extras_for(c, d, s) if not _never_selected(all_by_key.get(k))]
         # Solo lo que eligió la IA, sin completar con las reglas (30-10-2026, David: calidad antes que popularidad). Las fijadas
         # a mano (config/seleccion_manual.json) van delante aunque las reglas no las hayan propuesto como candidatas.
         def with_ai(scope, pool_items, base):
@@ -1012,7 +1032,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
             return got
         def pinned_items(scope):
             pins = pinned_for(day, scope)
-            return [dict(all_by_key[k], featured_date=pinned_day(k, day, scope), selection_pin=True) for k in pins if k in all_by_key]
+            return [dict(all_by_key[k], featured_date=pinned_day(k, day, scope), selection_pin=True) for k in pins if k in all_by_key and not _never_selected(all_by_key[k])]
         picks, ai_pick = with_ai('week', featured['items'], picks)
         # Más «Selección Ontoca» para la lista de ese día: los actos de ese día mejor
         # puntuados con las mismas reglas explicables de la portada (featured_score).

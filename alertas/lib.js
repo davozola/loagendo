@@ -64,12 +64,21 @@ export function label(f) {
   const parts = [...f.cats.map(c => CATS[c]), ...f.chans.map(c => CHANS[c]), f.district, f.free ? 'Gratis' : '', f.q ? `«${f.q}»` : ''].filter(Boolean);
   return parts.join(' · ') || 'Toda la agenda';
 }
-export function searchUrl(env, f) {
+// Con «news» ({from, to}, instantes): la web enseña solo los planes de esa búsqueda que entraron en la agenda en
+// ese intervalo, los mismos que el correo (2-11-2026, David). «nuevos=<desde>-<hasta>», segundos en base 36.
+export const newsParam = ({from, to}) => `${Math.floor(Date.parse(from) / 1000).toString(36)}-${Math.ceil(Date.parse(to) / 1000).toString(36)}`;
+export function searchUrl(env, f, news = null) {
   const p = new URLSearchParams();
   f.cats.forEach(c => p.append('cat', c)); f.chans.forEach(c => p.append('ch', c));
   if (f.district) p.set('district', f.district); if (f.free) p.set('free', '1'); if (f.q) p.set('q', f.q);
-  p.set('range', '30');
+  if (news) p.set('nuevos', newsParam(news)); else p.set('range', '30');
   return `${site(env)}/?${p}`;
+}
+// Orden del correo (2-11-2026, David): por fecha y hora. Lo que ya está en marcha cuenta como de hoy;
+// sin hora, después de los de hora fija de ese día.
+export function byDate(items, today) {
+  const day = i => (i.a && i.a > today ? i.a : today), time = i => (/^\d{1,2}:\d{2}/.test(i.tm || '') ? i.tm.padStart(5, '0') : '99:99');
+  return [...items].sort((x, y) => day(x).localeCompare(day(y)) || time(x).localeCompare(time(y)) || String(x.t).localeCompare(String(y.t), 'es'));
 }
 export function matches(item, f) {
   if (f.cats.length && !f.cats.includes(item.pc)) return false;
@@ -127,9 +136,35 @@ export async function sendMail(env, {to, subject, html, text, headers}) {
 }
 
 // ---------- páginas y correos ----------
+// Páginas de avisos (gestionar, confirmar, baja), maquetadas el 2-11-2026 con los colores y la letra de ontoca.com.
+const PAGE_CSS = `.alertas-page{max-width:44rem;font-family:'Inter Tight','Helvetica Neue',Helvetica,Arial,sans-serif}
+.alertas-page .al-lead{font-size:1.05rem;color:var(--text2);margin:-.4rem 0 1.6rem}
+.al-note{border:1px solid var(--ink);background:var(--sand);padding:.7rem 1rem;font-weight:600;margin:0 0 1.4rem}
+.al-sec{border-top:2px solid var(--ink);padding:1.2rem 0 1.6rem}
+.al-sec>h2{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:0 0 .9rem}
+.al-sec>h2 small{font-size:.85rem;font-weight:500;color:var(--text2)}
+.al-list{list-style:none;margin:0;padding:0;display:grid;gap:.7rem}
+.al-card{border:1px solid var(--ink);padding:.9rem 1rem;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;justify-content:space-between}
+.al-chip{display:inline-block;background:var(--ink);color:var(--paper);padding:.3rem .6rem;font-weight:700;font-size:1rem}
+.al-card .al-meta{display:block;font-size:.85rem;color:var(--text2);margin-top:.35rem}
+.al-actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.al-actions form{margin:0}
+.al-btn{display:inline-block;font:inherit;font-weight:700;font-size:.95rem;padding:.6rem 1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper)!important;text-decoration:none!important;cursor:pointer;border-radius:0}
+.al-btn.al-ghost{background:var(--paper);color:var(--ink)!important}.al-btn:hover{background:var(--petrol);border-color:var(--petrol);color:var(--paper)!important}
+.al-btn.al-small{font-size:.85rem;padding:.4rem .75rem}
+.al-freq{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));border:0;padding:0;margin:0 0 1rem}
+.al-opt{position:relative;display:block;border:1px solid var(--ink);padding:.85rem 1rem .85rem 2.6rem;cursor:pointer;background:var(--paper)}
+.al-opt input{position:absolute;left:1rem;top:1.05rem;accent-color:var(--ink);width:1rem;height:1rem;margin:0}
+.al-opt b{display:block;font-size:1rem}.al-opt span{display:block;font-size:.85rem;color:var(--text2);margin-top:.2rem}
+.al-opt:has(input:checked){background:var(--surface2);outline:2px solid var(--ink);outline-offset:-2px}
+.al-empty{background:var(--surface2);border:1px dashed var(--ink);padding:1rem}
+.al-hint{font-size:.9rem;color:var(--text2);margin:.9rem 0 0}
+.al-danger{border-top:1px solid var(--line);padding:1.2rem 0 0;margin-top:.6rem}
+.al-danger summary{cursor:pointer;font-weight:600;color:var(--text2)}.al-danger p{color:var(--text2);font-size:.92rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.al-card{flex-direction:column;align-items:flex-start}}`;
 export function page(env, title, body, status = 200) {
   const html = `<!doctype html><html lang="es" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex"><title>${esc(title)} · Ontoca</title><link rel="stylesheet" href="/public.css"><link rel="stylesheet" href="/public-v2.css"></head>
+<meta name="robots" content="noindex"><title>${esc(title)} · Ontoca</title><link rel="stylesheet" href="/public.css"><link rel="stylesheet" href="/public-v2.css"><style>${PAGE_CSS}</style></head>
 <body class="credits-page"><header class="site-header"><div class="nav-wrap"><a class="logo" href="/">ontoca<span>.</span></a></div></header>
 <main class="credits alertas-page"><h1>${esc(title)}</h1>${body}<p><a class="back" href="/">← Volver a la agenda</a></p></main></body></html>`;
   return new Response(html, {status, headers: {'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'no-referrer'}});
@@ -258,7 +293,9 @@ ${meta ? `<div class="nolink" style="font-size:14px;line-height:1.4;color:${C.te
 // groups: [{label, url, items, since}] con al menos un acto; since = desde cuándo se vigila esa búsqueda.
 // lastSent: fecha del aviso anterior (o null si es el primero); freq: frecuencia de la persona.
 export function digestMail(env, {groups, manageUrl, unsubscribeUrl, freq = 'bisemanal', lastSent = null, now = new Date()}) {
-  const total = groups.reduce((n, g) => n + g.items.length, 0), today = madrid(now).day, next = nextSlot(freq, now);
+  const today = madrid(now).day, next = nextSlot(freq, now);
+  groups = groups.map(g => ({...g, items: byDate(g.items, today)}));
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
   const subject = total === 1 ? `1 plan nuevo en Ontoca: ${groups[0].items[0].t}`.slice(0, 120)
     : groups.length > 1 ? `${total} planes nuevos en tus ${groups.length} búsquedas de Ontoca` : `${total} planes nuevos para «${groups[0].label}» en Ontoca`;
   const lead = lastSent ? `Planes que han entrado en la agenda de Barcelona desde tu último aviso, del ${longDate(lastSent)}.`
@@ -271,7 +308,9 @@ export function digestMail(env, {groups, manageUrl, unsubscribeUrl, freq = 'bise
 <span style="font-size:13px;color:${C.text2};margin-left:6px">${g.items.length} ${g.items.length === 1 ? 'plan nuevo' : 'planes nuevos'}</span>
 <div style="font-size:12px;color:${C.text2};margin:6px 0 2px">Captando planes nuevos desde el ${longDate(g.since)} (${shortDate(g.since)})</div></td></tr>
 ${shown.map(i => itemRow(env, i, today)).join('')}
-<tr><td colspan="2" style="padding:12px 0 0;font-family:${FONT};font-size:14px;font-weight:700"><a href="${esc(g.url)}" style="color:${C.petrol};text-decoration:none">${more > 0 ? `Ver ${more} más y toda la búsqueda →` : 'Ver la búsqueda en Ontoca →'}</a></td></tr></table>`;
+<tr><td colspan="2" style="padding:12px 0 0;font-family:${FONT};font-size:14px;font-weight:700">${more > 0 && g.newsUrl
+      ? `<a href="${esc(g.newsUrl)}" style="color:${C.petrol};text-decoration:none">Ver los ${g.items.length} planes nuevos en Ontoca →</a><br><a href="${esc(g.url)}" style="display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:${C.text2};text-decoration:underline">o toda la búsqueda</a>`
+      : `<a href="${esc(g.url)}" style="color:${C.petrol};text-decoration:none">Ver la búsqueda en Ontoca →</a>`}</td></tr></table>`;
   }).join('');
   // Con varias búsquedas, el titular dice cuántas suman el total (26-10-2026): «93 planes» junto a «En familia: 11» confundía.
   const headline = `${total === 1 ? '1 plan nuevo' : `${total} planes nuevos`}${groups.length > 1 ? ` en tus ${groups.length} búsquedas` : ` para «${esc(groups[0].label)}»`}`;
@@ -286,7 +325,8 @@ ${button(manageUrl, 'Modificar mis avisos')}${button(unsubscribeUrl, 'Cancelar l
   const legal = `Recibes este correo porque pediste avisos en ontoca.com. Horarios y precios, tal como los publica cada fuente: confírmalos antes de ir. <a href="${site(env)}/privacidad" style="color:#bdbdbd">Privacidad</a>`;
   const html = shell(env, {preheader: groups.map(g => g.items[0].t).slice(0, 3).join(' · '), kicker: `Tus avisos<br><b style="color:${C.ink}">${esc(longDate(now.toISOString()))}</b>`, inner, outro, legal});
   const text = `${headline.replace(/&laquo;|&raquo;/g, '"')} en Ontoca. ${lead}\n\n` + groups.map(g => `${g.label} (captando desde el ${shortDate(g.since)})\n` + g.items.slice(0, MAX_ITEMS_PER_SEARCH)
-    .map(i => `- ${i.t} (${[when(i), i.v].filter(Boolean).join(' · ')})\n  ${ficha(env, i.k)}`).join('\n') + `\n  Ver la búsqueda: ${g.url}`).join('\n\n')
+    .map(i => `- ${i.t} (${[when(i), i.v].filter(Boolean).join(' · ')})\n  ${ficha(env, i.k)}`).join('\n')
+    + (g.items.length > MAX_ITEMS_PER_SEARCH && g.newsUrl ? `\n  Ver los ${g.items.length} planes nuevos: ${g.newsUrl}` : '') + `\n  Ver la búsqueda: ${g.url}`).join('\n\n')
     + `\n\nTus avisos llegan ${freqSentence(freq)}, solo si hay planes nuevos, y solo con planes que entran en la agenda después de activar cada búsqueda.`
     + `\n\nModificar mis avisos: ${manageUrl}\nCancelar los avisos: ${unsubscribeUrl}`;
   return {subject, html, text, total};

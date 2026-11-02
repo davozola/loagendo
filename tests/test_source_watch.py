@@ -204,3 +204,23 @@ class FestivalWatchTests(unittest.TestCase):
             cfg.write_text(json.dumps({'horarios': [], 'descartados': [{'ficha': 'generalitat:42', 'motivo': 'sin programa'}]}))
             w2 = daily_report._festival_watch(conn, day, now, cat, cfg)
             self.assertEqual((w2['manual'], w2['manual_total']), ([], 0))
+
+    def test_festival_con_programa_conectado_no_pide_hora(self):
+        """2-11-2026, David (regla de festivales): si su programa se lee solo como agenda de festival, la ficha general no
+        pide hora ni descarte, tenga ya actos o no; una agenda inactiva o ya terminada no cuenta."""
+        items = [{'s': 'generalitat', 'i': '42', 't': 'Festival 42', 'a': '2026-11-04', 'b': '2026-11-08', 'fs': ['festival-42', 'Festival 42', 1], 'kd': 'program', 'f': 'festival'},
+                 {'s': 'opendatabcn_agenda', 'i': '7', 't': 'Art Llobet 2026', 'a': '2026-10-29', 'b': '2026-11-15', 'fs': ['art-llobet', 'Art Llobet', 1], 'kd': 'program', 'f': 'festival'},
+                 {'s': 'venue_ia_art_llobet', 'i': 'a1', 't': 'Between Strings', 'a': '2026-11-12', 'b': '2026-11-12', 'o': [['2026-11-12', '20:00']], 'tm': '20:00', 'fs': ['art-llobet', 'Art Llobet', 0], 'kd': 'single', 'f': 'one_shot'},
+                 {'s': 'guiabcn', 'i': '9', 't': 'Festival LOOP', 'a': '2026-11-10', 'b': '2026-11-21', 'fs': ['loop', 'LOOP', 1], 'kd': 'program', 'f': 'festival'}]
+        with tempfile.TemporaryDirectory() as folder:
+            cat = Path(folder) / 'catalog.json'; cat.write_text(json.dumps({'items': items}))
+            cfg = Path(folder) / 'horarios.json'; cfg.write_text(json.dumps({'horarios': [], 'descartados': []}))
+            agendas = Path(folder) / 'agendas.json'
+            agendas.write_text(json.dumps({'agendas': [{'slug': 'f42', 'festival': {'slug': 'festival-42'}, 'hasta': '2026-11-08', 'activa': True},
+                                                      {'slug': 'llobet', 'festival': {'slug': 'art-llobet'}, 'hasta': '2026-11-15', 'activa': True},
+                                                      {'slug': 'loop', 'festival': {'slug': 'loop'}, 'hasta': '2026-11-21', 'activa': False}]}))
+            conn = _conn(folder); day = dt.date(2026, 11, 2); now = dt.datetime(2026, 11, 2, 7, tzinfo=dt.timezone.utc)
+            w = daily_report._festival_watch(conn, day, now, cat, cfg, program_paths=[agendas])
+            self.assertEqual([p['name'] for p in w['manual']], ['Festival LOOP'])   # el 42 (sin actos aún) y Art Llobet (con actos), resueltos
+            self.assertEqual(w['pending'], 1)
+            self.assertEqual(daily_report._program_festivals(dt.date(2026, 11, 9), [agendas]), {'art-llobet'})   # el 42 ya terminó

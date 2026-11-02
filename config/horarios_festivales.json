@@ -10,11 +10,44 @@
     "fuente": "https://web-oficial-del-festival/programa",
     "nota": ""
   },
-  "horarios": [],
+  "horarios": [
+    {
+      "ficha": "venue_eventbrite:1b6022a1eee96df921b6d894",
+      "dias": {
+        "2026-11-05": "19:00",
+        "2026-11-06": "19:00",
+        "2026-11-07": "19:00",
+        "2026-11-08": "19:00"
+      },
+      "tipo": "apertura",
+      "fuente": "https://www.eventbrite.es/e/sambacine-festival-2026-tickets-2004014086078",
+      "nota": "Sambacine en Mecal Factory: la ticketera oficial da 19:00–22:00 para el ciclo (dos películas por día); el domingo hay además feijoada, roda de samba y DJ sin hora publicada."
+    },
+    {
+      "ficha": "generalitat:2026100600036",
+      "dias": {
+        "2026-11-13": "18:00"
+      },
+      "tipo": "primera sesión",
+      "fuente": "https://www.lensdansfest.com/",
+      "nota": "Lens Dans en Nau Bostik: el acto de esta ficha es el del 13-11 de 18:00 a 22:00. La exposición del CC Can Felipa (4–14/11, ma–vi 11–14 y 17–21, sá 11–14) y la proyección del 12-11 en Zumzeig son otras fichas."
+    }
+  ],
   "ejemplo_descartado": {
     "ficha": "guiabcn:99400000000",
     "motivo": "paraguas de varios espacios sin programa propio",
     "fecha": "2026-10-30"
   },
-  "descartados": []
+  "descartados": [
+    {
+      "ficha": "guiabcn:99400691727",
+      "motivo": "BARQ: las sesiones solo se ven con JavaScript en Cinemes Girona y la web del festival no se deja leer; revisar si aparecen por otra fuente",
+      "fecha": "2026-11-02"
+    },
+    {
+      "ficha": "generalitat:2026102700025",
+      "motivo": "Inclús: programa aún no publicado (inclus.cat «coming soon»); el espacio se corrige con la verificación de campo (GuiaBCN: CaixaForum, Cinemes Girona, CC La Sedeta)",
+      "fecha": "2026-11-02"
+    }
+  ]
 }

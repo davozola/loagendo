@@ -1,0 +1,5 @@
+{
+  "nota": "Salas que nunca pueden salir en la «Selección Ontoca» (ni elegidas por la IA, ni por reglas, ni en las filas del día). Siguen en la agenda y pueden salir como «Popular». Decisión de David, 2-11-2026.",
+  "salas": ["City Hall"],
+  "fuentes": ["venue_ia_city_hall"]
+}

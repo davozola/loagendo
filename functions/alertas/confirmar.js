@@ -15,7 +15,7 @@ export async function onRequestGet({request, env}) {
   const row = await pending(env, t);
   if (!row) return expired(env);
   return page(env, 'Confirma tus avisos', `<p>Búsqueda: <b>${esc(row.label)}</b><br>Avisos ${freqSentence(row.freq)}, solo si hay novedades.</p>
-<form method="post"><input type="hidden" name="t" value="${esc(t)}"><button class="pill-button" type="submit" style="padding:12px 18px;font-weight:700">Confirmar los avisos</button></form>`);
+<form method="post"><input type="hidden" name="t" value="${esc(t)}"><button class="al-btn" type="submit">Confirmar los avisos</button></form>`);
 }
 
 export async function onRequestPost({request, env}) {
@@ -31,5 +31,5 @@ export async function onRequestPost({request, env}) {
   ]);
   return page(env, 'Avisos confirmados', `<p>Te avisaremos de los planes nuevos para <b>${esc(row.label)}</b> ${freqSentence(row.freq)}, solo si hay novedades.</p>
 <p>Solo incluiremos los planes que entren en la agenda a partir de hoy, ${esc(shortDate(now))}.${(n => n ? ` El primer aviso posible será el ${esc(longDate(n.toISOString()))} a las 8:00.` : '')(nextSlot(row.freq, new Date(now)))}</p>
-<p><a href="${site(env)}/alertas/gestionar?t=${esc(row.token)}">Gestionar mis avisos</a></p>`);
+<p class="al-actions"><a class="al-btn" href="${site(env)}/alertas/gestionar?t=${esc(row.token)}">Gestionar mis avisos</a><a class="al-btn al-ghost" href="${site(env)}/">Volver a la agenda</a></p>`);
 }

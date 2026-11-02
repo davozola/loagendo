@@ -32,7 +32,7 @@ from src.network import tls_context
 ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.anthropic.com/v1'
 MODEL = 'claude-haiku-5-5'
-PROMPT_VERSION = {'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1, 'traduccion_en': 2, 'traduccion_es': 2}   # 2 (1-11-2026): campo «translation»; las copias del original se repiden
+PROMPT_VERSION = {'estructura': 2, 'categoria': 2, 'duplicado': 2, 'datos': 1, 'descripcion': 1, 'familia': 1, 'traduccion': 1, 'traduccion_en': 2, 'traduccion_es': 2}   # 2 (1-11-2026): campo «translation»; las copias del original se repiden
 APPLY_CATEGORY = 0.8      # confianza mínima para que la IA decida la categoría
 APPLY_DUPLICATE = 0.85    # confianza mínima para fusionar dos fichas
 ITEMS_PER_REQUEST = 40
@@ -98,8 +98,9 @@ def _conf(row):
 
 
 def _tasks():
-    from src import ai_extract, ai_describe, ai_family, ai_translate
+    from src import ai_extract, ai_describe, ai_family, ai_structure, ai_translate
     return {'familia': (ai_family.SYSTEM, ai_family.TOOL, 'fichas', ai_family.parse),
+            'estructura': (ai_structure.SYSTEM, ai_structure.TOOL, 'fichas', ai_structure.parse),   # fichas largas: formato, categoría y sesiones (2-11-2026)
             'categoria': (SYSTEM_CATEGORY, TOOL_CATEGORY, 'fichas', _parse_category),
             'duplicado': (SYSTEM_DUPLICATE, TOOL_DUPLICATE, 'pares', _parse_duplicate),
             'datos': (ai_extract.SYSTEM, ai_extract.TOOL, 'fichas', _parse_datos),
@@ -243,6 +244,26 @@ def data_for(conn, key, ev):
     if not s or s['prompt_version'] != prompt_version('datos') or s['input_hash'] != _hash(ai_extract.payload(ev)): return None
     try: return json.loads(s['answer'])
     except ValueError: return None
+
+
+def structure_candidates(conn, events, today):
+    """Fichas largas que pueden ser una exposición o traer actos con fecha dentro (src/ai_structure.py)."""
+    from src import ai_structure, taxonomy
+    current = suggestions(conn); out = []
+    for e in events:
+        if not taxonomy.eligible(e, today) or not ai_structure.needs(e) or e.get('category_status') == 'editorial': continue
+        payload = ai_structure.payload(e); s = current.get(('estructura', e['key']))
+        if s and s['input_hash'] == _hash(payload) and s['prompt_version'] == prompt_version('estructura'): continue
+        out.append((e['key'], payload))
+    return out
+
+
+def structure_for(conn, key, ev):
+    """Respuesta comprobada vigente de la tarea «estructura» para la ficha (fila de suggestions) o None."""
+    from src import ai_structure
+    s = suggestions(conn).get(('estructura', key))
+    if not s or s['prompt_version'] != prompt_version('estructura') or s['input_hash'] != _hash(ai_structure.payload(ev)): return None
+    return s
 
 
 def description_candidates(conn, events, today):
@@ -526,6 +547,12 @@ def run(conn, job=None, requester=_request, today=None):
         sent = {}
         for task, finder in (('categoria', category_candidates), ('datos', data_candidates), ('descripcion', description_candidates), ('familia', family_candidates), ('duplicado', duplicate_candidates)):
             if job.get(task, True): sent[task] = submit(conn, key, task, finder(conn, events, today), model, requester)
+        if job.get('estructura', True):
+            # Fichas largas con Sonnet, en directo (pocas al día): formato, categoría y sesiones (src/ai_structure.py).
+            from src import ai_structure
+            try: sent['estructura'] = ai_structure.run(conn, key, events, today, requester, model=job.get('modelo_estructura') or ai_structure.MODEL,
+                                                       limit=int(job.get('estructura_max') or ai_structure.MAX_PER_RUN))
+            except Exception as err: sent['estructura'] = {'status': 'failed', 'error': repr(err)[:300]}   # no para las demás tareas
         from src import ai_translate
         for lang in ai_translate.TARGETS:  # descripciones de la última exportación (24-10-2026)
             task = f'traduccion_{lang}'

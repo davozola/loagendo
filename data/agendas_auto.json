@@ -95,6 +95,44 @@
       "activa": true,
       "auto": true,
       "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-10-30)"
+    },
+    {
+      "slug": "fest_fotoperiodisme_photo_press_world",
+      "name": "World Press Photo 2026 Mostra Internacional de Fotoperiodisme",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://www.cccb.org/ca/calendari"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-fotoperiodisme-photo-press-world",
+        "name": "World Press Photo 2026 Mostra Internacional de Fotoperiodisme"
+      },
+      "hasta": "2026-12-13",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-11-02)"
+    },
+    {
+      "slug": "fest_cultura_raval",
+      "name": "Raval(s) Festival de Cultura del Raval 2026",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://totraval.org/ca/agenda"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "auto-cultura-raval",
+        "name": "Raval(s) Festival de Cultura del Raval 2026"
+      },
+      "hasta": "2026-11-08",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-11-02)"
     }
   ]
 }

@@ -48,15 +48,21 @@ function cleanFilters(f) {
     q: String(f.q || "").replace(/\s+/g, " ").trim().slice(0, 80)
   };
 }
-function searchUrl(env, f) {
+var newsParam = ({ from, to }) => `${Math.floor(Date.parse(from) / 1e3).toString(36)}-${Math.ceil(Date.parse(to) / 1e3).toString(36)}`;
+function searchUrl(env, f, news = null) {
   const p = new URLSearchParams();
   f.cats.forEach((c) => p.append("cat", c));
   f.chans.forEach((c) => p.append("ch", c));
   if (f.district) p.set("district", f.district);
   if (f.free) p.set("free", "1");
   if (f.q) p.set("q", f.q);
-  p.set("range", "30");
+  if (news) p.set("nuevos", newsParam(news));
+  else p.set("range", "30");
   return `${site(env)}/?${p}`;
+}
+function byDate(items, today) {
+  const day = (i) => i.a && i.a > today ? i.a : today, time = (i) => /^\d{1,2}:\d{2}/.test(i.tm || "") ? i.tm.padStart(5, "0") : "99:99";
+  return [...items].sort((x, y) => day(x).localeCompare(day(y)) || time(x).localeCompare(time(y)) || String(x.t).localeCompare(String(y.t), "es"));
 }
 function matches(item, f) {
   if (f.cats.length && !f.cats.includes(item.pc)) return false;
@@ -234,7 +240,9 @@ function itemRow(env, item, today) {
 ${meta ? `<div class="nolink" style="font-size:14px;line-height:1.4;color:${C.text2};margin-top:3px">${noLink(meta)}</div>` : ""}</td></tr>`;
 }
 function digestMail(env, { groups, manageUrl, unsubscribeUrl, freq = "bisemanal", lastSent = null, now = /* @__PURE__ */ new Date() }) {
-  const total = groups.reduce((n, g) => n + g.items.length, 0), today = madrid(now).day, next = nextSlot(freq, now);
+  const today = madrid(now).day, next = nextSlot(freq, now);
+  groups = groups.map((g) => ({ ...g, items: byDate(g.items, today) }));
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
   const subject = total === 1 ? `1 plan nuevo en Ontoca: ${groups[0].items[0].t}`.slice(0, 120) : groups.length > 1 ? `${total} planes nuevos en tus ${groups.length} b\xFAsquedas de Ontoca` : `${total} planes nuevos para \xAB${groups[0].label}\xBB en Ontoca`;
   const lead = lastSent ? `Planes que han entrado en la agenda de Barcelona desde tu \xFAltimo aviso, del ${longDate(lastSent)}.` : "Tu primer aviso: planes que han entrado en la agenda de Barcelona desde que activaste la b\xFAsqueda.";
   const blocks = groups.map((g) => {
@@ -245,7 +253,7 @@ function digestMail(env, { groups, manageUrl, unsubscribeUrl, freq = "bisemanal"
 <span style="font-size:13px;color:${C.text2};margin-left:6px">${g.items.length} ${g.items.length === 1 ? "plan nuevo" : "planes nuevos"}</span>
 <div style="font-size:12px;color:${C.text2};margin:6px 0 2px">Captando planes nuevos desde el ${longDate(g.since)} (${shortDate(g.since)})</div></td></tr>
 ${shown.map((i) => itemRow(env, i, today)).join("")}
-<tr><td colspan="2" style="padding:12px 0 0;font-family:${FONT};font-size:14px;font-weight:700"><a href="${esc(g.url)}" style="color:${C.petrol};text-decoration:none">${more > 0 ? `Ver ${more} m\xE1s y toda la b\xFAsqueda \u2192` : "Ver la b\xFAsqueda en Ontoca \u2192"}</a></td></tr></table>`;
+<tr><td colspan="2" style="padding:12px 0 0;font-family:${FONT};font-size:14px;font-weight:700">${more > 0 && g.newsUrl ? `<a href="${esc(g.newsUrl)}" style="color:${C.petrol};text-decoration:none">Ver los ${g.items.length} planes nuevos en Ontoca \u2192</a><br><a href="${esc(g.url)}" style="display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:${C.text2};text-decoration:underline">o toda la b\xFAsqueda</a>` : `<a href="${esc(g.url)}" style="color:${C.petrol};text-decoration:none">Ver la b\xFAsqueda en Ontoca \u2192</a>`}</td></tr></table>`;
   }).join("");
   const headline = `${total === 1 ? "1 plan nuevo" : `${total} planes nuevos`}${groups.length > 1 ? ` en tus ${groups.length} b\xFAsquedas` : ` para \xAB${esc(groups[0].label)}\xBB`}`;
   const inner = `<h1 style="margin:0 0 10px;font-size:32px;line-height:1.05;letter-spacing:-1.2px;font-weight:700">${headline}</h1>
@@ -262,7 +270,8 @@ ${button(manageUrl, "Modificar mis avisos")}${button(unsubscribeUrl, "Cancelar l
 
 ` + groups.map((g) => `${g.label} (captando desde el ${shortDate(g.since)})
 ` + g.items.slice(0, MAX_ITEMS_PER_SEARCH).map((i) => `- ${i.t} (${[when(i), i.v].filter(Boolean).join(" \xB7 ")})
-  ${ficha(env, i.k)}`).join("\n") + `
+  ${ficha(env, i.k)}`).join("\n") + (g.items.length > MAX_ITEMS_PER_SEARCH && g.newsUrl ? `
+  Ver los ${g.items.length} planes nuevos: ${g.newsUrl}` : "") + `
   Ver la b\xFAsqueda: ${g.url}`).join("\n\n") + `
 
 Tus avisos llegan ${freqSentence(freq)}, solo si hay planes nuevos, y solo con planes que entran en la agenda despu\xE9s de activar cada b\xFAsqueda.
@@ -308,7 +317,8 @@ async function run(env, now = /* @__PURE__ */ new Date()) {
       const from = Math.max(since, Date.parse(s.confirmed_at || s.created_at || 0) || 0);
       const items = fresh.filter((i) => Date.parse(i.fs) > from && !seen.has(i.k) && matches(i, f));
       items.forEach((i) => seen.add(i.k));
-      return { label: s.label, url: searchUrl(env, f), items, since: new Date(from || Date.parse(sub.confirmed_at) || now).toISOString() };
+      const watched = new Date(from || Date.parse(sub.confirmed_at) || now).toISOString();
+      return { label: s.label, url: searchUrl(env, f), newsUrl: searchUrl(env, f, { from: new Date(from || 0).toISOString(), to: at }), items, since: watched };
     }).filter((g) => g.items.length);
     if (groups.length) {
       const manageUrl = `${site(env)}/alertas/gestionar?t=${sub.token}`, unsubscribeUrl = `${site(env)}/alertas/baja?t=${sub.token}`;

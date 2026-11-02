@@ -107,6 +107,41 @@
       "nombre": "Mozilla Festival",
       "patron": "\\bmozilla festival\\b|\\bmozfest\\b",
       "web": "https://events.mozillafoundation.org/e/mozilla-festival-2026/page/schedule"
+    },
+    {
+      "slug": "art-llobet",
+      "nombre": "Art Llobet · Festival de les Arts i la Guitarra",
+      "patron": "\\bart llobet\\b",
+      "web": "https://mllobet.com/en/artllobet/a2026/",
+      "nota": "2-11-2026: programa leído como agenda de festival (config/agendas_ia.json, art_llobet)."
+    },
+    {
+      "slug": "festival-42",
+      "nombre": "42 · Festival de Gèneres Fantàstics de Barcelona",
+      "patron": "\\bfestival 42\\b|\\b42 festival\\b|\\b42\\b.{0,10}generes fantastics",
+      "web": "https://barcelona.cat/festival42/",
+      "nota": "2-11-2026: programa leído como agenda de festival (config/agendas_ia.json, festival_42)."
+    },
+    {
+      "slug": "barq",
+      "nombre": "BARQ · Festival Internacional de Cinema d'Arquitectura",
+      "patron": "\\bbarq\\b",
+      "web": "https://barqfestival.com/",
+      "nota": "2-11-2026: las sesiones solo se ven con JavaScript (Cinemes Girona); sin lector por ahora."
+    },
+    {
+      "slug": "fotofest-poblenou",
+      "nombre": "FotoFest Poblenou",
+      "patron": "\\bfotofest\\b",
+      "web": "https://www.fotofest.cat/",
+      "nota": "2-11-2026: paraguas de exposiciones; sus actos con hora llegan de las agendas de los espacios (Fundació Carulla)."
+    },
+    {
+      "slug": "loop-festival",
+      "nombre": "Loop Festival",
+      "patron": "\\bloop (festival|fair|talks|barcelona|20\\d\\d)\\b|festival de videoart.{0,6}loop",
+      "web": "https://loop-barcelona.com/es/loop-festival/",
+      "nota": "2-11-2026: festival de cine de artista y videoarte en una veintena de espacios; programa leído como agenda de festival (config/agendas_ia.json, loop_festival)."
     }
   ]
 }

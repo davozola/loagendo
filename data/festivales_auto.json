@@ -59,6 +59,65 @@
         "kind": "tribe_rest"
       },
       "note": "Conectado solo por el buscador de programas (2026-10-31): The Events Calendar (WordPress)"
+    },
+    {
+      "slug": "fest_dones_films_mifdb",
+      "name": "Mostra Internacional de Films de Dones de Barcelona - MIFDB",
+      "type": "festival",
+      "url": "https://www.mostrafilmsdones.cat/entrades-i-espais/",
+      "site": "https://www.mostrafilmsdones.cat/entrades-i-espais/",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-dones-films-mifdb",
+          "name": "Mostra Internacional de Films de Dones de Barcelona - MIFDB"
+        },
+        "desde": "2026-09-15",
+        "hasta": "2026-12-10",
+        "url": "https://www.mostrafilmsdones.cat/entrades-i-espais/"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-11-02): JSON-LD"
+    },
+    {
+      "slug": "fest_panoramic",
+      "name": "Festival Panoràmic",
+      "type": "festival",
+      "url": "https://festivalpanoramic.cat/",
+      "site": "https://festivalpanoramic.cat/",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-panoramic",
+          "name": "Festival Panoràmic"
+        },
+        "desde": "2026-10-15",
+        "hasta": "2026-12-27",
+        "url": "https://festivalpanoramic.cat/wp-json/tribe/events/v1/events",
+        "kind": "tribe_rest"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-11-02): The Events Calendar (WordPress)"
+    },
+    {
+      "slug": "fest_drap_sostenible",
+      "name": "Drap-Art 26 Festival Internacional d'Art Sostenible de Catalunya",
+      "type": "festival",
+      "url": "https://drap-art.org/drap-art-festival/",
+      "site": "https://drap-art.org/drap-art-festival/",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-drap-sostenible",
+          "name": "Drap-Art 26 Festival Internacional d'Art Sostenible de Catalunya"
+        },
+        "desde": "2026-11-17",
+        "hasta": "2026-12-21",
+        "url": "https://drap-art.org/wp-json/tribe/events/v1/events",
+        "kind": "tribe_rest"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-11-02): The Events Calendar (WordPress)"
     }
   ]
 }

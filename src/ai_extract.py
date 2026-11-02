@@ -108,8 +108,15 @@ TIME_RX = re.compile(r"(?<![\d/])(\d{1,2})\s*(?:[:.,]\s*(\d{2})|h\s*(\d{2})?|\s*
 RANGE_RX = re.compile(r"(?:de|des de|desde|entre)\s+(\d{1,2})(?:[:.](\d{2}))?\s*(?:a|i|y|fins a|hasta|-|–)\s*(?:les\s+|las\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(?:h\b|hores|horas)")
 
 
+# «8 pm», «10 am», «8 p.m.» sin minutos (2-11-2026, LOOP: «miércoles 18 noviembre 2026, 8 pm»): solo con am/pm pegado.
+AMPM_RX = re.compile(r"(?<![\d:.,])(\d{1,2})\s*([ap])\.?\s*m\b\.?")
+
+
 def times_in(quote):
     out = set()
+    for m in AMPM_RX.finditer(fold(quote)):
+        h = int(m.group(1))
+        if 1 <= h <= 12: out.add(f"{(h % 12) + (12 if m.group(2) == 'p' else 0):02d}:00")
     for m in RANGE_RX.finditer(fold(quote)):
         for h, mm in ((m.group(1), m.group(2)), (m.group(3), m.group(4))):
             if 0 <= int(h) <= 24: out.add(f'{int(h) % 24:02d}:{int(mm or 0):02d}')

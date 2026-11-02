@@ -85,7 +85,21 @@ def _festival_discards(path=None):
     return {str(r.get('ficha') or '').strip(): str(r.get('motivo') or '') for r in data.get('descartados') or [] if str(r.get('ficha') or '').strip()}
 
 
-def _festival_watch(conn, today, now, catalog_path=CATALOG, discards_path=None):
+def _program_festivals(today, paths=None):
+    """Festivales cuyo programa se lee solo (2-11-2026, David): agendas de festival activas y vigentes en
+    config/agendas_ia.json (puestas a mano) o data/agendas_auto.json (las pone el buscador de programas)."""
+    from src.ai_agenda import CONFIG_PATH, AUTO_PATH
+    out = set()
+    for path in paths or (CONFIG_PATH, AUTO_PATH):
+        try: agendas = json.loads(Path(path).read_text(encoding='utf-8')).get('agendas') or []
+        except (OSError, ValueError, AttributeError): continue
+        for a in agendas:
+            slug = (a.get('festival') or {}).get('slug')
+            if slug and a.get('activa') and str(a.get('hasta') or '9999') >= today.isoformat(): out.add(slug)
+    return out
+
+
+def _festival_watch(conn, today, now, catalog_path=CATALOG, discards_path=None, program_paths=None):
     """Festivales y fiestas de la web publicada (26-10-2026): los nuevos y los que no tienen hora de ningún día.
     Se lee el catálogo publicado (lo que ve la gente). Cada festival se guarda en ``festival_hour_watch`` desde que se ve
     por primera vez hasta que tiene hora o termina; el parte solo lista los nuevos, los que empiezan esta semana y, los
@@ -106,6 +120,10 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG, discards_path=None):
     # sigue pendiente hasta que su cobertura es completa (src/festival_finder.coverage).
     from src.festival_finder import coverage, _connected_festivals
     connected = _connected_festivals()
+    # Regla de festivales (2-11-2026, David): si su programa se lee solo, sus actos llegan como fichas con la etiqueta del
+    # festival y la ficha general no pide hora ni descarte: no hay nada que hacer a mano. Si el lector deja de traer actos,
+    # avisa su propia fuente (agendas-ia), no este apartado.
+    programmed = _program_festivals(today, program_paths)
     kids = {}
     for e in items:
         fs = e.get('fs')
@@ -123,7 +141,8 @@ def _festival_watch(conn, today, now, catalog_path=CATALOG, discards_path=None):
         hours = 'descartado' if key in discards else 'programa' if e.get('pf') else 'a mano' if e.get('mh') else 'por días' if e.get('hb') else 'con sesiones' if any(o[1] for o in e.get('o') or []) else ''
         if not hours and fs:
             k = kids.get(fs[0]) or {'n': 0, 'days': set()}
-            if coverage(e['a'], e['b'], k['days'], k['n'], fs[0] in connected) == 'completa': hours = '%d sesiones' % k['n']
+            if coverage(e['a'], e['b'], k['days'], k['n'], fs[0] in connected or fs[0] in programmed) == 'completa': hours = '%d sesiones' % k['n']
+            elif fs[0] in programmed: hours = 'programa conectado'
         seen.add(key)
         row = conn.execute('SELECT hours, resolved_at FROM festival_hour_watch WHERE key=?', (key,)).fetchone()
         if not row:

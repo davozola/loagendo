@@ -830,6 +830,10 @@ def report(conn, events, today, examples=8, queue_limit=300):
         'pending_reasons': dict(Counter(e.get('category_method') for e in pending).most_common()),
         'queue': [brief(e) for e in sorted(pending, key=lambda e: (e['start'], e['title']))[:queue_limit]],
         'ai_disagreements': [{**brief(e), 'ai': e.get('ai_disagrees')} for e in pub if e.get('ai_disagrees')][:queue_limit],
+        # Fichas largas (src/ai_structure.py): lo que la IA propone y no se aplica solo, para revisar; y lo aplicado.
+        'structure_suggestions': [{**brief(e), 'sugerencia': e.get('structure_suggestion')} for e in pub if e.get('structure_suggestion')][:queue_limit],
+        'structure_applied': {'formato': sum(1 for e in pub if e.get('format_evidence')), 'categoria': sum(1 for e in pub if e.get('category_method') == 'ia_estructura'),
+                              'sesiones': sum(1 for e in pub if e.get('source') == 'venue_ia_sesiones')},
         'recurring': [{'pattern': k, 'count': n} for k, n in recurring.most_common(25) if n > 1],
         'coverage': coverage, 'changes': changes, 'overrides': ov, 'ai': _ai_stats(conn, base),
     }
