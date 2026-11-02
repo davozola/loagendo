@@ -461,11 +461,20 @@
       "slug": "mercat_flors",
       "name": "Mercat de les Flors",
       "type": "theatre",
-      "url": "https://mercatflors.cat/es/programacion/",
-      "enabled": false,
-      "aliases": [
-        "Mercat de les Flors"
-      ]
+      "url": "https://mercatflors.cat/",
+      "site": "https://mercatflors.cat/",
+      "enabled": true,
+      "aliases": ["Mercat de les Flors", "Mercat de les Flors - Sala MAC", "Mercat de les Flors · Sala Ovidi Montllor", "Mercat de les Flors. Casa de la Dansa"],
+      "address": {"@type": "PostalAddress", "streetAddress": "Carrer de Lleida, 59", "postalCode": "08004", "addressLocality": "Barcelona"},
+      "max_pages": 60,
+      "feed": {
+        "kind": "sitemap_calendar",
+        "url": "https://mercatflors.cat/sitemap_index.xml",
+        "sitemap_pattern": "espectacle-sitemap",
+        "link_pattern": "^https://mercatflors\\.cat/es/espectacle/",
+        "days": 180
+      },
+      "note": "2-11-2026 (aviso de David: faltaba «Rave familiar»): sin IA. La programación y su schema.org se pintan con JavaScript; se leen las fichas del sitemap (cambiadas en 180 días, en castellano) y, de cada una, el JSON del botón «Añadir al calendario», con todas las sesiones. Antes solo llegaba por GuiaBCN (unas 30 fichas)."
     },
     {
       "slug": "antic_teatre",
@@ -747,13 +756,13 @@
       "type": "culture",
       "url": "https://poblenouurbandistrict.com/es/agenda/",
       "site": "https://poblenouurbandistrict.com/",
-      "enabled": true,
+      "enabled": false,
       "feed": {
         "kind": "tribe_rest",
         "url": "https://poblenouurbandistrict.com/es/wp-json/tribe/events/v1/events",
         "lugar": "Diversos espais del Poblenou"
       },
-      "note": "21-10-2026 (aviso de David): agenda del distrito creativo del Poblenou y de su festival AR-DE, desde la API pública de The Events Calendar de su web (reglas, sin IA)."
+      "note": "21-10-2026 (aviso de David): agenda del distrito creativo del Poblenou y de su festival AR-DE, desde la API pública de The Events Calendar de su web (reglas, sin IA). 2-11-2026: PAUSADA. Desde el 31-10 su Cloudflare devuelve 403 a nuestro lector (User-Agent Ontoca); la API sigue pública y responde en un navegador (133 eventos). No se disfraza el lector: se les pide que lo permitan; al responder, volver a poner enabled: true. Lo ya publicado se mantiene."
     },
     {
       "slug": "mozilla_festival",

@@ -604,6 +604,17 @@
       "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
     },
     {
+      "slug": "la_violeta",
+      "name": "La Violeta de Gràcia",
+      "address": "Carrer Maspons 6, Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://www.lavioleta.cat/activitats/"
+      ],
+      "activa": true,
+      "nota": "Añadida el 2-11-2026 (David: faltaba «En Patufet», 8-11). Centre de Cultura Popular de Gràcia: titelles i espectacles familiars, concerts, presentacions de llibres. Su agenda solo llegaba de GuiaBCN en fichas genéricas."
+    },
+    {
       "slug": "la_nau",
       "name": "La Nau",
       "address": "Carrer d'Àlaba 30, 08005 Barcelona",
@@ -680,10 +691,11 @@
       "address": "Carrer de Vila i Vilà 61, 08004 Barcelona",
       "type": "music",
       "urls": [
-        "https://laut.es/"
+        "https://laut.es/",
+        "https://laut.es/concert"
       ],
       "activa": true,
-      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA."
+      "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). Si la página publica schema.org se lee con reglas; si no, con IA. 2-11-2026: la web nueva separa el club (portada, enlaces a RA) y los conciertos (/concert); se leen las dos."
     },
     {
       "slug": "lleialtat",
@@ -892,6 +904,84 @@
       },
       "activa": true,
       "nota": "Añadida el 31-10-2026 (David): por GuiaBCN/Open Data llegaban 12 de 22 espectáculos de la temporada y casi sin hora. El listado /espectacles/ da el periodo de cada obra; la ficha (arxiu-arts-en-viu) da horarios por día de la semana («De dijous a dissabte, a les 19:30 h. Diumenge, a les 12 h»), precio, duración e imagen. «seguir» lee las fichas; vigilar en la primera muestra que las sesiones por día de la semana se conviertan bien."
+    },
+    {
+      "slug": "art_llobet",
+      "name": "Art Llobet",
+      "address": "",
+      "type": "music",
+      "urls": [
+        "https://mllobet.com/en/artllobet/a2026/"
+      ],
+      "otros_lugares": true,
+      "festival": {
+        "slug": "art-llobet",
+        "name": "Art Llobet · Festival de les Arts i la Guitarra"
+      },
+      "hasta": "2026-11-15",
+      "activa": true,
+      "nota": "2-11-2026 (David, regla de festivales): el programa oficial da cada concierto con día, hora y espacio («THURSDAY, NOV 12, 8:00pm Concert | BARCELONA MUNICIPAL MUSIC CONSERVATORY | …»). Cada acto con su ficha y la etiqueta del festival; deja de leerse el 16-11."
+    },
+    {
+      "slug": "festival_42",
+      "name": "Fabra i Coats - Fàbrica de Creació de Barcelona",
+      "address": "Carrer de Sant Adrià 20, 08030 Barcelona",
+      "type": "culture",
+      "urls": [
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=0",
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=1",
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=2",
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=3",
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=4",
+        "https://barcelona.cat/festival42/ca/programacio/programacio-42?page=5"
+      ],
+      "otros_lugares": true,
+      "festival": {
+        "slug": "festival-42",
+        "name": "42 · Festival de Gèneres Fantàstics de Barcelona"
+      },
+      "hasta": "2026-11-08",
+      "activa": true,
+      "nota": "2-11-2026 (David, regla de festivales): 71 actividades con día, hora y sala en 6 páginas de programa (Fabra i Coats y Biblioteca Can Fabra). Las exposiciones sin hora («consulta tots els dies i hores») no se convierten en actos. GuiaBCN avisa de posibles cambios el fin de semana por luto oficial: el lector retira lo que deje de salir."
+    },
+    {
+      "slug": "fotofest_carulla",
+      "name": "Fundació Carulla",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://fundaciocarulla.cat/programacio/sostenim-vida-al-fotofest-del-poblenou/"
+      ],
+      "otros_lugares": true,
+      "festival": {
+        "slug": "fotofest-poblenou",
+        "name": "FotoFest Poblenou"
+      },
+      "hasta": "2026-11-28",
+      "activa": true,
+      "nota": "2-11-2026 (David, regla de festivales): actos con hora de la Fundació Carulla dentro del FotoFest (charla 17-11 18:30, visita 19-11 18:00 en el Museu Terra). La web del festival no se deja leer; el paraguas no lleva hora."
+    },
+    {
+      "slug": "loop_festival",
+      "name": "Loop Festival",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://loop-barcelona.com/es/loop-festival/"
+      ],
+      "seguir": {
+        "patron": "^https://loop-barcelona\\.com/es/activity/[^/?#]+/?$",
+        "max": 30,
+        "ficha": true
+      },
+      "otros_lugares": true,
+      "festival": {
+        "slug": "loop-festival",
+        "name": "Loop Festival"
+      },
+      "hasta": "2026-11-21",
+      "activa": true,
+      "nota": "2-11-2026 (David, regla de festivales): el programa lista ~20 actividades con sede y fechas; cada ficha (/es/activity/…) da «Sede» y «Fechas y horarios» («miércoles 18 noviembre 2026, 8 pm» para los actos; periodo para las exposiciones). Se leen las fichas. Exposiciones en museos (MNAC, Picasso, Música…) pueden duplicar lo que traen otras fuentes: lo resuelve la deduplicación. Deja de leerse el 22-11."
     }
   ]
 }

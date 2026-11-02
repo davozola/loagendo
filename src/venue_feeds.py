@@ -852,6 +852,99 @@ def codetickets_nodes(venue, fetcher=fetch, timeout=25, today=None):
     return nodes, 2
 
 
+_SM_SITEMAP = re.compile(r"<sitemap>\s*<loc>([^<]+)</loc>(?:\s*<lastmod>([^<]+)</lastmod>)?", re.S)
+_SM_URL = re.compile(r"<url>\s*<loc>([^<]+)</loc>(?:\s*<lastmod>([^<]+)</lastmod>)?", re.S)
+_ATCB = re.compile(r'<div class="atcb"[^>]*>\s*(\{.*?\})\s*</div>', re.S)
+
+
+def _html_text(fragment):
+    """Texto de un trozo de HTML con sus párrafos y saltos de línea."""
+    t = re.sub(r"<br\s*/?>", "\n", fragment, flags=re.I)
+    t = re.sub(r"</p\s*>", "\n\n", t, flags=re.I)
+    t = html.unescape(re.sub(r"<[^>]+>", "", t))
+    return "\n".join(" ".join(line.split()) for line in t.split("\n")).strip().replace("\n\n\n", "\n\n")
+
+
+def _mercat_page(page):
+    """Lo que la ficha del Mercat de les Flors imprime en su HTML (2-11-2026): sinopsis completa (no el extracto de
+    og:description), información práctica y de accesibilidad, tarifa tal cual («6 €»), enlace de compra, sala y qué pases
+    tienen las entradas agotadas («Entrades exhaurides»). Lo que no esté, vacío: no se inventa nada."""
+    out = {"description": "", "room": "", "price": "", "tickets": "", "sold": {}}
+    m = re.search(r'<div class="sino-sec"[^>]*>(.*?)</div>\s*<div id="descomptes"', page, re.S) or re.search(r'<div class="sino-sec"[^>]*>(.*?)</div>', page, re.S)
+    parts = [_html_text(m.group(1))] if m else []
+    m = re.search(r'<div class="inscri-cnt">(.*?)</div>', page, re.S)
+    if m and _html_text(m.group(1)): parts.append(_html_text(m.group(1)))
+    out["description"] = "\n\n".join(p for p in parts if p)[:2000]
+    def field(label):
+        m = re.search(r"<h3>\s*" + label + r"\s*</h3>\s*</div>\s*<div class=\"esp-det-rgt\">(.*?)</div>", page, re.S | re.I)
+        return " ".join(_html_text(m.group(1)).split()) if m else ""
+    out["price"], out["room"] = field("(?:Tarifa|Preu|Precio)"), field("(?:Espacio|Espai|Space)")
+    m = re.search(r'<a class="blk-btn"[^>]*href="([^"]+)"[^>]*>\s*(?:COMPRAR ENTRADAS|COMPRA ENTRADES|BUY TICKETS)', page, re.I)
+    if m: out["tickets"] = html.unescape(m.group(1))
+    for day, hhmm, sold in re.findall(r'<h4><span>[^<]*?(\d{1,2})\s+[^<]*</span>\s*\((\d{1,2}:\d{2})h\)</h4>\s*</a>\s*(<p class="exhaurides-alt">)?', page):
+        out["sold"][(int(day), hhmm.zfill(5))] = bool(sold)
+    return out
+
+
+def sitemap_calendar_nodes(venue, fetcher=fetch, timeout=25, today=None):
+    """Mercat de les Flors (2-11-2026, aviso de David: faltaba «Rave familiar»). Su programación se pinta con JavaScript y
+    el schema.org/Event de cada espectáculo también, pero el HTML de cada ficha sí trae, para el botón «Añadir al
+    calendario», un JSON con el título, la sala y todas las sesiones (fecha, hora de inicio y de fin). Se leen las fichas
+    del sitemap de WordPress que cambiaron en los últimos «days» días y casan con «link_pattern» (una sola lengua), las más
+    recientes primero y como mucho «max_pages»; imagen y texto, los de la propia ficha (og:image, og:description)."""
+    feed = venue["feed"]; today = today or dt.date.today()
+    since = (today - dt.timedelta(days=int(feed.get("days", 180)))).isoformat()
+    status, _, body = fetcher(feed["url"], timeout); fetched = 1
+    if status != 200: raise RuntimeError("HTTP %s en %s" % (status, feed["url"]))
+    maps = _SM_SITEMAP.findall(body)
+    bodies = [body]
+    if maps:
+        bodies = []
+        for loc, mod in maps:
+            if not re.search(feed.get("sitemap_pattern", "."), loc) or (mod and mod[:10] < since): continue
+            st, _, child = fetcher(html.unescape(loc), timeout); fetched += 1
+            if st == 200: bodies.append(child)
+    pages = {}
+    for b in bodies:
+        for loc, mod in _SM_URL.findall(b):
+            loc = html.unescape(loc).strip()
+            if re.search(feed["link_pattern"], loc) and (mod or "")[:10] >= since: pages[loc] = max(pages.get(loc, ""), mod or "")
+    budget = int(venue.get("max_pages", 60)); nodes = []
+    for url in sorted(pages, key=pages.get, reverse=True)[:budget]:
+        if fetcher is fetch and not robots_allows(url): continue
+        st, final_url, page = fetcher(url, timeout); fetched += 1
+        if st != 200: continue
+        meta = og_meta(page); sessions, name = [], ""
+        extra = _mercat_page(page)
+        for raw in _ATCB.findall(page):
+            try: cal = json.loads(html.unescape(raw))
+            except ValueError: continue
+            name = name or _text(cal.get("name"))
+            for d in cal.get("dates") or [cal]:
+                if d.get("startDate"): sessions.append((str(d["startDate"])[:10], str(d.get("startTime") or "")[:5], str(d.get("endDate") or d["startDate"])[:10], str(d.get("endTime") or "")[:5]))
+        # Una ficha por día (el id es por página y fecha); si hay varios pases ese día, todos en x_sessions («10:30 · 17:00»).
+        by_day = {}
+        for start, t0, end, t1 in sorted(set(sessions)): by_day.setdefault(start, []).append((t0, end, t1))
+        for start, rows in by_day.items():
+            t0, end, t1 = rows[0]
+            node = {"@type": "Event", "name": name or meta.get("og:title", ""), "url": final_url or url,
+                    "startDate": f"{start}T{t0}:00" if t0 else start, "endDate": f"{end}T{t1}:00" if t1 else end,
+                    "image": meta.get("og:image", ""), "description": extra["description"] or meta.get("og:description", ""),
+                    "location": {"@type": "Place", "name": venue["name"], "address": venue.get("address") or {}}}
+            if extra["room"]: node["x_room"] = extra["room"]
+            if extra["price"] or extra["tickets"]:
+                offer = {"@type": "Offer", "url": extra["tickets"]}
+                if extra["price"]: offer.update(price=extra["price"], priceCurrency="")
+                # Entradas agotadas: solo si la ficha lo dice de todos los pases de ese día.
+                day_sessions = [extra["sold"].get((int(start[8:10]), r[0])) for r in rows if r[0]]
+                if day_sessions and all(day_sessions): offer["availability"] = "https://schema.org/SoldOut"
+                node["offers"] = offer
+            times = [r[0] for r in rows if r[0]]
+            if len(times) > 1: node["x_sessions"] = times
+            nodes.append((final_url or url, node))
+    return nodes, fetched
+
+
 def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
     source = "venue_" + venue["slug"]
     initialize(conn); initialize_catalog(conn); started = now_utc()
@@ -861,7 +954,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
         urls = venue.get("urls") or [venue.get("agenda_url") or venue["url"]]
         pages = []
         kind = (venue.get("feed") or {}).get("kind")
-        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule", "accelevents", "codetickets"):
+        if kind in ("wp_fullcalendar", "html", "tribe_list", "palau_json", "liceu_json", "wp_openhouse", "tribe_rest", "festival_schedule", "accelevents", "codetickets", "sitemap_calendar"):
             if fetcher is fetch and not robots_allows(venue["feed"]["url"]): raise RuntimeError("robots.txt no permite leer %s" % venue["feed"]["url"])
             if kind == "tribe_list":
                 known = {}
@@ -871,7 +964,7 @@ def sync_venue(conn: sqlite3.Connection, venue, fetcher=fetch, timeout=25):
                     if item.get("url") and item.get("description"): known[item["url"]] = {"description": item["description"], "image": item.get("image") or ""}
                 nodes, fetched = tribe_list_nodes(venue, fetcher, timeout, known=known)
             else:
-                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes, "accelevents": accelevents_nodes, "codetickets": codetickets_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
+                nodes, fetched = {"wp_fullcalendar": wp_fullcalendar_nodes, "palau_json": palau_json_nodes, "liceu_json": liceu_json_nodes, "wp_openhouse": wp_openhouse_nodes, "tribe_rest": tribe_rest_nodes, "festival_schedule": festival_schedule_nodes, "accelevents": accelevents_nodes, "codetickets": codetickets_nodes, "sitemap_calendar": sitemap_calendar_nodes}.get(kind, html_agenda_nodes)(venue, fetcher, timeout)
             urls = []
         for agenda_url in urls:
             if fetcher is fetch and not robots_allows(agenda_url): raise RuntimeError("robots.txt no permite leer %s" % agenda_url)
