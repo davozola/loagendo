@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit", "official_images"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit", "official_images", "radar"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -108,9 +108,10 @@ def _maintain_media(conn, media_root):
             conn.execute("UPDATE media_assets SET local_path=NULL,content_type=NULL WHERE asset_id=?", (asset_id,)); cleared += 1
     duplicate_refs = conn.execute("SELECT COUNT(*) FROM (SELECT sha256 FROM media_assets WHERE sha256<>'' GROUP BY sha256 HAVING COUNT(*)>1)").fetchone()[0]
     conn.commit()
-    from src.media import retry_transient_download_failures
+    from src.media import retry_transient_download_failures, prune_past_originals
     retried = retry_transient_download_failures(conn)
-    return {"cleared_missing_paths": cleared, "deduplicated_file_groups": duplicate_refs, "transient_failures_requeued": retried, "media_root": str(media_root)}
+    past = prune_past_originals(conn)
+    return {"cleared_missing_paths": cleared, "deduplicated_file_groups": duplicate_refs, "transient_failures_requeued": retried, **past, "media_root": str(media_root)}
 
 
 def execute(conn, job, media_root):
@@ -179,6 +180,9 @@ def execute(conn, job, media_root):
     if kind == "festival_finder":
         from src.festival_finder import run as run_finder
         return run_finder(conn, job)
+    if kind == "radar":   # radar semanal de música con Mood (2-11-2026): solo informe, no publica nada
+        from src.radar_mood import run as run_radar
+        return run_radar(conn, job)
     if kind == "audit":
         from src.weekly_audit import run as run_audit
         return run_audit(conn, job)

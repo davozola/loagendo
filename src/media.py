@@ -191,3 +191,40 @@ def ensure_local(conn, asset_id, directory, *, timeout=20):
         return None,None
     row=conn.execute('SELECT local_path,content_type FROM media_assets WHERE asset_id=?',(asset_id,)).fetchone()
     return (row[0],row[1]) if row else (str(path),None)
+
+
+# Originales de actos que ya pasaron (3-11-2026, decisión de David): la web se genera desde data/media, pero un acto
+# terminado hace más de una semana ya no sale en la agenda. Se borra el archivo y se conserva la procedencia (original_url,
+# sha256, derechos); la marca de download_error impide que se vuelva a descargar. Si el acto vuelve a tener fechas
+# vigentes, la marca se quita y se descarga de nuevo.
+PAST_ORIGINAL_DAYS = 7
+PAST_ORIGINAL_MARK = 'original borrado: acto ya terminado'
+
+
+def prune_past_originals(conn, today=None, days=PAST_ORIGINAL_DAYS, remove=None):
+    today = today or dt.date.today()
+    cutoff = (today - dt.timedelta(days=days)).isoformat()
+    remove = remove or (lambda p: Path(p).unlink(missing_ok=True))
+    # Un mismo archivo (mismo sha) puede servir a varias fichas: solo se borra si todas terminaron antes del corte.
+    rows = conn.execute('''SELECT m.local_path, MIN(COALESCE(NULLIF(r.end_date,''),'9999')) AS first_end,
+        MAX(COALESCE(NULLIF(r.end_date,''),'9999')) AS last_end
+      FROM media_assets m LEFT JOIN source_records r ON r.source=m.source AND r.id=m.id
+      WHERE m.local_path IS NOT NULL GROUP BY m.local_path''').fetchall()
+    places = set()
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE name='place_images'").fetchone():
+        places = {p for (p,) in conn.execute('SELECT local_path FROM place_images WHERE local_path IS NOT NULL')}
+    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
+    removed = freed = 0
+    for path, first_end, last_end in rows:
+        if first_end == '9999' and last_end == '9999': continue  # sin ficha o sin fecha de fin: no se toca
+        if last_end >= cutoff or path in places: continue
+        try: size = Path(path).stat().st_size
+        except OSError: size = 0
+        remove(path)
+        conn.execute('UPDATE media_assets SET local_path=NULL,download_failed_at=?,download_error=? WHERE local_path=?', (now, PAST_ORIGINAL_MARK, path))
+        removed += 1; freed += size
+    revived = conn.execute('''UPDATE media_assets SET download_failed_at=NULL,download_error=NULL
+      WHERE download_error=? AND local_path IS NULL AND EXISTS (SELECT 1 FROM source_records r
+        WHERE r.source=media_assets.source AND r.id=media_assets.id AND r.end_date>=?)''', (PAST_ORIGINAL_MARK, cutoff)).rowcount
+    conn.commit()
+    return {'past_originals_removed': removed, 'past_originals_freed_mb': round(freed / 1e6, 1), 'past_originals_revived': revived}
