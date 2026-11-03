@@ -775,3 +775,21 @@ footer a{color:var(--footer-ink);text-decoration:underline}
   .filters-panel .filter-chip.active:before{border-color:var(--ink) !important}
   .filters-panel .channel-chip.active:after{color:#fff !important;background:var(--petrol) !important;border-color:var(--petrol) !important}
 }
+
+/* La Selecció (4-11-2026): enlace junto a las fechas de la Selección, acceso en el pie y modal de alta (lienzo «Ontoca · La Selecció») */
+.nl-open{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:15px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;vertical-align:baseline}
+.nl-open svg{flex:none;vertical-align:-2px}
+.nl-sheet{width:min(480px,100%);max-width:480px;padding:0;overflow:auto;max-height:92vh}
+.nl-head{display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 6px 0 20px;background:var(--turq);color:#000;border-bottom:1px solid #000;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.nl-head .close{width:44px;height:44px;border:0;background:transparent;color:#000;font-size:18px;cursor:pointer}
+.nl-body{padding:24px 20px 28px}.nl-body h2{margin:0;font-size:28px;line-height:1.1;font-weight:700;letter-spacing:-.035em}
+.nl-body p{margin:12px 0 0;font-size:17px;line-height:1.5}.nl-body .nl-rhythm{font-size:15px;font-weight:600}
+.nl-body label{display:block;margin-top:22px;font-size:14px;font-weight:600}
+.nl-body input{display:block;width:100%;box-sizing:border-box;height:52px;margin-top:6px;padding:0 14px;border:1px solid #000;border-radius:0;font:inherit;font-size:17px;background:#fff}
+.nl-body input[aria-invalid=true]{border:2px solid #b4400f}.nl-body .nl-err{margin-top:8px;font-size:14px;font-weight:600;color:#b4400f}
+#nlTurnstile{margin-top:14px}
+.nl-cta{display:block;width:100%;height:52px;margin-top:18px;border:1px solid #000;border-radius:0;background:#000;color:#fff;font:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.nl-cta.nl-ghost{background:#fff;color:#000}.nl-cta:disabled{opacity:.6;cursor:wait}
+.nl-body .nl-legal{font-size:13px;line-height:1.55;color:#444}.nl-body .nl-legal a{color:#444}
+.nl-example{display:inline-block;margin-top:10px;font-size:15px;font-weight:600;color:var(--ink)}
+@media(min-width:621px){.nl-overlay{align-items:center}}

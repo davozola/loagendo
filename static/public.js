@@ -766,13 +766,27 @@ async function selection() {
     const when = e => e.featured_date || e.start;
     const past = e => when(e) < now.day || (when(e) === now.day && e.time && (minutesOf(String(e.time).padStart(5, '0')) ?? 1e4) < now.min - GRACE);
     const usable = d => d.items.filter(e => !past(e) && !e.promo && !PROMO_TITLE.test(e.title || '') && (!finde || when(e) <= win.to));
-    let one = !win && state.pickRange === 'today', d = await fetchPicks(one), list = usable(d);
-    if (!win && state.pickRange === 'auto') {
-      one = true; d = await fetchPicks(true); list = usable(d);
-      if (list.length < 3) { one = false; d = await fetchPicks(false); list = usable(d) }
+    // «Cap de setmana» (4-11-2026, La Selecció): la Selección de cada día del fin de semana (viernes a domingo; de viernes a
+    // domingo, lo que queda), sin repetir y en su orden. Con «auto», de jueves a domingo abre en el fin de semana.
+    const wkDays = weekendDays(now.day);
+    let range = state.pickRange;
+    if (!win && range === 'auto' && [4, 5, 6, 0].includes(new Date(now.day + 'T12:00:00').getDay())) range = 'weekend';
+    let one = !win && range === 'today', wk = !win && range === 'weekend', d, list;
+    if (wk) {
+      const parts = await Promise.all(wkDays.map(x => get('/api/events?' + new URLSearchParams({day: x, featured: '1', page_size: '30', public: '1', featured_days: '1'})).catch(() => ({items: []}))));
+      const seen = new Set();
+      d = {ai: parts.some(p => p.ai), items: parts.flatMap(p => p.items || []).filter(e => !seen.has(key(e)) && seen.add(key(e)))};
+      list = usable(d);
+      if (state.pickRange === 'auto' && list.length < 3) { wk = false; one = false; d = await fetchPicks(false); list = usable(d) }
+    } else {
+      d = await fetchPicks(one); list = usable(d);
+      if (!win && range === 'auto') {
+        one = true; d = await fetchPicks(true); list = usable(d);
+        if (list.length < 3) { one = false; d = await fetchPicks(false); list = usable(d) }
+      }
     }
     const rangeBox = document.querySelector('.pick-range'); if (rangeBox) rangeBox.hidden = Boolean(win);
-    document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === (one ? 'today' : 'week'))));
+    document.querySelectorAll('[data-pickrange]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pickrange === (wk ? 'weekend' : one ? 'today' : 'week'))));
     // Elegida por la IA (src/ai_select.py): se respeta su orden de preferencia. Si no, las reglas, con imagen y texto primero.
     const complete = list.filter(e => e.media?.length && e.has_description);
     const ranked = d.ai ? list : complete.concat(list.filter(e => !complete.includes(e) && (e.media?.length || e.has_description)));
@@ -814,11 +828,86 @@ async function selection() {
     // Una ficha fijada a mano (config/seleccion_manual.json) va la primera, en «Todo» y en su tipo (30-10-2026, David: MIRA).
     const items = want === 'expos' ? sel : sel.slice().sort((a, b) => (Number(b.pinned) - Number(a.pinned)) || byTime(a, b));
     const end = new Date(pickDay + 'T12:00:00'); end.setDate(end.getDate() + 6);
-    $('weekRange').textContent = finde ? `${L('Lo mejor del fin de semana', 'El millor del cap de setmana', 'The best of the weekend')} · ${labelDate(win.from)} – ${labelDate(win.to)}` : win ? `${labelDate(pickDay)} – ${labelDate(iso(end))}` : one ? labelDate(pickDay) : `${labelDate(pickDay)} – ${labelDate(iso(end))}`;
+    $('weekRange').textContent = wk ? `${labelDay(wkDays[0])} – ${labelDay(wkDays[wkDays.length - 1])}` : finde ? `${L('Lo mejor del fin de semana', 'El millor del cap de setmana', 'The best of the weekend')} · ${labelDate(win.from)} – ${labelDate(win.to)}` : win ? `${labelDate(pickDay)} – ${labelDate(iso(end))}` : one ? labelDate(pickDay) : `${labelDate(pickDay)} – ${labelDate(iso(end))}`;
+    nlLink();
     $('curated').innerHTML = items.map(pick).join('') || `<div class="empty">${one ? L('Hoy no hay actividades destacadas. Mira los próximos 7 días.', 'Avui no hi ha activitats destacades. Mira els propers 7 dies.', 'No featured activities today. See the next 7 days.') : t('Aún no hay actividades destacadas para estas fechas.')}</div>`;
     $('curated').scrollLeft = 0; pickNav();
   } catch (_) { $('curated').innerHTML = document.getElementById('seoLista') || document.getElementById('seoFicha') ? '' : `<div class="empty">${t('No se pudo cargar la selección.')}</div>`; pickNav() }
 }
+function weekendDays(day) {
+  const d = new Date(day + 'T12:00:00'), wd = d.getDay(), x = new Date(d), out = [];
+  if (![5, 6, 0].includes(wd)) x.setDate(d.getDate() + ((5 - wd + 7) % 7));
+  for (let n = 0; n < 3; n++) { out.push(iso(x)); if (x.getDay() === 0) break; x.setDate(x.getDate() + 1) }
+  return out;
+}
+/* ---------- La Selecció, la newsletter de los jueves (4-11-2026) ---------- */
+// Apagada hasta que la publicación la activa (data-newsletter="1", config/seleccio.json web_signup). El idioma es el de la
+// página (4-11-2026, David): no se pregunta. Alta con la doble confirmación de Brevo (functions/api/seleccio/alta.js).
+const NEWSLETTER = document.documentElement.dataset.newsletter === '1';
+const MAIL_ICON = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14"></rect><path d="M3 7l9 6 9-6"></path></svg>';
+const PRIVACY_PATH = {ca: '/privacitat', es: '/es/privacidad', en: '/en/privacy'};
+let nlToken = '';
+function nlLink() {
+  if (!NEWSLETTER) return; const p = $('weekRange'); if (!p || p.querySelector('.nl-open')) return;
+  const a = document.createElement('a'); a.className = 'nl-open'; a.href = `${BASE}/seleccio/`; a.dataset.newsletter = 'open';
+  a.innerHTML = MAIL_ICON + `<span>${L('Recíbela cada jueves', 'Rep-la cada dijous', 'Get it every Thursday')}</span>`;
+  p.append(' ', a);
+}
+function nlFooter() {
+  const box = document.querySelector('.footer-links'); if (!NEWSLETTER || !box || box.querySelector('.nl-foot')) return;
+  const a = document.createElement('a'); a.className = 'nl-foot'; a.href = `${BASE}/seleccio/`; a.dataset.newsletter = 'open'; a.textContent = L('La Selecció, cada jueves', 'La Selecció, cada dijous', 'La Selecció, every Thursday');
+  box.prepend(a, ' · ');
+}
+function nlTurnstile() {
+  if (!TURNSTILE_KEY) return; nlToken = '';
+  const render = () => { try { window.turnstile.render('#nlTurnstile', {sitekey: TURNSTILE_KEY, language: LANG, callback: tok => { nlToken = tok }, 'expired-callback': () => { nlToken = '' }}) } catch (_) {} };
+  if (window.turnstile) { render(); return }
+  const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = render; document.head.append(sc);
+}
+function nlOpen(open = true) {
+  let ov = $('nlOverlay');
+  if (!open) { if (ov) { ov.hidden = true; document.body.style.overflow = '' } return }
+  if (!ov) { ov = document.createElement('div'); ov.id = 'nlOverlay'; ov.className = 'overlay nl-overlay'; document.body.append(ov) }
+  ov.innerHTML = `<article class="sheet nl-sheet" role="dialog" aria-modal="true" aria-labelledby="nlTitle"><div class="nl-head"><span>La Selecció</span><button class="close" type="button" data-newsletter="close" aria-label="${esc(t('Cerrar'))}">✕</button></div>
+<form id="nlForm" class="nl-body" novalidate><h2 id="nlTitle">${L('Barcelona, cada jueves en tu buzón.', 'Barcelona, cada dijous a la teva bústia.', 'Barcelona, every Thursday in your inbox.')}</h2>
+<p>${L('Una selección de los mejores planes culturales para el fin de semana y los días siguientes.', 'Una selecció dels millors plans culturals per al cap de setmana i els dies següents.', 'A selection of the best cultural plans for the weekend and the days after.')}</p>
+<p class="nl-rhythm">${L('Cada jueves a las 9 h. Gratis. Un solo correo a la semana.', 'Cada dijous a les 9 h. Gratis. Un sol correu a la setmana.', 'Every Thursday at 9 am. Free. One email a week.')}</p>
+<label for="nlEmail">${L('Tu correo electrónico', 'El teu correu electrònic', 'Your email address')}</label><input id="nlEmail" type="email" autocomplete="email" inputmode="email" aria-describedby="nlErr" required>
+<p id="nlErr" class="nl-err" role="alert" hidden></p><div id="nlTurnstile"></div>
+<button class="nl-cta" type="submit">${L('Quiero recibir la Selecció', 'Vull rebre la Selecció', 'Send me La Selecció')}</button>
+<p class="nl-legal">${L('La recibirás en castellano; puedes cambiarlo desde cualquier correo. Te enviaremos un correo para confirmar el alta. Puedes darte de baja cuando quieras. La enviamos con Brevo, que mide aperturas y clics.', 'La rebràs en català; ho pots canviar des de qualsevol correu. T’enviarem un correu per confirmar l’alta. Te’n pots donar de baixa quan vulguis. L’enviem amb Brevo, que mesura obertures i clics.', 'You’ll get it in English; you can change this from any email. We’ll email you to confirm. Unsubscribe any time. We send it with Brevo, which measures opens and clicks.')} <a href="${PRIVACY_PATH[LANG] || PRIVACY_PATH.ca}">${esc(t('Privacidad'))}</a></p>
+<a class="nl-example" href="${BASE}/seleccio/">${L('Ver un ejemplo →', 'Veure un exemple →', 'See an example →')}</a></form></article>`;
+  ov.hidden = false; document.body.style.overflow = 'hidden'; $('nlEmail').focus(); nlTurnstile(); track('seleccio', 'signup_open');
+}
+async function nlSubmit(form) {
+  const input = $('nlEmail'), err = $('nlErr'), email = input.value.trim(), btn = form.querySelector('.nl-cta');
+  const fail = m => { err.textContent = m; err.hidden = false; input.setAttribute('aria-invalid', 'true') };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail(L('Escribe un correo válido, como nombre@ejemplo.es.', 'Escriu un correu vàlid, com nom@exemple.cat.', 'Enter a valid email, like name@example.com.'));
+  if (TURNSTILE_KEY && !nlToken) return fail(L('Espera un momento a que termine la comprobación antirrobots.', 'Espera un moment que acabi la comprovació antirobots.', 'Please wait for the bot check to finish.'));
+  btn.disabled = true; err.hidden = true; input.removeAttribute('aria-invalid');
+  try {
+    const r = await fetch('/api/seleccio/alta', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({email, lang: LANG, turnstile: nlToken})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) {
+      btn.disabled = false; nlTurnstile();
+      return fail(d.code === 'too_many' ? L('Demasiadas solicitudes desde esta conexión. Prueba dentro de una hora.', 'Massa sol·licituds des d’aquesta connexió. Prova-ho d’aquí a una hora.', 'Too many requests from this connection. Try again in an hour.')
+        : d.code === 'robot' ? L('No hemos podido comprobar que no eres un robot. Prueba otra vez.', 'No hem pogut comprovar que no ets un robot. Torna-ho a provar.', 'We couldn’t check you’re not a robot. Please try again.')
+        : L('No se ha podido enviar. Prueba más tarde.', 'No s’ha pogut enviar. Prova-ho més tard.', 'Could not send. Please try later.'));
+    }
+    track('seleccio', 'signup', d.status || 'sent');
+    form.outerHTML = d.status === 'already'
+      ? `<div class="nl-body"><h2>${L('Ya recibes la Selecció', 'Ja reps la Selecció', 'You’re already subscribed')}</h2><p>${L('Este correo ya está suscrito. Si no te llega, mira en la carpeta de correo no deseado o de promociones.', 'Aquest correu ja està subscrit. Si no t’arriba, mira a la carpeta de correu brossa o de promocions.', 'This address already gets La Selecció. If it isn’t arriving, check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-newsletter="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`
+      : `<div class="nl-body">${MAIL_ICON.replace('width="16" height="16"', 'width="40" height="40"')}<h2>${L('Revisa tu correo', 'Revisa el teu correu', 'Check your inbox')}</h2><p>${L('Te hemos enviado un enlace a', 'T’hem enviat un enllaç a', 'We’ve sent a link to')} <strong>${esc(email)}</strong>. ${L('Ábrelo para confirmar el alta y la primera Selecció te llegará el jueves.', 'Obre’l per confirmar l’alta i la primera Selecció t’arribarà el dijous.', 'Open it to confirm and your first Selecció arrives on Thursday.')}</p><p class="nl-legal">${L('Si no lo ves en unos minutos, mira en la carpeta de correo no deseado o de promociones.', 'Si no el veus en uns minuts, mira a la carpeta de correu brossa o de promocions.', 'Can’t see it in a few minutes? Check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-newsletter="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`;
+  } catch (_) { btn.disabled = false; fail(L('No se ha podido enviar. Prueba más tarde.', 'No s’ha pogut enviar. Prova-ho més tard.', 'Could not send. Please try later.')) }
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-newsletter]');
+  if (a) { e.preventDefault(); nlOpen(a.dataset.newsletter === 'open'); return }
+  const ov = $('nlOverlay'); if (ov && !ov.hidden && e.target === ov) nlOpen(false);
+});
+document.addEventListener('submit', e => { if (e.target.id === 'nlForm') { e.preventDefault(); nlSubmit(e.target) } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('nlOverlay') && !$('nlOverlay').hidden) nlOpen(false) });
+if (NEWSLETTER) document.addEventListener('DOMContentLoaded', nlFooter); if (NEWSLETTER && document.readyState !== 'loading') nlFooter();
 // Carrusel de la Selección (28-10-2026, David): también en escritorio, todas las fichas iguales. Flechas y «1–4 de 7» en
 // escritorio; en móvil se desliza con el dedo. Sin paso automático.
 function pickNav() {
@@ -2346,7 +2435,10 @@ $('hourFrom').addEventListener('input', e => { $('hourFromLabel').textContent = 
 function typeHero() {
   const el = $('heroWord'); if (!el) return;
   const words = ['hoy.', 'mañana.', 'este fin de semana.', 'esta semana.', 'este mes.'].map(t);
-  $('heroTitle').setAttribute('aria-label', `${t('Qué hacer en Barcelona')} ${words[0]}`);
+  // Empieza por el periodo elegido (2-11-2026, David): fin de semana, 7 días, 30 días o mañana; luego sigue rotando.
+  const start = {finde: 2, '7': 3, '30': 4}[state.range] ?? (!state.range && state.day === addDays(today, 1) ? 1 : 0);
+  if (start) el.textContent = words[start];
+  $('heroTitle').setAttribute('aria-label', `${t('Qué hacer en Barcelona')} ${words[start]}`);
   const fit = w => {   // 28-10-2026 (David): todo al mismo tamaño; solo encoge la palabra que no cabe (p. ej. «aquest cap de setmana.» en móvil)
     el.style.fontSize = ''; el.style.lineHeight = ''; el.style.minHeight = '';
     const probe = document.createElement('span'); probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'; probe.textContent = w; el.append(probe);
@@ -2358,7 +2450,7 @@ function typeHero() {
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const visible = async () => { while (document.hidden) await wait(500) };
   (async () => {
-    let i = 0; el.classList.add('typing'); await wait(2600);
+    let i = start; el.classList.add('typing'); await wait(2600);
     for (;;) {
       await visible();
       const current = el.textContent; for (let n = current.length; n >= 0; n--) { el.textContent = current.slice(0, n); await wait(38) }

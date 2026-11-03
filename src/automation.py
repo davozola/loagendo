@@ -15,7 +15,7 @@ from pathlib import Path
 from src.sync import GUIABCN_ENDPOINT, IncrementalSync, now_utc
 
 STALE_LOCK_MINUTES = 240  # 22-10-2026: la publicación llegó a pasar de 2 h y otra pasada la daba por muerta a los 120 min
-VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit", "official_images", "radar"}
+VALID_KINDS = {"api", "web", "opendata", "venues", "enrich", "media", "media_maintenance", "publish", "dedupe", "places", "eventbrite", "ticketmaster", "xceed", "dice", "ai", "ai_agenda", "organizer_text", "official_dates", "time_rescue", "official_translations", "venue_text", "report", "festival_finder", "audit", "official_images", "radar", "seleccio"}
 # A completed run that returns far fewer rows than the source usually gives is
 # a parser or site regression, not success (CCCB once returned 4 rows after 122).
 LOW_VOLUME_RATIO = 0.3
@@ -186,6 +186,9 @@ def execute(conn, job, media_root):
     if kind == "audit":
         from src.weekly_audit import run as run_audit
         return run_audit(conn, job)
+    if kind == "seleccio":   # La Selecció, la newsletter de los jueves (src/seleccio.py, 4-11-2026)
+        from src import seleccio
+        return seleccio.run(conn, job)
     if kind == "report":
         from src.daily_report import run as run_report
         return run_report(conn, job)

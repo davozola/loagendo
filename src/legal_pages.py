@@ -45,6 +45,7 @@ PRIVACIDAD = {
     'es': ('Privacidad', f'''
 <p><b>Responsable:</b> {OWNER} · {MAIL}.</p>
 <p><b>Avisos por correo.</b> Si te suscribes, guardamos tu correo, la frecuencia y las búsquedas que elijas, solo para enviarte los avisos. La base legal es tu consentimiento, que confirmas desde un correo; las solicitudes sin confirmar se borran a las 48 horas. Puedes darte de baja desde el enlace de cada correo y entonces se borran tus datos. Para evitar abusos se guarda durante un día un resumen cifrado de la IP, nunca la IP.</p>
+<p><b>La Selecció.</b> Si te suscribes a la newsletter de los jueves, guardamos en Brevo (nuestro proveedor de envíos, en la UE) tu correo y el idioma en que la recibes, solo para enviártela. La base legal es tu consentimiento, que confirmas desde un correo. Brevo mide si abres el correo y en qué enlaces haces clic, para que sepamos qué interesa. Puedes darte de baja desde el enlace de cada edición. Para evitar abusos se guarda durante un día un resumen cifrado de la IP, nunca la IP.</p>
 <p><b>Si nos escribes</b> a {CONTACT}, usamos tu correo solo para responderte.</p>
 <p><b>Estadísticas.</b> Medimos el uso de la web con Matomo en un servidor propio, sin cookies, con la IP anonimizada y sin medir nada si tu navegador pide no ser seguido (Do Not Track o Global Privacy Control).</p>
 <p><b>En tu navegador.</b> El idioma y los planes guardados se quedan en tu dispositivo; no nos llegan. Si usas «Cerca de mí», tu ubicación solo se usa en tu dispositivo para calcular distancias: no se envía ni se guarda.</p>
@@ -54,6 +55,7 @@ PRIVACIDAD = {
     'ca': ('Privacitat', f'''
 <p><b>Responsable:</b> {OWNER} · {MAIL}.</p>
 <p><b>Avisos per correu.</b> Si t'hi subscrius, guardem el teu correu, la freqüència i les cerques que triïs, només per enviar-te els avisos. La base legal és el teu consentiment, que confirmes des d'un correu; les sol·licituds sense confirmar s'esborren al cap de 48 hores. Et pots donar de baixa des de l'enllaç de cada correu i llavors s'esborren les teves dades. Per evitar abusos es guarda durant un dia un resum xifrat de la IP, mai la IP.</p>
+<p><b>La Selecció.</b> Si et subscrius a la newsletter dels dijous, guardem a Brevo (el nostre proveïdor d'enviaments, a la UE) el teu correu i l'idioma en què la reps, només per enviar-te-la. La base legal és el teu consentiment, que confirmes des d'un correu. Brevo mesura si obres el correu i en quins enllaços fas clic, perquè sapiguem què interessa. Et pots donar de baixa des de l'enllaç de cada edició. Per evitar abusos es guarda durant un dia un resum xifrat de la IP, mai la IP.</p>
 <p><b>Si ens escrius</b> a {CONTACT}, fem servir el teu correu només per respondre't.</p>
 <p><b>Estadístiques.</b> Mesurem l'ús de la web amb Matomo en un servidor propi, sense galetes, amb la IP anonimitzada i sense mesurar res si el teu navegador demana no ser seguit (Do Not Track o Global Privacy Control).</p>
 <p><b>Al teu navegador.</b> L'idioma i els plans desats es queden al teu dispositiu; no ens arriben. Si fas servir «A prop meu», la teva ubicació només s'usa al teu dispositiu per calcular distàncies: no s'envia ni es guarda.</p>
@@ -63,6 +65,7 @@ PRIVACIDAD = {
     'en': ('Privacy', f'''
 <p><b>Controller:</b> {OWNER} · {MAIL}.</p>
 <p><b>Email alerts.</b> If you subscribe, we store your email address, the frequency and the searches you choose, only to send you the alerts. The legal basis is your consent, which you confirm from an email; unconfirmed requests are deleted after 48 hours. You can unsubscribe from the link in every email, and your data is then deleted. To prevent abuse, a hashed summary of your IP is kept for one day, never the IP itself.</p>
+<p><b>La Selecció.</b> If you subscribe to the Thursday newsletter, we store your email address and language in Brevo (our email provider, in the EU), only to send it to you. The legal basis is your consent, which you confirm from an email. Brevo measures whether you open the email and which links you click, so we know what is of interest. You can unsubscribe from the link in every edition. To prevent abuse, a hashed summary of your IP is kept for one day, never the IP itself.</p>
 <p><b>If you write to us</b> at {CONTACT}, we use your address only to reply.</p>
 <p><b>Statistics.</b> We measure use of the site with Matomo on our own server, without cookies, with anonymised IPs and measuring nothing if your browser asks not to be tracked (Do Not Track or Global Privacy Control).</p>
 <p><b>In your browser.</b> Your language and saved plans stay on your device; they never reach us. If you use «Near me», your location is only used on your device to work out distances: it is never sent or stored.</p>

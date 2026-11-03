@@ -814,6 +814,11 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     # Avisos por correo (alertas/): el botón solo aparece con alerts.enabled y la clave pública de Turnstile
     # (config/automation.json, trabajo publicar-web). Apagado mientras no estén la privacidad y las claves.
     alerts = alerts or {}
+    # Alta en La Selecció (4-11-2026): el enlace «Rep-la cada dijous» solo sale con config/seleccio.json web_signup y Turnstile.
+    from src.seleccio import config as _seleccio_config
+    if _seleccio_config().get('web_signup') and alerts.get('turnstile_site_key'):
+        extra = '' if alerts.get('enabled') else f' data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"'
+        index = index.replace('<html lang="es"', f'<html lang="es" data-newsletter="1"{extra}', 1)
     if alerts.get('enabled') and alerts.get('turnstile_site_key'):
         index = index.replace('<html lang="es"', f'<html lang="es" data-alerts="1" data-turnstile="{html.escape(str(alerts["turnstile_site_key"]))}"', 1)
     from src import landings   # las páginas de entrada ya no se enlazan en el pie (25-10-2026); siguen en el sitemap
@@ -827,6 +832,8 @@ def write_shell(static_dir, out, site_url, alerts, today, days):
     landings.write_all(out, index, days, site_url, today, catalog_items)
     from src import legal_pages   # Aviso legal, Privacidad y Fuentes en catalán (raíz), castellano (/es/) e inglés (/en/)
     legal_pages.write_all(out, f"/public-v2.css?v={versions['public-v2.css']}" if PUBLIC_SKIN == 'v2' else '', site_url)
+    from src import seleccio   # La Selecció (4-11-2026): confirmación de alta, archivo de ediciones y la última, en los tres idiomas
+    seleccio.write_pages(out)
     return versions
 
 
