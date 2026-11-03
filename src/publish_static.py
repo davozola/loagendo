@@ -50,7 +50,7 @@ STATIC_FILES = ('public.css', 'public.js', 'public-v2.css', 'analytics.js', 'leg
 PUBLIC_DETAIL_FIELDS = ('source', 'id', 'key', 'title', 'source_label', 'start', 'end', 'kind', 'kind_label', 'format', 'format_label', 'category', 'district',
                         'family_audience', 'has_description', 'summary', 'venue_names', 'coordinates', 'occurrences', 'has_candidate', 'date_precision',
                         'media', 'also_in', 'price_label', 'is_free', 'time', 'time_source', 'time_label', 'public_category', 'url', 'description',
-                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit',
+                        'editorial_summary', 'time_text', 'schedule_days', 'schedule_note', 'registration_required', 'price_text', 'venues', 'organizers', 'links', 'link_label', 'confirmations', 'presentation', 'time_conflicts', 'hours_by_day', 'notes_by_day', 'lineup', 'lineup_times', 'channels', 'age_min', 'age_max', 'age_evidence', 'age_source', 'price_source', 'official_dates', 'official_page', 'open_enrollment', 'drop_in', 'program', 'manual_hours', 'data_origin', 'festival', 'venue_unconfirmed', 'venue_upcoming', 'description_credit', 'url_generic',
                         'milestone', 'milestone_link', 'opening', 'other_days', 'sold_out', 'description_scope', 'part_of', 'activities')
 IMAGE_EXTENSIONS = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/avif': '.avif'}
 
@@ -155,8 +155,13 @@ class ImageExporter:
     def _write(self, asset_id, src, content_type):
         ext = IMAGE_EXTENSIONS.get(content_type.split(';')[0].strip().lower()) or (src.suffix.lower() if src.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif') else '.jpg')
         name = f'{asset_id}{ext}'; dst = self.out / name
+        if ext == '.png':   # PNG pesado ya pasado a JPEG en una publicación anterior (3-11-2026)
+            alt = self.out / f'{asset_id}.jpg'
+            if alt.is_file() and alt.stat().st_size > 0: self.stats['reused'] += 1; return alt.name
         if dst.is_file() and dst.stat().st_size > 0:
-            self.stats['reused'] += 1; return name
+            self.stats['reused'] += 1; recompress(dst, self.stats)
+            jpg = png_to_jpeg(dst, self.stats)
+            return jpg.name if jpg else name
         try:
             ok = self.thumbnailer(src, dst) if self.thumbnailer else False
             if not ok: shutil.copyfile(src, dst)
@@ -164,8 +169,72 @@ class ImageExporter:
             self.stats['failed'] += 1; return None
         if dst.stat().st_size > MAX_ASSET_BYTES:
             dst.unlink(); self.stats['skipped_too_large'] += 1; return None
+        recompress(dst, self.stats)
+        jpg = png_to_jpeg(dst, self.stats)
         self.stats['exported'] += 1
-        return name
+        return jpg.name if jpg else name
+
+
+RECOMPRESS_OVER = 600_000   # 3-11-2026: JPEG de más de 600 KB tras reducirlos a 1.200 px (350 fotos eran 0,7 GB de la web)
+RECOMPRESS_QUALITY = 78
+
+
+def recompress(dst, stats=None):
+    """JPEG publicado demasiado pesado: se vuelve a guardar con calidad 78 (sips, macOS), mismas medidas y mismo nombre.
+    Solo la copia de la web (dist/img); el original de data/media no se toca. Sin sips, nada."""
+    try:
+        if dst.suffix.lower() not in ('.jpg', '.jpeg') or dst.stat().st_size <= RECOMPRESS_OVER: return False
+        sips = shutil.which('sips')
+        if not sips: return False
+        tmp = dst.with_name(dst.stem + '.tmp' + dst.suffix)
+        result = subprocess.run([sips, '-s', 'format', 'jpeg', '-s', 'formatOptions', str(RECOMPRESS_QUALITY), str(dst), '--out', str(tmp)], capture_output=True, text=True, timeout=60)
+        if result.returncode == 0 and tmp.is_file() and 0 < tmp.stat().st_size < dst.stat().st_size:
+            tmp.replace(dst)
+            if stats is not None: stats['recompressed'] = stats.get('recompressed', 0) + 1
+            return True
+        if tmp.exists(): tmp.unlink()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return False
+
+
+def png_to_jpeg(dst, stats=None):
+    """PNG publicado de más de 600 KB (carteles y fotos guardados como PNG: 290 eran 450 MB de la web): copia JPEG con
+    calidad 78 junto a él (<id>.jpg), que es la que se publica; el PNG sin usar lo quita prune_images. Sin sips, nada."""
+    try:
+        if dst.suffix.lower() != '.png' or dst.stat().st_size <= RECOMPRESS_OVER: return None
+        sips = shutil.which('sips')
+        if not sips: return None
+        jpg = dst.with_suffix('.jpg')
+        result = subprocess.run([sips, '-s', 'format', 'jpeg', '-s', 'formatOptions', str(RECOMPRESS_QUALITY), str(dst), '--out', str(jpg)], capture_output=True, text=True, timeout=60)
+        if result.returncode == 0 and jpg.is_file() and 0 < jpg.stat().st_size < dst.stat().st_size:
+            if stats is not None: stats['png_to_jpeg'] = stats.get('png_to_jpeg', 0) + 1
+            return jpg
+        if jpg.exists(): jpg.unlink()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+def prune_images(out):
+    """Fotos de dist/img que ya no usa ninguna página ni fichero de datos publicado (actos pasados o retirados): fuera
+    de la carpeta publicada (3-11-2026). Es solo la copia para la web; el original sigue en data/media y se vuelve a
+    exportar si hace falta. Por seguridad, si las referencias encontradas son pocas (algo ha ido mal), no se toca nada."""
+    img = Path(out) / 'img'
+    if not img.is_dir(): return {'removed': 0, 'freed_mb': 0.0, 'skipped': 'sin carpeta'}
+    rx = re.compile(r'/img/([A-Za-z0-9._-]+)')
+    refs = set()
+    for f in Path(out).rglob('*'):
+        if f.is_file() and f.suffix in ('.json', '.html', '.xml', '.js') and img not in f.parents:
+            try: refs.update(rx.findall(f.read_text(encoding='utf-8', errors='ignore')))
+            except OSError: pass
+    files = [f for f in img.iterdir() if f.is_file()]
+    if len(refs) < 0.3 * len(files): return {'removed': 0, 'freed_mb': 0.0, 'skipped': f'solo {len(refs)} referencias para {len(files)} fotos'}
+    removed = freed = 0
+    for f in files:
+        if f.name not in refs:
+            freed += f.stat().st_size; f.unlink(); removed += 1
+    return {'removed': removed, 'freed_mb': round(freed / 1e6, 1)}
 
 
 def default_thumbnailer():
@@ -1117,6 +1186,7 @@ def export(conn, out_dir, *, media_root=ROOT / 'data' / 'media', static_dir=ROOT
     from src import landings
     # Solo las páginas de entrada indexables: con actos y que son su propia canónica (1-11-2026).
     write_sitemaps(out, site_url, events, cards, today, landings.indexable_paths(today, days, catalogue) + ['/es/', '/en/'])
+    images.stats['pruned'] = prune_images(out)   # fotos que ya no usa nada de lo publicado (3-11-2026), con todo ya escrito
     file_count = sum(1 for p in out.rglob('*') if p.is_file())
     # Readiness gate: a thin or empty export must never replace a working site.
     soon = (today + dt.timedelta(days=14)).isoformat()

@@ -264,6 +264,20 @@ def initialize(conn: sqlite3.Connection) -> None:
     # stable source identity and is therefore the external id for this MVP.
 
 
+# Sellos de generación de los iCal de las fuentes (3-11-2026): Open Data BCN manda en cada ficha su .ics con DTSTAMP = hora
+# de la descarga, así que cada día parecía cambiar todo y se guardaba una versión nueva de ~4.600 fichas (unos 150 MB al
+# día; 2,1 GB del historial eran eso). La huella de la ficha ya no lo cuenta; el contenido se guarda igual, entero.
+_ICAL_STAMP = _re.compile(r'^DTSTAMP[;:][^\r\n]*(?:\r?\n)?', _re.M)
+
+
+def stable_raw(obj):
+    """El dato tal cual, sin los DTSTAMP de los iCal que lleve dentro (solo para comparar versiones)."""
+    if isinstance(obj, dict): return {k: stable_raw(v) for k, v in obj.items()}
+    if isinstance(obj, list): return [stable_raw(v) for v in obj]
+    if isinstance(obj, str) and 'BEGIN:VCALENDAR' in obj: return _ICAL_STAMP.sub('', obj)
+    return obj
+
+
 def _upsert_record(conn: sqlite3.Connection, run_id: int, record: dict) -> tuple[bool, list[str]]:
     old_row = conn.execute("SELECT raw_json FROM source_records WHERE source=? AND id=?", (record["source"], record["id"])).fetchone()
     old = None
@@ -277,9 +291,16 @@ def _upsert_record(conn: sqlite3.Connection, run_id: int, record: dict) -> tuple
         except (ValueError, IndexError, TypeError, KeyError):
             old = None
     record["raw"].setdefault("normalized", {key: record[key] for key in ("title", "start", "end", "time_text", "price_text", "kind", "eligibility", "venues", "organizers", "url")})
-    raw_hash = sha(record["raw"])
+    raw_hash = sha(stable_raw(record["raw"]))
     normalized_hash = sha({key: record[key] for key in ("title", "start", "end", "time_text", "price_text", "kind", "eligibility", "venues", "organizers", "url")})
     existing = conn.execute("SELECT raw_sha256 FROM source_records WHERE source=? AND id=?", (record["source"], record["id"])).fetchone()
+    # Guardada con la huella de antes (con DTSTAMP): si solo cambia el sello, no es una versión nueva; se pone la huella nueva.
+    if existing and existing[0] != raw_hash and old_row:
+        try: same_content = sha(stable_raw(json.loads(old_row[0]))) == raw_hash
+        except (TypeError, ValueError): same_content = False
+        if same_content:
+            conn.execute("UPDATE source_records SET raw_sha256=? WHERE source=? AND id=?", (raw_hash, record["source"], record["id"]))
+            return False, []
     if existing and existing[0] == raw_hash:
         # Snapshots predate the version table.  The first live observation of
         # an unchanged snapshot is still its auditable baseline, but later
