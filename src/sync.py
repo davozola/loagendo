@@ -267,14 +267,30 @@ def initialize(conn: sqlite3.Connection) -> None:
 # Sellos de generación de los iCal de las fuentes (3-11-2026): Open Data BCN manda en cada ficha su .ics con DTSTAMP = hora
 # de la descarga, así que cada día parecía cambiar todo y se guardaba una versión nueva de ~4.600 fichas (unos 150 MB al
 # día; 2,1 GB del historial eran eso). La huella de la ficha ya no lo cuenta; el contenido se guarda igual, entero.
-_ICAL_STAMP = _re.compile(r'^DTSTAMP[;:][^\r\n]*(?:\r?\n)?', _re.M)
+# Open Data BCN genera el iCal en cada descarga: sello DTSTAMP y UID nuevos (UID al azar), sesiones en otro orden y
+# sin las que ya pasaron. Nada de eso es un cambio del acto; para comparar versiones se quita (3-11-2026).
+_ICAL_VOLATILE = _re.compile(r'^(?:DTSTAMP|UID)[;:][^\r\n]*(?:\r?\n)?', _re.M)
+_ICAL_EVENT = _re.compile(r'BEGIN:VEVENT\r?\n.*?END:VEVENT(?:\r?\n)?', _re.S)
+_ICAL_END = _re.compile(r'^DTEND[^:\r\n]*:(\d{8})', _re.M)
+_ICAL_START = _re.compile(r'^DTSTART[^:\r\n]*:(\d{8})', _re.M)
 
 
-def stable_raw(obj):
-    """El dato tal cual, sin los DTSTAMP de los iCal que lleve dentro (solo para comparar versiones)."""
-    if isinstance(obj, dict): return {k: stable_raw(v) for k, v in obj.items()}
-    if isinstance(obj, list): return [stable_raw(v) for v in obj]
-    if isinstance(obj, str) and 'BEGIN:VCALENDAR' in obj: return _ICAL_STAMP.sub('', obj)
+def _stable_ical(text, since=None):
+    events = []
+    for event in _ICAL_EVENT.findall(text):
+        event = _ICAL_VOLATILE.sub('', event).strip()
+        day = _ICAL_END.search(event) or _ICAL_START.search(event)
+        if since and day and day.group(1) < since: continue
+        events.append(event)
+    return _ICAL_VOLATILE.sub('', _ICAL_EVENT.sub('', text)) + '\n' + '\n'.join(sorted(events))
+
+
+def stable_raw(obj, since=None):
+    """El dato tal cual, con los iCal sin lo que cambia en cada descarga (solo para comparar versiones).
+    ``since`` (AAAAMMDD): deja fuera las sesiones del iCal que terminaron antes de ese día."""
+    if isinstance(obj, dict): return {k: stable_raw(v, since) for k, v in obj.items()}
+    if isinstance(obj, list): return [stable_raw(v, since) for v in obj]
+    if isinstance(obj, str) and 'BEGIN:VCALENDAR' in obj: return _stable_ical(obj, since)
     return obj
 
 
@@ -294,12 +310,14 @@ def _upsert_record(conn: sqlite3.Connection, run_id: int, record: dict) -> tuple
     raw_hash = sha(stable_raw(record["raw"]))
     normalized_hash = sha({key: record[key] for key in ("title", "start", "end", "time_text", "price_text", "kind", "eligibility", "venues", "organizers", "url")})
     existing = conn.execute("SELECT raw_sha256 FROM source_records WHERE source=? AND id=?", (record["source"], record["id"])).fetchone()
-    # Guardada con la huella de antes (con DTSTAMP): si solo cambia el sello, no es una versión nueva; se pone la huella nueva.
+    # Lo mismo que lo guardado salvo lo que el iCal cambia en cada descarga (sellos, UID, orden, sesiones ya pasadas):
+    # no es una versión nueva. Se deja la huella y el dato guardados como estaban, así una lectura igual a la guardada
+    # sigue sin crear versión (3-11-2026).
     if existing and existing[0] != raw_hash and old_row:
-        try: same_content = sha(stable_raw(json.loads(old_row[0]))) == raw_hash
+        since = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
+        try: same_content = sha(stable_raw(json.loads(old_row[0]), since)) == sha(stable_raw(record["raw"], since))
         except (TypeError, ValueError): same_content = False
         if same_content:
-            conn.execute("UPDATE source_records SET raw_sha256=? WHERE source=? AND id=?", (raw_hash, record["source"], record["id"]))
             return False, []
     if existing and existing[0] == raw_hash:
         # Snapshots predate the version table.  The first live observation of

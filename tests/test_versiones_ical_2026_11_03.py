@@ -27,6 +27,15 @@ class VersionesIcal(unittest.TestCase):
             sync._upsert_record(conn, 3, record('20261104T090000Z', 'En Patufet (nova data)')); self.assertEqual(versions(), n + 1)
             conn.close()
 
+    def test_uid_orden_y_sesiones_pasadas(self):
+        ev = lambda uid, d: f'BEGIN:VEVENT\r\nUID:{uid}@x.org\r\nDTSTART:{d}T100000Z\r\nDTEND:{d}T190000Z\r\nEND:VEVENT\r\n'
+        cal = lambda *evs: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\n' + ''.join(evs) + 'END:VCALENDAR'
+        hoy = sync.stable_raw({'i': cal(ev('a', '20261105'), ev('b', '20261106'))}, '20261105')
+        self.assertEqual(sync.stable_raw({'i': cal(ev('c', '20261104'), ev('d', '20261106'), ev('e', '20261105'))}, '20261105'), hoy)
+        self.assertNotEqual(sync.stable_raw({'i': cal(ev('a', '20261105'), ev('b', '20261107'))}, '20261105'), hoy)
+        # sin fecha de corte, las sesiones pasadas sí cuentan
+        self.assertNotEqual(sync.stable_raw({'i': cal(ev('c', '20261104'), ev('d', '20261106'), ev('e', '20261105'))}), sync.stable_raw({'i': cal(ev('a', '20261105'), ev('b', '20261106'))}))
+
 
 if __name__ == '__main__':
     unittest.main()
