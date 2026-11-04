@@ -849,13 +849,13 @@ const PRIVACY_PATH = {ca: '/privacitat', es: '/es/privacidad', en: '/en/privacy'
 let nlToken = '';
 function nlLink() {
   if (!NEWSLETTER) return; const p = $('weekRange'); if (!p || p.querySelector('.nl-open')) return;
-  const a = document.createElement('a'); a.className = 'nl-open'; a.href = `${BASE}/seleccio/`; a.dataset.newsletter = 'open';
+  const a = document.createElement('a'); a.className = 'nl-open'; a.href = `${BASE}/seleccio/`; a.dataset.nl = 'open';
   a.innerHTML = MAIL_ICON + `<span>${L('Recíbela cada jueves', 'Rep-la cada dijous', 'Get it every Thursday')}</span>`;
   p.append(' ', a);
 }
 function nlFooter() {
   const box = document.querySelector('.footer-links'); if (!NEWSLETTER || !box || box.querySelector('.nl-foot')) return;
-  const a = document.createElement('a'); a.className = 'nl-foot'; a.href = `${BASE}/seleccio/`; a.dataset.newsletter = 'open'; a.textContent = L('La Selecció, cada jueves', 'La Selecció, cada dijous', 'La Selecció, every Thursday');
+  const a = document.createElement('a'); a.className = 'nl-foot'; a.href = `${BASE}/seleccio/`; a.dataset.nl = 'open'; a.textContent = L('La Selecció, cada jueves', 'La Selecció, cada dijous', 'La Selecció, every Thursday');
   box.prepend(a, ' · ');
 }
 function nlTurnstile() {
@@ -868,7 +868,7 @@ function nlOpen(open = true) {
   let ov = $('nlOverlay');
   if (!open) { if (ov) { ov.hidden = true; document.body.style.overflow = '' } return }
   if (!ov) { ov = document.createElement('div'); ov.id = 'nlOverlay'; ov.className = 'overlay nl-overlay'; document.body.append(ov) }
-  ov.innerHTML = `<article class="sheet nl-sheet" role="dialog" aria-modal="true" aria-labelledby="nlTitle"><div class="nl-head"><span>La Selecció</span><button class="close" type="button" data-newsletter="close" aria-label="${esc(t('Cerrar'))}">✕</button></div>
+  ov.innerHTML = `<article class="sheet nl-sheet" role="dialog" aria-modal="true" aria-labelledby="nlTitle"><div class="nl-head"><span>La Selecció</span><button class="close" type="button" data-nl="close" aria-label="${esc(t('Cerrar'))}">✕</button></div>
 <form id="nlForm" class="nl-body" novalidate><h2 id="nlTitle">${L('Barcelona, cada jueves en tu buzón.', 'Barcelona, cada dijous a la teva bústia.', 'Barcelona, every Thursday in your inbox.')}</h2>
 <p>${L('Una selección de los mejores planes culturales para el fin de semana y los días siguientes.', 'Una selecció dels millors plans culturals per al cap de setmana i els dies següents.', 'A selection of the best cultural plans for the weekend and the days after.')}</p>
 <p class="nl-rhythm">${L('Cada jueves a las 9 h. Gratis. Un solo correo a la semana.', 'Cada dijous a les 9 h. Gratis. Un sol correu a la setmana.', 'Every Thursday at 9 am. Free. One email a week.')}</p>
@@ -896,13 +896,13 @@ async function nlSubmit(form) {
     }
     track('seleccio', 'signup', d.status || 'sent');
     form.outerHTML = d.status === 'already'
-      ? `<div class="nl-body"><h2>${L('Ya recibes la Selecció', 'Ja reps la Selecció', 'You’re already subscribed')}</h2><p>${L('Este correo ya está suscrito. Si no te llega, mira en la carpeta de correo no deseado o de promociones.', 'Aquest correu ja està subscrit. Si no t’arriba, mira a la carpeta de correu brossa o de promocions.', 'This address already gets La Selecció. If it isn’t arriving, check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-newsletter="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`
-      : `<div class="nl-body">${MAIL_ICON.replace('width="16" height="16"', 'width="40" height="40"')}<h2>${L('Revisa tu correo', 'Revisa el teu correu', 'Check your inbox')}</h2><p>${L('Te hemos enviado un enlace a', 'T’hem enviat un enllaç a', 'We’ve sent a link to')} <strong>${esc(email)}</strong>. ${L('Ábrelo para confirmar el alta y la primera Selecció te llegará el jueves.', 'Obre’l per confirmar l’alta i la primera Selecció t’arribarà el dijous.', 'Open it to confirm and your first Selecció arrives on Thursday.')}</p><p class="nl-legal">${L('Si no lo ves en unos minutos, mira en la carpeta de correo no deseado o de promociones.', 'Si no el veus en uns minuts, mira a la carpeta de correu brossa o de promocions.', 'Can’t see it in a few minutes? Check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-newsletter="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`;
+      ? `<div class="nl-body"><h2>${L('Ya recibes la Selecció', 'Ja reps la Selecció', 'You’re already subscribed')}</h2><p>${L('Este correo ya está suscrito. Si no te llega, mira en la carpeta de correo no deseado o de promociones.', 'Aquest correu ja està subscrit. Si no t’arriba, mira a la carpeta de correu brossa o de promocions.', 'This address already gets La Selecció. If it isn’t arriving, check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-nl="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`
+      : `<div class="nl-body">${MAIL_ICON.replace('width="16" height="16"', 'width="40" height="40"')}<h2>${L('Revisa tu correo', 'Revisa el teu correu', 'Check your inbox')}</h2><p>${L('Te hemos enviado un enlace a', 'T’hem enviat un enllaç a', 'We’ve sent a link to')} <strong>${esc(email)}</strong>. ${L('Ábrelo para confirmar el alta y la primera Selecció te llegará el jueves.', 'Obre’l per confirmar l’alta i la primera Selecció t’arribarà el dijous.', 'Open it to confirm and your first Selecció arrives on Thursday.')}</p><p class="nl-legal">${L('Si no lo ves en unos minutos, mira en la carpeta de correo no deseado o de promociones.', 'Si no el veus en uns minuts, mira a la carpeta de correu brossa o de promocions.', 'Can’t see it in a few minutes? Check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-nl="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`;
   } catch (_) { btn.disabled = false; fail(L('No se ha podido enviar. Prueba más tarde.', 'No s’ha pogut enviar. Prova-ho més tard.', 'Could not send. Please try later.')) }
 }
 document.addEventListener('click', e => {
-  const a = e.target.closest('[data-newsletter]');
-  if (a) { e.preventDefault(); nlOpen(a.dataset.newsletter === 'open'); return }
+  const a = e.target.closest('a[data-nl], button[data-nl]');   // no «[data-newsletter]»: lo lleva también <html> (4-11-2026)
+  if (a) { e.preventDefault(); nlOpen(a.dataset.nl === 'open'); return }
   const ov = $('nlOverlay'); if (ov && !ov.hidden && e.target === ov) nlOpen(false);
 });
 document.addEventListener('submit', e => { if (e.target.id === 'nlForm') { e.preventDefault(); nlSubmit(e.target) } });
