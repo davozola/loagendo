@@ -810,3 +810,9 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 #seleccion .pick-range button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
 #seleccion .pick-range button:not([aria-pressed=true]):hover{background:#F4F4F1;color:var(--ink)}
 @media(max-width:620px){#seleccion .pick-range{display:flex;width:100%;box-sizing:border-box}#seleccion .pick-range button{flex:1 1 auto;height:44px;padding:0 8px}}
+/* 4-11-2026, David: el blanco cantaba y eran altos. Sin elegir, transparentes sobre el turquesa; más bajos. */
+#seleccion .pick-range,#seleccion .pick-range button{background:transparent}
+#seleccion .pick-range button{height:30px;padding:0 12px}
+#seleccion .pick-range button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+#seleccion .pick-range button:not([aria-pressed=true]):hover{background:rgba(0,0,0,.08)}
+@media(max-width:620px){#seleccion .pick-range button{height:38px;padding:0 6px}}
