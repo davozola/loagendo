@@ -1,16 +1,16 @@
 {
-  "enabled": false,
+  "enabled": true,
   "note": "La Selecció (src/seleccio.py, 4-11-2026). Poner enabled: true cuando estén en Brevo las tres listas (sus ids aquí) y las plantillas de doble confirmación, y en Cloudflare los secretos (docs/seleccio.md).",
   "test_to": "hola@ontoca.com",
   "site_url": "https://ontoca.com",
   "api_url": "https://ontoca.com/api/seleccio",
   "lists": {
-    "ca": null,
-    "es": null,
-    "en": null
+    "ca": 4,
+    "es": 5,
+    "en": 6
   },
   "prepare_at": "09:00",
   "deadline": "08:45",
   "send_at": "09:00",
-  "web_signup": false
+  "web_signup": true
 }
