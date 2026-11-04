@@ -907,7 +907,23 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => { if (e.target.id === 'nlForm') { e.preventDefault(); nlSubmit(e.target) } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('nlOverlay') && !$('nlOverlay').hidden) nlOpen(false) });
-if (NEWSLETTER) document.addEventListener('DOMContentLoaded', nlFooter); if (NEWSLETTER && document.readyState !== 'loading') nlFooter();
+if (NEWSLETTER) setTimeout(nlFooter, 0);   // después de que se haya leído todo el fichero (L y t se definen más abajo)
+// Arrastrar el carrusel con el ratón (4-11-2026, David): mantener pulsado y mover. Un clic sin mover abre la ficha como
+// siempre; si se ha arrastrado, soltar no abre nada. En el móvil ya se desliza con el dedo.
+(() => {
+  const box = $('curated'); if (!box) return;
+  let down = null, moved = false;
+  box.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button !== 0) return; down = {x: e.clientX, left: box.scrollLeft}; moved = false });
+  window.addEventListener('pointermove', e => {
+    if (!down) return; const dx = e.clientX - down.x;
+    if (!moved && Math.abs(dx) < 6) return;
+    if (!moved) { moved = true; box.classList.add('dragging') }
+    box.scrollLeft = down.left - dx;
+  });
+  window.addEventListener('pointerup', () => { if (!down) return; down = null; if (moved) { box.classList.remove('dragging'); setTimeout(() => { moved = false; pickNav() }, 0) } });
+  box.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation() } }, true);
+  box.addEventListener('dragstart', e => e.preventDefault());
+})();
 // Carrusel de la Selección (28-10-2026, David): también en escritorio, todas las fichas iguales. Flechas y «1–4 de 7» en
 // escritorio; en móvil se desliza con el dedo. Sin paso automático.
 function pickNav() {

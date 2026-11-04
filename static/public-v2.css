@@ -793,3 +793,20 @@ footer a{color:var(--footer-ink);text-decoration:underline}
 .nl-body .nl-legal{font-size:13px;line-height:1.55;color:#444}.nl-body .nl-legal a{color:#444}
 .nl-example{display:inline-block;margin-top:10px;font-size:15px;font-weight:600;color:var(--ink)}
 @media(min-width:621px){.nl-overlay{align-items:center}}
+
+/* Carrusel (4-11-2026, David): las flechas suben a la línea de las fechas (a la derecha) y la fila de debajo desaparece;
+   arrastrar con el ratón lo mueve. */
+#seleccion #weekRange{grid-column:1 / 3}
+#seleccion .pick-nav{grid-column:3;grid-row:2;justify-self:end;align-self:center;margin:0}
+#seleccion .pick-bar:has(> #pickCats[hidden]){display:none}
+@media(max-width:620px){#seleccion #weekRange{grid-column:1 / -1}}
+@media(hover:hover) and (pointer:fine){.curated{cursor:grab}.curated.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}.curated.dragging>*{pointer-events:none}}
+
+/* Periodo de la Selección (4-11-2026, David): sin redondeos, como el resto de la web. Tres botones pegados con línea negra
+   de 1 px; el elegido en negro. En móvil ocupan todo el ancho. */
+#seleccion .pick-range{display:inline-flex;gap:0;padding:0;border:1px solid var(--ink);border-radius:0;background:var(--paper)}
+#seleccion .pick-range button{height:36px;padding:0 14px;border:0;border-left:1px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap}
+#seleccion .pick-range button:first-child{border-left:0}
+#seleccion .pick-range button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+#seleccion .pick-range button:not([aria-pressed=true]):hover{background:#F4F4F1;color:var(--ink)}
+@media(max-width:620px){#seleccion .pick-range{display:flex;width:100%;box-sizing:border-box}#seleccion .pick-range button{flex:1 1 auto;height:44px;padding:0 8px}}
