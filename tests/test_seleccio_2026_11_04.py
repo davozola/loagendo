@@ -81,6 +81,14 @@ class Datos(Base):
         self.assertTrue(all(i['img_ok'] for i in items))
         self.assertEqual(items[0]['price'], '17 €')
 
+    def test_foto_de_la_ficha_aunque_el_catalogo_no_la_lleve(self):
+        days = [dt.date(2026, 11, 6)]
+        c = card('2', 'Vijay Iyer', '2026-11-06', '2026-11-06', o=[['2026-11-06', '20:30']], img=False)
+        it = seleccio.make_item('opendatabcn_agenda:2', c, {'media': [{'url': '/img/2.jpg'}]}, days, 'weekend', self.dist)
+        self.assertEqual((it['img'], it['img_ok']), ('/img/2.jpg', True))
+        sala = seleccio.make_item('opendatabcn_agenda:2', c, {'media': [{'url': '/img/2.jpg', 'fallback': True}]}, days, 'weekend', self.dist)
+        self.assertEqual((sala['img'], sala['img_ok']), ('/img/2.jpg', False))   # foto de la sala: sale, pero no de protagonista
+
     def test_comprobacion_de_textos(self):
         facts = 'El guitarrista californià Jonathan Stout, del swing.'
         self.assertEqual(seleccio.unknown_terms('Swing de Jonathan Stout.', facts), [])

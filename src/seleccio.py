@@ -213,13 +213,17 @@ def make_item(key, card, detail, days, part, dist, motivo=''):
     s = sessions(card, days)
     if not s: return None
     cat = detail.get('public_category') or card.get('pc') or ''
-    img = card.get('mi') or ''
+    # La foto de la ficha (detalle publicado), como la web; el catálogo solo la lleva en las fichas que la lista puede
+    # destacar (4-11-2026: 27 planes de la Selección salían sin foto). La de la sala solo si la ficha no tiene propia.
+    media = [m for m in detail.get('media') or [] if m.get('url')]
+    own = next((m['url'] for m in media if not m.get('fallback')), '')
+    img = own or card.get('mi') or next((m['url'] for m in media), '')
     size = image_size(Path(dist) / img.lstrip('/')) if img else None
     venue = (detail.get('venue_names') or card.get('v') or [''])[0]
     return {'key': key, 'part': part, 'title': detail.get('title') or card['t'], 'category': cat, 'color': CAT_COLORS.get(cat, '#000000'),
             'venue': venue.split(' · ')[0].split(' - ')[0], 'district': card.get('d') or '', 'sessions': s,
             'when': {l: when_label(s, l) for l in LANGS}, 'free': bool(card.get('fr') or detail.get('is_free')), 'price': price_label({**detail, 'is_free': card.get('fr')}),
-            'img': img, 'img_ok': bool(size and 1.3 <= size[0] / max(size[1], 1) <= 2.0 and size[0] >= 900), 'img_wide': bool(size and size[0] / max(size[1], 1) >= 1.2),
+            'img': img, 'img_ok': bool(own or card.get('mi')) and bool(size and 1.3 <= size[0] / max(size[1], 1) <= 2.0 and size[0] >= 900), 'img_wide': bool(size and size[0] / max(size[1], 1) >= 1.2),
             'path': f"/e/{public_source(card['s'])}/{card['i']}", 'description': str(detail.get('description') or detail.get('summary') or '')[:1500],
             'festival': (detail.get('festival') or {}).get('name', '') if isinstance(detail.get('festival'), dict) else '',
             'lineup': [x.get('name', '') if isinstance(x, dict) else str(x) for x in (detail.get('lineup') or [])][:8], 'motivo': motivo,
@@ -662,6 +666,25 @@ def stale_intro(ed):
     facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'] and it['part'] == 'weekend')
     d['intro_stale'] = sorted({l for l in LANGS if d['intro'].get(l) and unknown_terms(d['intro'][l], facts)})
     return d['intro_stale']
+
+
+def refresh_images(ed, dist):
+    """Vuelve a tomar la foto de cada plan de la ficha publicada (para ediciones hechas antes del 4-11-2026)."""
+    from src.publish_static import shard_of
+    changed, cache = 0, {}
+    for it in ed['data']['items']:
+        shard = shard_of(it['key'])
+        if shard not in cache:
+            try: cache[shard] = json.loads((Path(dist) / 'data' / 'detail' / f'{shard}.json').read_text(encoding='utf-8'))
+            except (OSError, ValueError): cache[shard] = {}
+        media = [m for m in (cache[shard].get(it['key']) or {}).get('media') or [] if m.get('url')]
+        own = next((m['url'] for m in media if not m.get('fallback')), '')
+        img = own or it['img'] or next((m['url'] for m in media), '')
+        if img and img != it['img']:
+            size = image_size(Path(dist) / img.lstrip('/'))
+            it['img'], it['img_ok'] = img, bool(own) and bool(size and 1.3 <= size[0] / max(size[1], 1) <= 2.0 and size[0] >= 900)
+            changed += 1
+    return changed
 
 
 def add_reserves(conn, ed, dist, requester=None):
