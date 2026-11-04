@@ -35,6 +35,9 @@ const SCRIPT = String.raw`
   const {id, k} = window.SEL, app = document.getElementById('app');
   let S = null, lang = 'ca', editing = null, busy = false, msg = '';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const FALLBACK = {ca: 'Els plans del cap de setmana', es: 'Los planes del fin de semana', en: 'This weekend’s plans'};
+  const headHtml = s => s.head[lang] ? '<h2>' + esc(s.head[lang]) + '</h2>'
+    : '<h2 style="color:#444">' + esc(FALLBACK[lang]) + '</h2><div class="src">Sin titular de la IA: sale este, el de reserva. Pulsa «Otro texto» para pedir titular e introducción nuevos.</div>';
   const SRC = {ia: 'Texto de la IA · comprobado con la ficha', david: 'Escrito por ti', traducido: 'Traducido de tu texto · revísalo', '': 'Sin texto: sale solo con los datos de la ficha'};
   const pendingFor = item => (S.pending || []).filter(a => (a.item || '') === item && a.type !== 'approve' && a.type !== 'unapprove');
   const pendNote = item => pendingFor(item).length ? '<div class="pend">Cambio guardado. Se aplica en unos minutos y la página se actualiza sola.</div>' : '';
@@ -72,7 +75,7 @@ const SCRIPT = String.raw`
       + '<div>' + (late ? 'El plazo ha terminado.' : 'Tienes hasta las ' + hh + '. Sin tu aprobación, no sale.') + '</div></div>'
       + '<div class="tabs" role="group" aria-label="Idioma que revisas">' + [['ca', 'Català'], ['es', 'Castellano'], ['en', 'English']].map(([l, n]) => '<button data-lang="' + l + '" aria-pressed="' + (l === lang) + '">' + n + '</button>').join('') + '</div>'
       + (msg ? '<p class="err" style="padding:0 16px">' + esc(msg) + '</p>' : '')
-      + '<section><div class="k" style="color:#444">Titular e introducción</div><h2>' + esc(s.head[lang] || '') + '</h2>' + textBlock('intro', s.intro[lang], s.intro_src[lang]) + pendNote('intro')
+      + '<section><div class="k" style="color:#444">Titular e introducción</div>' + headHtml(s) + '' + textBlock('intro', s.intro[lang], s.intro_src[lang]) + pendNote('intro')
       + (late || editing === 'intro' ? '' : '<div class="acts"><button class="b" data-a="regenerate" data-i="intro">Otro texto</button><button class="b" data-a="edit" data-i="intro">Editar</button></div>') + '</section>'
       + '<section style="padding-bottom:8px;border-bottom:0"><div class="k" style="color:#444">Fin de semana · ' + items.filter(x => !x.removed).length + ' planes</div></section>'
       + (hero ? card(hero, true) : '') + rest.map(x => card(x, false)).join('')

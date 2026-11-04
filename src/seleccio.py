@@ -24,6 +24,7 @@ import re
 import secrets
 import struct
 import unicodedata
+import urllib.error
 import urllib.request
 from html import escape as esc
 from pathlib import Path
@@ -61,6 +62,8 @@ def initialize(conn):
         id TEXT PRIMARY KEY, number INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, status TEXT NOT NULL,
         review_key TEXT NOT NULL, data_json TEXT NOT NULL, ai_json TEXT NOT NULL DEFAULT '[]', history_json TEXT NOT NULL DEFAULT '[]',
         actions_seq INTEGER NOT NULL DEFAULT 0, approved_at TEXT, campaigns_json TEXT, preview_sent_at TEXT, notified_at TEXT, sent_at TEXT)""")
+    try: conn.execute('ALTER TABLE seleccio_editions ADD COLUMN pushed_at TEXT')   # 4-11-2026: subida a Cloudflare hecha
+    except Exception: pass
 
 
 def now_utc(): return dt.datetime.now(dt.timezone.utc)
@@ -71,9 +74,9 @@ def stamp(): return now_utc().isoformat(timespec='seconds')
 
 def load(conn, eid):
     initialize(conn)
-    row = conn.execute('SELECT id,number,status,review_key,data_json,ai_json,history_json,actions_seq,approved_at,campaigns_json,preview_sent_at,notified_at,sent_at FROM seleccio_editions WHERE id=?', (eid,)).fetchone()
+    row = conn.execute('SELECT id,number,status,review_key,data_json,ai_json,history_json,actions_seq,approved_at,campaigns_json,preview_sent_at,notified_at,sent_at,pushed_at FROM seleccio_editions WHERE id=?', (eid,)).fetchone()
     if not row: return None
-    keys = ('id', 'number', 'status', 'review_key', 'data', 'ai', 'history', 'actions_seq', 'approved_at', 'campaigns', 'preview_sent_at', 'notified_at', 'sent_at')
+    keys = ('id', 'number', 'status', 'review_key', 'data', 'ai', 'history', 'actions_seq', 'approved_at', 'campaigns', 'preview_sent_at', 'notified_at', 'sent_at', 'pushed_at')
     ed = dict(zip(keys, row))
     for k in ('data', 'ai', 'history', 'campaigns'): ed[k] = json.loads(ed[k]) if ed[k] else ([] if k in ('ai', 'history') else None)
     return ed
@@ -81,13 +84,13 @@ def load(conn, eid):
 
 def save(conn, ed):
     with conn:
-        conn.execute("""INSERT INTO seleccio_editions(id,number,created_at,updated_at,status,review_key,data_json,ai_json,history_json,actions_seq,approved_at,campaigns_json,preview_sent_at,notified_at,sent_at)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET number=excluded.number,updated_at=excluded.updated_at,status=excluded.status,
+        conn.execute("""INSERT INTO seleccio_editions(id,number,created_at,updated_at,status,review_key,data_json,ai_json,history_json,actions_seq,approved_at,campaigns_json,preview_sent_at,notified_at,sent_at,pushed_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET number=excluded.number,updated_at=excluded.updated_at,status=excluded.status,
             data_json=excluded.data_json,ai_json=excluded.ai_json,history_json=excluded.history_json,actions_seq=excluded.actions_seq,approved_at=excluded.approved_at,
-            campaigns_json=excluded.campaigns_json,preview_sent_at=excluded.preview_sent_at,notified_at=excluded.notified_at,sent_at=excluded.sent_at""",
+            campaigns_json=excluded.campaigns_json,preview_sent_at=excluded.preview_sent_at,notified_at=excluded.notified_at,sent_at=excluded.sent_at,pushed_at=excluded.pushed_at""",
             (ed['id'], ed.get('number'), ed.get('created_at') or stamp(), stamp(), ed['status'], ed['review_key'], json.dumps(ed['data'], ensure_ascii=False),
              json.dumps(ed.get('ai') or [], ensure_ascii=False), json.dumps(ed.get('history') or [], ensure_ascii=False), ed.get('actions_seq') or 0,
-             ed.get('approved_at'), json.dumps(ed['campaigns']) if ed.get('campaigns') else None, ed.get('preview_sent_at'), ed.get('notified_at'), ed.get('sent_at')))
+             ed.get('approved_at'), json.dumps(ed['campaigns']) if ed.get('campaigns') else None, ed.get('preview_sent_at'), ed.get('notified_at'), ed.get('sent_at'), ed.get('pushed_at')))
 
 
 # ---------- datos de las fichas ----------
@@ -264,13 +267,13 @@ def unknown_terms(text, facts):
     """Cifras y nombres propios del texto que no están en los datos. Vacío = texto aceptado."""
     f, bad = fold(facts), []
     digits = set(re.findall(r'\d+', f))
-    bad += [n for n in re.findall(r'\d+', text) if n not in digits]
+    bad += [n for n in re.findall(r'(?<!\d)\d+(?![\dA-Za-z])', text) if n not in digits]   # «21st-century» es un ordinal, no un dato
     for sentence in re.split(r'(?<=[.!?:])\s+|\n+', text):
         words = sentence.split()
         for i, w in enumerate(words):
             core = w.strip('«»"“”(),;:.!?¡¿—–-')
             if i == 0 or len(core) < 3 or not core[:1].isupper(): continue
-            token = fold(core).strip("’'")
+            token = fold(re.sub(r"[’']s$", '', core)).strip("’'")   # «Falla's», «Foucault’s»
             if token in ALLOWED or not token: continue
             if token not in f: bad.append(core)
     return bad
@@ -288,8 +291,8 @@ def check_text(kind, text, facts):
 
 SYSTEM = """Eres el editor de «La Selecció», la newsletter de los jueves de Ontoca, agenda cultural de Barcelona. Escribes como una pequeña publicación cultural: con criterio, curiosidad e independencia; nunca como un catálogo ni como publicidad.
 Recibes los planes ya elegidos (JSON con n, título, categoría, sala, barrio, descripción de la sala y motivo de la selección). Respondes con la herramienta redactar, en catalán, castellano e inglés:
-- titular: de 4 a 9 palabras, como máximo 60 caracteres, que conecte dos o tres planes del fin de semana;
-- intro: de 50 a 80 palabras sobre el fin de semana, nombrando planes concretos;
+- titular: de 4 a 9 palabras, como máximo 60 caracteres, que conecte dos o tres planes del fin de semana (parte="weekend");
+- intro: de 50 a 80 palabras sobre el fin de semana, nombrando solo planes con parte="weekend"; los de parte="next" son de lunes a miércoles y no se mencionan en la intro;
 - protagonista: el n del plan del fin de semana más singular entre los que tienen foto (foto=true);
 - planes: para cada n, por qué vale la pena en 15 a 40 palabras, sin repetir la descripción.
 Reglas: usa solo lo que dicen los datos de cada plan; no inventes nada (ni personas, ni obras, ni premios, ni historia). No escribas fechas, horas, días ni precios: salen aparte. Nombres propios solo si están en los datos. Sin superlativos vacíos ni signos de exclamación."""
@@ -329,11 +332,13 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
     d, items = ed['data'], [it for it in ed['data']['items'] if not it['removed']]
     if only and only != 'intro': items = [it for it in items if it['key'] == only]
     ask = SYSTEM + ('' if not avoid else '\n\nEscribe una versión distinta de esta, con otro enfoque: ' + json.dumps(avoid, ensure_ascii=False))
-    body = {'model': model or ai_assist.MODEL, 'max_tokens': 4000, 'system': ask, 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'redactar'},
+    body = {'model': model or ai_assist.MODEL, 'max_tokens': 12000, 'system': ask, 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'redactar'},
             'messages': [{'role': 'user', 'content': json.dumps(_payload(items), ensure_ascii=False)}]}
     message = _call(body, f"{ed['id']} {only or 'todo'}", requester)
     out, log = _tool_input(message, 'redactar'), {'at': stamp(), 'model': body['model'], 'prompt_version': PROMPT_VERSION, 'only': only, 'usage': message.get('usage') or {}, 'rejected': []}
-    all_facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'])
+    # Titular e introducción hablan del fin de semana: solo valen nombres de los planes del fin de semana (4-11-2026: la
+    # primera edición nombraba en la intro a Miguel Zenón, que toca el miércoles).
+    all_facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'] and it['part'] == 'weekend')
     if only in (None, 'intro'):
         for part in ('head', 'intro'):
             for l in LANGS:
@@ -544,7 +549,9 @@ def env(name):
 
 def _http(method, url, body=None, headers=None, opener=None, timeout=30):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers={'content-type': 'application/json', 'accept': 'application/json', **(headers or {})})
+    # Identificación propia: Cloudflare bloquea la de Python por defecto («Python-urllib») como si fuera un robot (4-11-2026).
+    req = urllib.request.Request(url, data=data, method=method, headers={'content-type': 'application/json', 'accept': 'application/json',
+                                                                         'user-agent': 'Ontoca-motor/1.0 (+https://ontoca.com)', **(headers or {})})
     if opener: return opener(req, timeout)
     from src.network import tls_context
     with urllib.request.urlopen(req, timeout=timeout, context=tls_context()) as r:
@@ -576,7 +583,11 @@ def push(ed, cfg, opener=None):
     body = {'id': ed['id'], 'key': ed['review_key'], 'deadline': deadline(ed, cfg).isoformat(), 'approved': ed['status'] in ('approved', 'scheduled'),
             'seq': ed.get('actions_seq') or 0, 'summary': public_summary(ed, cfg), 'preview': {l: render(ed, l, 'web', cfg['site_url']) for l in LANGS}}
     try: return {'status': 'ok', **(_http('POST', cfg['api_url'] + '/edicion', body, {'authorization': 'Bearer ' + token}, opener) or {})}
-    except Exception as error: return {'status': 'failed', 'error': str(error)[:300]}
+    except urllib.error.HTTPError as error:
+        try: detail = error.read().decode('utf-8', 'replace')[:200]
+        except Exception: detail = ''
+        return {'status': 'failed', 'error': f'HTTP {error.code} {detail}'.strip()}
+    except Exception as error: return {'status': 'failed', 'error': (type(error).__name__ + ': ' + str(error))[:300]}
 
 
 def pull(ed, cfg, opener=None):
@@ -700,13 +711,19 @@ def run(conn, job=None, *, now=None, dist=None, requester=None, opener=None, cfg
             notify(f"La Selecció {ed['id']}: esta semana no hay edición", f"<p>Solo hay {len([i for i in ed['data']['items'] if i['part'] == 'weekend'])} planes del fin de semana en la Selección (mínimo {MIN_ITEMS}). No se envía nada.</p>", 'No hay edición esta semana.', cfg)
             ed['notified_at'] = stamp(); save(conn, ed)
             return {**out, 'step': 'sin edición (pocos planes)'}
-        out['push'] = push(ed, cfg, opener)['status']
+        pushed = push(ed, cfg, opener); out['push'] = pushed['status']
+        if pushed.get('error'): out['push_error'] = pushed['error']
+        if pushed['status'] == 'ok': ed['pushed_at'] = stamp()
         sent = notify(f"[Prueba] La Selecció núm. {ed['number']} · aprueba antes del jueves a las {cfg['deadline']}", preview_mail(ed, cfg), text_version(ed, 'ca'), cfg)
         if sent.get('status') == 'sent': ed['preview_sent_at'] = stamp()
         save(conn, ed)
         return {**out, 'step': 'prueba enviada', 'preview': sent.get('status')}
     if ed['status'] in ('sent', 'not_sent', 'empty'): return {**out, 'step': ed['status']}
     if now < deadline(ed, cfg):
+        if not ed.get('pushed_at'):   # la primera subida falló (red, Cloudflare): se reintenta en cada pasada
+            pushed = push(ed, cfg, opener); out['push'] = pushed['status']
+            if pushed.get('error'): out['push_error'] = pushed['error']
+            if pushed['status'] == 'ok': ed['pushed_at'] = stamp(); save(conn, ed)
         actions = pull(ed, cfg, opener)
         if actions:
             was = ed['status']
@@ -715,7 +732,8 @@ def run(conn, job=None, *, now=None, dist=None, requester=None, opener=None, cfg
             if ed.get('campaigns') and (touched or ed['status'] != 'approved'):
                 unschedule(ed, opener)
                 if ed['status'] == 'scheduled': ed['status'] = 'approved'
-            save(conn, ed); out['applied'] = len(actions); out['push'] = push(ed, cfg, opener)['status']
+            save(conn, ed); out['applied'] = len(actions); pushed = push(ed, cfg, opener); out['push'] = pushed['status']
+            if pushed.get('error'): out['push_error'] = pushed['error']
         if ed['status'] == 'approved' and not ed.get('campaigns'):
             try:
                 ids, missing = schedule(ed, cfg, opener)
