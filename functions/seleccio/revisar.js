@@ -62,11 +62,15 @@ const SCRIPT = String.raw`
   function draw() {
     if (!S) return; const s = S.summary, dl = new Date(S.deadline), late = Date.now() >= dl.getTime();
     const hh = dl.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid'});
-    const items = s.items.filter(x => x.part === 'weekend'), hero = items.find(x => x.key === s.hero), rest = items.filter(x => x !== hero), next = s.items.filter(x => x.part === 'next');
+    // Reservas (4-11-2026, David): lo que no está en la edición (las reservas y lo que hayas quitado) va en su propio bloque.
+    const items = s.items.filter(x => x.part === 'weekend' && !x.removed), hero = items.find(x => x.key === s.hero), rest = items.filter(x => x !== hero);
+    const next = s.items.filter(x => x.part === 'next' && !x.removed);
+    const spareW = s.items.filter(x => x.part === 'weekend' && x.removed), spareN = s.items.filter(x => x.part === 'next' && x.removed);
+    const spares = (list, title) => list.length ? '<section style="border-top:1px solid #000;padding-bottom:8px"><div class="k" style="color:#444">' + title + ' · ' + list.length + '</div><div class="m" style="margin-top:4px">No salen en el correo. Añade las que quieras.</div></section>' + list.map(x => card(x, false)).join('') : '';
     const card = (it, isHero) => '<article class="' + (isHero ? 'hero' : '') + (it.removed ? ' off' : '') + '"><div class="row">' + (it.img ? '<img src="' + esc(s.site + it.img) + '" alt="">' : '')
-      + '<div>' + (isHero ? '<span class="tag">Protagonista</span>' : '') + (it.removed ? '<span class="tag o">Quitado</span>' : '') + '<div class="t" style="margin-top:4px">' + esc(it.title) + '</div><div class="m">' + esc(it.when[lang] || '') + ' · ' + esc(it.venue || '') + '</div></div></div>'
-      + (it.removed ? '' : textBlock(it.key, it.why[lang], it.why_src[lang])) + pendNote(it.key)
-      + (late ? '' : '<div class="acts">' + (it.removed ? '<button class="b" data-a="restore" data-i="' + esc(it.key) + '">Recuperar</button>'
+      + '<div>' + (isHero ? '<span class="tag">Protagonista</span>' : '') + (it.removed ? '<span class="tag o">' + (it.reserve ? 'Reserva' : 'Quitado') + '</span>' : '') + '<div class="t" style="margin-top:4px">' + esc(it.title) + '</div><div class="m">' + esc(it.when[lang] || '') + ' · ' + esc(it.venue || '') + '</div></div></div>'
+      + textBlock(it.key, it.why[lang], it.why_src[lang]) + pendNote(it.key)
+      + (late ? '' : '<div class="acts">' + (it.removed ? '<button class="b d" data-a="restore" data-i="' + esc(it.key) + '">Añadir</button>' + (it.img_ok && it.part === 'weekend' ? '<button class="b" data-a="hero" data-i="' + esc(it.key) + '">Añadir como protagonista</button>' : '')
         : (!isHero && it.img_ok && it.part === 'weekend' ? '<button class="b" data-a="hero" data-i="' + esc(it.key) + '">Hacer protagonista</button>' : '')
           + (editing === it.key ? '' : '<button class="b" data-a="regenerate" data-i="' + esc(it.key) + '">Otro texto</button><button class="b" data-a="edit" data-i="' + esc(it.key) + '">Editar</button>')
           + (isHero ? '' : '<button class="b" data-a="remove" data-i="' + esc(it.key) + '">Quitar</button>')) + '</div>') + '</article>';
@@ -76,10 +80,12 @@ const SCRIPT = String.raw`
       + '<div class="tabs" role="group" aria-label="Idioma que revisas">' + [['ca', 'Català'], ['es', 'Castellano'], ['en', 'English']].map(([l, n]) => '<button data-lang="' + l + '" aria-pressed="' + (l === lang) + '">' + n + '</button>').join('') + '</div>'
       + (msg ? '<p class="err" style="padding:0 16px">' + esc(msg) + '</p>' : '')
       + '<section><div class="k" style="color:#444">Titular e introducción</div>' + headHtml(s) + '' + textBlock('intro', s.intro[lang], s.intro_src[lang]) + pendNote('intro')
+      + ((s.intro_stale || []).includes(lang) ? '<div class="pend">La introducción nombra un plan que ya no está en la edición. Pide otro texto o edítala.</div>' : '')
       + (late || editing === 'intro' ? '' : '<div class="acts"><button class="b" data-a="regenerate" data-i="intro">Otro texto</button><button class="b" data-a="edit" data-i="intro">Editar</button></div>') + '</section>'
-      + '<section style="padding-bottom:8px;border-bottom:0"><div class="k" style="color:#444">Fin de semana · ' + items.filter(x => !x.removed).length + ' planes</div></section>'
+      + '<section style="padding-bottom:8px;border-bottom:0"><div class="k" style="color:#444">Fin de semana · ' + items.length + ' planes</div>' + (items.length > (s.long_weekend || 9) ? '<div class="pend">Son más de ' + (s.long_weekend || 9) + ' planes: el correo empieza a hacerse largo.</div>' : '') + '</section>'
       + (hero ? card(hero, true) : '') + rest.map(x => card(x, false)).join('')
       + (next.length ? '<section class="grey" style="border-top:1px solid #000"><div class="k" style="color:#444">Els dies següents</div>' + next.map(x => card(x, false)).join('') + '</section>' : '')
+      + spares(spareW, 'Reservas · fin de semana') + spares(spareN, 'Reservas · días siguientes')
       + '<div class="foot">' + (S.approved
         ? '<div class="ok" role="status"><strong>Aprobada.</strong> Sale el jueves a las 9:00, a cada suscriptor en su idioma.</div>' + (late ? '' : '<button class="b big" data-a="unapprove">Deshacer la aprobación (hasta las ' + hh + ')</button>')
         : '<div class="m">' + (changes ? changes + (changes === 1 ? ' cambio, guardado con su historial.' : ' cambios, guardados con su historial.') : 'Sin cambios: se envía tal como la propuso la IA.') + '</div>'

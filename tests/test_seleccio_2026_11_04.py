@@ -185,6 +185,35 @@ class Semana(Base):
         self.assertEqual(seleccio.run(self.conn, cfg={**self.cfg, 'enabled': False})['status'], 'skipped')
 
 
+class Reservas(Base):
+    def setUp(self):
+        super().setUp()
+        with mock.patch.object(seleccio, 'MAX_WEEKEND', 2), mock.patch.object(seleccio, 'MIN_ITEMS', 2):
+            self.ed = seleccio.build(self.conn, THU, self.dist, requester=self.ai(GOOD))
+
+    def test_reservas_fuera_de_la_edicion_y_con_texto(self):
+        items = self.ed['data']['items']
+        reserves = [i for i in items if i.get('reserve')]
+        self.assertEqual([i['key'] for i in reserves], ['opendatabcn_agenda:3'])
+        self.assertTrue(all(i['removed'] for i in reserves))
+        html = seleccio.render(self.ed, 'ca', 'email', 'https://ontoca.com')
+        self.assertNotIn('Jonathan Stout', html)
+        self.assertNotEqual(self.ed['data']['hero'], 'opendatabcn_agenda:3')
+        summary = seleccio.public_summary(self.ed, self.cfg)
+        self.assertTrue(next(i for i in summary['items'] if i['key'] == 'opendatabcn_agenda:3')['reserve'])
+
+    def test_anadir_reserva_y_aviso_de_intro(self):
+        seleccio.apply_actions(self.ed, [{'seq': 1, 'type': 'restore', 'item': 'opendatabcn_agenda:3'}, {'seq': 2, 'type': 'remove', 'item': 'opendatabcn_agenda:2'}])
+        html = seleccio.render(self.ed, 'ca', 'email', 'https://ontoca.com')
+        self.assertIn('Jonathan Stout', html); self.assertNotIn('Vijay Iyer</a>', html)
+        self.assertEqual(self.ed['data']['intro_stale'], ['ca', 'en', 'es'])   # la intro nombra a Vijay Iyer, que ya no está
+
+    def test_webp(self):
+        p = Path(self.tmp.name) / 'x.webp'
+        p.write_bytes(b'RIFF\x00\x00\x00\x00WEBPVP8X' + b'\x0a\x00\x00\x00' + b'\x00\x00\x00\x00' + (1199).to_bytes(3, 'little') + (674).to_bytes(3, 'little'))
+        self.assertEqual(seleccio.image_size(p), (1200, 675))
+
+
 class Paginas(Base):
     def test_archivo_y_confirmacion(self):
         root = Path(self.tmp.name) / 'archivo'; out = Path(self.tmp.name) / 'out'

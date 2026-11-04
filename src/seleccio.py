@@ -37,6 +37,9 @@ PROMPT_VERSION = 1
 MIN_ITEMS = 3          # con menos, no hay edición (lo dice la prueba del miércoles)
 MAX_WEEKEND = 7        # protagonista y hasta seis más
 MAX_NEXT = 4
+RESERVE_WEEKEND = 6     # reservas para la revisión (4-11-2026, David)
+RESERVE_NEXT = 3
+LONG_WEEKEND = 9        # más planes del fin de semana: la revisión avisa de que el correo se alarga
 LIMITS = {'head': 70, 'intro_words': 90, 'why_words': 50}
 BREVO = 'https://api.brevo.com/v3'
 
@@ -164,7 +167,7 @@ def price_label(detail):
 
 
 def image_size(path):
-    """Ancho y alto de un JPEG o PNG sin dependencias (para elegir protagonista con foto horizontal)."""
+    """Ancho y alto de un JPEG, PNG o WebP sin dependencias (para elegir protagonista con foto horizontal)."""
     try:
         with open(path, 'rb') as f: head = f.read(64 * 1024)
     except OSError: return None
@@ -177,6 +180,12 @@ def image_size(path):
             if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
                 h, w = struct.unpack('>HH', head[i + 5:i + 9]); return w, h
             i += 2 + size
+    if head[:4] == b'RIFF' and head[8:12] == b'WEBP':   # 4-11-2026: las WebP quedaban descartadas sin motivo
+        kind = head[12:16]
+        if kind == b'VP8X': return 1 + int.from_bytes(head[24:27], 'little'), 1 + int.from_bytes(head[27:30], 'little')
+        if kind == b'VP8 ': w, h = struct.unpack('<HH', head[26:30]); return w & 0x3FFF, h & 0x3FFF
+        if kind == b'VP8L':
+            b = int.from_bytes(head[21:25], 'little'); return (b & 0x3FFF) + 1, ((b >> 14) & 0x3FFF) + 1
     return None
 
 
@@ -222,9 +231,9 @@ def thursday_for(today):
     return today + dt.timedelta(days=(3 - today.weekday()) % 7)
 
 
-def choose(conn, thursday, dist, rules_path=None):
+def choose(conn, thursday, dist, rules_path=None, skip=None, only_reserves=False):
     """Planes de la edición desde la Selección guardada, sin elegir nada nuevo."""
-    from src.ai_select import picks_for
+    from src.ai_select import picks_for, extras_for
     from src.selection_rules import excluded
     cards, cache = _catalog(dist), {}
     weekend = [thursday + dt.timedelta(days=i) for i in (1, 2, 3)]
@@ -235,21 +244,26 @@ def choose(conn, thursday, dist, rules_path=None):
             row = conn.execute("SELECT picks_json FROM ai_selection WHERE day=? AND scope='day'", (d.isoformat(),)).fetchone()
             for p in json.loads(row[0]) if row else []: motivos.setdefault(p['key'], p.get('motivo') or '')
         except Exception: pass
-    items, seen = [], set()
-    for part, days, cap in (('weekend', weekend, MAX_WEEKEND), ('next', following, MAX_NEXT)):
+    items, seen = [], set(skip or ())
+    for part, days, cap, spare in (('weekend', weekend, MAX_WEEKEND, RESERVE_WEEKEND), ('next', following, MAX_NEXT, RESERVE_NEXT)):
         # Por turnos entre los días (el primero de cada día, luego el segundo…): si no, el viernes y el sábado llenan la
-        # edición y el domingo se queda fuera (4-11-2026, prueba con la Selección real).
-        queues, got = [list(picks_for(conn, d.isoformat(), 'day')) for d in days], 0
-        while got < cap and any(queues):
+        # edición y el domingo se queda fuera (4-11-2026, prueba con la Selección real). Después, las reservas (4-11-2026,
+        # David): lo que queda de la Selección del día y las «mas» de la IA, para añadirlas en la revisión.
+        queues = [list(picks_for(conn, d.isoformat(), 'day')) + extras_for(conn, d.isoformat(), 'day') for d in days]
+        got, extra = (cap, 0) if only_reserves else (0, 0)
+        while (got < cap or extra < spare) and any(queues):
             for q in queues:
-                if got >= cap: break
+                if got >= cap and extra >= spare: break
                 while q:
                     key = q.pop(0)
                     if key in seen or key not in cards: continue
                     detail = _detail(dist, key, cache)
                     if excluded({**detail, 'source': cards[key]['s'], 'venue_names': detail.get('venue_names') or cards[key].get('v')}, rules_path): continue
                     item = make_item(key, cards[key], detail, days, part, dist, motivos.get(key, ''))
-                    if item: items.append(item); seen.add(key); got += 1; break
+                    if not item: continue
+                    if got < cap: got += 1
+                    else: item['reserve'] = item['removed'] = True; extra += 1
+                    items.append(item); seen.add(key); break
     return items, len(cards)
 
 
@@ -292,9 +306,9 @@ def check_text(kind, text, facts):
 SYSTEM = """Eres el editor de «La Selecció», la newsletter de los jueves de Ontoca, agenda cultural de Barcelona. Escribes como una pequeña publicación cultural: con criterio, curiosidad e independencia; nunca como un catálogo ni como publicidad.
 Recibes los planes ya elegidos (JSON con n, título, categoría, sala, barrio, descripción de la sala y motivo de la selección). Respondes con la herramienta redactar, en catalán, castellano e inglés:
 - titular: de 4 a 9 palabras, como máximo 60 caracteres, que conecte dos o tres planes del fin de semana (parte="weekend");
-- intro: de 50 a 80 palabras sobre el fin de semana, nombrando solo planes con parte="weekend"; los de parte="next" son de lunes a miércoles y no se mencionan en la intro;
-- protagonista: el n del plan del fin de semana más singular entre los que tienen foto (foto=true);
-- planes: para cada n, por qué vale la pena en 15 a 40 palabras, sin repetir la descripción.
+- intro: de 50 a 80 palabras sobre el fin de semana, nombrando solo planes con parte="weekend" y reserva=false; los de parte="next" son de lunes a miércoles y las reservas pueden no salir, así que ni unos ni otras se mencionan en la intro;
+- protagonista: el n del plan del fin de semana más singular entre los que tienen foto (foto=true) y no son reserva;
+- planes: para cada n (también las reservas), por qué vale la pena en 15 a 40 palabras, sin repetir la descripción.
 Reglas: usa solo lo que dicen los datos de cada plan; no inventes nada (ni personas, ni obras, ni premios, ni historia). No escribas fechas, horas, días ni precios: salen aparte. Nombres propios solo si están en los datos. Sin superlativos vacíos ni signos de exclamación."""
 
 TOOL = {'name': 'redactar', 'description': 'Titular, introducción, protagonista y texto de cada plan, en los tres idiomas.',
@@ -310,7 +324,7 @@ TRANSLATE = {'name': 'traducir', 'description': 'El texto en los idiomas pedidos
 
 def _payload(items):
     return [{'n': n, 'titulo': it['title'], 'categoria': it['category'], 'sala': it['venue'], 'barrio': it['district'], 'parte': it['part'],
-             'foto': it['img_ok'], 'festival': it.get('festival') or '', 'descripcion': it.get('description', '')[:1200], 'motivo': it.get('motivo') or ''} for n, it in enumerate(items)]
+             'foto': it['img_ok'], 'reserva': bool(it.get('reserve') and it['removed']), 'festival': it.get('festival') or '', 'descripcion': it.get('description', '')[:1200], 'motivo': it.get('motivo') or ''} for n, it in enumerate(items)]
 
 
 def _call(body, label, requester=None):
@@ -327,10 +341,14 @@ def _tool_input(message, name):
 
 
 def write_texts(ed, requester=None, model=None, only=None, avoid=None):
-    """Pide los textos a la IA y aplica los que pasan la comprobación. only: 'intro' o una clave para pedir otra versión."""
+    """Pide los textos a la IA y aplica los que pasan la comprobación. only: 'intro', 'reserves' (solo las reservas sin
+    texto) o una clave para pedir otra versión de ese plan."""
     from src import ai_assist
-    d, items = ed['data'], [it for it in ed['data']['items'] if not it['removed']]
-    if only and only != 'intro': items = [it for it in items if it['key'] == only]
+    d = ed['data']
+    items = [it for it in d['items'] if not it['removed'] or it.get('reserve')]   # las reservas también llevan su texto
+    if only == 'reserves': items = [it for it in items if it.get('reserve') and it['removed'] and not any(it['why'].values())]
+    elif only and only != 'intro': items = [it for it in d['items'] if it['key'] == only]
+    if not items: return {'at': stamp(), 'only': only, 'skipped': 'nada que escribir'}
     ask = SYSTEM + ('' if not avoid else '\n\nEscribe una versión distinta de esta, con otro enfoque: ' + json.dumps(avoid, ensure_ascii=False))
     body = {'model': model or ai_assist.MODEL, 'max_tokens': 12000, 'system': ask, 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'redactar'},
             'messages': [{'role': 'user', 'content': json.dumps(_payload(items), ensure_ascii=False)}]}
@@ -339,7 +357,7 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
     # Titular e introducción hablan del fin de semana: solo valen nombres de los planes del fin de semana (4-11-2026: la
     # primera edición nombraba en la intro a Miguel Zenón, que toca el miércoles).
     all_facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'] and it['part'] == 'weekend')
-    if only in (None, 'intro'):
+    if only in (None, 'intro'):   # en 'reserves' y en un plan suelto no se tocan titular ni introducción
         for part in ('head', 'intro'):
             for l in LANGS:
                 text = str((out.get('titular' if part == 'head' else 'intro') or {}).get(l) or '').strip()
@@ -348,7 +366,7 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
                 else: d[part][l], d[part + '_src'][l] = text, 'ia'
     if only is None:
         n = out.get('protagonista')
-        if isinstance(n, int) and 0 <= n < len(items) and items[n]['img_ok'] and items[n]['part'] == 'weekend': d['hero'] = items[n]['key']
+        if isinstance(n, int) and 0 <= n < len(items) and items[n]['img_ok'] and items[n]['part'] == 'weekend' and not items[n]['removed']: d['hero'] = items[n]['key']
     for p in out.get('planes') or []:
         n = p.get('n')
         if not isinstance(n, int) or not 0 <= n < len(items) or (only == 'intro'): continue
@@ -383,7 +401,7 @@ def translate_edit(ed, target_key, lang, text, facts, requester=None, model=None
 def build(conn, thursday, dist, *, requester=None, model=None, rules_path=None, number=None):
     initialize(conn)
     items, total = choose(conn, thursday, dist, rules_path)
-    weekend = [it for it in items if it['part'] == 'weekend']
+    weekend = [it for it in items if it['part'] == 'weekend' and not it['removed']]   # sin las reservas
     data = {'thursday': thursday.isoformat(), 'weekend': [(thursday + dt.timedelta(days=i)).isoformat() for i in (1, 2, 3)],
             'items': items, 'hero': next((it['key'] for it in weekend if it['img_ok']), None), 'catalog_total': total,
             'head': {l: '' for l in LANGS}, 'head_src': {l: '' for l in LANGS}, 'intro': {l: '' for l in LANGS}, 'intro_src': {l: '' for l in LANGS}}
@@ -572,9 +590,9 @@ def send_time(ed, cfg):
 def public_summary(ed, cfg):
     """Lo que ve la página de revisión: textos por idioma, datos y estado. Nada de configuración ni claves."""
     d = ed['data']
-    items = [{k: it[k] for k in ('key', 'part', 'title', 'venue', 'when', 'why', 'why_src', 'removed', 'img', 'img_ok')} for it in d['items']]
+    items = [{**{k: it[k] for k in ('key', 'part', 'title', 'venue', 'when', 'why', 'why_src', 'removed', 'img', 'img_ok')}, 'reserve': bool(it.get('reserve'))} for it in d['items']]
     return {'id': ed['id'], 'number': ed.get('number'), 'status': ed['status'], 'hero': d.get('hero'), 'head': d['head'], 'intro': d['intro'], 'intro_src': d['intro_src'],
-            'items': items, 'deadline': deadline(ed, cfg).isoformat(), 'send_at': send_time(ed, cfg).isoformat(), 'changes': len(ed.get('history') or []), 'site': cfg['site_url']}
+            'items': items, 'intro_stale': d.get('intro_stale') or [], 'long_weekend': LONG_WEEKEND, 'deadline': deadline(ed, cfg).isoformat(), 'send_at': send_time(ed, cfg).isoformat(), 'changes': len(ed.get('history') or []), 'site': cfg['site_url']}
 
 
 def push(ed, cfg, opener=None):
@@ -613,6 +631,7 @@ def apply_actions(ed, actions, requester=None):
             if it['removed'] and d.get('hero') == key: d['hero'] = next((x['key'] for x in d['items'] if x['part'] == 'weekend' and not x['removed'] and x['img_ok']), None)
         elif kind == 'hero' and it and it['img']:
             entry['before'], d['hero'] = d.get('hero'), key; entry['after'] = key
+            it['removed'] = False   # una reserva que pasa a protagonista entra en la edición
         elif kind == 'regenerate' and (it or key == 'intro'):
             before = d['intro'] if key == 'intro' else it['why']
             entry['before'] = dict(before); write_texts(ed, requester, only=key or 'intro', avoid=before.get(lang))
@@ -633,7 +652,25 @@ def apply_actions(ed, actions, requester=None):
             continue
         ed.setdefault('history', []).append(entry); changed = True
         ed['actions_seq'] = max(ed.get('actions_seq') or 0, a['seq'])
+    stale_intro(ed)
     return changed
+
+
+def stale_intro(ed):
+    """La introducción nombra algo que ya no está en la edición (un plan quitado): la revisión lo avisa (4-11-2026)."""
+    d = ed['data']
+    facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'] and it['part'] == 'weekend')
+    d['intro_stale'] = sorted({l for l in LANGS if d['intro'].get(l) and unknown_terms(d['intro'][l], facts)})
+    return d['intro_stale']
+
+
+def add_reserves(conn, ed, dist, requester=None):
+    """Reservas para una edición ya hecha (la primera, del 5-11-2026, se preparó sin ellas), con su texto."""
+    have = {it['key'] for it in ed['data']['items']}
+    extra, _ = choose(conn, _day(ed['id']), dist, skip=have, only_reserves=True)
+    ed['data']['items'].extend(extra)
+    if extra: write_texts(ed, requester, only='reserves')
+    return len(extra)
 
 
 def brevo(method, path, body=None, opener=None):
