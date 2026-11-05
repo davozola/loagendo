@@ -11,8 +11,9 @@ export async function onRequestPost(ctx) {
 
 async function signup({request, env}) {
   let input; try { input = await request.json(); } catch (_) { return json({ok: false, code: 'bad_request'}, 400); }
-  const email = String(input.email || '').trim().toLowerCase(), lang = LANGS.includes(input.lang) ? input.lang : 'ca';
+  const email = String(input.email || '').trim().toLowerCase(), lang = String(input.lang || '');
   if (!validEmail(email)) return json({ok: false, code: 'email'}, 400);
+  if (!LANGS.includes(lang)) return json({ok: false, code: 'lang'}, 400);   // el idioma es obligatorio (5-11-2026); sin él no se da de alta
   if (!(await human(env, request, input.turnstile))) return json({ok: false, code: 'robot'}, 400);
   const lists = LANGS.map(l => listId(env, l)).filter(Boolean), list = listId(env, lang), template = Number(env['SELECCIO_DOI_' + lang.toUpperCase()] || 0);
   if (!list || !template) return json({ok: false, code: 'not_ready'}, 503);

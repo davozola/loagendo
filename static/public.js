@@ -841,8 +841,9 @@ function weekendDays(day) {
   return out;
 }
 /* ---------- La Selecció, la newsletter de los jueves (4-11-2026) ---------- */
-// Apagada hasta que la publicación la activa (data-newsletter="1", config/seleccio.json web_signup). El idioma es el de la
-// página (4-11-2026, David): no se pregunta. Alta con la doble confirmación de Brevo (functions/api/seleccio/alta.js).
+// Apagada hasta que la publicación la activa (data-newsletter="1", config/seleccio.json web_signup). El idioma se elige al
+// darse de alta y es obligatorio (5-11-2026, David; antes se tomaba el de la página y él mismo acabó en la lista inglesa sin
+// saberlo). No hay ninguno marcado de entrada. Alta con la doble confirmación de Brevo (functions/api/seleccio/alta.js).
 const NEWSLETTER = document.documentElement.dataset.newsletter === '1';
 const MAIL_ICON = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14"></rect><path d="M3 7l9 6 9-6"></path></svg>';
 const PRIVACY_PATH = {ca: '/privacitat', es: '/es/privacidad', en: '/en/privacy'};
@@ -873,20 +874,30 @@ function nlOpen(open = true) {
 <p>${L('Una selección de los mejores planes culturales para el fin de semana y los días siguientes.', 'Una selecció dels millors plans culturals per al cap de setmana i els dies següents.', 'A selection of the best cultural plans for the weekend and the days after.')}</p>
 <p class="nl-rhythm">${L('Cada jueves a las 9 h. Gratis. Un solo correo a la semana.', 'Cada dijous a les 9 h. Gratis. Un sol correu a la setmana.', 'Every Thursday at 9 am. Free. One email a week.')}</p>
 <label for="nlEmail">${L('Tu correo electrónico', 'El teu correu electrònic', 'Your email address')}</label><input id="nlEmail" type="email" autocomplete="email" inputmode="email" aria-describedby="nlErr" required>
+<fieldset class="nl-langs" aria-describedby="nlLangErr"><legend>${L('¿En qué idioma la quieres?', 'En quin idioma la vols?', 'Which language would you like?')}</legend>
+<div class="nl-lang-row">${[['ca', 'Català'], ['es', 'Castellano'], ['en', 'English']].map(([v, n]) => `<label class="nl-lang"><input type="radio" name="nlLang" value="${v}" required><span>${n}</span></label>`).join('')}</div>
+<p id="nlLangErr" class="nl-err" role="alert" hidden></p></fieldset>
 <p id="nlErr" class="nl-err" role="alert" hidden></p><div id="nlTurnstile"></div>
 <button class="nl-cta" type="submit">${L('Quiero recibir la Selecció', 'Vull rebre la Selecció', 'Send me La Selecció')}</button>
-<p class="nl-legal">${L('La recibirás en castellano; puedes cambiarlo desde cualquier correo. Te enviaremos un correo para confirmar el alta. Puedes darte de baja cuando quieras. La enviamos con Brevo, que mide aperturas y clics.', 'La rebràs en català; ho pots canviar des de qualsevol correu. T’enviarem un correu per confirmar l’alta. Te’n pots donar de baixa quan vulguis. L’enviem amb Brevo, que mesura obertures i clics.', 'You’ll get it in English; you can change this from any email. We’ll email you to confirm. Unsubscribe any time. We send it with Brevo, which measures opens and clicks.')} <a href="${PRIVACY_PATH[LANG] || PRIVACY_PATH.ca}">${esc(t('Privacidad'))}</a></p>
+<p class="nl-legal">${L('Puedes cambiar el idioma desde cualquier correo. Te enviaremos un correo para confirmar el alta. Puedes darte de baja cuando quieras. La enviamos con Brevo, que mide aperturas y clics.', 'Pots canviar l’idioma des de qualsevol correu. T’enviarem un correu per confirmar l’alta. Te’n pots donar de baixa quan vulguis. L’enviem amb Brevo, que mesura obertures i clics.', 'You can change the language from any email. We’ll email you to confirm. Unsubscribe any time. We send it with Brevo, which measures opens and clicks.')} <a href="${PRIVACY_PATH[LANG] || PRIVACY_PATH.ca}">${esc(t('Privacidad'))}</a></p>
 <a class="nl-example" href="${BASE}/seleccio/">${L('Ver un ejemplo →', 'Veure un exemple →', 'See an example →')}</a></form></article>`;
   ov.hidden = false; document.body.style.overflow = 'hidden'; $('nlEmail').focus(); nlTurnstile(); track('seleccio', 'signup_open');
 }
 async function nlSubmit(form) {
   const input = $('nlEmail'), err = $('nlErr'), email = input.value.trim(), btn = form.querySelector('.nl-cta');
   const fail = m => { err.textContent = m; err.hidden = false; input.setAttribute('aria-invalid', 'true') };
+  const picked = form.querySelector('input[name=nlLang]:checked'), langErr = $('nlLangErr'), box = form.querySelector('.nl-langs');
+  if (!picked) {
+    langErr.textContent = L('Elige en qué idioma quieres recibirla.', 'Tria en quin idioma la vols rebre.', 'Choose which language you’d like it in.');
+    langErr.hidden = false; box.classList.add('nl-invalid'); form.querySelector('input[name=nlLang]').focus(); return;
+  }
+  langErr.hidden = true; box.classList.remove('nl-invalid');
+  const lang = picked.value;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail(L('Escribe un correo válido, como nombre@ejemplo.es.', 'Escriu un correu vàlid, com nom@exemple.cat.', 'Enter a valid email, like name@example.com.'));
   if (TURNSTILE_KEY && !nlToken) return fail(L('Espera un momento a que termine la comprobación antirrobots.', 'Espera un moment que acabi la comprovació antirobots.', 'Please wait for the bot check to finish.'));
   btn.disabled = true; err.hidden = true; input.removeAttribute('aria-invalid');
   try {
-    const r = await fetch('/api/seleccio/alta', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({email, lang: LANG, turnstile: nlToken})});
+    const r = await fetch('/api/seleccio/alta', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({email, lang, turnstile: nlToken})});
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) {
       btn.disabled = false; nlTurnstile();
@@ -894,7 +905,7 @@ async function nlSubmit(form) {
         : d.code === 'robot' ? L('No hemos podido comprobar que no eres un robot. Prueba otra vez.', 'No hem pogut comprovar que no ets un robot. Torna-ho a provar.', 'We couldn’t check you’re not a robot. Please try again.')
         : L('No se ha podido enviar. Prueba más tarde.', 'No s’ha pogut enviar. Prova-ho més tard.', 'Could not send. Please try later.'));
     }
-    track('seleccio', 'signup', d.status || 'sent');
+    track('seleccio', 'signup', (d.status || 'sent') + ':' + lang);
     form.outerHTML = d.status === 'already'
       ? `<div class="nl-body"><h2>${L('Ya recibes la Selecció', 'Ja reps la Selecció', 'You’re already subscribed')}</h2><p>${L('Este correo ya está suscrito. Si no te llega, mira en la carpeta de correo no deseado o de promociones.', 'Aquest correu ja està subscrit. Si no t’arriba, mira a la carpeta de correu brossa o de promocions.', 'This address already gets La Selecció. If it isn’t arriving, check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-nl="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`
       : `<div class="nl-body">${MAIL_ICON.replace('width="16" height="16"', 'width="40" height="40"')}<h2>${L('Revisa tu correo', 'Revisa el teu correu', 'Check your inbox')}</h2><p>${L('Te hemos enviado un enlace a', 'T’hem enviat un enllaç a', 'We’ve sent a link to')} <strong>${esc(email)}</strong>. ${L('Ábrelo para confirmar el alta y la primera Selecció te llegará el jueves.', 'Obre’l per confirmar l’alta i la primera Selecció t’arribarà el dijous.', 'Open it to confirm and your first Selecció arrives on Thursday.')}</p><p class="nl-legal">${L('Si no lo ves en unos minutos, mira en la carpeta de correo no deseado o de promociones.', 'Si no el veus en uns minuts, mira a la carpeta de correu brossa o de promocions.', 'Can’t see it in a few minutes? Check your spam or promotions folder.')}</p><button class="nl-cta nl-ghost" type="button" data-nl="close">${L('De acuerdo', 'D’acord', 'OK')}</button></div>`;
@@ -905,6 +916,7 @@ document.addEventListener('click', e => {
   if (a) { e.preventDefault(); nlOpen(a.dataset.nl === 'open'); return }
   const ov = $('nlOverlay'); if (ov && !ov.hidden && e.target === ov) nlOpen(false);
 });
+document.addEventListener('change', e => { if (e.target.name === 'nlLang') { const x = $('nlLangErr'); if (x) x.hidden = true; e.target.closest('.nl-langs')?.classList.remove('nl-invalid') } });
 document.addEventListener('submit', e => { if (e.target.id === 'nlForm') { e.preventDefault(); nlSubmit(e.target) } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('nlOverlay') && !$('nlOverlay').hidden) nlOpen(false) });
 if (NEWSLETTER) setTimeout(nlFooter, 0);   // después de que se haya leído todo el fichero (L y t se definen más abajo)
