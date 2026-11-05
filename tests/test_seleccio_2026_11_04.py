@@ -146,6 +146,8 @@ class Semana(Base):
             calls.append((req.get_method(), req.full_url, json.loads(req.data) if req.data else None))
             if '/acciones' in req.full_url: return {'actions': actions.pop(0) if actions else []}
             if '/emailCampaigns' in req.full_url and req.get_method() == 'POST': return {'id': 100 + len(calls)}
+            if '/emailCampaigns?' in req.full_url: return {'campaigns': []}
+            if '/contacts/lists/' in req.full_url: return {'uniqueSubscribers': 3, 'totalSubscribers': 3}
             return {}
         return op, calls
 

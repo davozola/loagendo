@@ -697,29 +697,104 @@ def add_reserves(conn, ed, dist, requester=None):
 
 
 def brevo(method, path, body=None, opener=None):
+    """Brevo con su respuesta de error a la vista: «HTTP 400 {"code":…,"message":…}» en vez de un «Bad Request» mudo (5-11-2026)."""
     key = env('BREVO_API_KEY')
     if not key: raise RuntimeError('Falta BREVO_API_KEY en .env')
-    return _http(method, BREVO + path, body, {'api-key': key}, opener)
+    try: return _http(method, BREVO + path, body, {'api-key': key}, opener)
+    except urllib.error.HTTPError as error:
+        try: detail = error.read().decode('utf-8', 'replace')[:300]
+        except Exception: detail = ''
+        raise RuntimeError(f'HTTP {error.code} {detail}'.strip()) from None
 
 
-def schedule(ed, cfg, opener=None):
-    """Una campaña por idioma, a su lista, a las 9:00. Sin lista configurada, ese idioma no se envía (queda dicho)."""
-    when, made, missing = send_time(ed, cfg), {}, []
-    for l in LANGS:
-        lid = (cfg.get('lists') or {}).get(l)
-        if not lid: missing.append(l); continue
-        got = brevo('POST', '/emailCampaigns', {'name': f"La Selecció {ed['id']} ({l})", 'subject': subject(ed, l), 'previewText': (ed['data']['intro'].get(l) or '')[:140],
-                                               'sender': {'name': 'Ontoca', 'email': 'hola@ontoca.com'}, 'replyTo': 'hola@ontoca.com', 'htmlContent': render(ed, l, 'email', cfg['site_url']),
-                                               'recipients': {'listIds': [int(lid)]}, 'scheduledAt': when.isoformat(), 'inlineImageActivation': False}, opener)
-        made[l] = got.get('id')
-    return made, missing
+# Programar es idempotente (incidente del 5-11-2026: la campaña en catalán se creó en cada pasada porque la de castellano fallaba
+# y no se guardaba nada; salieron 42 copias). Ahora cada campaña se guarda nada más crearse, antes de crear se busca en Brevo una
+# con el mismo nombre, cada idioma tiene como mucho MAX_TRIES intentos y una lista vacía no se intenta.
+MAX_TRIES = 3
+
+
+def campaign_name(ed, lang):
+    return f"La Selecció {ed['id']} ({lang}) · r{ed.get('actions_seq') or 0}"
+
+
+def existing_campaigns(opener=None):
+    got = brevo('GET', '/emailCampaigns?limit=100&offset=0&sort=desc&excludeHtmlContent=true', None, opener)
+    return {c.get('name'): c.get('id') for c in got.get('campaigns') or [] if c.get('id')}
+
+
+def list_size(lid, opener=None):
+    got = brevo('GET', f'/contacts/lists/{int(lid)}', None, opener)
+    return max(int(got.get('uniqueSubscribers') or 0), int(got.get('totalSubscribers') or 0))
+
+
+def pending_langs(ed, cfg):
+    """Idiomas con lista y contactos que aún no tienen campaña y a los que les quedan intentos."""
+    camp = ed.get('campaigns') or {}
+    ids, tries = camp.get('ids') or {}, camp.get('tries') or {}
+    return [l for l in LANGS if (cfg.get('lists') or {}).get(l) and l not in (camp.get('empty') or []) and not ids.get(l) and tries.get(l, 0) < MAX_TRIES]
+
+
+def schedule(ed, cfg, opener=None, keep=None):
+    """Una campaña por idioma, a su lista, a las 9:00. Guarda (keep) tras cada paso, así que una pasada que falla a medias no
+    repite lo ya hecho. Sin lista configurada o con la lista vacía, ese idioma no se envía (queda dicho)."""
+    keep = keep or (lambda: None)
+    camp = ed.get('campaigns') or {}
+    ids, errors, tries = camp.setdefault('ids', {}), camp.setdefault('errors', {}), camp.setdefault('tries', {})
+    ed['campaigns'] = camp
+    if camp.get('stale'):
+        retry_deletes(ed, opener); keep()
+        if camp.get('stale'): raise RuntimeError('Hay campañas anteriores que Brevo no dejó borrar: ' + ', '.join(map(str, camp['stale'].values())))
+    camp['missing'] = [l for l in LANGS if not (cfg.get('lists') or {}).get(l)]
+    todo = pending_langs(ed, cfg)
+    if not todo: return camp
+    have = existing_campaigns(opener)   # si Brevo no responde, no se crea nada en esta pasada
+    when = send_time(ed, cfg)
+    for l in todo:
+        lid, name = cfg['lists'][l], campaign_name(ed, l)
+        if name in have:
+            ids[l] = have[name]; errors.pop(l, None); keep(); continue
+        if list_size(lid, opener) == 0:
+            camp.setdefault('empty', []).append(l); keep(); continue
+        tries[l] = tries.get(l, 0) + 1; keep()   # el intento cuenta antes de pedirlo: si se corta a medias, el nombre lo encuentra luego
+        try:
+            got = brevo('POST', '/emailCampaigns', {'name': name, 'subject': subject(ed, l), 'previewText': (ed['data']['intro'].get(l) or '')[:140],
+                                                    'sender': {'name': 'Ontoca', 'email': 'hola@ontoca.com'}, 'replyTo': 'hola@ontoca.com', 'htmlContent': render(ed, l, 'email', cfg['site_url']),
+                                                    'recipients': {'listIds': [int(lid)]}, 'scheduledAt': when.isoformat(), 'inlineImageActivation': False}, opener)
+        except Exception as error:
+            errors[l] = str(error)[:400]; keep(); continue
+        if got.get('id'): ids[l] = got['id']; errors.pop(l, None)
+        keep()
+    camp['at'] = stamp(); keep()
+    return camp
+
+
+def retry_deletes(ed, opener=None):
+    camp = ed.get('campaigns') or {}
+    left = {}
+    for l, cid in (camp.get('stale') or {}).items():
+        try: brevo('DELETE', f'/emailCampaigns/{cid}', None, opener)
+        except Exception as error:
+            if not str(error).startswith('HTTP 404'): left[l] = cid
+    camp['stale'] = left
 
 
 def unschedule(ed, opener=None):
-    for l, cid in (ed.get('campaigns') or {}).get('ids', {}).items():
-        try: brevo('DELETE', f'/emailCampaigns/{cid}', None, opener)
-        except Exception: pass
-    ed['campaigns'] = None
+    """Borra las campañas programadas. La que Brevo no deje borrar queda apuntada (stale) y bloquea programar otra hasta que se borre."""
+    camp = ed.get('campaigns') or {}
+    camp['stale'] = {**(camp.get('stale') or {}), **{f'{l}#{cid}': cid for l, cid in (camp.get('ids') or {}).items()}}
+    retry_deletes(ed, opener)
+    ed['campaigns'] = {'ids': {}, 'stale': camp['stale']} if camp['stale'] else None
+
+
+def schedule_report(ed):
+    camp = ed.get('campaigns') or {}
+    lines = []
+    for l in LANGS:
+        if (camp.get('ids') or {}).get(l): lines.append(f'{l}: programada (campaña {camp["ids"][l]})')
+        elif l in (camp.get('empty') or []): lines.append(f'{l}: la lista no tiene contactos, no se envía')
+        elif l in (camp.get('missing') or []): lines.append(f'{l}: sin lista en config/seleccio.json')
+        elif (camp.get('errors') or {}).get(l): lines.append(f'{l}: Brevo la rechazó: {camp["errors"][l]}')
+    return lines
 
 
 def preview_mail(ed, cfg):
@@ -779,6 +854,10 @@ def run(conn, job=None, *, now=None, dist=None, requester=None, opener=None, cfg
         save(conn, ed)
         return {**out, 'step': 'prueba enviada', 'preview': sent.get('status')}
     if ed['status'] in ('sent', 'not_sent', 'empty'): return {**out, 'step': ed['status']}
+    if (ed.get('campaigns') or {}).get('stale'):   # una campaña antigua que Brevo no dejó borrar: se reintenta en cada pasada
+        retry_deletes(ed, opener)
+        if not ed['campaigns']['stale'] and not ed['campaigns'].get('ids'): ed['campaigns'] = None
+        save(conn, ed)
     if now < deadline(ed, cfg):
         if not ed.get('pushed_at'):   # la primera subida falló (red, Cloudflare): se reintenta en cada pasada
             pushed = push(ed, cfg, opener); out['push'] = pushed['status']
@@ -794,23 +873,32 @@ def run(conn, job=None, *, now=None, dist=None, requester=None, opener=None, cfg
                 if ed['status'] == 'scheduled': ed['status'] = 'approved'
             save(conn, ed); out['applied'] = len(actions); pushed = push(ed, cfg, opener); out['push'] = pushed['status']
             if pushed.get('error'): out['push_error'] = pushed['error']
-        if ed['status'] == 'approved' and not ed.get('campaigns'):
+        if ed['status'] == 'approved' and (not ed.get('campaigns') or ed['campaigns'].get('stale') or pending_langs(ed, cfg)):
             try:
-                ids, missing = schedule(ed, cfg, opener)
-                ed['campaigns'] = {'ids': ids, 'missing': missing, 'at': stamp()}
-                ed['status'] = 'scheduled' if ids else 'approved'
-                save(conn, ed); out['scheduled'] = ids; out['missing_lists'] = missing
+                camp = schedule(ed, cfg, opener, keep=lambda: save(conn, ed))
+                out['scheduled'] = dict(camp.get('ids') or {})
+                if camp.get('errors'): out['schedule_errors'] = dict(camp['errors'])
+                if camp.get('empty'): out['empty_lists'] = list(camp['empty'])
+                if not pending_langs(ed, cfg):
+                    if camp.get('ids'): ed['status'] = 'scheduled'
+                    if camp.get('errors') and not camp.get('alerted'):   # un aviso, no uno por pasada
+                        notify(f"La Selecció núm. {ed['number']}: Brevo rechazó algún idioma", '<p style="font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5">'
+                               + '<br>'.join(esc(x) for x in schedule_report(ed)) + '</p>', '\n'.join(schedule_report(ed)), cfg)
+                        camp['alerted'] = stamp()
+                save(conn, ed)
             except Exception as error:
                 out['schedule_error'] = str(error)[:300]
         return {**out, 'step': ed['status']}
     # Pasado el plazo
+    if ed['status'] == 'approved' and (ed.get('campaigns') or {}).get('ids'):   # a medias: lo programado sale a las 9:00
+        ed['status'] = 'scheduled'; save(conn, ed)
     if ed['status'] == 'scheduled':
         if now >= send_time(ed, cfg):
             ed['status'], ed['sent_at'] = 'sent', stamp(); save(conn, ed); archive(ed, cfg)
             return {**out, 'step': 'enviada', 'campaigns': ed['campaigns']}
         return {**out, 'step': 'programada'}
     if not ed.get('notified_at'):
-        reason = 'No la aprobaste antes de las ' + cfg['deadline'] if ed['status'] != 'approved' else 'Estaba aprobada pero no se pudo programar en Brevo (revisa las listas de config/seleccio.json)'
+        reason = 'No la aprobaste antes de las ' + cfg['deadline'] if ed['status'] != 'approved' else 'Estaba aprobada pero no se pudo programar en Brevo. ' + ('; '.join(schedule_report(ed)) or (out.get('schedule_error') or 'Mira el último resultado del job seleccio'))
         notify(f"La Selecció núm. {ed['number']} no sale esta semana", f'<p style="font-family:Helvetica,Arial,sans-serif;font-size:17px;line-height:1.5"><strong>Esta semana no se envía.</strong> {esc(reason)}, así que a las {cfg["send_at"]} no saldrá nada. '
                f'La edición queda guardada con todos sus textos y cambios. El miércoles que viene a las {cfg["prepare_at"]} te llegará la prueba de la siguiente.</p>', reason, cfg)
         ed['notified_at'] = stamp()
