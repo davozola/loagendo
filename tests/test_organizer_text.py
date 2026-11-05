@@ -22,13 +22,13 @@ class OrganizerTextTests(unittest.TestCase):
             from src.guia_detail import initialize as init_enrich; init_enrich(conn)
             rows = [('1', 'Cicle "Festival de Cinema Jueu de Barcelona 2026"', 'https://filmoteca.test/cicle/festival-cinema-jueu'),
                     ('2', 'Futbol "F.C. Barcelona - Villarreal"', 'https://club.test/partits/villarreal'),
-                    ('3', 'Concert de tardor', 'https://generic.test/agenda/concert')]
+                    ('3', 'Concert de tardor', 'https://generic.test/agenda/concert-2')]
             for rid, title, url in rows:
                 conn.execute("INSERT INTO source_records(source,id,title,start_date,end_date,kind,eligibility,evidence_level,source_url,raw_sha256,raw_json) VALUES('guiabcn',?,?,'2099-10-13','2099-10-28','program','review','x','u','h','{}')", (rid, title))
                 conn.execute("INSERT INTO source_enrichments(source,id,fetched_at,source_url,description,links_json,raw_html_sha256) VALUES('guiabcn',?,'2026-10-20','u','',?,'h')", (rid, json.dumps([url])))
             pages = {'https://filmoteca.test/cicle/festival-cinema-jueu': '<meta property="og:description" content="El Festival de Cinema Jueu de Barcelona arriba a la seva edició amb pel·lícules inèdites i col·loquis.">',
                      'https://club.test/partits/villarreal': '<meta property="og:description" content="Curt">',
-                     'https://generic.test/agenda/concert': '<meta property="og:description" content="La nostra entitat organitza activitats culturals per a tot el barri durant tot l\'any.">'}
+                     'https://generic.test/agenda/concert-2': '<meta property="og:description" content="La nostra entitat organitza activitats culturals per a tot el barri durant tot l\'any.">'}
             out = organizer_text.run(conn, fetcher=lambda u, t: (200, u, pages[u]))
             self.assertEqual(out['with_text'], 1)
             status = dict(conn.execute("SELECT id,status FROM organizer_texts"))

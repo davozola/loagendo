@@ -185,7 +185,11 @@ def _expected_minutes():
     try: jobs = [j for j in json.loads(AUTOMATION.read_text(encoding='utf-8'))['jobs'] if j.get('enabled', True)]
     except (OSError, ValueError, KeyError): return {}, {}
     by_source = {j['source']: j['every_minutes'] for j in jobs if j.get('source')}
-    by_kind = {j['kind']: j['every_minutes'] for j in jobs}
+    # Un trabajo que solo relee unas pocas (agendas-ia-frenadas, cada 4 h, 2-11-2026) no marca el ritmo de todas: el 3-11 el
+    # parte dio 55 salas «sin leer bien desde hace 20 h (lee cada 4 h)» cuando leen una vez al día.
+    by_kind = {}
+    for j in jobs:
+        if not j.get('only_held'): by_kind[j['kind']] = max(by_kind.get(j['kind'], 0), j['every_minutes'])
     return by_source, by_kind
 
 
@@ -332,6 +336,12 @@ def _safe(fn, *args, default=None):
 RESOLVED_AUDIT = AUDIT_DIR / 'resueltos.json'
 
 
+def _radar(today):
+    """Último radar de música (src/radar_mood.py) de los últimos 7 días, o None."""
+    from src.radar_mood import latest
+    return latest(today)
+
+
 def _audit(today, conn=None):
     """Última auditoría semanal (src/weekly_audit.py) de los últimos 7 días: {day, patterns, serious, file}.
     28-10-2026: un error grave ya resuelto no vuelve al parte: corregido después de la auditoría (corrección editorial) o
@@ -459,7 +469,7 @@ def collect(conn, today=None, now=None, first_seen_path=FIRST_SEEN, matomo=None,
             'festivals': _festivals(conn, today), 'ai': _ai(conn, since, today), 'fest_watch': _festival_watch(conn, today, now, catalog_path),
             'freshness': _safe(_freshness, conn, now, default=[]), 'coverage': _safe(_coverage_by, conn, today, default={}),
             'venues_lost': _safe(_venues_lost, conn, today, default=[]), 'dups': _safe(_dup_suspects, conn, today, default=[]), 'date_text': _mark_new_dates(_safe(date_contradictions, conn, today, default=[]), today),
-            'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today, conn)}
+            'corrections': _safe(_corrections, conn, (now - dt.timedelta(days=7)).isoformat(timespec='seconds')), 'audit': _audit(today, conn), 'radar': _safe(_radar, today)}
 
 
 def _tokens(value, out):
@@ -629,6 +639,13 @@ def render(data):
     if corr: lines.append('Correcciones editoriales en 7 días: <b>%d</b> (%d fuera de la agenda)' % (corr['total'], corr['excluded']))
     if audit:
         lines.append('Auditoría semanal (%s): %s' % (esc(audit['day'][8:10] + '/' + audit['day'][5:7]), esc(' · '.join(p['title'] for p in audit.get('patterns', [])[:3])) or 'sin patrones'))
+    rd = data.get('radar')
+    if rd:
+        # Radar semanal de música (2-11-2026): conciertos que anuncia Mood y no tenemos, y las salas que más se escapan.
+        lines.append('Radar de música (%s, Mood, %d días): tenemos %d de %d · faltan %d conciertos (además %d de ocio nocturno y %d turísticos)%s · <span style="color:#666">informe: reports/radar/mood-%s.md</span>' % (
+            esc(rd['day'][8:10] + '/' + rd['day'][5:7]), rd.get('window_days', 14), rd['we_have'], rd['mood_events'], rd['by_kind'].get('musica', 0),
+            rd['by_kind'].get('ocio_nocturno', 0), rd['by_kind'].get('turistico', 0),
+            (' · salas: ' + esc(', '.join('%s (%d)' % (v['venue'][:30], v['count']) for v in rd.get('venues', [])[:6]))) if rd.get('venues') else '', esc(rd['day'])))
     ai = data.get('ai')
     if ai:
         tk = ai['tokens']

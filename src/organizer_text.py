@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import html
 import re
 import sqlite3
 import unicodedata
@@ -28,6 +29,13 @@ SHORT = 80
 # Lo leído antes de esta hora con resultado «corto» o «sin texto» se vuelve a leer en la siguiente pasada:
 # el lector anterior cortaba en el primer apóstrofo y no leía el cuerpo de la página (24-10-2026).
 REREAD_BEFORE = '2026-10-24T09:00:00+00:00'
+# 3-11-2026 (La Violeta, «En Patufet»): las webs WordPress/Divi ponen el título del acto después del texto, y el lector
+# del cuerpo, que empieza en el encabezado del título, no leía nada; se quedaba la frase corta de compartir y la IA no
+# sabía si era un cuento o títeres. Ahora también lee el bloque de contenido de la entrada. Lo leído antes de esta hora
+# con un texto corto se vuelve a leer una vez.
+BODY_RULES_SINCE = '2026-11-03T07:00:00+00:00'
+SHORT_OK = 300
+POST_CONTENT = re.compile(r'<(?:div|section|article)\b[^>]*\b(?:class|id)="[^"]*(?:entry-content|post-content|post_content|gal-post-content)[^"]*"[^>]*>', re.I)
 CREDIT = 'la web del organizador'
 SKIP_HOSTS = re.compile(r"(?:^|\.)(?:barcelona\.cat|bcn\.cat|instagram\.com|facebook\.com|fb\.me|twitter\.com|x\.com|youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|"
                         r"ticketmaster\.\w+|entradas\.com|eventbrite\.\w+|atrapalo\.com|fever\w*\.com|dice\.fm|wegow\.com|taquilla\.com|tickets\.\w+|"
@@ -51,7 +59,9 @@ def usable_link(url):
     parts = urlsplit(str(url or ''))
     if parts.scheme not in ('http', 'https') or not parts.netloc: return False
     if SKIP_HOSTS.search(parts.netloc.lower().split(':')[0]): return False
-    return parts.path.strip('/') != '' or bool(parts.query)   # una portada describe el sitio, no el acto
+    if parts.path.strip('/') == '' and not parts.query: return False   # una portada describe el sitio, no el acto
+    from mvp.catalog import listing_url
+    return not listing_url(url)   # ni una lista («/concert», «?pag=cartelera»; auditoría del 3-11-2026, P4)
 
 
 def page_text(page):
@@ -117,12 +127,29 @@ def body_text(page, title, limit=MAX_TEXT):
     p = _Body(_words(title))
     try: p.feed(page or '')
     except Exception: pass
+    paras = p.paras or post_content_paragraphs(page)
     out = []
-    for para in p.paras:
+    for para in paras:
         if len(para) < 80 or BOILER.search(para) or para in out: continue
         if out and len('\n\n'.join(out + [para])) > limit: break
         out.append(para)
     return '\n\n'.join(out)[:limit], (p.images[0] if p.images else '')
+
+
+def post_content_paragraphs(page):
+    """Párrafos (<p>) del bloque de contenido de una entrada de WordPress (entry-content, post_content…), cuando la
+    página no tiene el encabezado con el título antes del texto."""
+    m = POST_CONTENT.search(page or '')
+    if not m: return []
+    chunk = page[m.end():m.end() + 30000]
+    end = re.search(r'</article>|<footer\b', chunk, re.I)
+    if end: chunk = chunk[:end.start()]
+    out = []
+    for raw in re.findall(r'<p\b[^>]*>(.*?)</p>', chunk, re.S | re.I):
+        text = html.unescape(re.sub(r'<[^>]+>', ' ', re.sub(r'<br\s*/?>', ' ', raw, flags=re.I)))
+        text = ' '.join(text.split())
+        if text: out.append(text)
+    return out
 
 
 def jsonld_text(page, title):
@@ -147,8 +174,9 @@ def candidates(conn, limit, today=None):
             LEFT JOIN organizer_texts o ON o.source=r.source AND o.id=r.id
             WHERE r.source LIKE 'venue_ia_%' AND r.end_date>=? AND r.eligibility<>'exclude'
               AND COALESCE(json_extract(r.raw_json,'$.loagendo.description'),'')=''
-              AND (o.id IS NULL OR (o.status<>'ok' AND (o.fetched_at<? OR (o.status IN ('corto','sin_texto') AND o.fetched_at<?))))
-            ORDER BY r.start_date LIMIT ?""", (today, retry, REREAD_BEFORE, limit * 3)).fetchall()
+              AND (o.id IS NULL OR (o.status<>'ok' AND (o.fetched_at<? OR (o.status IN ('corto','sin_texto') AND o.fetched_at<?)))
+                   OR (o.status='ok' AND length(o.text)<? AND o.fetched_at<?))
+            ORDER BY r.start_date LIMIT ?""", (today, retry, REREAD_BEFORE, SHORT_OK, BODY_RULES_SINCE, limit * 3)).fetchall()
     except sqlite3.DatabaseError: own = []
     # Agendas propias de sala que no son de IA (Palau, Sala VOL, Nau Bostik…) sin texto (26-10-2026).
     try:

@@ -17,6 +17,9 @@ VENUES_PATH = Path(__file__).resolve().parents[1] / 'config' / 'venues.json'
 try:
     _VENUES={v['slug']:v for v in json.loads(VENUES_PATH.read_text(encoding='utf-8')).get('venues',[]) if v.get('slug')}
 except (OSError,json.JSONDecodeError,ValueError): _VENUES={}
+try:   # festivales conectados solos (src/festival_finder.py): para saber su nombre al darles categoría (3-11-2026)
+    _AUTO_FESTIVALS={v['slug']:v for v in json.loads((VENUES_PATH.parents[1]/'data'/'festivales_auto.json').read_text(encoding='utf-8')).get('venues',[]) if v.get('slug')}
+except (OSError,json.JSONDecodeError,ValueError): _AUTO_FESTIVALS={}
 VENUE_CATEGORY={'music':'Música y vida nocturna','festival':'Música y vida nocturna','theatre':'Artes escénicas','cinema':'Cine y audiovisual','culture':'Arte y exposiciones'}
 for _slug,_v in _VENUES.items(): SOURCES['venue_'+_slug]=_v.get('name',_slug)+' · agenda del recinto'
 KINDS = {'single':'Acto puntual','program':'Programa / ciclo','exhibition':'Exposición','course':'Curso','service':'Servicio'}
@@ -201,8 +204,11 @@ def category_of(raw, source, kind):
             schema=next((TYPE_CATEGORY[t] for t in ((raw or {}).get('loagendo') or {}).get('schema_types') or [] if t in TYPE_CATEGORY and t!='Event'),None)
             if schema: return schema
     if source.startswith('venue_') and not own_culture:
-        venue=_VENUES.get(source[6:],{})
+        venue=_VENUES.get(source[6:]) or _AUTO_FESTIVALS.get(source[6:]) or {}
         declared=(raw.get('loagendo') or {}).get('category') or VENUE_CATEGORY.get(venue.get('type',''))
+        if venue.get('type')=='festival' and 'category' not in venue:
+            from src.venue_feeds import festival_category
+            declared=festival_category(venue,((raw or {}).get('loagendo') or {}).get('schema_types') or [])
         if declared and kind!='exhibition': return declared
     if source=='guiabcn':
         declared,_,_=guiabcn_taxonomy(raw)
@@ -818,9 +824,19 @@ MONTHS_RX=r"gener|febrer|mar[çc]|abril|maig|juny|juliol|agost|setembre|octubre|
 LEAD_DATE=re.compile(r"^\s*\d{1,2}\s+(?:de\s+|d['’])?(?:"+MONTHS_RX+r"),?\s+\d{4}(?:\s+(?:to|a|al|fins al)\s+\d{1,2}\s+(?:de\s+|d['’])?(?:"+MONTHS_RX+r"),?\s+\d{4})?\.?\s*",re.I)
 
 
+# Códigos de maquetadores de WordPress (Divi, WPBakery, Avada, Enfold…) que algunas webs dejan en el texto
+# (auditoría del 3-11-2026, M2: «[et_pb_section fb_built="1"…» en la Mostra de Films de Dones). Se quitan; si no
+# queda prosa, no hay descripción. No se reescribe nada.
+SHORTCODE=re.compile(r"\[/?(?:(?:et_pb|vc|av|fusion|su|mk|cs|dt)_\w*|tatsu\w*|elementor\w*|caption|gallery|embed|video|audio|row|column|section)\b[^\[\]]{0,3000}(?:\]|$)",re.I)   # también uno cortado al final (el resumen se recorta a 220)
+
+
 def clean_description(text):
-    """HTML suelto (<br/>, etiquetas) y la fecha que algunas salas ponen delante («15 novembre, 2026.»)."""
+    """HTML suelto (<br/>, etiquetas), códigos de maquetador ([et_pb_…]) y la fecha que algunas salas ponen delante
+    («15 novembre, 2026.»)."""
     t=str(text or '')
+    if '[' in t and SHORTCODE.search(t):
+        t=SHORTCODE.sub(' ',t)
+        if len(re.findall(r"[^\W\d_]{3,}",t))<6: return ''
     if '<' in t:
         t=re.sub(r'(?i)<br\s*/?>|</p>|</div>|</li>','\n',t); t=re.sub(r'<[^>]{1,200}>','',t)
     t=t.replace('&nbsp;',' ').replace('&amp;','&')
@@ -834,10 +850,12 @@ def _fold_words(text):
 
 
 def description_skeleton(text, title):
-    """La forma de una plantilla: sin las palabras del título, cifras ni meses («{} actuará en la Sala Upload el # de {}»)."""
-    words=_fold_words(title)
+    """La forma de una plantilla: sin las palabras del título, cifras ni meses («{} actuará en la Sala Upload el # de {}»).
+    Todas las palabras del título, también las cortas («My New Band Believe»: antes «my» se quedaba y cada artista daba
+    una forma distinta; 3-11-2026)."""
+    words={w for w in re.findall(r'[a-z0-9]+',clean(title))}
     out=[('#' if w.isdigit() else '{}' if w in words or re.fullmatch(MONTHS_RX,w) else w) for w in re.findall(r'[a-z0-9]+',clean(text))]
-    return ' '.join(out)[:180]
+    return re.sub(r'\{\}(?: \{\})+','{}',' '.join(out))[:180]   # un nombre de 2 o de 4 palabras da la misma forma
 
 
 _TEMPLATES={'stamp':None,'set':set(),'generic':set(),'shared':set()}
@@ -874,10 +892,20 @@ def description_templates(conn):
     return _TEMPLATES['set']
 
 
+# Frases de ticketera o de sala que solo repiten artista, sala y fecha (auditoría del 3-11-2026, M2). Se reconocen
+# por su forma aunque la fuente tenga pocas fichas (la detección por repetición pide 5 títulos distintos).
+TEMPLATE_RX=[
+    re.compile(r"^.{1,140}\bat\b.{1,90}\bat \d{4}-\d{2}-\d{2}\W*$",re.I),                      # Songkick: «X at Razzmatazz at 2026-12-11»
+    re.compile(r"^.{1,140}\bactuar[aá] en\b.{1,120}\.\s*(?:entradas a la venta aqu[ií]|compra tus entradas.{0,30})\W*$",re.I),   # Upload
+    re.compile(r"^(?:concierto|concert|show|espect[aá]culo) de .{1,140} en .{1,90}\bel \d{1,2} de (?:"+MONTHS_RX+r")(?: de)? \d{4}\W*$",re.I),   # Apolo
+]
+
+
 def description_problem(conn, source, text, title):
     """Motivo por el que el texto no sirve de descripción del acto, o ''."""
     t=clean_description(text)
-    if not t: return ''
+    if not t: return 'codigo_de_maquetador' if str(text or '').strip() and SHORTCODE.search(str(text)) else ''
+    if len(t)<320 and '\n' not in t.strip() and any(rx.match(t.strip()) for rx in TEMPLATE_RX): return 'plantilla'
     ft,ftitle=re.sub(r'[^a-z0-9]+',' ',clean(t)).strip(),re.sub(r'[^a-z0-9]+',' ',clean(title)).strip()
     if ft==ftitle or (len(t)<40 and _fold_words(t)<=_fold_words(title)): return 'igual_al_titulo'
     # Datos prácticos del recinto (horario de apertura, cierres, transporte, aparcamiento) y casi nada más. Un programa
@@ -1209,7 +1237,7 @@ def _possible_duplicates(conn, source, record_id):
     except sqlite3.DatabaseError: return []
 
 
-PROJECTION_VERSION=39  # 39: inauguraciones, simposios y conciertos archivados como exposición pasan a acto (28-10-2026); 38: 38: festival declarado por la fuente (raw.item.x_festival) también en la lista, no solo en la ficha (28-10-2026, In-Edit); 37: exposiciones de GuiaBCN y Generalitat por el enlace oficial a la sección de exposiciones de la sala (27-10-2026); 36: días de apertura de las exposiciones de GRAF según el horario del espacio (27-10-2026); 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
+PROJECTION_VERSION=41  # 41: horario del espacio de GRAF solo en exposiciones y sin «según GRAF» (4-11-2026); 40: la categoría de un festival sale de su nombre («Mostra de Films de Dones» es cine), no «música» para todos; los conectados solos sin género en el nombre quedan sin categoría de fuente (3-11-2026, auditoría M3); 39: inauguraciones, simposios y conciertos archivados como exposición pasan a acto (28-10-2026); 38: 38: festival declarado por la fuente (raw.item.x_festival) también en la lista, no solo en la ficha (28-10-2026, In-Edit); 37: exposiciones de GuiaBCN y Generalitat por el enlace oficial a la sección de exposiciones de la sala (27-10-2026); 36: días de apertura de las exposiciones de GRAF según el horario del espacio (27-10-2026); 35: exposiciones de sala por la sección de su página o su título (27-10-2026); 34: una sola noche cuando la fuente cierra de madrugada del día siguiente (single_night, 26-10-2026); 33: museos y centros culturales leídos con IA dejan de ser «Arte y exposiciones» por su tipo de sala (24-10-2026); 32: idioma de la actividad (Open Data BCN, languages_data; 23-10-2026); 31: hora de fin de GRAF en actos de un día (22-10-2026); 30: franjas de programa de festival (x_parts) y distrito del programa oficial; 29: (20-10: recinto delante de la sala, fuera de la proyección) 29: talleres, visitas y festivales que la fuente archiva como exposición dejan de serlo; 28: «per a famílies» / «para familias» en el título es público familiar; 27: horario del espacio según el directorio de GRAF; 26: horario de página de sala; 25: no es gratis si el precio da un importe; 24: texto de la fuente para la IA (ai_text); 23: categoría de agendas de sala (Auditori, Lliure, CCCB); 22: precio sin notas de acceso; 21: precio de salas y ticketeras; 20: descripciones sin markdown; 19: subtipos de GuiaBCN por sus códigos oficiales; 18: entradas y precio de conciertos.club, lugares con coordenadas de otras fuentes; 17: sesiones de centres cívics; 16: MACBA y centres cívics con sus días y horas; 15: periodo heredado, parte del día; 14: más formatos de horario (fechas sin mes, «1r dijous del mes», sin «:»); 13: actividad por día; 12: horario semanal en texto → hora por día (19-10-2026); 11: cartel
 # 10: periodos y meses cerrados en el horario de Open Data (18-10-2026)
 # 9: días sin actividad fuera del listado; periodo de fila (18-10-2026)
 # 8: horario de Open Data BCN por filas y por día (18-10-2026)
@@ -1569,7 +1597,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     summary=projection['summary'] or (archived_description or '').strip()[:220]
     boiler=is_boilerplate(conn,source,projection.get('summary'))
     if boiler: has_description=False; summary=(archived_description or '').strip()[:220]
-    elif has_description and summary and description_problem(conn,source,summary,title) in ('plantilla','igual_al_titulo'): has_description=False   # 27-10-2026
+    elif has_description and summary and description_problem(conn,source,summary,title) in ('plantilla','igual_al_titulo','codigo_de_maquetador'):
+        has_description=False; summary=''   # 27-10-2026; desde el 3-11 tampoco se muestra como resumen en la tarjeta (M2)
+    if summary and '[' in summary: summary=clean_description(summary)[:220]
     if source=='venue_eventbrite' and facts.get('api_summary'):
         summary=summary or facts['api_summary'][:220]; has_description=has_description or len(facts['api_summary'])>=40
     # Curso semanal fechado con el día del listado (27-10-2026, Institut français «Atelier théâtre»: «tous les mardis», con
@@ -2002,6 +2032,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
     if fest: chans.add('festivales')
     elif 'festivales' in chans and not (events.get('format')=='festival' and str(start)[:10]!=str(end)[:10]): chans.discard('festivales')
     events['channels']=sorted(chans)
+    # «Público familiar» igual que el canal «En familia» (3-11-2026, auditoría M3/P9): había fichas en el canal con
+    # family_audience falso (taller de l'Institut français, Pica Pica) y al revés. La marca de la fuente queda aparte.
+    fam='familia' in chans
+    if bool(events.get('family_audience'))!=fam: events['family_audience_source']=bool(events.get('family_audience')); events['family_audience']=fam
     # Festival con abono: su programa (actos sin ficha propia) va en la ficha del festival y en lo que mira el buscador.
     events['program']=_festivals(conn).programs.get(fest['slug'],[]) if fest and fest.get('umbrella') else []
     # Hora puesta a mano (config/horarios_festivales.json): manda y no la toca ninguna actualización.
@@ -2067,8 +2101,10 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         sched_days=opendata_facts.get('schedule_days','') if od_table else archived_facts.get('schedule_days') or (opendata_facts.get('schedule_days','') if source=='opendatabcn_agenda' else '')
         sched_note=opendata_facts.get('schedule_note','') if od_table else archived_facts.get('schedule_note') or (opendata_facts.get('schedule_note','') if source=='opendatabcn_agenda' else '')
         space=((raw.get('item') or {}).get('space_opening') or {}) if source=='web_graf' else {}
-        if space.get('opening') and not sched_note:
-            sched_note='Horario del espacio (según GRAF): '+' · '.join(space['opening'].splitlines())
+        # Horario del espacio solo para exposiciones (4-11-2026, David): en un simposio o un concierto confunde. Sin nombrar
+        # a GRAF: la fuente no se cita en la ficha.
+        if space.get('opening') and not sched_note and (events.get('kind') or kind)=='exhibition':
+            sched_note='Horario del espacio: '+' · '.join(space['opening'].splitlines())
         events.update({
             'description':('' if boiler else source_description(raw,source)) or archived_description,
             **({'description_credit':organizer_credit} if organizer_credit else {}),
@@ -2115,6 +2151,7 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
         # largo que lo que da la programación (una línea, una meta recortada). El de la fuente queda en el registro.
         from src.venue_text import text_for as _venue_text
         full=_venue_text(conn,source,id)
+        if full and listing_url(full.get('url')): full=None   # leída de una lista o portada: no es del acto (3-11-2026, M2/P4)
         if full and len(full['text'])>len((events.get('description') or '').strip()):
             events['description_short']=events.get('description') or ''
             events['description']=full['text']; events['description_scope']='sala'; events['description_url']=full['url']
@@ -2126,7 +2163,28 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 events['description']=''; events.pop('description_credit',None); events.pop('description_scope',None)
         if policy=='venue_link_only': apply_venue_link_policy(events,detail=True,source_url=url)
         else: borrow_from_twins(conn,events)
+        # Enlace de la fuente que es una lista o la portada, no la página del acto (auditoría del 3-11-2026, P4): se
+        # deja (es lo único que hay) pero se marca, y no se lee texto de él (src/venue_text.py, src/organizer_text.py).
+        if policy!='venue_link_only' and listing_url(url): events['url_generic']=True
     return events
+
+
+LISTING_SLUGS={'agenda','agenda-cultural','cartelera','cartellera','programacio','programacion','programa','programme','program','events','eventos',
+               'esdeveniments','activitats','actividades','activities','calendari','calendario','calendar','concerts','concert','conciertos',
+               'concierto','espectacles','espectaculos','shows','index','index.php','inici','inicio','home','es','ca','en','tickets','entradas'}
+
+
+def listing_url(url):
+    """True si el enlace es la portada o una página de lista («/concert», «index?pag=cartelera», «/agenda»), no la de un acto."""
+    from urllib.parse import urlsplit,parse_qs
+    try: parts=urlsplit(str(url or '').strip())
+    except ValueError: return False
+    if parts.scheme not in ('http','https') or not parts.netloc: return False
+    segs=[x for x in parts.path.lower().split('/') if x]
+    query=parse_qs(parts.query)
+    if any(str(v[0]).lower() in LISTING_SLUGS for k,v in query.items() if k.lower() in ('pag','page','seccion','section','p')): return True
+    if parts.query: return False   # «?p=123», «?occurrence=…»: la página de un acto
+    return all(x in LISTING_SLUGS for x in segs)
 
 
 def initialize(conn):

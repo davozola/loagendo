@@ -163,7 +163,8 @@ class ParteTests(unittest.TestCase):
     def test_pausa_y_descartadas_no_avisan(self):
         import json
         a = {x['slug']: x for x in json.loads((ROOT / 'config' / 'agendas_ia.json').read_text())['agendas']}
-        self.assertTrue(a['23robadors']['descartada']); self.assertEqual(a['tradicionarius']['pausa_hasta'], '2026-11-04')
+        self.assertTrue(a['23robadors']['descartada'])   # la pausa de Tradicionàrius terminó el 4-11 (5-11-2026: se lee su web provisional)
+        self.assertIn('traddigital.tradicionarius.cat', ' '.join(a['tradicionarius']['urls']))
         v = {x['slug']: x for x in json.loads((ROOT / 'config' / 'venues.json').read_text())['venues']}
         self.assertFalse(v['cinemes_girona']['enabled']); self.assertFalse(v['verdi']['enabled'])
 

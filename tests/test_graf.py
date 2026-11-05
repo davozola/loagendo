@@ -93,7 +93,7 @@ class GrafTests(unittest.TestCase):
             detail = catalog.event_detail(conn, 'web_graf', key)
             self.assertEqual((detail['description'], detail['public_category'], 'galerias' in detail['channels']), ('Projecte a l’espai públic.', 'arte', True))
             self.assertTrue(detail['media'])
-            self.assertEqual(detail['schedule_note'], 'Horario del espacio (según GRAF): Dimarts a diumenge: 10 a 19 h · Dilluns tancat')
+            self.assertEqual(detail['schedule_note'], 'Horario del espacio: Dimarts a diumenge: 10 a 19 h · Dilluns tancat')
             opening = conn.execute("SELECT id FROM source_records WHERE source='web_graf' AND title LIKE 'Ho has vist%'").fetchone()[0]
             self.assertNotIn('Horario del espacio', catalog.event_detail(conn, 'web_graf', opening).get('schedule_note') or '')  # un acto de un día no hereda el horario
 
@@ -135,3 +135,15 @@ class GrafDireccionDelDirectorioTests(unittest.TestCase):
         r, = self.run_details([self.record('Espai Fora', 'Carrer Major, 3')])
         self.assertEqual(r['eligibility'], 'exclude')
 
+
+
+class DiaCompletoConDesfase(unittest.TestCase):
+    """GRAF exporta los actos sin hora como «23:00 → 22:59» (4-11-2026, simposio Aurèlia Muñoz, MACBA): es del día siguiente, sin hora."""
+    def test_23_a_22_59(self):
+        from src import web_agendas
+        ics = ('BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:x\r\nSUMMARY:Aurèlia Muñoz. Ressonància i confluència\r\nURL:https://graf.cat/events/event/a/\r\n'
+               'DTSTART:20261104T230000\r\nDTEND:20261106T225900\r\nCATEGORIES:Simposi\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n')
+        rec = web_agendas.parse_graf(ics, today=dt.date(2026, 11, 4))[0]
+        self.assertEqual((rec['start'], rec['end'], rec['time_text']), ('2026-11-05', '2026-11-06', ''))
+        old = web_agendas._record('web_graf', 'Aurèlia Muñoz. Ressonància i confluència', '2026-11-04', '2026-11-06', 'https://graf.cat/events/event/a/', '', '', {})
+        self.assertEqual(rec['id'], old['id'])   # misma ficha que antes del arreglo

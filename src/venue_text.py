@@ -163,7 +163,9 @@ def run(conn, job=None, fetcher=None, today=None):
         except Exception as error: st, body = 0, ''
         pages[url] = (st, body if st == 200 else ''); return pages[url]
 
+    from mvp.catalog import listing_url
     for source, rid, url in candidates(conn, today, job.get('limit', 300)):
+        if listing_url(url): continue   # lista o portada: no es la página del acto (auditoría del 3-11-2026, P4)
         st, page = get(url)
         if st is None: status, text = 'robots', ''
         elif not page: status, text = f'http_{st}', ''

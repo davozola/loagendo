@@ -253,3 +253,13 @@ class ActivityFiledAsExhibitionTests(unittest.TestCase):
         self.assertEqual(catalog.effective_kind('generalitat', {}, 'exhibition', 'Visita dinamitzada "Posem ordre a la història"', '2026-11-28', '2026-11-28'), 'single')
         self.assertEqual(catalog.effective_kind('generalitat', {}, 'exhibition', 'Exposició "Sim, el dibuix i la guerra"', '2026-05-08', '2026-12-31'), 'exhibition')
         self.assertEqual(catalog.effective_kind('web_graf', {}, 'exhibition', 'Synthetic Nature. Alejandro Monge', '2026-09-17', '2026-10-31'), 'exhibition')
+
+
+class PresentacionConDirectoTests(unittest.TestCase):
+    def test_presentacion_live_en_sala_de_musica_es_concierto(self):
+        """2-11-2026 (David): «Presentación Sistema de Sonido Inmersivo: Mouse On Mars Live!» en Apolo salía en Charlas."""
+        from src import taxonomy
+        base = {'source': 'venue_sala_apolo', 'category': 'Música y vida nocturna', 'venue_names': ['Sala Apolo'], 'kind': 'single', 'format': 'one_shot',
+                'classification_paths': [], 'start': '2026-11-05', 'end': '2026-11-05'}
+        self.assertEqual(taxonomy.classify({**base, 'title': 'Presentación Sistema de Sonido Inmersivo: Mouse On Mars Live!'})['category'], 'musica')
+        self.assertEqual(taxonomy.classify({**base, 'title': 'Presentació del llibre «Ritmes» de Joan Pi'})['category'], 'charlas')   # sin directo, sigue siendo charla

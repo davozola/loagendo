@@ -133,6 +133,25 @@
       "activa": true,
       "auto": true,
       "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-11-02)"
+    },
+    {
+      "slug": "fest_loop_festival",
+      "name": "Loop Festival",
+      "address": "",
+      "type": "culture",
+      "urls": [
+        "https://loop-barcelona.com/ca/activity/double-takes-kadist/"
+      ],
+      "otros_lugares": true,
+      "seguir_actos": 40,
+      "festival": {
+        "slug": "loop-festival",
+        "name": "Loop Festival"
+      },
+      "hasta": "2026-11-21",
+      "activa": true,
+      "auto": true,
+      "nota": "Programa oficial leído con IA comprobada, puesto solo por el buscador de programas (2026-11-03)"
     }
   ]
 }

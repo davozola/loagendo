@@ -80,17 +80,21 @@ class FrenoRetiradas(unittest.TestCase):
         self.assertEqual(alive(self.conn), 8)
 
     def test_alerta_retirada_frenada(self):
+        # 2-11-2026: el aviso sale a partir de la segunda lectura seguida con la retirada frenada (la primera la confirma o la
+        # deshace la relectura de unas horas después, trabajo agendas-ia-frenadas).
         from src import source_watch
-        read(self.conn, DAYS[:2], 1)
         source_watch.initialize(self.conn)
-        opened, resolved = [], []
-        orig = ai_agenda.load_agendas
-        ai_agenda.load_agendas = lambda: [dict(AGENDA, activa=True)]
-        try: source_watch._check_agendas(self.conn, '2026-10-20T10:00:00', opened, resolved)
-        finally: ai_agenda.load_agendas = orig
-        kinds = [r[0] for r in self.conn.execute("SELECT kind FROM source_alerts WHERE source='venue_ia_prova' AND resolved_at IS NULL")] \
-            if self.conn.execute("SELECT 1 FROM sqlite_master WHERE name='source_alerts'").fetchone() else [a.get('kind') for a in opened]
-        self.assertIn('RETIRE_HELD', kinds)
+        def kinds_after_check():
+            opened, resolved = [], []
+            orig = ai_agenda.load_agendas
+            ai_agenda.load_agendas = lambda: [dict(AGENDA, activa=True)]
+            try: source_watch._check_agendas(self.conn, '2026-10-20T10:00:00', opened, resolved)
+            finally: ai_agenda.load_agendas = orig
+            return [r[0] for r in self.conn.execute("SELECT kind FROM source_alerts WHERE source='venue_ia_prova' AND resolved_at IS NULL")]
+        read(self.conn, DAYS[:2], 1)
+        self.assertNotIn('RETIRE_HELD', kinds_after_check())
+        read(self.conn, DAYS[:2], 2)
+        self.assertIn('RETIRE_HELD', kinds_after_check())
 
 
 class PaginaVaciaDiagnostico(unittest.TestCase):

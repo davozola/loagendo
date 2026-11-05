@@ -121,6 +121,7 @@ def recinto_source(source):
 # Fuentes que son salas de cine: todo lo que publican es Cine, diga lo que diga el título
 # («Escape Room 2» es una película). Decisión de David, 26-10-2026: «Espai Texas es un cine».
 CINEMA_SOURCES = {'venue_ia_espai_texas'}
+STAGE_PAGE = re.compile(r"/(?:teatre|teatro|espectacles?|espectaculos?)(?:/|$)", re.I)
 STAGE_AT_CINEMA = re.compile(r"(?i)\bl'espectacle\b|\bal teatre\b|\buna obra (?:de teatre|sobre)\b")
 PROFESSIONAL_EVENTBRITE = {'business', 'science tech', 'science technology'}
 TICKET_PRODUCT_DAYS = 60
@@ -161,7 +162,7 @@ SERIES = [("patis-escolars-oberts", PATIS)]
 def series_of(title):
     t = norm(title)
     return next((key for key, rx in SERIES if rx.search(t)), '')
-SERVICE = re.compile(r"\b(?:activitats laborals|busques feina|kit emprenedor|acces a l'habitatge|estudis a l'estranger|botiga solidaria|cibernarium|campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de)\b")
+SERVICE = re.compile(r"\b(?:activitats laborals|busques feina|kit emprenedor|acces a l'habitatge|estudis a l'estranger|botiga solidaria|cibernarium|campanya|donacio de sang|taula informativa|canvi oficial d'horari|dispositiu de proves|servei punt tic|punt tic|servei d'|inscripcions? obertes|convocatoria|oberta la convocatoria|campanya de recollida|recollida solidaria|borsa de|fira de graus|fira d'orientacio|feria de orientacion|orientacio academica|orientacion academica|salo de l'ensenyament|salon de la ensenanza)\b")
 
 SCHOOL_SUPPORT = re.compile(r"\b(?:reforc (?:educatiu|escolar)|refuerzo (?:educativo|escolar)|classes de repas|clases de repaso)\b")
 
@@ -197,6 +198,9 @@ def segments(title):
 
 
 FIESTA_FRAME = re.compile(r"^(?:festa major|festes|fiestas? mayor|festa de barri|festes de|castanyada|castanada)\b")
+
+
+LIVE_SHOW = re.compile(r"\b(?:live|en directe|en directo|en vivo|en concert|en concierto|showcase|dj set|live set)\b")
 
 
 def lead_category(title):
@@ -328,9 +332,15 @@ def _base_rules(ev, override=None):
                 'evidence': override.get('note') or 'Corrección editorial', 'ambiguous': False}
     # …salvo cuando la propia sala dice que es teatro (27-10-2026: Espai Texas también tiene escenario; «compra les
     # teves entrades per l'espectacle AUTÓNOMOS EL MUSICAL al teatre de l'Espai Texas», «Rita, una obra sobre…»).
-    if ev.get('source') in CINEMA_SOURCES and not STAGE_AT_CINEMA.search(str(ev.get('description') or ev.get('source_text') or '')[:600]):
+    # Y si el acto sale de su cartelera de teatro (3-11-2026: las funciones de «Rita» leídas de espaitexas.cat/teatre/, sin
+    # texto propio, salían en Cine).
+    if ev.get('source') in CINEMA_SOURCES and not STAGE_AT_CINEMA.search(str(ev.get('description') or ev.get('source_text') or '')[:600]) \
+            and not STAGE_PAGE.search(str(ev.get('url') or '')):
         return {'category': 'cine', 'status': 'confirmada', 'method': 'sala_de_cine',
                 'evidence': 'La fuente es una sala de cine (decisión editorial 26-10-2026)', 'ambiguous': False}
+    if ev.get('source') in CINEMA_SOURCES and STAGE_PAGE.search(str(ev.get('url') or '')) and lead_category(ev.get('title') or '')[0] in (None, 'escena'):
+        return {'category': 'escena', 'status': 'probable', 'method': 'cartelera_de_teatro',
+                'evidence': 'La sala de cine lo publica en su cartelera de teatro (3-11-2026)', 'ambiguous': False}
     title = ev.get('title') or ''
     source_cat = SOURCE_CATEGORY.get(ev.get('category') or '')
     lead, word = lead_category(title)
@@ -341,6 +351,14 @@ def _base_rules(ev, override=None):
     if lead and source_cat in ('musica', 'cine') and lead != source_cat and ev.get('source') not in GENERALIST_SOURCES \
             and NAME_WORDS.match(norm(word or '')):
         lead, word = None, None
+    # «Presentación … Live!» en una sala de música (2-11-2026, David: Mouse On Mars en Apolo salía en Charlas): una
+    # presentación con directo es un concierto; sin marca de directo sigue siendo charla (presentación de un libro).
+    if lead == 'charlas' and source_cat == 'musica' and re.match(r"presenta", norm(word or '')) and LIVE_SHOW.search(norm(title)):
+        lead, word = None, None
+    # «… en Concierto» en un teatro (3-11-2026, auditoría M3: «El Señor de los Anillos en Concierto» del Teatre Apolo salía en
+    # Teatro por la categoría del recinto): es un concierto. Solo con la fórmula entera, no con «concierto» suelto.
+    if not lead and source_cat == 'escena' and re.search(r"\b(?:en concierto|en concert|in concert)\b", norm(title)):
+        lead, word = 'musica', re.search(r"\b(?:en concierto|en concert|in concert)\b", norm(title)).group(0)
     official = next((cat for cat, rx in OFFICIAL_TYPE for p in ev.get('classification_paths') or [] if rx.search(norm(p))), None)
     signals = []
     # Una visita o un taller dentro de una exposición es esa actividad, no la exposición.

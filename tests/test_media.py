@@ -77,3 +77,11 @@ class MediaRightsPolicyTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SniffImage(unittest.TestCase):
+    """Servidor sin Content-Type (4-11-2026, Phenomena): la imagen se reconoce por su firma."""
+    def test_firmas(self):
+        self.assertEqual(media.sniff_image(bytes.fromhex('ffd8ffe000104a464946')), 'image/jpeg')
+        self.assertEqual(media.sniff_image(b'\x89PNG\r\n\x1a\n0000'), 'image/png')
+        self.assertIsNone(media.sniff_image(b'<!doctype html>'))

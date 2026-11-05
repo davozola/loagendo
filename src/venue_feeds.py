@@ -44,6 +44,26 @@ TYPE_CATEGORY = {"MusicEvent": "Música y vida nocturna", "Festival": "Música y
                  "ScreeningEvent": "Cine y audiovisual", "ExhibitionEvent": "Arte y exposiciones", "VisualArtsEvent": "Arte y exposiciones", "LiteraryEvent": "Literatura y palabra",
                  "EducationEvent": "Talleres y experiencias", "ChildrensEvent": "Talleres y experiencias", "SportsEvent": "Deporte", "FoodEvent": "Gastronomía"}
 VENUE_CATEGORY = {"music": "Música y vida nocturna", "festival": "Música y vida nocturna", "theatre": "Artes escénicas", "cinema": "Cine y audiovisual", "culture": "Arte y exposiciones"}
+# Festivales (3-11-2026, auditoría M3): el tipo «festival» daba «Música» a todos, también a la Mostra Internacional de
+# Films de Dones, Drap-Art o el Panoràmic. Manda el género que dice el nombre del festival; si no dice ninguno, el tipo
+# schema.org de cada acto (sin contar «Festival» ni «Event»); y si tampoco, «Música» para los de config/venues.json
+# (Primavera Sound, Sónar, Cruïlla…) y nada para los que conectó solo el buscador de programas: decide el título.
+FESTIVAL_GENRE = [("Cine y audiovisual", r"\b(?:films?|cinema|cine|cinema|curts?|curtmetratges?|cortometrajes?|documentals?|documentales?|audiovisual\w*|animacio|animacion|pel.licules|peliculas)\b"),
+                  ("Artes escénicas", r"\b(?:teatre|teatro|dansa|danza|circ|circo|escena|esceniques|escenicas|titelles|clown)\b"),
+                  ("Arte y exposiciones", r"\b(?:art|arts|arte|fotografia|photo|foto|il.lustracio|ilustracion|disseny|diseno|design)\b"),
+                  ("Música y vida nocturna", r"\b(?:music|musica|musique|jazz|rock|flamenc\w*|electronica|sound|sonar|blues|soul|opera)\b")]
+
+
+def festival_category(venue, schema_types=()):
+    import unicodedata
+    name = ''.join(c for c in unicodedata.normalize('NFKD', str(venue.get('name') or '').lower()) if not unicodedata.combining(c))
+    for cat, rx in FESTIVAL_GENRE:
+        if re.search(rx, name): return cat
+    typed = next((TYPE_CATEGORY[t] for t in schema_types or () if t in TYPE_CATEGORY and t not in ('Festival', 'Event')), None)
+    if typed: return typed
+    return None if venue.get('auto') else VENUE_CATEGORY['festival']
+
+
 EVENT_TYPES = {"Event", "MusicEvent", "TheaterEvent", "DanceEvent", "ComedyEvent", "ScreeningEvent", "Festival", "ExhibitionEvent", "VisualArtsEvent", "LiteraryEvent", "EducationEvent", "ChildrensEvent", "SocialEvent"}
 USER_AGENT = "Ontoca/1.4 (+https://ontoca.com; hola@ontoca.com) venue census (reads published schema.org data)"
 
@@ -306,6 +326,12 @@ def record_id(slug, url, start, title):
     return hashlib.sha256((slug + "\0" + basis + "\0" + start).encode()).hexdigest()[:24]
 
 
+# Una ticketera o un agregador no organiza lo que vende (5-11-2026, auditoría del 3-11: «Jacopo Mezzanotti Trio, organiza
+# Ticketmaster España»). Sin organizador en el propio dato, la ficha va sin él; la sala sí sigue siendo el organizador por
+# defecto de su propia agenda.
+NOT_ORGANIZER_TYPES = ('ticketing', 'aggregator')
+
+
 def record_from_jsonld(venue, node, page_url):
     """Normalise one schema.org Event into Brollant's record shape."""
     title = _text(node.get("name"))
@@ -388,6 +414,7 @@ def record_from_jsonld(venue, node, page_url):
         category = venue["category"] or next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
     else:
         category = VENUE_CATEGORY.get(venue.get("type", "")) or next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
+        if venue.get("type") == "festival": category = festival_category(venue, types)
     if venue.get("type") in ("ticketing", "aggregator"):
         # A marketplace lists every kind of event: classify by the schema type, not the site.
         category = next((TYPE_CATEGORY[t] for t in types if t in TYPE_CATEGORY), None)
@@ -395,7 +422,7 @@ def record_from_jsonld(venue, node, page_url):
     raw = {"source_page": page_url, "item": node, "image": image, "venue": venue["name"], "loagendo": {"room": _text(node.get("x_room")), "description": description[:2000], "tickets_url": tickets_url, "performers": [_text(p) for p in performers][:10], "category": category, "source_label": label, "schema_types": types}}
     return {"source": "venue_" + venue["slug"], "id": key, "title": title, "start": start, "end": end or start, "time_text": time_text, "price_text": price_text,
             "kind": kind, "eligibility": eligibility, "start_timestamp": "", "frequency": "", "raw": raw,
-            "venues": [{"name": venue_name or venue["name"], "address": address_text, "coords": coords}], "organizers": organizers or [venue["name"]], "url": url,
+            "venues": [{"name": venue_name or venue["name"], "address": address_text, "coords": coords}], "organizers": organizers or ([] if venue.get("type") in NOT_ORGANIZER_TYPES else [venue["name"]]), "url": url,
             "alerts": alerts, "evidence_level": "venue_structured_data_unverified", "time_evidence_field": "schema.org/startDate"}
 
 

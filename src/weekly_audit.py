@@ -35,6 +35,14 @@ def cut(s, n):
     return s if len(s) <= n else s[:n - 1] + '…'
 
 
+def _days_view(hours):
+    """Los 6 primeros días del horario y, si hay más, cuántos son y cuál es el último (fechas reales, no el formato comprimido)."""
+    items = sorted((k, v) for k, v in hours.items() if v)
+    out = dict(items[:6])
+    if len(items) > 6: out['…'] = f'y {len(items) - 6} días más ({len(items)} en total; el último, {items[-1][0]} {items[-1][1]})'
+    return out
+
+
 def row(d):
     """Una ficha como la ve el auditor (las mismas columnas que describe el prompt)."""
     from src.taxonomy import CATEGORIES
@@ -46,9 +54,11 @@ def row(d):
         'url_fuente': next((l['url'] for l in d.get('links') or [] if l.get('url')), d.get('url') or ''),
         'fechas': f"{d.get('start')} → {d.get('end')}",
         'tipo': d.get('kind_label') or d.get('kind'),
-        'sesiones': occ[:8] + (['…'] if len(occ) > 8 else []),
+        # Con el total a la vista (3-11-2026): con solo las 8 primeras sesiones y los 4 primeros días, sin decir que
+        # había más, la auditoría del 3-11 dio por «truncados» horarios que estaban completos (M1).
+        'sesiones': occ[:8] + ([f'… y {len(occ) - 8} más ({len(occ)} en total, la última el {occ[-1]})'] if len(occ) > 8 else []),
         'hora_ficha': d.get('time') or d.get('time_label') or '',
-        'horario_por_dia': dict(list((d.get('hours_by_day') or {}).items())[:4]),
+        'horario_por_dia': _days_view(d.get('hours_by_day') or {}),
         'texto_horario_fuente': cut(d.get('time_text'), 160),
         'categoria_ontoca': CATEGORIES.get(d.get('public_category'), (d.get('public_category'),))[0],
         'categoria_fuente': d.get('category') or '',

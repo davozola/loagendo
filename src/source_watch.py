@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 
 from src.time_health import _notify, initialize as init_health
 
@@ -114,6 +115,9 @@ def _check_agendas(conn, now, opened, resolved):
         try: last = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", (source,)).fetchone()
         except Exception: continue   # tabla de lecturas sin avisos (bases antiguas o de prueba)
         held = next((w for w in json.loads((last or ['[]'])[0] or '[]') if str(w).startswith('retirada frenada')), None) if last else None
+        # Solo a partir de la segunda lectura seguida (2-11-2026): la primera se confirma o se deshace con la relectura de unas
+        # horas después (trabajo agendas-ia-frenadas); un aviso por cada cartelera renovada no sirve.
+        if held and re.search(r'\(lectura 1 de \d+\)', held): held = None
         if held: _raise(conn, source, 'RETIRE_HELD', '%s. Si la sala ha quitado esos actos, a la tercera lectura se retiran solos; si no, revisar la página.' % held, now, opened)
         else: _clear(conn, source, 'RETIRE_HELD', now, resolved)
 

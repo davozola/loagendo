@@ -99,6 +99,17 @@ def register(conn, source, record_id, url, *, alt='', credit='', rights_status=N
       (source,record_id,url,alt,credit,rights_status))
 
 
+def sniff_image(content):
+    """Tipo de imagen por su firma (JPEG, PNG, GIF, WebP, AVIF) o None."""
+    head = content[:16]
+    if head[:3] == b'\xff\xd8\xff': return 'image/jpeg'
+    if head[:8] == b'\x89PNG\r\n\x1a\n': return 'image/png'
+    if head[:6] in (b'GIF87a', b'GIF89a'): return 'image/gif'
+    if head[:4] == b'RIFF' and head[8:12] == b'WEBP': return 'image/webp'
+    if head[4:12] in (b'ftypavif', b'ftypavis'): return 'image/avif'
+    return None
+
+
 def _download(conn, asset_id, directory):
     row=conn.execute('SELECT original_url FROM media_assets WHERE asset_id=?',(asset_id,)).fetchone()
     if not row: raise LookupError('Imagen no encontrada')
@@ -109,6 +120,10 @@ def _download(conn, asset_id, directory):
     with urllib.request.urlopen(request,timeout=20,context=tls_context()) as response:  # nosec B310: URL is recorded from an event source
         content=response.read(10_000_000)
         content_type=response.headers.get_content_type()
+    # Servidor que no dice el tipo (4-11-2026, Phenomena: sin Content-Type, Python lo toma por texto): se reconoce por la
+    # firma del propio fichero, solo formatos de imagen. Un HTML o cualquier otra cosa sigue rechazándose.
+    if not content_type.startswith('image/') and content_type in ('text/plain', 'application/octet-stream', 'binary/octet-stream'):
+        content_type = sniff_image(content) or content_type
     if not content_type.startswith('image/') or len(content)>10_000_000: raise ValueError('Contenido de imagen no permitido')
     extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/avif':'avif'}.get(content_type,'img')
     digest=hashlib.sha256(content).hexdigest(); path=Path(directory)/f'{digest}.{extension}'; path.parent.mkdir(parents=True,exist_ok=True)
@@ -155,9 +170,15 @@ def download_local_previews(conn, directory, limit=20, source=None):
       WHERE m.local_path IS NULL AND m.download_failed_at IS NULL
         AND m.rights_status IN ('unknown','authorized')
         AND (m.original_url LIKE 'https://%' OR m.original_url LIKE 'http://%')
+        AND event_image(m.original_url)
         AND NOT EXISTS (SELECT 1 FROM media_assets existing
-          WHERE existing.source=m.source AND existing.id=m.id AND existing.local_path IS NOT NULL)
+          WHERE existing.source=m.source AND existing.id=m.id AND existing.local_path IS NOT NULL
+            AND event_image(existing.original_url))
     '''
+    # Una foto genérica ya descargada (avatar de la web, imagen para redes…) no se publica, así que no cuenta como la
+    # foto del acto: no debe impedir que se descargue la de verdad (3-11-2026, 55 fichas vigentes de Filmoteca,
+    # Espai Texas, Teatre Muntaner y Zumzeig con la foto buena registrada y sin descargar).
+    conn.create_function('event_image', 1, lambda url: 1 if is_event_image(url or '') else 0)
     params=[]
     if source:
         query+=' AND m.source=?\n'; params.append(source)

@@ -104,8 +104,8 @@ def _iso(value):
     try:return dt.datetime.fromisoformat(value).date().isoformat()
     except ValueError:return value[:10]
 
-def _record(source, title, start, end, url, venue, address, raw, time_text='', image=''):
-    key=hashlib.sha256((source+'\0'+url+'\0'+start+'\0'+title).encode()).hexdigest()[:24]
+def _record(source, title, start, end, url, venue, address, raw, time_text='', image='', key_start=None):
+    key=hashlib.sha256((source+'\0'+url+'\0'+(key_start or start)+'\0'+title).encode()).hexdigest()[:24]
     kind, eligibility=event_kind(title,'',delta(start,end),time_text,source)
     return {'source':source,'id':key,'title':title.strip(),'start':start,'end':end or start,
       'time_text':time_text,'price_text':'','kind':kind,'eligibility':eligibility,
@@ -319,9 +319,15 @@ def parse_graf(page, today=None, horizon_days=183):
         url = get('URL')[1]; title = get('SUMMARY')[1].strip()
         start, start_time = _ics_moment(*get('DTSTART')); end, end_time = _ics_moment(*get('DTEND'))
         if not (url and title and start): continue
-        all_day = not start_time
         if end is None: end = start
-        if all_day and end > start: end -= dt.timedelta(days=1)  # DTEND de día completo es exclusivo
+        # Día completo exportado con una hora de desfase (4-11-2026): GRAF da «23:00 → 22:59» (22:00 → 21:59 en verano)
+        # para actos y exposiciones sin hora; el primer día real es el siguiente y no hay hora.
+        orig_start = start   # la clave de la ficha sigue siendo la de siempre (no sale una ficha nueva)
+        if (start_time, end_time) in (('23:00', '22:59'), ('22:00', '21:59')):
+            start, start_time, end_time, shifted = start + dt.timedelta(days=1), '', '', True   # su DTEND (22:59) es el último día
+        else: shifted = False
+        all_day = not start_time
+        if all_day and end > start and not shifted: end -= dt.timedelta(days=1)  # DTEND de día completo es exclusivo
         rrule = get('RRULE')[1]
         if rrule:
             until = re.search(r'UNTIL=(\d{8})', rrule)
@@ -344,7 +350,8 @@ def parse_graf(page, today=None, horizon_days=183):
             if until < first or day > last: continue
             record = _record(source, title, day.isoformat(), until.isoformat(), url, location, '', {
                 'parser_version': 'graf-ical-v1', 'graf_uid': uid, 'graf_category': category, 'graf_organizer': organizer,
-                'time_end': until_time if until_time != at else '', 'rrule': rrule}, at, image)
+                'time_end': until_time if until_time != at else '', 'rrule': rrule}, at, image,
+                key_start=orig_start.isoformat() if day == start else None)
             record['venues'][0]['coords'] = coords
             record['organizers'] = [organizer] if organizer else []
             if category.lower().startswith('exposici') and until > day: record['kind'] = 'exhibition'

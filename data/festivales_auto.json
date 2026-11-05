@@ -118,6 +118,26 @@
         "kind": "tribe_rest"
       },
       "note": "Conectado solo por el buscador de programas (2026-11-02): The Events Calendar (WordPress)"
+    },
+    {
+      "slug": "fest_inclus",
+      "name": "Festival Inclús",
+      "type": "festival",
+      "url": "https://inclus.cat/edicions/edicio-2026/#schedule",
+      "site": "https://inclus.cat/edicions/edicio-2026/#schedule",
+      "enabled": true,
+      "auto": true,
+      "feed": {
+        "festival": {
+          "slug": "auto-inclus",
+          "name": "Festival Inclús"
+        },
+        "desde": "2026-11-21",
+        "hasta": "2026-12-01",
+        "url": "https://inclus.cat/wp-json/tribe/events/v1/events",
+        "kind": "tribe_rest"
+      },
+      "note": "Conectado solo por el buscador de programas (2026-11-04): The Events Calendar (WordPress)"
     }
   ]
 }

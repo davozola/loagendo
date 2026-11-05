@@ -36,14 +36,14 @@
     {
       "slug": "tradicionarius",
       "name": "Centre Artesà Tradicionàrius",
-      "address": "",
+      "address": "Travessia de Sant Antoni 6, 08012 Barcelona",
       "type": "music",
       "urls": [
-        "https://www.tradicionarius.cat/ca/programacio"
+        "https://www.tradicionarius.cat/ca/programacio",
+        "https://traddigital.tradicionarius.cat/traddigital/2026/tr%C3%A0d-tardor26"
       ],
       "activa": true,
-      "pausa_hasta": "2026-11-04",
-      "nota": "28-10-2026: la web dice «temporalment fora de servei» (404 en la agenda): en pausa hasta el 4-11, se vuelve a leer sola."
+      "nota": "28-10-2026: la web dice «temporalment fora de servei» (404 en la agenda). 5-11-2026: la propia web remite a traddigital.tradicionarius.cat mientras dure el cierre (vulnerabilidad PHP); se lee su programación de tardor. Cuando vuelva la web principal, quitar la segunda dirección (la temporada cambia de página). Dirección: la de Open Data BCN (localizaciones)."
     },
     {
       "slug": "conservatori_liceu",

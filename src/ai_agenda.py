@@ -37,12 +37,19 @@ PROMPT_VERSION = 3            # 2 (29-10-2026): cabecera de mes vigente en cada 
 LABEL = 'Datos de la sala'
 CHUNK_CHARS = 8000           # ~2.500 tokens por petición: la respuesta (una entrada por acto) cabe entera
 MAX_CHARS = 70000            # tope de texto por agenda y pasada
+# Lectura guardada (5-11-2026, consumo): cuando cambia una página de una agenda se leen todas, y en las que siguen las fichas de
+# cada acto (MNAC, 33 páginas) eso eran 32 llamadas al día por una sola página cambiada. Ahora, si el texto de una página es
+# idéntico al de su última lectura (misma versión de las instrucciones, mismo modelo y misma configuración de la agenda) y
+# esa lectura tiene menos de READ_CACHE_DAYS días, se reutiliza la respuesta de la IA. La comprobación de citas se hace
+# igual sobre el texto de hoy. Las relecturas forzadas (retirada frenada, lectura incompleta) no usan lo guardado.
+READ_CACHE_DAYS = 7
 EMPTY_PAGE_MIN_ACTIVE = 3    # con menos actos vigentes, una página vacía puede ser simplemente que no hay programación
 # Freno a las retiradas masivas (1-11-2026, Fundació Miró: su página de actividades dio 3 actos en vez de 25 y se
 # retiraron 19 vigentes). Si una lectura dejaría de publicar más de la mitad de lo vigente (y al menos 5), no se retira
 # nada: se avisa y la siguiente pasada vuelve a leer aunque la página no cambie. A la tercera lectura seguida igual, sí.
 RETIRE_HOLD_MIN, RETIRE_HOLD_RATIO, RETIRE_HOLD_RUNS = 5, 0.5, 3
 RETIRE_HELD_MARK = 'retirada frenada'
+INCOMPLETE_MARK = 'lectura incompleta'   # 2-11-2026: la IA no vio actos que siguen en la página; se repite en unas horas
 # Y acto a acto (1-11-2026, Espai Texas: la IA da 53, 5, 29, 31, 17, 47 y 40 actos en lecturas seguidas y cada una retiraba
 # lo que esa vez no vio, «RITA» con funciones hasta diciembre entre ellos): un acto deja de publicarse cuando falta en
 # RETIRE_MISSES lecturas seguidas; si vuelve a salir, la cuenta se pone a cero.
@@ -60,6 +67,11 @@ WEEKDAYS = {0: ('dilluns', 'lunes', 'monday', 'dl', 'lun'), 1: ('dimarts', 'mart
             5: ('dissabte', 'sabado', 'saturday', 'ds', 'sab', 'sa'), 6: ('diumenge', 'domingo', 'sunday', 'dg', 'dom', 'do')}
 WEEKDAY_SHORT = {0: {'dl'}, 1: {'dt', 'dm'}, 2: {'dc', 'dx'}, 3: {'dj'}, 4: {'dv'}, 5: {'ds'}, 6: {'dg'}}
 WEEKDAY_SHORT_RX = re.compile(r"\b(dl|dt|dm|dc|dx|dj|dv|ds|dg)\.?\s*(\d{1,2})(?!\d)")
+# Cabecera de día de una cartelera por días («Dc 23 des. Dc 23 L'ESTIUEIG 20:00 Dj 24 …»): día de la semana abreviado o entero
+# y el número. Sirve para saber de qué día es el bloque en el que cae una fecha (ver _own_day).
+DAY_HEADER_RX = re.compile(r"\b(?:dl|dt|dm|dc|dx|dj|dv|ds|dg|lun|mar|mie|jue|vie|sab|dom|mon|tue|wed|thu|fri|sat|sun|dilluns|dimarts|dimecres|dijous|"
+                           r"divendres|dissabte|diumenge|lunes|martes|miercoles|jueves|viernes|sabado|domingo|monday|tuesday|wednesday|thursday|"
+                           r"friday|saturday|sunday)\.?,?\s*(\d{1,2})(?!\d)")
 WEEKDAY_FULL = re.compile(r"\b(dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|miercoles|jueves|viernes|sabado|domingo|"
                           r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b")
 CANCELLED_RX = re.compile(r"\b(?:ajornat|ajornada|aplazad[oa]|cancel[.·]?lat|cancel[.·]?lada|cancelad[oa]|anul[.·]?lat|anul[.·]?lada|anulad[oa]|suspes|suspesa|suspendid[oa]|postponed|cancelled|canceled)\b")
@@ -281,6 +293,34 @@ def _near(a_positions, b_positions, before, after):
     return any(-before <= b - a <= after for a in a_positions for b in b_positions)
 
 
+def _own_day(hay, tpos, tlen, dpos, qlen, allowed):
+    """¿Hay una aparición del título y una de la fecha cercanas sin la cabecera de otro día en medio? (5-11-2026, Espai Texas:
+    en su cartelera por días, «RITA» sale hasta el 13 de diciembre y la IA le dio también las funciones de «L'ESTIUEIG» del 16
+    al 23, que van unos días más abajo; la fecha estaba cerca de un «RITA», pero en el bloque de otros días.) Entre las dos solo
+    pueden aparecer cabeceras del mismo día o de días que la IA da a este mismo acto (listas «Título · dv 20, ds 21, dg 22»)."""
+    for t in tpos:
+        for p in dpos:
+            if not -NEAR_DATE_BEFORE <= p - t <= NEAR_DATE_AFTER: continue
+            lo, hi = (p + qlen, t) if p < t else (t + tlen, p)
+            if {int(n) for n in DAY_HEADER_RX.findall(hay[lo:hi])} <= allowed: return True
+    return False
+
+
+RANGE_RX = re.compile(r"(?<!\d)\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?\s*(?:-|–|al?)\s*\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?(?!\d)")
+
+
+def _own_range(hay, tpos, tlen, ppos, qlen, near=1500):
+    """El periodo es de este acto si entre su cita y el título no hay otro periodo (5-11-2026, Espai Texas: «RITA … 06/11/26 -
+    13/12/26 BIOPIC … 18/09/26 - 29/01/27»: la IA le dio a RITA el periodo de BIOPIC, que también estaba a menos de 1.500
+    caracteres)."""
+    for t in tpos:
+        for p in ppos:
+            if not -near <= p - t <= near: continue
+            lo, hi = (p + qlen, t) if p < t else (t + tlen, p)
+            if not RANGE_RX.search(hay[lo:hi]): return True
+    return False
+
+
 def _same_place(a, b):
     a, b = fold(a), fold(b)
     return bool(a and b) and (a in b or b in a)
@@ -315,6 +355,10 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
         place = ' '.join(str(item['sala']).split())
         if not _near_(tpos, _positions(place, hay), 1500, 1500): return None, [f"lugar que no está junto al acto: {place!r}"]
         out['sala'] = {'name': place, 'address': ''}
+    claimed = set()
+    for s in item.get('sesiones') or []:
+        try: claimed.add(dt.date.fromisoformat(str(s.get('fecha'))[:10]).day)
+        except ValueError: pass
     for s in item.get('sesiones') or []:
         qd = str(s.get('cita_fecha') or ''); dpos = _positions(qd, hay)
         if not dpos: why.append(f"cita de fecha que no está en la página: {qd!r}"); continue
@@ -323,6 +367,8 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
             why.append(f"fecha lejos del título: {qd!r}"); continue
         d = _date_from_quote(s.get('fecha'), qd, today)
         if not d: why.append(f"fecha que no cuadra con su cita: {s.get('fecha')} / {qd!r}"); continue
+        if not whole_page and not _own_day(hay, tpos, len(fold(title)), dpos, len(fold(qd)), claimed | {d.day}):
+            why.append(f"fecha del bloque de otro día en una cartelera por días: {s.get('fecha')} / {qd!r}"); continue
         hour = ''
         h, qh = str(s.get('hora') or '').strip(), str(s.get('cita_hora') or '')
         # Hora escrita justo detrás de la fecha (28-10-2026, Zumzeig «Ds 7.11.26 (19:00)», Documenta «02/11/2026 19:00 h»):
@@ -359,7 +405,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
                     cand = dt.date(y, int(first.group(2)), int(first.group(1)))
                     if cand < today: a = cand
                 except ValueError: pass
-        if ppos and a and b and a <= b and (_near_(tpos, ppos, 1500, 1500)):
+        if ppos and a and b and a <= b and _near_(tpos, ppos, 1500, 1500) and (whole_page or _own_range(hay, tpos, len(fold(title)), ppos, len(fold(qp)))):
             out['periodo'] = (a.isoformat(), b.isoformat()); out['quotes'].setdefault('date', qp)
         else: why.append(f"periodo sin cita válida: {p!r}")
     if not out['sesiones'] and not out.get('periodo'): return None, why or ['sin fecha comprobada']
@@ -432,6 +478,70 @@ def venue_category(agenda, page_url='', act_url=''):
     return 'Arte y exposiciones' if segments & EXHIBITION_SEGMENTS else ''
 
 
+# ---------- identidad y presencia de los actos (2-11-2026, autorreparación) ----------
+# La IA no copia el título igual cada día («LUNES l DJ KHALI l SECRET ROOM l TECHNO…» → «DJ KHALI ALL NIGHT LONG | SECRET
+# ROOM | SALA 2») y a veces cambia el enlace del acto: la clave de la ficha cambiaba, salía una ficha duplicada y la de
+# ayer contaba como desaparecida (alertas de City Hall, Zumzeig y Espai Texas). Ahora el mismo acto se reconoce por día y
+# palabras propias del título; lo que sigue escrito en la página no cuenta como desaparecido; lo que cae más allá del
+# último día que enseña la página, tampoco.
+_SHOW_NOISE = {'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', 'monday', 'tuesday', 'wednesday', 'wednesay',
+               'thursday', 'friday', 'saturday', 'sunday', 'dilluns', 'dimarts', 'dimecres', 'dijous', 'divendres', 'dissabte', 'diumenge',
+               'room', 'sala', 'salas', 'secret', 'main', 'all', 'night', 'long', 'pres', 'presents', 'presenta', 'guest', 'list', 'techno',
+               'hard', 'house', 'tech', 'dark', 'melodic', 'indie', 'dance', 'city', 'hall', 'club', 'showcase', 'sessio', 'sesion', 'session',
+               'nov', 'des', 'dic', 'oct', 'noviembre', 'novembre', 'diciembre', 'desembre'}
+
+
+def show_words(title):
+    """Palabras propias de un título (sin días, salas, géneros ni coletillas de club)."""
+    return {w for w in _words(title, digits=True) if w not in _SHOW_NOISE}
+
+
+def same_show(a, b):
+    """¿Es el mismo acto? Igual sin acentos ni signos, o dos palabras propias en común (una sola si uno de los títulos no
+    tiene más, y de 4 letras o más: «Naza», «DJ Khali»)."""
+    fa, fb = ' '.join(re.findall(r'\w+', fold(a or '').lower())), ' '.join(re.findall(r'\w+', fold(b or '').lower()))
+    if fa and fa == fb: return True
+    wa, wb = show_words(a), show_words(b)
+    common = _close(wa, wb)
+    if len(common) >= 2: return True
+    return bool(common) and min(len(wa), len(wb)) <= 1 and max(len(w) for w in common) >= 4
+
+
+def norm_text(text):
+    """Texto sin acentos, en minúsculas y con solo palabras separadas por un espacio (y un espacio a cada lado)."""
+    return ' ' + ' '.join(re.findall(r'\w+', fold(text or '').lower())) + ' '
+
+
+def page_mentions(page_text, title):
+    """¿Sigue el título, tal cual (sin acentos ni signos), en el texto de la página (ya pasado por norm_text)? Solo
+    títulos con alguna palabra propia: «Concert número 23» no se busca por «número»; se busca entero."""
+    t = norm_text(title)
+    return bool(t.strip()) and len(t.strip()) >= 4 and t in page_text
+
+
+def page_horizon(accepted):
+    """Último día que la página enseña con algún acto (sesiones o fin de periodo) en esta lectura."""
+    days = [d for a in accepted for d, _ in a.get('sesiones') or []] + [a['periodo'][1] for a in accepted if a.get('periodo')]
+    return max(days) if days else ''
+
+
+def reuse_ids(conn, source, records, today):
+    """A cada ficha nueva de esta lectura le pone la clave de la que ya había ese mismo día para el mismo acto (título o
+    enlace distintos). Devuelve cuántas ha reconocido."""
+    rows = conn.execute("SELECT id, title, substr(start_date,1,10) FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'",
+                        (source, today.isoformat())).fetchall()
+    have = {rid for rid, _, _ in rows}
+    taken = {r['id'] for r in records if r['id'] in have}
+    by_day = {}
+    for rid, title, day in rows: by_day.setdefault(day, []).append((rid, title))
+    n = 0
+    for r in records:
+        if r['id'] in have: continue
+        match = next((rid for rid, title in by_day.get(r['start'][:10], []) if rid not in taken and same_show(title, r['title'])), None)
+        if match: r['id'] = match; taken.add(match); n += 1
+    return n
+
+
 def records_for(agenda, accepted, page_url, page_hash, model):
     """Fichas (forma de src.sync) de los actos comprobados: una por día con sus pases; un periodo, una ficha."""
     from src.venue_feeds import record_from_jsonld
@@ -475,6 +585,8 @@ def initialize(conn):
     conn.executescript("""
     CREATE TABLE IF NOT EXISTS ai_agenda_pages (slug TEXT NOT NULL, url TEXT NOT NULL, text_hash TEXT NOT NULL, checked_at TEXT NOT NULL,
       changed_at TEXT, events INTEGER, PRIMARY KEY(slug, url));
+    CREATE TABLE IF NOT EXISTS ai_agenda_reads (slug TEXT NOT NULL, url TEXT NOT NULL, text_hash TEXT NOT NULL, fingerprint TEXT NOT NULL,
+      items_json TEXT NOT NULL, read_at TEXT NOT NULL, PRIMARY KEY(slug, url));
     CREATE TABLE IF NOT EXISTS ai_agenda_images (url TEXT PRIMARY KEY, image TEXT NOT NULL DEFAULT '', fetched_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS source_record_retirements (source TEXT NOT NULL, id TEXT NOT NULL, run_id INTEGER, retired_at TEXT NOT NULL,
       previous_eligibility TEXT, reason TEXT, restored_at TEXT);
@@ -581,6 +693,26 @@ def _get(fetcher, url, timeout):
     return status, final_url, body
 
 
+def read_fingerprint(agenda, model=None):
+    from src import ai_assist
+    cfg = {'name': agenda.get('name'), 'salas': [s.get('name') for s in agenda.get('salas') or []], 'otros': bool(agenda.get('otros_lugares')), 'model': model or ai_assist.MODEL}
+    return hashlib.sha256(json.dumps(cfg, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
+
+
+def saved_read(conn, agenda, url, digest, today):
+    """Respuesta de la IA guardada para este mismo texto, si vale (ver READ_CACHE_DAYS); si no, None."""
+    if conn is None: return None
+    try:
+        row = conn.execute('SELECT text_hash, fingerprint, items_json, read_at FROM ai_agenda_reads WHERE slug=? AND url=?', (agenda['slug'], url)).fetchone()
+    except Exception: return None
+    if not row or row[0] != digest or row[1] != read_fingerprint(agenda): return None
+    try: read_day = dt.date.fromisoformat(row[3][:10])
+    except ValueError: return None
+    if read_day.year != today.year or not 0 <= (today - read_day).days < READ_CACHE_DAYS: return None
+    try: return json.loads(row[2])
+    except ValueError: return None
+
+
 def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, conn=None, force=False, usage=None):
     """Lee las páginas de una agenda: {'pages', 'accepted', 'rejected', 'unchanged'} (sin escribir fichas)."""
     from src.venue_feeds import fetch, robots_allows
@@ -623,12 +755,21 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         if follow.get('solo_fichas') and page['url'] in listing: page['via'] = 'solo enlaces'; continue
         # Reglas antes que IA: si la página publica sus actos en schema.org, se toman de ahí (sin tokens).
         nodes = schema_nodes(body, agenda, today)
+        # schema.org incompleto (3-11-2026, auditoría M1, Teatre Apolo): un acto de pocos días con una sola fecha de inicio
+        # («startDate» del sábado 19:30, «endDate» el domingo) cuando la página da más horas («SÁB 21 NOV 19:30 h · DOM 22
+        # NOV 17:00 h»). Con reglas solo saldría la primera función: se lee con IA y la comprobación de citas de siempre.
+        if nodes and _schema_misses_sessions(nodes, text):
+            page['via_note'] = 'schema.org con una sola función; leído con IA'; nodes = []
         if nodes:
             result.setdefault('rules_nodes', []).extend((n, page_url, page['hash']) for n in nodes)
             page['events'] = len(nodes); page['via'] = 'schema.org'
             continue
-        page['via'] = 'IA'
-        items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
+        items = None if force else saved_read(conn, agenda, page['url'], page['hash'], today)
+        if items is not None: page['via'] = 'IA (lectura guardada)'
+        else:
+            page['via'] = 'IA'
+            items = ask(agenda, text, page_url, today, key, requester=requester, usage=usage)
+            result.setdefault('fresh_reads', {})[page['url']] = (page['hash'], items)
         result.setdefault('raw_items', 0); result['raw_items'] += len(items)
         for item in items:
             act, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'], whole_page=whole)
@@ -694,6 +835,21 @@ def schema_nodes(body, agenda, today):
     return out
 
 
+def _schema_misses_sessions(nodes, text):
+    """La página de un acto (un solo nodo: en una cartelera con muchos no se toca nada) de 2 a 7 días, con una sola hora de
+    inicio y sin lista de pases, cuando la página escribe más horas."""
+    from src.venue_feeds import _date
+    if len(nodes) != 1: return False
+    hours = times_in(text or '')
+    if len(hours) < 2: return False
+    for n in nodes:
+        a, b = _date(n.get('startDate')), _date(n.get('endDate'))
+        try: span = (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days if a and b else 0
+        except ValueError: span = 0
+        if 1 <= span <= 7 and not n.get('x_sessions') and not n.get('subEvent') and not n.get('eventSchedule'): return True
+    return False
+
+
 def rules_records(agenda, nodes):
     """Fichas de los actos schema.org de la agenda (fuente venue_ia_<slug>, etiqueta «Datos de la sala»)."""
     from src.venue_feeds import record_from_jsonld
@@ -726,7 +882,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
     try:
         # Retirada frenada en la última lectura: se vuelve a leer aunque la página no cambie, para confirmarla o deshacerla.
         last = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", (source,)).fetchone()
-        if last and RETIRE_HELD_MARK in (last[0] or ''): force = True
+        if last and (RETIRE_HELD_MARK in (last[0] or '') or INCOMPLETE_MARK in (last[0] or '')): force = True
         res = read_agenda(agenda, today, key, fetcher=fetcher, requester=requester, timeout=timeout, conn=conn, usage=usage, force=force)
         errors = [p['error'] for p in res['pages'] if p.get('error')]
         if errors and len(errors) == len(res['pages']): raise RuntimeError('; '.join(errors))
@@ -770,6 +926,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
         records = []
         for act in res['accepted']: records += records_for(agenda, [act], act['page'], act['page_hash'], model)
         records += rules_records(agenda, res.get('rules_nodes') or [])
+        recognised = reuse_ids(conn, source, records, today)   # el mismo acto con otro título o enlace: misma ficha (2-11-2026)
         seen = set(); records = [r for r in records if not (r['id'] in seen or seen.add(r['id']))]
         mutated = 0; now = now_utc()
         with conn:
@@ -779,10 +936,35 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                 if image.startswith(('https://', 'http://')):
                     register(conn, source, record['id'], image, alt=record['title'], credit=record['venues'][0]['name'])
             # Lo que ya no está en la página (y aún no ha pasado) deja de publicarse; no se borra y queda anotado.
-            held = None
+            held = None; duplicates, still_there = [], 0
             if records and not errors:
-                current = conn.execute("SELECT id, eligibility FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'", (source, today.isoformat())).fetchall()
-                missing = [(rid, el) for rid, el in current if rid not in seen]
+                current_rows = conn.execute("SELECT id, eligibility, title, substr(start_date,1,10) FROM source_records WHERE source=? AND end_date>=? AND eligibility<>'exclude'",
+                                            (source, today.isoformat())).fetchall()
+                current = [(rid, el) for rid, el, _, _ in current_rows]
+                # Autorreparación (2-11-2026): antes de contar un acto como desaparecido,
+                # 1) si es la misma sesión que otra ficha de esta lectura (título o enlace distintos), es un duplicado: se une
+                #    a la buena (deja de publicarse, anotado y recuperable, sin borrar nada);
+                # 2) si su título sigue escrito en la página, la IA no lo vio esta vez: no cuenta;
+                # (Se probó también no contar lo que cae después del último día que enseña la página, pero una sala que quita
+                # sus actos futuros los dejaría publicados: descartado.)
+                by_day_seen = {}
+                for r in records: by_day_seen.setdefault(r['start'][:10], []).append((r['id'], r['title']))
+                page_text = norm_text(html.unescape(_NEXT_TAG.sub(' ', ' '.join(bodies.values())))) if bodies else ''
+                missing, duplicates, still_there = [], [], 0
+                for rid, el, title, day in current_rows:
+                    if rid in seen: continue
+                    twin = next((sid for sid, st in by_day_seen.get(day, []) if same_show(st, title)), None)
+                    if twin: duplicates.append((rid, el, twin)); continue
+                    if page_text and page_mentions(page_text, title): still_there += 1; continue
+                    missing.append((rid, el))
+                for rid, el, twin in duplicates:
+                    conn.execute("UPDATE source_records SET eligibility='exclude' WHERE source=? AND id=?", (source, rid))
+                    conn.execute('DELETE FROM ai_agenda_misses WHERE source=? AND id=?', (source, rid))
+                    conn.execute('INSERT INTO source_record_retirements(source,id,run_id,retired_at,previous_eligibility,reason) VALUES(?,?,?,?,?,?)',
+                                 (source, rid, run_id, now, el, 'duplicado de %s: la misma sesión con otro título o enlace' % twin))
+                kept = {rid for rid, _, _, _ in current_rows if rid not in seen and rid not in {d[0] for d in duplicates} and rid not in {m[0] for m in missing}}
+                if kept: conn.execute('DELETE FROM ai_agenda_misses WHERE source=? AND id IN (%s)' % ','.join('?' * len(kept)), (source, *kept))
+                current = [(rid, el) for rid, el in current if rid not in {d[0] for d in duplicates}]
                 if len(missing) >= RETIRE_HOLD_MIN and len(missing) > len(current) * RETIRE_HOLD_RATIO:
                     prev = [w for (w,) in conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND id<? AND status='completed' AND rows_received>0 "
                                                        "ORDER BY id DESC LIMIT ?", (source, run_id, RETIRE_HOLD_RUNS - 1))]
@@ -812,7 +994,18 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
                     conn.execute('INSERT INTO ai_agenda_pages(slug,url,text_hash,checked_at,changed_at,events) VALUES(?,?,?,?,?,?) '
                                  'ON CONFLICT(slug,url) DO UPDATE SET text_hash=excluded.text_hash,checked_at=excluded.checked_at,changed_at=excluded.changed_at,events=excluded.events',
                                  (agenda['slug'], p['url'], p['hash'], now, now, p.get('events', 0)))
+            fp = read_fingerprint(agenda)
+            for url, (digest, items) in (res.get('fresh_reads') or {}).items():
+                conn.execute('INSERT INTO ai_agenda_reads(slug,url,text_hash,fingerprint,items_json,read_at) VALUES(?,?,?,?,?,?) '
+                             'ON CONFLICT(slug,url) DO UPDATE SET text_hash=excluded.text_hash,fingerprint=excluded.fingerprint,items_json=excluded.items_json,read_at=excluded.read_at',
+                             (agenda['slug'], url, digest, fp, json.dumps(items, ensure_ascii=False), today.isoformat()))   # el día de la lectura
             warn = [held] if held else []
+            # Muchos actos que siguen en la página y la IA no vio (Zumzeig, 2-11-2026: 12 de 39): se vuelve a leer en unas horas.
+            if records and not errors and still_there >= RETIRE_HOLD_MIN:
+                warn.append(f"{INCOMPLETE_MARK}: {still_there} actos siguen en la página y la IA no los vio; se vuelve a leer en unas horas")
+            if records and not errors and (recognised or duplicates or still_there):
+                warn.append(f"autorreparación · {recognised} reconocidos con otro título o enlace · {len(duplicates)} duplicados unidos · "
+                            f"{still_there} siguen en la página sin que la IA los viera")
             warn += [f"{len(res['rejected'])} actos descartados por no pasar la comprobación"] if res['rejected'] else []
             # Motivos de cada descarte (28-10-2026): para revisar una agenda nueva sin volver a gastar IA.
             warn += [f"descartado · {str((r.get('item') or {}).get('titulo') or '')[:80]} · {'; '.join(r.get('why') or [])[:240]} · {r.get('page', '')}" for r in res['rejected'][:200]]
@@ -835,6 +1028,13 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     # «pausa_hasta» (28-10-2026, Tradicionàrius fuera de servicio): no se lee ni avisa hasta esa fecha; después, sola.
     day = (today or dt.date.today()).isoformat()
     agendas = [a for a in load_agendas() if a.get('activa') and not a.get('descartada') and not (a.get('hasta') and day > a['hasta']) and not (a.get('pausa_hasta') and day <= a['pausa_hasta'])]
+    # «only_held» (2-11-2026): relectura a las pocas horas de las agendas cuya última lectura frenó una retirada, para
+    # confirmarla o deshacerla sin esperar al día siguiente (trabajo agendas-ia-frenadas).
+    if (job or {}).get('only_held'):
+        def held(a):
+            row = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", ('venue_ia_' + a['slug'],)).fetchone()
+            return bool(row and (RETIRE_HELD_MARK in (row[0] or '') or INCOMPLETE_MARK in (row[0] or '')))
+        agendas = [a for a in agendas if held(a)]
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()

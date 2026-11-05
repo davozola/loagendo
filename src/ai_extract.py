@@ -58,6 +58,9 @@ AGE_SEGMENT = re.compile(r"(?:\.\s|\s\.\s|\s-\s|;|\|\||\n)")
 AGE_TARIFF_WINDOW = 70
 
 
+AGE_CHILDCARE = re.compile(r"\b(?:conciliacio\w*|conciliacion|canguratge|cangur|canguro|ludoteca|guarderia|servei d.acollida|servicio de acogida|espai infantil|espacio infantil|cuidado de (?:ninos|menores))\b")
+
+
 def _audience_age(text, m, lo):
     """¿La edad encontrada en el texto es la del público? (1-11-2026, auditoría del 6-11)
     · No si habla de los artistas («tienen entre 19 y 21 años cuando…», Múltipla).
@@ -71,6 +74,10 @@ def _audience_age(text, m, lo):
     window = text[max(0, m.start() - AGE_TARIFF_WINDOW):m.start()]
     segment = AGE_SEGMENT.split(window)[-1]
     if AGE_PERFORMERS_BEFORE.search(segment): return False
+    # Servicio de canguro mientras dura el acto (3-11-2026, auditoría M3: el Fòrum contra les Violències de Gènere
+    # «disposa de servei de conciliació per a infants de 3 a 12 anys» salía en familia): es la edad de los niños
+    # atendidos, no la del público.
+    if AGE_CHILDCARE.search(segment): return False
     if AGE_AUDIENCE.search(segment): return True
     after = text[m.end():m.end() + 30]
     if AGE_TARIFF.search(segment) or AGE_TARIFF_AFTER.search(after): return False
