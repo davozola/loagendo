@@ -74,11 +74,11 @@ def candidates(conn, limit, today=None):
 def verify(hour, quote, text, title):
     """Hora comprobada sin IA, o ''. La cita está en el texto, contiene la hora y va cerca del título."""
     from src.ai_extract import fold, times_in
-    from src.ai_agenda import _positions, _near
+    from src.ai_agenda import _positions, _near, vfold
     hour, quote = str(hour or '').strip(), str(quote or '')
     if not re.fullmatch(r'\d{1,2}:\d{2}', hour): return ''
     hour = f'{int(hour[:-3]):02d}:{hour[-2:]}'
-    hay = fold(text)
+    hay = vfold(text)   # mismo pliegue que _positions (guiones tipográficos, 5-11-2026)
     qpos, tpos = _positions(quote, hay), _positions(title, hay)
     if not qpos or hour not in times_in(quote) or hour == '00:00': return ''
     if tpos and not _near(tpos, qpos, 2500, 2500): return ''

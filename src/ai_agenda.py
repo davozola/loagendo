@@ -31,6 +31,15 @@ from urllib.parse import urljoin, urlsplit
 
 from src.ai_extract import fold, times_in
 
+# Guiones tipográficos (5-11-2026, La Caldera «7–8 nov 2026»): fold los quitaba y la cita quedaba «78 nov 2026», así que ninguna
+# de las dos fechas cuadraba. Para comprobar citas se cambian por un guion normal antes de plegar el texto (las claves de las
+# fichas siguen usando fold tal cual, para no cambiarlas).
+_DASHES = re.compile('[\u2010-\u2015\u2212]')
+
+
+def vfold(text):
+    return fold(_DASHES.sub('-', str(text or '')))
+
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / 'config' / 'agendas_ia.json'
 PROMPT_VERSION = 3            # 2 (29-10-2026): cabecera de mes vigente en cada trozo; 3 (30-10-2026): precio general si hay de socio y general. Cambia la huella de las páginas, así que todas se releen una vez
@@ -248,7 +257,7 @@ def chunks(text, size=CHUNK_CHARS):
 
 # ---------- comprobación ----------
 def _positions(needle, hay):
-    n = fold(needle).strip(' .,;:"\'«»'); out = []
+    n = vfold(needle).strip(' .,;:"\'«»'); out = []
     if len(n) < 3: return out
     i = hay.find(n)
     while i >= 0: out.append(i); i = hay.find(n, i + 1)
@@ -260,7 +269,7 @@ def _date_from_quote(iso, quote, today, allow_past=False):
     la cita los nombra, coinciden; sin mes en la cita, es la fecha futura más próxima con ese día."""
     try: d = dt.date.fromisoformat(str(iso)[:10])
     except ValueError: return None
-    q = fold(quote)
+    q = vfold(quote)
     if (d < today and not allow_past) or d < today - dt.timedelta(days=1200) or d > today + dt.timedelta(days=400): return None
     if not re.search(rf"(?<!\d)0?{d.day}(?!\d)", q): return None
     years = set(re.findall(r"\b(20\d\d)\b", q))
@@ -332,7 +341,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
     ``whole_page`` (28-10-2026, In-Edit): la página es la ficha de un solo acto (enlazada desde la agenda con
     «seguir»: {«ficha»: true}); su título encabeza la página y las sesiones van después de la sinopsis, así que la
     cercanía al título no se exige. Las citas siguen teniendo que estar literalmente en la página."""
-    hay = fold(text); why = []
+    hay = vfold(text); why = []
     _near_ = (lambda *a: True) if whole_page else _near
     title = ' '.join(str(item.get('titulo') or '').split())
     tpos = _positions(title, hay)
@@ -367,7 +376,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
             why.append(f"fecha lejos del título: {qd!r}"); continue
         d = _date_from_quote(s.get('fecha'), qd, today)
         if not d: why.append(f"fecha que no cuadra con su cita: {s.get('fecha')} / {qd!r}"); continue
-        if not whole_page and not _own_day(hay, tpos, len(fold(title)), dpos, len(fold(qd)), claimed | {d.day}):
+        if not whole_page and not _own_day(hay, tpos, len(vfold(title)), dpos, len(vfold(qd)), claimed | {d.day}):
             why.append(f"fecha del bloque de otro día en una cartelera por días: {s.get('fecha')} / {qd!r}"); continue
         hour = ''
         h, qh = str(s.get('hora') or '').strip(), str(s.get('cita_hora') or '')
@@ -378,7 +387,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
             near = [p for p in dpos if any(-NEAR_DATE_BEFORE <= p - t <= NEAR_DATE_AFTER for t in tpos)] or ([] if not whole_page else dpos)
             # Primero la aparición que va detrás del título (listados «Título · fecha (hora)»); si no, la de delante.
             for p in sorted(near, key=lambda p: (not any(0 <= p - t <= NEAR_DATE_AFTER for t in tpos), min(abs(p - t) for t in tpos))):
-                tail = hay[p + len(fold(qd)):p + len(fold(qd)) + 20]
+                tail = hay[p + len(vfold(qd)):p + len(vfold(qd)) + 20]
                 m = re.match(r"[\s(,·-]{0,3}([01]?\d|2[0-3])[:.]([0-5]\d)\s*h?\)?(?![\d:.]|\s*(?:-|–|a)\s*\d)", tail)
                 if m: return f"{int(m.group(1)):02d}:{m.group(2)}", (qd + tail[:m.end()]).strip()
             return '', ''
@@ -405,7 +414,7 @@ def verify(item, text, links, today, salas=None, other_places=False, own_name=''
                     cand = dt.date(y, int(first.group(2)), int(first.group(1)))
                     if cand < today: a = cand
                 except ValueError: pass
-        if ppos and a and b and a <= b and _near_(tpos, ppos, 1500, 1500) and (whole_page or _own_range(hay, tpos, len(fold(title)), ppos, len(fold(qp)))):
+        if ppos and a and b and a <= b and _near_(tpos, ppos, 1500, 1500) and (whole_page or _own_range(hay, tpos, len(vfold(title)), ppos, len(vfold(qp)))):
             out['periodo'] = (a.isoformat(), b.isoformat()); out['quotes'].setdefault('date', qp)
         else: why.append(f"periodo sin cita válida: {p!r}")
     if not out['sesiones'] and not out.get('periodo'): return None, why or ['sin fecha comprobada']
@@ -867,6 +876,24 @@ def rules_records(agenda, nodes):
     return out
 
 
+INCOMPLETE_REREADS = 1   # 6-11-2026: relecturas seguidas por «lectura incompleta»; ver needs_reread
+
+
+def needs_reread(conn, source):
+    """¿Hay que volver a leer la agenda aunque la página no cambie? Siempre tras una retirada frenada. Tras una lectura
+    incompleta, como mucho INCOMPLETE_REREADS veces seguidas (6-11-2026, Espai Texas: su cartelera por días sale incompleta
+    lectura tras lectura, 174 a 186 funciones sin ver, y se releía cada pocas horas, 16 páginas por vez, hasta que su web
+    empezó a cortar la conexión). Si la relectura también sale incompleta, la IA no da más de sí con esa página y se
+    espera a que cambie."""
+    rows = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT ?",
+                        (source, INCOMPLETE_REREADS + 1)).fetchall()
+    if not rows: return False
+    last = rows[0][0] or ''
+    if RETIRE_HELD_MARK in last: return True
+    if INCOMPLETE_MARK not in last: return False
+    return not (len(rows) > INCOMPLETE_REREADS and all(INCOMPLETE_MARK in (r[0] or '') for r in rows))
+
+
 def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, timeout=30, force=False):
     """Lee una agenda y guarda sus fichas (fuente venue_ia_<slug>)."""
     from src.media import register
@@ -881,8 +908,7 @@ def sync_agenda(conn, agenda, key, today=None, fetcher=None, requester=None, tim
         run_id = conn.execute('INSERT INTO sync_runs(source,started_at,status,cursor) VALUES(?,?,?,?)', (source, now_utc(), 'running', '0')).lastrowid
     try:
         # Retirada frenada en la última lectura: se vuelve a leer aunque la página no cambie, para confirmarla o deshacerla.
-        last = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", (source,)).fetchone()
-        if last and (RETIRE_HELD_MARK in (last[0] or '') or INCOMPLETE_MARK in (last[0] or '')): force = True
+        if needs_reread(conn, source): force = True
         res = read_agenda(agenda, today, key, fetcher=fetcher, requester=requester, timeout=timeout, conn=conn, usage=usage, force=force)
         errors = [p['error'] for p in res['pages'] if p.get('error')]
         if errors and len(errors) == len(res['pages']): raise RuntimeError('; '.join(errors))
@@ -1031,10 +1057,7 @@ def run(conn, job=None, requester=None, fetcher=None, today=None):
     # «only_held» (2-11-2026): relectura a las pocas horas de las agendas cuya última lectura frenó una retirada, para
     # confirmarla o deshacerla sin esperar al día siguiente (trabajo agendas-ia-frenadas).
     if (job or {}).get('only_held'):
-        def held(a):
-            row = conn.execute("SELECT warning_json FROM sync_runs WHERE source=? AND status='completed' AND rows_received>0 ORDER BY id DESC LIMIT 1", ('venue_ia_' + a['slug'],)).fetchone()
-            return bool(row and (RETIRE_HELD_MARK in (row[0] or '') or INCOMPLETE_MARK in (row[0] or '')))
-        agendas = [a for a in agendas if held(a)]
+        agendas = [a for a in agendas if needs_reread(conn, 'venue_ia_' + a['slug'])]
     results = [sync_agenda(conn, a, key, today=today, fetcher=fetcher, requester=requester, timeout=(job or {}).get('timeout_seconds', 30)) for a in agendas]
     if any(r.get('rows_mutated') for r in results):
         from mvp import catalog; catalog.invalidate_cache()

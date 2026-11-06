@@ -48,5 +48,30 @@ class CarteleraPorDias(unittest.TestCase):
         self.assertEqual(ok['periodo'], ('2026-09-18', '2027-01-29'))
 
 
+    def test_guion_tipografico_en_la_cita(self):
+        text, links = ai_agenda.clean('<p>Tot allò que balla · 7–8 nov 2026 · Nau de La Caldera</p>', 'https://www.lacaldera.info/')
+        act, why = ai_agenda.verify({'titulo': 'Tot allò que balla', 'sesiones': [ses('2026-11-07', '7–8 nov 2026'), ses('2026-11-08', '7–8 nov 2026')]}, text, links, TODAY)
+        self.assertEqual([d for d, _ in act['sesiones']], ['2026-11-07', '2026-11-08'], why)
+
+
+class Relecturas(unittest.TestCase):
+    def setUp(self):
+        import sqlite3
+        self.conn = sqlite3.connect(':memory:')
+        self.conn.execute('CREATE TABLE sync_runs(id INTEGER PRIMARY KEY, source TEXT, status TEXT, rows_received INTEGER, warning_json TEXT)')
+
+    def add(self, warn):
+        import json
+        self.conn.execute("INSERT INTO sync_runs(source,status,rows_received,warning_json) VALUES('s','completed',5,?)", (json.dumps(warn),))
+
+    def test_incompleta_una_relectura_y_basta(self):
+        self.add([]); self.assertFalse(ai_agenda.needs_reread(self.conn, 's'))
+        self.add([ai_agenda.INCOMPLETE_MARK + ': 20 actos']); self.assertTrue(ai_agenda.needs_reread(self.conn, 's'))
+        self.add([ai_agenda.INCOMPLETE_MARK + ': 18 actos']); self.assertFalse(ai_agenda.needs_reread(self.conn, 's'))
+
+    def test_retirada_frenada_siempre(self):
+        self.add([ai_agenda.INCOMPLETE_MARK]); self.add([ai_agenda.RETIRE_HELD_MARK + ': 6 de 9']); self.assertTrue(ai_agenda.needs_reread(self.conn, 's'))
+
+
 if __name__ == '__main__':
     unittest.main()
