@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -38,6 +39,17 @@ def initialize(conn):
       name TEXT PRIMARY KEY, held_at TEXT NOT NULL
     );
     """)
+    # Proceso que tiene el candado (6-11-2026): si ya no existe, el candado se suelta en la siguiente pasada en vez de esperar
+    # STALE_LOCK_MINUTES (la publicación del 5-11 y la del 6-11 murieron a medias y el motor estuvo 4 h sin hacer nada).
+    if 'pid' not in {r[1] for r in conn.execute("PRAGMA table_info(automation_locks)")}:
+        conn.execute("ALTER TABLE automation_locks ADD COLUMN pid INTEGER")
+
+
+def _alive(pid):
+    try: os.kill(int(pid), 0)
+    except ProcessLookupError: return False
+    except (PermissionError, OSError, ValueError, TypeError): return True
+    return True
 
 
 def load_config(path: Path) -> dict:
@@ -264,7 +276,10 @@ def run_due(conn, config, media_root, *, force=False, now=None):
     stale_before = (now - dt.timedelta(minutes=STALE_LOCK_MINUTES)).isoformat(timespec="seconds")
     with conn:
         conn.execute("DELETE FROM automation_locks WHERE name='engine' AND held_at<?", (stale_before,))
-        acquired = conn.execute("INSERT OR IGNORE INTO automation_locks(name,held_at) VALUES ('engine',?)", (now_utc(),)).rowcount
+        owner = conn.execute("SELECT pid FROM automation_locks WHERE name='engine'").fetchone()
+        if owner and owner[0] and int(owner[0]) != os.getpid() and not _alive(owner[0]):
+            conn.execute("DELETE FROM automation_locks WHERE name='engine'")   # su proceso ya no existe
+        acquired = conn.execute("INSERT OR IGNORE INTO automation_locks(name,held_at,pid) VALUES ('engine',?,?)", (now_utc(), os.getpid())).rowcount
     if not acquired:
         return {"ran_at": now.isoformat(timespec="seconds"), "outcomes": [], "status": "engine_busy"}
     # launchd may terminate a process during logout, sleep, or an upgrade.

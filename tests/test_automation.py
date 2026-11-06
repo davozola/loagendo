@@ -44,6 +44,24 @@ class AutomationTests(unittest.TestCase):
         result=run_due(self.conn, {'jobs':[]}, Path(self.temp.name), now=dt.datetime(2026,10,12,0,1,tzinfo=dt.timezone.utc))
         self.assertEqual(result['status'],'engine_busy')
 
+    def test_lock_of_a_dead_process_is_released(self):
+        import os
+        from src.automation import initialize
+        initialize(self.conn)
+        self.conn.execute("INSERT INTO automation_locks(name,held_at,pid) VALUES ('engine','2026-10-12T00:00:00+00:00',?)", (2**22 + 12345,))
+        self.conn.execute("INSERT INTO automation_runs(job_name,source,kind,started_at,status) VALUES ('publicar-web','','publish','2026-10-12T00:00:00+00:00','running')")
+        result=run_due(self.conn, {'jobs':[]}, Path(self.temp.name), now=dt.datetime(2026,10,12,0,30,tzinfo=dt.timezone.utc))
+        self.assertNotEqual(result.get('status'),'engine_busy')
+        self.assertEqual(self.conn.execute("SELECT status FROM automation_runs WHERE job_name='publicar-web'").fetchone()[0],'interrupted')
+
+    def test_lock_of_a_live_process_is_kept(self):
+        import os
+        from src.automation import initialize
+        initialize(self.conn)
+        self.conn.execute("INSERT INTO automation_locks(name,held_at,pid) VALUES ('engine','2026-10-12T00:00:00+00:00',?)", (os.getppid(),))
+        result=run_due(self.conn, {'jobs':[]}, Path(self.temp.name), now=dt.datetime(2026,10,12,0,30,tzinfo=dt.timezone.utc))
+        self.assertEqual(result['status'],'engine_busy')
+
 
 if __name__ == '__main__': unittest.main()
 
