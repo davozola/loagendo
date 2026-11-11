@@ -137,3 +137,14 @@ class ApplyTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ConsumoEstructura(unittest.TestCase):
+    """11-11-2026: los talleres y cursos no se preguntan (eran el 82 % de las llamadas, siempre sin cambios)."""
+    def test_talleres_y_cursos_fuera(self):
+        base = {'source': 'opendatabcn_agenda', 'start': '2026-10-01', 'end': '2026-12-20', 'title': 'Taller de ceràmica',
+                'source_text': 'Taller trimestral de ceràmica. Dimarts de 18 a 20 h. Exposició de les peces al final del curs al centre cívic.'}
+        self.assertFalse(ai_structure.needs({**base, 'format': 'workshop'}))
+        self.assertFalse(ai_structure.needs({**base, 'format': 'course'}))
+        self.assertTrue(ai_structure.needs({**base, 'format': 'program'}))
+

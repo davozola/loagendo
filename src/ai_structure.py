@@ -47,6 +47,7 @@ CHUNK = 8
 MAX_PER_RUN = 48          # fichas por pasada del motor (la primera vez hay ~180; luego, unas pocas al día)
 CONFIDENCE = {'alta': 0.9, 'media': 0.6, 'baja': 0.3}
 APPLY = 0.85
+SKIP_FORMATS = {'workshop', 'course'}
 
 FORMATS = ['exhibition', 'program', 'one_shot', 'workshop', 'course', 'festival', 'ongoing']
 FORMAT_LABELS = {'one_shot': 'Actos y funciones', 'workshop': 'Talleres', 'course': 'Cursos', 'program': 'Ciclos y programas',
@@ -104,6 +105,10 @@ def needs(ev):
     """Fichas de 7 días o más con texto propio que hablan de exposición o instalación, o que anuncian
     actos con hora dentro. Las sesiones creadas aquí no se vuelven a preguntar."""
     if ev.get('source') == SOURCE or span_days(ev) < MIN_DAYS: return False
+    # Talleres y cursos (11-11-2026, consumo): eran el 82 % de lo preguntado (2.014 de 2.448, casi todos cursos trimestrales de
+    # los centros cívicos de Open Data) y la respuesta fue siempre «taller/curso, sin sesiones sueltas». Con Sonnet era más de
+    # la mitad del gasto diario de IA. Su horario ya lo dan las reglas; esta tarea es para exposiciones e instalaciones.
+    if ((ev.get('structure_basis') or {}).get('format') or ev.get('format')) in SKIP_FORMATS: return False
     text = ev.get('source_text') or ''
     if len(text.strip()) < MIN_TEXT: return False
     t = fold((ev.get('title') or '') + '\n' + text)
