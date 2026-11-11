@@ -422,7 +422,9 @@
         "https://www.dissenyhub.barcelona/ca/activitats/per-a-tothom",
         "https://www.dissenyhub.barcelona/ca/activitats/families"
       ],
-      "activa": true
+      "activa": true,
+      "seguir_actos": 6,
+      "nota_seguir_actos": "10-11-2026 (auditoría M1): actos que el listado da sin hora o solo con la primera y la última sesión (clubs de lectura, ciclos); se lee la página de cada uno, como mucho 6 por pasada."
     },
     {
       "slug": "palau_robert",
@@ -718,6 +720,8 @@
         "https://espaitexas.cat/teatre/"
       ],
       "activa": true,
+      "reglas": "cartelera_por_dias",
+      "nota_reglas": "10-11-2026: las dos carteleras dan cada función por día con su hora; se leen con reglas (src/ai_agenda.py grid_nodes), sin IA. La IA dejaba sin ver 170-190 funciones por lectura.",
       "nota": "Añadida el 21-10-2026: sus actos llegaban solo por agregadores (Ajuntament, Generalitat, Songkick…). 31-10-2026 (alerta ACTS_DROP, 12 frente a 28): se leía solo la portada, que enseña las películas de la semana en curso como periodo y sin hora; la semana de la Festa del Cinema trajo menos. Ahora se leen las dos carteleras completas (cine y teatre), que dan cada sesión por día con su hora («Ds31 ELS NENS ESTAN BÉ 16:00»), hasta diciembre."
     },
     {

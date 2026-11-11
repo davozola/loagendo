@@ -764,6 +764,9 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         if follow.get('solo_fichas') and page['url'] in listing: page['via'] = 'solo enlaces'; continue
         # Reglas antes que IA: si la página publica sus actos en schema.org, se toman de ahí (sin tokens).
         nodes = schema_nodes(body, agenda, today)
+        if not nodes and agenda.get('reglas') == 'cartelera_por_dias':
+            nodes = grid_nodes(text, agenda, today, page_url)
+            if nodes: page['via_note'] = 'cartelera por días leída con reglas'
         # schema.org incompleto (3-11-2026, auditoría M1, Teatre Apolo): un acto de pocos días con una sola fecha de inicio
         # («startDate» del sábado 19:30, «endDate» el domingo) cuando la página da más horas («SÁB 21 NOV 19:30 h · DOM 22
         # NOV 17:00 h»). Con reglas solo saldría la primera función: se lee con IA y la comprobación de citas de siempre.
@@ -771,7 +774,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             page['via_note'] = 'schema.org con una sola función; leído con IA'; nodes = []
         if nodes:
             result.setdefault('rules_nodes', []).extend((n, page_url, page['hash']) for n in nodes)
-            page['events'] = len(nodes); page['via'] = 'schema.org'
+            page['events'] = len(nodes); page['via'] = 'reglas' if page.get('via_note') == 'cartelera por días leída con reglas' else 'schema.org'
             continue
         items = None if force else saved_read(conn, agenda, page['url'], page['hash'], today)
         if items is not None: page['via'] = 'IA (lectura guardada)'
@@ -796,7 +799,13 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
         for act in list(result['accepted']):
             if budget <= 0: break
             u = act.get('url') or ''
-            if not u or any(h for _, h in act['sesiones']) or urlsplit(u).netloc not in hosts or u in seen: continue
+            # También el acto del que el listado solo da la primera y la última sesión (10-11-2026,
+            # Disseny Hub «Club Llegim el Museu»: «28/10/2026 - 18:30 - 26/05/2027 - 19:30»; la página del acto da el programa
+            # sesión a sesión). Su página manda si trae más sesiones que el listado.
+            # La cita de fecha trae dos fechas («28/10/2026 - 18:30 - 26/05/2027 - 19:30») y el acto, como mucho dos sesiones: son el
+            # principio y el fin del ciclo, no sus sesiones (pasado el 28-10 solo quedaba la del 26-5).
+            bounds_only = len(act['sesiones']) <= 2 and len(re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}', (act.get('quotes') or {}).get('date', ''))) >= 2
+            if not u or (any(h for _, h in act['sesiones']) and not bounds_only) or urlsplit(u).netloc not in hosts or u in seen: continue
             seen.add(u); budget -= 1
             if fetcher is fetch and not robots_allows(u): continue
             status, final_url, body = _get(fetcher, u, timeout)
@@ -805,7 +814,7 @@ def read_agenda(agenda, today, key, fetcher=None, requester=None, timeout=30, co
             for item in ask(agenda, text, final_url or u, today, key, requester=requester, usage=usage):
                 if fold(item.get('titulo') or '') != fold(act['titulo']) and fold(act['titulo']) not in fold(item.get('titulo') or ''): continue
                 got, why = verify(item, text, links, today, agenda.get('salas'), bool(agenda.get('otros_lugares')), agenda['name'], whole_page=True)
-                if got and any(h for _, h in got['sesiones']):
+                if got and (any(h for _, h in got['sesiones']) and not bounds_only or bounds_only and len(got['sesiones']) > len(act['sesiones'])):
                     got['titulo'] = act['titulo']; got['page'] = final_url or u; got['page_hash'] = hashlib.sha256(text.encode()).hexdigest()[:20]; got['why_partial'] = why
                     got.setdefault('url', u); result['accepted'].append(got)
                     # La ficha del acto manda sobre la línea sin hora del listado: esa no se publica aparte (sin duplicados).
@@ -844,6 +853,46 @@ def schema_nodes(body, agenda, today):
     return out
 
 
+# Cartelera por días leída con reglas, sin IA (10-11-2026, Espai Texas). Su página escribe cada día con funciones así:
+# «Dt 10 nov. Dt 10 VIATGE AL PAÍS DELS BLANCS 16:00 BLUE HERON 16:15 … Dc 11 Dj 12 nov. Dj 12 …»: la cabecera del día con el mes,
+# el día repetido y cada título con su hora; los días sin funciones salen solo como «Dc 11». La IA dejaba sin ver entre 170 y 190
+# funciones por lectura. Se activa en config/agendas_ia.json con «reglas»: «cartelera_por_dias»; si una página no tiene esa forma
+# (menos de GRID_MIN funciones), se lee con IA como siempre.
+GRID_MIN = 5
+_GRID_MONTHS = {'gen': 1, 'ene': 1, 'febr': 2, 'feb': 2, 'març': 3, 'marc': 3, 'mar': 3, 'abr': 4, 'maig': 5, 'may': 5, 'juny': 6, 'jun': 6,
+                'jul': 7, 'ag': 8, 'ago': 8, 'set': 9, 'sep': 9, 'oct': 10, 'nov': 11, 'des': 12, 'dic': 12}
+_GRID_DAY = r"D[ltmcxjvsg]"
+_GRID_HEAD = re.compile(rf"\b({_GRID_DAY})\s?(\d{{1,2}})\s+(gen|ene|febr|feb|març|marc|mar|abr|maig|may|juny|jun|jul|ag|ago|set|sep|oct|nov|des|dic)\.?\s+\1\s?\2\b")
+_GRID_STOP = re.compile(rf"\s(?:{_GRID_DAY})\s?\d{{1,2}}\b|\sDl\s+Dt\b")
+_GRID_ITEM = re.compile(r"\s*(.+?)\s+([01]?\d|2[0-3])[:.]([0-5]\d)\b")
+
+
+def grid_nodes(text, agenda, today, page_url):
+    """Funciones de una cartelera por días como nodos tipo schema.org (uno por función), o [] si la página no tiene esa forma."""
+    flat = ' '.join(re.sub(r"\s*\[L\d+\]", ' ', text or '').split())
+    out = []
+    for m in _GRID_HEAD.finditer(flat):
+        day, month = int(m.group(2)), _GRID_MONTHS[m.group(3)]
+        year = today.year + (1 if month < today.month - 1 else 0)
+        try: date = dt.date(year, month, day)
+        except ValueError: continue
+        wd = m.group(1).lower()
+        if wd in {'dl', 'dt', 'dm', 'dc', 'dx', 'dj', 'dv', 'ds', 'dg'} and wd not in WEEKDAY_SHORT[date.weekday()]: continue   # día de la semana que no cuadra
+        if date < today: continue
+        body = flat[m.end():]
+        stop = _GRID_STOP.search(' ' + body)
+        body = body[:stop.start()] if stop else body[:400]
+        items = [(t.strip(' ·-–|'), h, mi) for t, h, mi in _GRID_ITEM.findall(body)]
+        # «CICLE ARTEC 19:00 SNOWPIERCER 19:00»: el ciclo y la película a la misma hora son una sola función, la de la película.
+        items = [it for k, it in enumerate(items) if not (re.match(r'(?i)(?:cicle|ciclo|sessió|sesión)\b', it[0]) and k + 1 < len(items) and items[k + 1][1:] == it[1:])]
+        for title, h, mi in items:
+            if not title or len(title) > 120: continue
+            out.append({'@type': 'Event', 'name': title, 'startDate': f'{date.isoformat()}T{int(h):02d}:{mi}:00', 'url': page_url,
+                        'location': {'@type': 'Place', 'name': agenda['name'], 'address': {'streetAddress': agenda.get('address') or '', 'addressLocality': 'Barcelona'}},
+                        'x_quote': f"{m.group(0)} … {title} {h}:{mi}"})
+    return out if len(out) >= GRID_MIN else []
+
+
 def _schema_misses_sessions(nodes, text):
     """La página de un acto (un solo nodo: en una cartelera con muchos no se toca nada) de 2 a 7 días, con una sola hora de
     inicio y sin lista de pases, cuando la página escribe más horas."""
@@ -870,7 +919,8 @@ def rules_records(agenda, nodes):
         record = record_from_jsonld({**venue, **({'category': cat} if cat is not None else {})}, node, page_url)
         if not record: continue
         record['raw'].setdefault('loagendo', {})['source_label'] = LABEL
-        record['raw']['ai_agenda'] = {'page': page_url, 'page_hash': page_hash, 'model': 'reglas: schema.org', 'prompt_version': PROMPT_VERSION}
+        record['raw']['ai_agenda'] = {'page': page_url, 'page_hash': page_hash, 'model': 'reglas: cartelera por días' if node.get('x_quote') else 'reglas: schema.org',
+                                      'prompt_version': PROMPT_VERSION, **({'quotes': {'date': node['x_quote']}} if node.get('x_quote') else {})}
         record['evidence_level'] = 'venue_page_schema_org'
         out.append(record)
     return out

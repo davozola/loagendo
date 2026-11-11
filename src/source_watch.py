@@ -75,7 +75,14 @@ def _festival_sources():
     try: venues = json.loads((Path(__file__).resolve().parents[1] / 'config' / 'venues.json').read_text(encoding='utf-8'))
     except (OSError, ValueError): return set()
     venues = venues.get('venues', venues) if isinstance(venues, dict) else venues
-    return {'venue_' + v['slug'] for v in venues if v.get('type') == 'festival'}
+    out = {'venue_' + v['slug'] for v in venues if v.get('type') == 'festival'}
+    # Y los festivales leídos como agenda de sala (10-11-2026, 42 · Festival de Gèneres Fantàstics: acabó el 8-11 y el parte
+    # avisaba de «0 actos frente a 50 habituales»): llevan «festival» o «hasta» en config/agendas_ia.json.
+    try:
+        from src.ai_agenda import load_agendas
+        out |= {'venue_ia_' + a['slug'] for a in load_agendas() if a.get('festival') or a.get('hasta')}
+    except Exception: pass
+    return out
 
 
 def check_volume(conn, today, now, opened, resolved):
@@ -85,7 +92,8 @@ def check_volume(conn, today, now, opened, resolved):
     known = {r[0] for r in conn.execute('SELECT DISTINCT source FROM source_volume WHERE day>=? AND day<?', (since, today.isoformat()))}
     for source in sorted(set(current) | known):
         acts = current.get(source, 0)
-        if source in skip: continue
+        if source in skip:
+            _clear(conn, source, 'ACTS_DROP', now, resolved); continue
         conn.execute("""INSERT INTO source_volume(source,day,acts,measured_at) VALUES(?,?,?,?)
             ON CONFLICT(source,day) DO UPDATE SET acts=excluded.acts, measured_at=excluded.measured_at""", (source, today.isoformat(), acts, now))
         history = sorted(r[0] for r in conn.execute('SELECT acts FROM source_volume WHERE source=? AND day<? ORDER BY day DESC LIMIT 7', (source, today.isoformat())))

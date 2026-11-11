@@ -8,5 +8,9 @@
  "venue_eventbrite:0e283bcfca2e37746891c085": "Taller de LUSH: excluido como actividad comercial de una marca (corrección editorial 5-11-2026).",
  "venue_ia_espai_texas:758baa7e5a054b06b6f39cc8": "RITA 23-12: función de L'ESTIUEIG atribuida a RITA; excluida, y la comprobación de citas ya no acepta fechas del bloque de otro día en una cartelera por días (5-11-2026).",
  "venue_ia_festival_42:09b448c42a798a21e9ee2f1e": "50 anys de 'Carrie': pasa a Charlas y libros (corrección editorial 5-11-2026).",
- "venue_ticketmaster_es:a1154ec00f01757c9abe8407": "Jacopo Mezzanotti Trio: una ticketera o un agregador ya no figura como organizador (src/venue_feeds.py, 5-11-2026); el enlace de universe.com es el de venta que da Ticketmaster y se mantiene."
+ "venue_ticketmaster_es:a1154ec00f01757c9abe8407": "Jacopo Mezzanotti Trio: una ticketera o un agregador ya no figura como organizador (src/venue_feeds.py, 5-11-2026); el enlace de universe.com es el de venta que da Ticketmaster y se mantiene.",
+ "venue_ia_ateneu:1771e4a778fc135e9cfcb674": "Barallat: la fecha de la ficha (18-11, 18:30) es la de la página del Ateneu; la descripción arrastraba un párrafo de solo fecha de otra sesión y el pie «KIT DIGITAL». Los textos ya no toman párrafos de solo fecha ni pies de financiación (src/organizer_text.py, 10-11-2026).",
+ "venue_ia_balana:74dacef2e3883f1d35730d10": "Noticiero Live Show: falso positivo. La web de Balañá es la del grupo propietario del Teatre Borràs, donde es la función; el texto (de la ficha gemela) describe el mismo espectáculo en el Borràs. La portada como enlace es porque la sala no da página propia por acto (10-11-2026).",
+ "venue_eventbrite:60446ff39aaea0b3dec9de42": "Registros Akáshicos: excluido como captación de servicios esotéricos (corrección editorial 10-11-2026).",
+ "venue_ia_teatreneu:333de04d37dfa030230732fd": "Última planta: el periodo «Del dv. 02.08.24 al dt. 08.12.26» es literal de la cartelera de Teatreneu (obra en cartel desde 2024). Que solo salga una función es el patrón P1 de la auditoría (pases de sala incompletos), no un error de esta ficha (10-11-2026)."
 }

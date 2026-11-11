@@ -275,6 +275,14 @@ def choose(conn, thursday, dist, rules_path=None, skip=None, only_reserves=False
 
 ALLOWED = {'barcelona', 'ontoca', 'seleccio', 'festival', 'divendres', 'dissabte', 'diumenge', 'dilluns', 'dimarts', 'dimecres', 'dijous',
            'viernes', 'sabado', 'domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'friday', 'saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday'}
+# Palabras comunes que la traducción escribe con mayúscula y no son nombres propios (11-11-2026: «la Segona de Mahler»,
+# «Mahler's Second Symphony», «the Great Revolt»; la intro en catalán y en inglés se descartaba y la cabecera salía vacía).
+# Ordinales y nombres genéricos de obras y hechos en los tres idiomas; ninguna persona, sala ni título.
+ALLOWED |= {'primera', 'primer', 'segona', 'segon', 'tercera', 'tercer', 'quarta', 'quart', 'cinquena', 'sisena', 'setena', 'vuitena', 'novena', 'desena',
+            'segunda', 'segundo', 'cuarta', 'cuarto', 'quinta', 'sexta', 'septima', 'octava',
+            'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
+            'simfonia', 'sinfonia', 'symphony', 'concert', 'concierto', 'concerto', 'requiem', 'opera', 'quartet', 'cuarteto', 'quartet',
+            'gran', 'great', 'revolta', 'revuelta', 'revolt', 'guerra', 'war', 'civil', 'republica', 'republic'}
 STOP = re.compile(r'[A-Za-zÀ-ÿ’\'·.-]+')
 
 
@@ -344,7 +352,7 @@ def _tool_input(message, name):
     return {}
 
 
-def write_texts(ed, requester=None, model=None, only=None, avoid=None):
+def write_texts(ed, requester=None, model=None, only=None, avoid=None, note='', retry=True):
     """Pide los textos a la IA y aplica los que pasan la comprobación. only: 'intro', 'reserves' (solo las reservas sin
     texto) o una clave para pedir otra versión de ese plan."""
     from src import ai_assist
@@ -353,7 +361,7 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
     if only == 'reserves': items = [it for it in items if it.get('reserve') and it['removed'] and not any(it['why'].values())]
     elif only and only != 'intro': items = [it for it in d['items'] if it['key'] == only]
     if not items: return {'at': stamp(), 'only': only, 'skipped': 'nada que escribir'}
-    ask = SYSTEM + ('' if not avoid else '\n\nEscribe una versión distinta de esta, con otro enfoque: ' + json.dumps(avoid, ensure_ascii=False))
+    ask = SYSTEM + ('' if not avoid else '\n\nEscribe una versión distinta de esta, con otro enfoque: ' + json.dumps(avoid, ensure_ascii=False)) + (('\n\n' + note) if note else '')
     body = {'model': model or ai_assist.MODEL, 'max_tokens': 12000, 'system': ask, 'tools': [TOOL], 'tool_choice': {'type': 'tool', 'name': 'redactar'},
             'messages': [{'role': 'user', 'content': json.dumps(_payload(items), ensure_ascii=False)}]}
     message = _call(body, f"{ed['id']} {only or 'todo'}", requester)
@@ -363,11 +371,22 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
     all_facts = ' '.join(facts_text(it) for it in d['items'] if not it['removed'] and it['part'] == 'weekend')
     if only in (None, 'intro'):   # en 'reserves' y en un plan suelto no se tocan titular ni introducción
         for part in ('head', 'intro'):
+            fresh = {}
             for l in LANGS:
                 text = str((out.get('titular' if part == 'head' else 'intro') or {}).get(l) or '').strip()
                 why = check_text(part, text, all_facts)
                 if why: log['rejected'].append({'what': part, 'lang': l, 'text': text, 'why': why})
-                else: d[part][l], d[part + '_src'][l] = text, 'ia'
+                else: d[part][l], d[part + '_src'][l] = text, 'ia'; fresh[l] = text
+            # Un idioma pasa y otro no (11-11-2026: la intro solo en castellano; en catalán e inglés, vacía): el que falta se
+            # traduce del que pasó y se comprueba contra ese texto y las fichas (translate_edit). Queda marcado «traducido».
+            missing = [l for l in LANGS if l not in fresh]
+            if fresh and missing:
+                src = next(l for l in ('ca', 'es', 'en') if l in fresh)
+                try: got = translate_edit(ed, part, src, fresh[src], all_facts, requester, model)
+                except Exception: got = {}
+                for l in missing:
+                    if got.get(l) and not check_text(part, got[l], all_facts + ' ' + fresh[src]): d[part][l], d[part + '_src'][l] = got[l], 'traducido'
+                log.setdefault('translated', {})[part] = [l for l in missing if d[part + '_src'][l] == 'traducido']
     if only is None:
         n = out.get('protagonista')
         if isinstance(n, int) and 0 <= n < len(items) and items[n]['img_ok'] and items[n]['part'] == 'weekend' and not items[n]['removed']: d['hero'] = items[n]['key']
@@ -381,6 +400,10 @@ def write_texts(ed, requester=None, model=None, only=None, avoid=None):
             if why: log['rejected'].append({'what': it['key'], 'lang': l, 'text': text, 'why': why})
             else: it['why'][l], it['why_src'][l] = text, 'ia'
     ed.setdefault('ai', []).append(log)
+    # Ninguna intro pasó por larga (11-11-2026: las tres de más de 90 palabras): se pide otra vez, solo la intro, una vez.
+    if retry and only in (None, 'intro') and not any(d['intro_src'].get(l) for l in LANGS) and \
+            any(r['what'] == 'intro' and 'larga' in r['why'] for r in log['rejected']):
+        write_texts(ed, requester, model, only='intro', note=f"La introducción anterior era demasiado larga: escríbela en {LIMITS['intro_words'] - 20} palabras como máximo.", retry=False)
     return log
 
 

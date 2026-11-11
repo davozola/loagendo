@@ -74,3 +74,36 @@ class Idempotente(base.Semana):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CabeceraSinHuecos(base.Base):
+    """11-11-2026: la intro solo pasaba en castellano y la cabecera salía vacía en catalán e inglés."""
+    def requester(self, intros, translations=None):
+        calls = []
+        def r(method, url, key, body=None, timeout=60, raw=False):
+            calls.append(body['tools'][0]['name'])
+            if body['tools'][0]['name'] == 'traducir':
+                return {'content': [{'type': 'tool_use', 'name': 'traducir', 'input': {'textos': translations or {}}}], 'usage': {}}
+            out = dict(base.GOOD, intro=intros.pop(0) if intros else base.GOOD['intro'])
+            return {'content': [{'type': 'tool_use', 'name': 'redactar', 'input': out}], 'usage': {}}
+        return r, calls
+
+    def test_palabras_comunes_con_mayuscula(self):
+        self.assertEqual(seleccio.unknown_terms("Aquest cap de setmana, la Segona Simfonia i la Gran Revolta.", 'Mahler'), [])
+        self.assertEqual(seleccio.unknown_terms("This weekend, Mahler's Second Symphony and the Great Revolt.", 'Mahler'), [])
+        self.assertEqual(seleccio.unknown_terms('This weekend, Wynton Marsalis.', 'Mahler'), ['Wynton', 'Marsalis'])
+
+    def test_el_idioma_que_falla_se_traduce_del_que_paso(self):
+        bad = {'ca': 'Aquest cap de setmana, Wynton Marsalis.', 'es': 'Maquetas en escena y Vijay Iyer.', 'en': 'This weekend, Wynton Marsalis.'}
+        req, calls = self.requester([bad], {'ca': 'Maquetes en escena i Vijay Iyer.', 'en': 'Scale models on stage and Vijay Iyer.'})
+        ed = seleccio.build(self.conn, base.THU, self.dist, requester=req)
+        self.assertEqual(ed['data']['intro']['ca'], 'Maquetes en escena i Vijay Iyer.')
+        self.assertEqual((ed['data']['intro_src']['ca'], ed['data']['intro_src']['en']), ('traducido', 'traducido'))
+        self.assertIn('traducir', calls)
+
+    def test_intro_larga_se_pide_otra_vez(self):
+        long = {l: ' '.join(['paraula'] * 120) for l in seleccio.LANGS}
+        req, calls = self.requester([long, dict(base.GOOD['intro'])])
+        ed = seleccio.build(self.conn, base.THU, self.dist, requester=req)
+        self.assertEqual(calls.count('redactar'), 2)
+        self.assertTrue(all(ed['data']['intro'][l] for l in seleccio.LANGS))

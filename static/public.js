@@ -2236,6 +2236,10 @@ const LINK_RANK = {evento: 0, inscripcion: 1, entradas: 2, sala: 3, social: 4, f
 const LINK_NAME = {evento: () => L('Web del evento', "Web de l'esdeveniment", 'Event website'), inscripcion: () => L('Inscripción', 'Inscripció', 'Registration'), entradas: () => L('Entradas', 'Entrades', 'Tickets'), sala: () => L('Web de la sala', 'Web de la sala', 'Venue website')};
 const urlHost = u => { try { return new URL(u).hostname.replace(/^www\./, '') } catch (_) { return '' } };
 // Portada de un dominio («auditori.cat/ca/»); las webs de una sola página con rutas tras «#/» (h2o.es/#/ca/exposicion/438) no lo son.
+// Cartelera o agenda de la sala, no la página del acto (10-11-2026, auditoría M3: Phenomena «index?pag=cartelera», Espai Texas
+// «/teatre/», Balañá en la portada): se rotula «Web de la sala», no «Web del evento».
+const LISTING_RX = /^(?:agenda|agendes|programacio|programacion|programa|programme|program|cartellera|cartelera|calendari|calendario|calendar|events?|eventos|activitats|actividades|activities|teatre|teatro|cinema|cine|sessions|sesiones|concerts|conciertos|espectacles|espectaculos|exposicions|exposiciones)$/i;
+const isListing = u => { try { const x = new URL(u), last = x.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html?$/, ''); return LISTING_RX.test(last) || /[?&]pag=(?:cartelera|cartellera|agenda|programacio)/i.test(x.search) } catch (_) { return false } };
 const isHome = u => { try { const x = new URL(u), path = (x.pathname + (x.hash.startsWith('#/') ? x.hash.slice(1) : '')).replace(/\/+/g, '/'); return path.replace(/^\/(?:ca|es|en|cat|esp|eng)(?=\/|$)/, '').replace(/\/+$/, '').length <= 1 } catch (_) { return true } };
 // Páginas genéricas del Ajuntament (la del distrito, «ajuntament.barcelona.cat/sants-montjuic»): no dicen nada del acto.
 const isCityPortal = u => { try { const x = new URL(u); return /(^|\.)barcelona\.cat$/.test(x.hostname) && !/guia\.barcelona/.test(x.hostname) && x.pathname.split('/').filter(Boolean).length <= 2 } catch (_) { return false } };
@@ -2259,7 +2263,7 @@ function sheetLinks(e) {
   if (official) list.push({url: official, kind: isHome(official) ? 'sala' : 'evento'});
   for (const l of e.links || []) { const kind = linkKind(l, e); if (kind) list.push({url: safeurl(l.url), kind, label: kind === 'social' || (kind === 'fuente' && l.label !== 'Página de la fuente') ? linkLabel(l.label) : kind === 'fuente' ? L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`, `Listing on ${sourceName(e)}`) : ''}) }
   // La página de la fuente: si la fuente es el propio centro, esa página ya es la del acto.
-  if (own && !e.link_label) list.push({url: own, kind: e.data_origin === 'centro' ? 'evento' : 'fuente', label: e.data_origin === 'centro' ? '' : L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`, `Listing on ${sourceName(e)}`)});
+  if (own && !e.link_label) list.push({url: own, kind: e.data_origin === 'centro' ? (isHome(own) || isListing(own) ? 'sala' : 'evento') : 'fuente', label: e.data_origin === 'centro' ? '' : L(`Ficha en ${sourceName(e)}`, `Fitxa a ${sourceName(e)}`, `Listing on ${sourceName(e)}`)});
   const seen = new Set(), key = u => u.split('#')[0].replace(/^http:/, 'https:').replace('://www.', '://').replace(/\/+$/, '');
   const out = list.filter(x => x.url && !seen.has(key(x.url)) && seen.add(key(x.url))).sort((a, b) => LINK_RANK[a.kind] - LINK_RANK[b.kind]);
   for (const x of out) if (!x.label) x.label = x.kind === 'sala' && isHome(x.url) ? urlHost(x.url) : LINK_NAME[x.kind]();

@@ -1207,7 +1207,10 @@ def organizer_description(conn, source, record_id, prefetch=None):
     try:
         row=conn.execute("SELECT text FROM organizer_texts WHERE source=? AND id=? AND status='ok'",(source,record_id)).fetchone()
     except sqlite3.DatabaseError: return ''
-    return row[0] if row else ''
+    if not row: return ''
+    from src.organizer_text import clean_text, MIN_TEXT
+    text=clean_text(row[0])   # sin pie de web ni párrafos de solo fecha (10-11-2026)
+    return text if len(text)>=MIN_TEXT else ''
 
 
 def detail_facts(conn, source, record_id, prefetch=None):
@@ -1647,6 +1650,9 @@ def row_to_event(conn, row, detail=False, requested_day='', prefetch=None, proje
                 official_dates={**best,'host':re.sub(r'^www\.','',urlsplit(best['url']).netloc),'source_start':str(start)[:10],'source_end':str(end)[:10]}
                 start,end=best['start'],best['end']
                 occurrences=[o for o in occurrences if start<=o['date']<=end]
+                # El horario por día tampoco va más allá (10-11-2026, auditoría M1: «Digues, cosa» de la Fundació Brossa acabó el
+                # 16-4-2026 según su web y el horario seguía hasta el 27-6-2027, el fin que da la Generalitat).
+                hours_by_day={d:v for d,v in (hours_by_day or {}).items() if start<=d<=end}
     # Página oficial del acto (actos que solo llegan por agregadores): su hora en schema.org manda sobre la
     # del agregador; su precio, más abajo; su texto se añade al de la ficha para la extracción con IA.
     official_page=None
@@ -2701,10 +2707,25 @@ def event_detail(conn,source,id,day=''):
     event['other_days']=other_days(conn,event)
     event['venue_upcoming']=venue_upcoming(conn,event)
     event['links']=readable_links(event.get('links') or [])
-    # La plataforma no es quien organiza («Eventbrite», «DICE»).
-    names=[re.sub(r'^\s*Organizado por\s+','',o) for o in event.get('organizers') or []]
-    event['organizers']=[o for o in names if clean(o) not in PLATFORMS]
+    event['organizers']=public_organizers(event)
     return event
+
+
+ORGANIZER_PREFIX=re.compile(r'^\s*(?:organizado por|organitzat per|organitza|organiza|organi[sz]ed by|presentado por|presentat per|presented by)\s*:?\s*',re.I)
+
+
+def public_organizers(event):
+    """Organizadores que se enseñan en la ficha. La plataforma no es quien organiza («Eventbrite», «DICE»); sin coletillas
+    («Organizado por …»); y el que es la propia sala no se repite debajo de «Dónde» (10-11-2026, auditoría M3: «Organiza Espai
+    Texas» bajo «Espai Texas», «Organiza Sala B» bajo «Luz de Gas · Sala B»). El dato se queda en la base; solo no se enseña."""
+    venues=[clean(v) for v in (event.get('venue_names') or [])+[x.get('name','') for x in event.get('venues') or [] if isinstance(x,dict)] if v]
+    out=[]
+    for o in event.get('organizers') or []:
+        name=ORGANIZER_PREFIX.sub('',str(o or '')).strip()
+        c=clean(name)
+        if not c or c in PLATFORMS or any(c==v or (len(c)>=4 and c in v) for v in venues): continue
+        if name not in out: out.append(name)
+    return out
 
 
 def other_days(conn, event):

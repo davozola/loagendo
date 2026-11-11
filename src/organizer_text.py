@@ -77,7 +77,25 @@ def page_text(page):
 # Texto y foto del cuerpo de la página del acto (24-10-2026), para webs de sala que no publican
 # og:description ni og:image (Arts Santa Mònica) o publican una frase corta.
 BOILER = re.compile(r"cookie|galetes|newsletter|butllet[ií]|bolet[ií]n|subscriu|suscr[ií]bete|uneix-te|privacitat|privacidad|avís legal|aviso legal|"
-                    r"tots els drets|todos los derechos|javascript", re.I)
+                    r"tots els drets|todos los derechos|javascript|kit digital|next generation eu|financ?[çc]at per la uni[óo] europea|financiado por la uni[óo]n europea", re.I)
+# Párrafo que solo da fecha y hora («Dimarts 03 de novembre de 2026 - 18:30 h - Dimarts 03 de novembre de 2026 - 20:30 h», Ateneu, auditoría
+# 10-11-2026): no es descripción, y si es la de otra sesión o de otro acto contradice la ficha. Fecha y hora salen de los datos de la ficha.
+_DATE_WORDS = re.compile(r"\b(?:dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|"
+                         r"monday|tuesday|wednesday|thursday|friday|saturday|sunday|gener|febrer|mar[çc]|abril|maig|juny|juliol|agost|setembre|octubre|"
+                         r"novembre|desembre|enero|febrero|marzo|mayo|junio|julio|agosto|septiembre|noviembre|diciembre|january|february|march|april|"
+                         r"may|june|july|august|september|october|november|december|de|del|d|i|y|and|a|al|les|las|h|hores|horas|hrs|from|to)\b|\d+", re.I)
+
+
+def date_only(para):
+    """¿El párrafo es solo fechas y horas? (lo que queda sin días, meses, números ni enlaces son como mucho 3 letras)."""
+    return len(re.sub(r"[\W_]+", '', _DATE_WORDS.sub(' ', para))) <= 3
+
+
+def clean_text(text):
+    """Quita de un texto ya guardado los párrafos de pie de web y los que solo dan fechas (ver date_only y BOILER)."""
+    paras = [p for p in re.split(r'\n\s*\n', text or '') if p.strip()]
+    keep = [p for p in paras if not BOILER.search(p) and not date_only(p)]
+    return '\n\n'.join(keep) if keep != paras else text
 SKIP_TAGS = {'script', 'style', 'noscript', 'svg', 'template', 'nav', 'footer', 'header', 'aside', 'form', 'button', 'select'}
 BAD_IMAGE = re.compile(r"logo|icon|sprite|avatar|placeholder|blank|pixel|banner-cookie|\.svg(?:\?|$)|\.gif(?:\?|$)", re.I)
 
@@ -130,7 +148,7 @@ def body_text(page, title, limit=MAX_TEXT):
     paras = p.paras or post_content_paragraphs(page)
     out = []
     for para in paras:
-        if len(para) < 80 or BOILER.search(para) or para in out: continue
+        if len(para) < 80 or BOILER.search(para) or date_only(para) or para in out: continue
         if out and len('\n\n'.join(out + [para])) > limit: break
         out.append(para)
     return '\n\n'.join(out)[:limit], (p.images[0] if p.images else '')
@@ -320,7 +338,12 @@ def texts(conn):
     try: titles = conn.execute("SELECT source,id,title FROM source_records WHERE source IN (SELECT DISTINCT source FROM organizer_texts WHERE status='ok')").fetchall()
     except sqlite3.DatabaseError: titles = []
     bad = foreign(rows, titles)
-    return {(s, i): (t, u) for s, i, t, u in rows if (s, i) not in bad}
+    out = {}
+    for s, i, t, u in rows:
+        if (s, i) in bad: continue
+        t = clean_text(t)   # textos leídos antes del 10-11-2026 con el pie de la web o una fecha suelta
+        if len(t) >= MIN_TEXT: out[(s, i)] = (t, u)
+    return out
 
 
 def foreign(rows, titles):
